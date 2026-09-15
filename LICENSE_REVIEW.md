@@ -2,6 +2,12 @@
 
 > ATK License Gate · Version 1.0 · Last updated: 2026-09-14
 
+## Architecture R2 boundary
+
+> **License Gate is a redistribution gate, not a discovery gate.**
+>
+> A FAIL here blocks Fork/Redistribution/Commercial Distribution under the proposed model. It does **not** remove the project from technical discovery, research, commentary, tutorials, source linking or material intelligence. Those activities must still respect copyright, attribution and other applicable rights.
+
 The License Gate is an **independent veto** on the Fork Pipeline. A repository may score 100
 on `skill_score` and still be blocked here. No exceptions, no "we'll check later".
 
