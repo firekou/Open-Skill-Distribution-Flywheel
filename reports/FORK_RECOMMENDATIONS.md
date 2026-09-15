@@ -192,9 +192,12 @@ assignment is an ATK staffing decision.
 2. Assign a named maintainer per fork
 3. Legal read on data-source ToS for `last30days-skill` and `Agent-Reach`
 
-**License backlog** (unblocks 22 candidates, including three that would rank in the Top 10)
-4. Manual LICENSE read for `calesthio/OpenMontage` (85), `Graphify-Labs/graphify` (83),
-   `mksglu/context-mode` (82), `anthropics/skills`
+**License backlog** — now resolved; what remains is decisions, not lookups
+4. Decide the delivery model for `mksglu/context-mode` (82, Elastic License 2.0): self-install
+   is permitted, hosting it as an ATK service is not
+5. Ask the two no-license maintainers (`anthropics/skills`, `ComposioHQ/awesome-claude-skills`)
+   to add one. The remaining blocks are licenses their authors chose deliberately — asking
+   will not move them
 
 **Infrastructure, in parallel**
 5. Start the daily GitHub Traffic API snapshot **now** — the API retains only 14 days, so
@@ -239,8 +242,15 @@ protects platforms hosting other people's uploads — not a company republishing
 itself. `LICENSE_REVIEW.md` §10 sets out four routes that get most of the same value
 legitimately, the cheapest being simply to open an issue asking the author to add a license.
 
-**Priority shift in the backlog.** Six of the ten blocked candidates are "non-standard
-license", which usually means a known license with a modified header or one added clause.
-**Reading those six takes about ten minutes total** and would likely move most of them to
-PASS — including `context-mode` at 82. That is the cheapest unblocking available anywhere in
-this plan.
+**The six non-standard licenses were read on 2026-09-15, and the estimate above was wrong.**
+Only two cleared (both MCP repositories, Apache-2.0 with legacy MIT portions, and neither is
+a fork target). The other four are deliberately restrictive — Business Source License,
+Elastic License 2.0, AGPL plus a commercial tier, and CC BY-NC-ND. An unusual license
+generally means the author chose one on purpose, most often to prevent commercial
+redistribution.
+
+One is still worth acting on: **`mksglu/context-mode` (82)** is Elastic License 2.0, which
+permits forking, modifying and redistributing but bars offering the software as a hosted or
+managed service. If ATK ships it for self-install — the user runs it, it routes to ATK — that
+is within the license. If ATK hosts it, it is not. That is a delivery-model decision, not a
+legal one, and it is the only blocked candidate that ATK can unlock unilaterally.

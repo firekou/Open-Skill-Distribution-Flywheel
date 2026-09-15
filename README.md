@@ -45,7 +45,7 @@ Discover → Fork → Improve → Integrate → Publish → Distribute → Use �
 | Candidates discovered | **68** |
 | Priority A (score ≥ 80) | 21 |
 | License Gate PASS | 58 |
-| Blocked — AGPL or non-standard license | 8 |
+| Blocked — copyleft or source-available license | 6 |
 | Blocked — no license file at all | 2 |
 | Rejected — strategic conflict | 3 |
 | Recommended first forks | **4** |
@@ -79,10 +79,15 @@ decision other than `blocked`.
 ## Two principles that constrain everything else
 
 **1. The License Gate is independent of the score.** A repository may score 100 and still be
-blocked. 10 of 68 are, including `OpenMontage` at 85 (AGPL-3.0 network copyleft) and
-`anthropics/skills` — the most-starred project in the sweep, which has no LICENSE file at
-all. Attribution does not substitute for a license; see `LICENSE_REVIEW.md` §9–10 for why,
-and for the four legitimate ways to get the same value.
+blocked. 8 of 68 are — `OpenMontage` at 85 (AGPL-3.0), `context-mode` at 82 (Elastic License
+2.0, no hosted service), `ThinkWatch` (Business Source License, free only to 10M tokens a
+month), and `anthropics/skills`, the most-starred project in the sweep, which has no LICENSE
+file at all. Attribution does not substitute for a license; see `LICENSE_REVIEW.md` §9–10 for
+why, and for the four legitimate ways to get the same value.
+
+Every license was read or verified against GitHub metadata — the six that GitHub could not
+identify were fetched and read in full. Two cleared; four turned out to be deliberately
+restrictive.
 
 **2. ATK Routing must be transparent, replaceable, documented and optional.** ATK may be the
 Quick Start default; it may never be the only path. Locking a provider would convert ATK's

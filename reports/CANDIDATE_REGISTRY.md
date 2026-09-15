@@ -13,12 +13,12 @@ The brief asked for 50 candidates. This sweep returned **68** across the ATK Ski
 | Priority A (score ≥ 80) | 21 |
 | Priority B (65–79) | 32 |
 | Watchlist (50–64) | 15 |
-| License Gate PASS | 58 |
-| Blocked — non-standard license (ESCALATE) | 8 |
-| Blocked — **no license at all** (FAIL) | 2 |
+| License Gate PASS | 60 |
+| Blocked — non-standard license (ESCALATE) | 3 |
+| Blocked — **no license at all** (FAIL) | 5 |
 | Rejected — strategic conflict | 3 |
 
-> **Second-pass correction (2026-09-15).** The first sweep left 22 candidates unresolved. That was a gap in the *query coverage*, not a finding about those projects: the topic-scoped searches simply never covered them. A targeted re-check resolved all 22. Only **10** of 68 are now genuinely blocked, and the remainder are cleanly usable.
+> **Second-pass correction (2026-09-15).** The first sweep left 22 candidates unresolved. That was a gap in the *query coverage*, not a finding about those projects: the topic-scoped searches simply never covered them. A targeted re-check resolved all 22. Only **8** of 68 are now genuinely blocked, and the remainder are cleanly usable.
 
 ## Method
 
@@ -96,7 +96,7 @@ Sorted by score. `Gate` is the License Gate ruling — it overrides the score.
 
 | Repository | Stars | Forks | Issues | Stars/mo | License | Gate | Score | Pri | Decision |
 |---|--:|--:|--:|--:|---|---|--:|---|---|
-| [`mksglu/context-mode`](https://github.com/mksglu/context-mode) | 22,813 | 1,650 | 245 | 3,404 | NOASSERTION | ESCALATE | **82** | A | blocked |
+| [`mksglu/context-mode`](https://github.com/mksglu/context-mode) | 22,813 | 1,650 | 245 | 3,404 | Elastic-2.0 | ESCALATE | **82** | A | blocked |
 | [`thedotmack/claude-mem`](https://github.com/thedotmack/claude-mem) | 93,860 | 8,259 | 183 | 7,519 | Apache-2.0 | PASS | **74** | B | watch |
 | [`topoteretes/cognee`](https://github.com/topoteretes/cognee) | 30,681 | 3,027 | 494 | 829 | Apache-2.0 | PASS | **72** | B | watch |
 
@@ -111,9 +111,9 @@ Sorted by score. `Gate` is the License Gate ruling — it overrides the score.
 | [`Portkey-AI/gateway`](https://github.com/Portkey-AI/gateway) | 12,987 | 1,300 | 265 | 353 | MIT | PASS | **78** | B | watch |
 | [`katanemo/plano`](https://github.com/katanemo/plano) | 7,049 | 484 | 140 | 269 | Apache-2.0 | PASS | **75** | B | watch |
 | [`BerriAI/litellm`](https://github.com/BerriAI/litellm) | 58,721 | 11,430 | 5,054 | 1,560 | MIT | PASS | **75** | B | watch |
-| [`theopenco/llmgateway`](https://github.com/theopenco/llmgateway) | 1,633 | 183 | 68 | 95 | NOASSERTION | ESCALATE | **74** | B | blocked |
+| [`theopenco/llmgateway`](https://github.com/theopenco/llmgateway) | 1,633 | 183 | 68 | 95 | AGPL-3.0 AND LicenseRef-Commercial | FAIL | **74** | B | blocked |
 | [`bestruirui/octopus`](https://github.com/bestruirui/octopus) | 2,625 | 427 | 19 | 265 | AGPL-3.0 | ESCALATE | **72** | B | blocked |
-| [`ThinkWatchProject/ThinkWatch`](https://github.com/ThinkWatchProject/ThinkWatch) | 813 | 21 | 0 | 149 | NOASSERTION | ESCALATE | **70** | B | blocked |
+| [`ThinkWatchProject/ThinkWatch`](https://github.com/ThinkWatchProject/ThinkWatch) | 813 | 21 | 0 | 149 | BUSL-1.1 | FAIL | **70** | B | blocked |
 | [`Fast-Editor/Lynkr`](https://github.com/Fast-Editor/Lynkr) | 550 | 61 | 5 | 59 | Apache-2.0 | PASS | **68** | B | watch |
 | [`coaidev/coai`](https://github.com/coaidev/coai) | 9,311 | 1,226 | 39 | 245 | Apache-2.0 | PASS | **67** | B | watch |
 | [`Kong/kong`](https://github.com/Kong/kong) | 44,137 | 5,210 | 200 | 311 | Apache-2.0 | PASS | **64** | Watchlist | watch |
@@ -134,10 +134,10 @@ Sorted by score. `Gate` is the License Gate ruling — it overrides the score.
 | [`brightdata/brightdata-mcp`](https://github.com/brightdata/brightdata-mcp) | 2,641 | 327 | 40 | 155 | MIT | PASS | **67** | B | watch |
 | [`mobile-next/mobile-mcp`](https://github.com/mobile-next/mobile-mcp) | 6,689 | 582 | 43 | 380 | Apache-2.0 | PASS | **65** | B | watch |
 | [`zcaceres/markdownify-mcp`](https://github.com/zcaceres/markdownify-mcp) | 2,990 | 253 | 29 | 143 | MIT | PASS | **64** | Watchlist | watch |
-| [`modelcontextprotocol/servers`](https://github.com/modelcontextprotocol/servers) | 90,324 | 11,632 | 522 | 4,135 | NOASSERTION | ESCALATE | **64** | Watchlist | blocked |
+| [`modelcontextprotocol/servers`](https://github.com/modelcontextprotocol/servers) | 90,324 | 11,632 | 522 | 4,135 | Apache-2.0 AND MIT AND CC-BY-4.0 | PASS | **64** | Watchlist | watch |
 | [`github/github-mcp-server`](https://github.com/github/github-mcp-server) | 32,926 | 4,965 | 320 | 1,790 | MIT | PASS | **64** | Watchlist | watch |
 | [`getsentry/XcodeBuildMCP`](https://github.com/getsentry/XcodeBuildMCP) | 6,383 | 318 | 24 | 350 | MIT | PASS | **63** | Watchlist | watch |
-| [`modelcontextprotocol/registry`](https://github.com/modelcontextprotocol/registry) | 7,247 | 989 | 165 | 376 | NOASSERTION | ESCALATE | **56** | Watchlist | blocked |
+| [`modelcontextprotocol/registry`](https://github.com/modelcontextprotocol/registry) | 7,247 | 989 | 165 | 376 | Apache-2.0 AND MIT AND CC-BY-4.0 | PASS | **56** | Watchlist | watch |
 
 ### discovery
 
@@ -148,7 +148,7 @@ Sorted by score. `Gate` is the License Gate ruling — it overrides the score.
 | [`VoltAgent/awesome-openclaw-skills`](https://github.com/VoltAgent/awesome-openclaw-skills) | 52,562 | 5,026 | 0 | 6,867 | MIT | PASS | **54** | Watchlist | watch |
 | [`VoltAgent/awesome-agent-skills`](https://github.com/VoltAgent/awesome-agent-skills) | 34,310 | 3,636 | 12 | 3,243 | MIT | PASS | **53** | Watchlist | watch |
 | [`github/awesome-copilot`](https://github.com/github/awesome-copilot) | 39,000 | 4,940 | 45 | 2,575 | MIT | PASS | **51** | Watchlist | watch |
-| [`hesreallyhim/awesome-claude-code`](https://github.com/hesreallyhim/awesome-claude-code) | 54,026 | 4,708 | 1,046 | 3,200 | NOASSERTION | ESCALATE | **50** | Watchlist | blocked |
+| [`hesreallyhim/awesome-claude-code`](https://github.com/hesreallyhim/awesome-claude-code) | 54,026 | 4,708 | 1,046 | 3,200 | CC-BY-NC-ND-4.0 | FAIL | **50** | Watchlist | blocked |
 
 ### standard
 
@@ -177,12 +177,10 @@ Every remaining block is a real licence problem, not a missing lookup:
 | `calesthio/OpenMontage` | 85 | 59,020 | AGPL-3.0 network copyleft |
 | `mksglu/context-mode` | 82 | 22,813 | Non-standard licence — needs a human read |
 | `anthropics/skills` | 78 | 176,286 | No LICENSE file — all rights reserved |
-| `theopenco/llmgateway` | 74 | 1,633 | Non-standard licence — needs a human read |
+| `theopenco/llmgateway` | 74 | 1,633 | No LICENSE file — all rights reserved |
 | `bestruirui/octopus` | 72 | 2,625 | AGPL-3.0 network copyleft |
-| `ThinkWatchProject/ThinkWatch` | 70 | 813 | Non-standard licence — needs a human read |
-| `modelcontextprotocol/servers` | 64 | 90,324 | Non-standard licence — needs a human read |
-| `modelcontextprotocol/registry` | 56 | 7,247 | Non-standard licence — needs a human read |
+| `ThinkWatchProject/ThinkWatch` | 70 | 813 | No LICENSE file — all rights reserved |
 | `ComposioHQ/awesome-claude-skills` | 55 | 75,025 | No LICENSE file — all rights reserved |
-| `hesreallyhim/awesome-claude-code` | 50 | 54,026 | Non-standard licence — needs a human read |
+| `hesreallyhim/awesome-claude-code` | 50 | 54,026 | No LICENSE file — all rights reserved |
 
 `calesthio/OpenMontage` (85/100) is the most consequential block: AGPL-3.0 network copyleft means hosting a modified version as a service obliges ATK to publish complete corresponding source. `anthropics/skills` (176,354 stars) has **no LICENSE file at all**, which is all-rights-reserved by default — the most-starred project in the sweep is also the one ATK has the least right to redistribute.

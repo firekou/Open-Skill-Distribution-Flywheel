@@ -71,18 +71,27 @@ Only these remain blocked after the second-pass check, and each for a real reaso
 | Repository | Score | Problem |
 |---|--:|---|
 | `calesthio/OpenMontage` | 85 | **AGPL-3.0.** Would rank #5. Network copyleft: hosting a modified version as a service obliges ATK to publish complete corresponding source |
-| `mksglu/context-mode` | 82 | Non-standard license — needs a human read |
+| `mksglu/context-mode` | 82 | **Elastic License 2.0** — self-install OK, hosted service barred |
 | `anthropics/skills` | 78 | **No LICENSE file** — all rights reserved by default |
-| `theopenco/llmgateway` | 74 | Non-standard license — needs a human read |
+| `theopenco/llmgateway` | 74 | **AGPL-3.0 + commercial `ee/` tier** — blocked twice over |
 | `bestruirui/octopus` | 72 | AGPL-3.0 — network copyleft |
-| `ThinkWatchProject/ThinkWatch` | 70 | Non-standard license — needs a human read |
+| `ThinkWatchProject/ThinkWatch` | 70 | **BSL 1.1** — free only to 10M tokens/month, then paid. Not open source |
 | `ComposioHQ/awesome-claude-skills` | 55 | No LICENSE file |
-| `modelcontextprotocol/servers` · `registry` · `hesreallyhim/awesome-claude-code` | — | Non-standard license — needs a human read |
+| `hesreallyhim/awesome-claude-code` | 50 | **CC BY-NC-ND 4.0** — no commercial use, no derivatives |
 
-Six of the ten are "non-standard license", meaning GitHub found a license file but could not
-identify it. Most will turn out to be a standard license with a modified header or an added
-clause. **Reading one takes about two minutes** and would likely move most to PASS — the
-cheapest item in the whole backlog.
+`modelcontextprotocol/servers` and `registry` were also in this group and **cleared to PASS**
+(Apache-2.0 with legacy MIT portions). Neither is a fork target — both are ecosystem
+reference infrastructure with high trademark risk.
+
+All six "non-standard license" files were read on 2026-09-15. **Only two resolved to PASS**
+(both MCP repositories, Apache-2.0 with legacy MIT portions). The other four turned out to be
+deliberately restrictive: Business Source License, Elastic License 2.0, AGPL plus a commercial
+tier, and CC BY-NC-ND. The earlier prediction that most would clear was wrong — an unusual
+license usually means the author chose one on purpose.
+
+`context-mode` (82) is the one still worth pursuing: Elastic License 2.0 permits forking and
+redistribution but bars offering it as a hosted service, so it is unlocked by a delivery-model
+decision rather than by a conversation with the author.
 
 ---
 

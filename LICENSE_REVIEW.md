@@ -51,7 +51,10 @@ license: blocked.**
 | **LGPL-3.0** | ✅ | ✅ | ✅ | Library-level | **CONDITIONAL** — dynamic linking only; no static bundling into closed ATK components |
 | **GPL-3.0** | ✅ | ✅ | ✅ | Strong | **ESCALATE** — the whole distributed work becomes GPL. Fork only as a standalone GPL deliverable, never linked into proprietary ATK code |
 | **AGPL-3.0** | ✅ | ✅ | ✅ | Network | **ESCALATE / DEFAULT NO** — §13 triggers on *network use*. If ATK hosts a modified version as a service, ATK must publish the complete corresponding source. Incompatible with closed ATK Routing internals |
-| **BSL / SSPL / "Commons Clause"** | ⚠️ | ⚠️ | ❌ *(typically)* | — | **FAIL** — not open source; commercial redistribution restricted |
+| **BSL 1.1 (Business Source License)** | ✅ | ✅ | ❌ *(above the Use Grant)* | Converts later | **FAIL** — self-describes as "not an Open Source license". Free use only under the Additional Use Grant; beyond it a paid licence is required |
+| **Elastic License 2.0 (ELv2)** | ✅ | ✅ | ✅ *(but not as a service)* | None | **CONDITIONAL** — may not be offered as a hosted or managed service. Fine to ship for self-install; blocked if ATK hosts it |
+| **CC BY-NC-ND 4.0** | ❌ | ✅ *(verbatim only)* | ❌ | — | **FAIL** — NonCommercial bars ATK's use, NoDerivatives bars forking. Linking is unaffected |
+| **SSPL / "Commons Clause"** | ⚠️ | ⚠️ | ❌ *(typically)* | — | **FAIL** — not open source; commercial redistribution restricted |
 | **No LICENSE file** | ❌ | ❌ | ❌ | — | **FAIL** — default copyright: all rights reserved |
 | **Unclear / conflicting** | ? | ? | ? | ? | **FAIL** until resolved in writing by upstream |
 
@@ -194,17 +197,69 @@ and **2026-09-15** (targeted re-check of everything the first pass left open).
 Hosting a modified version of either as a service obliges ATK to publish complete
 corresponding source — including anything the courts would treat as part of the same work.
 
-### ESCALATE — non-standard license (6)
+### Read in full — the six "non-standard license" repositories
 
-GitHub detected a license file but could not identify it as a known license. These need a
-human to read the actual text; the automated gate cannot rule on them either way.
+All six LICENSE files were fetched and read on **2026-09-15**. The outcome contradicts the
+earlier estimate recorded in this document, which predicted most would resolve to PASS:
 
-`modelcontextprotocol/servers` · `modelcontextprotocol/registry` · `theopenco/llmgateway` ·
-`ThinkWatchProject/ThinkWatch` · `hesreallyhim/awesome-claude-code` · `mksglu/context-mode`
+| Repository | Actual license | Ruling |
+|---|---|---|
+| `modelcontextprotocol/servers` | Apache-2.0, with legacy MIT contributions during an in-progress relicensing; docs CC-BY-4.0 | **PASS** |
+| `modelcontextprotocol/registry` | Same as above | **PASS** |
+| `mksglu/context-mode` | **Elastic License 2.0** | **CONDITIONAL** |
+| `theopenco/llmgateway` | **AGPL-3.0**, plus an `ee/` directory under a separate commercial license | **FAIL** |
+| `ThinkWatchProject/ThinkWatch` | **Business Source License 1.1** | **FAIL** |
+| `hesreallyhim/awesome-claude-code` | **CC BY-NC-ND 4.0** | **FAIL** |
 
-> Most of these will turn out to be a standard license with a modified header, a dual
-> license, or a license plus an extra clause. Reading one takes about two minutes and would
-> likely move most of them to PASS.
+> **Correction.** This document previously predicted that most of these would "turn out to be
+> a standard license with a modified header" and move to PASS. Two did. Four did not, and
+> three of those are deliberately restrictive. The reasoning was wrong in a specific way:
+> a project that adopts a non-standard license has usually gone out of its way to do so, and
+> the most common motive is to prevent exactly the kind of commercial redistribution ATK is
+> planning. **"Unusual license" correlates with "restrictive", not with "clerical variation".**
+
+#### The three that matter
+
+**`ThinkWatchProject/ThinkWatch` — BSL 1.1.** The license states in its own Notice section
+that it "is not an Open Source license". Its Additional Use Grant permits free production use
+only up to **10,000,000 billable tokens and 10,000 MCP tool calls per calendar month**;
+beyond either threshold a paid commercial license is required, priced by usage tier. It
+converts to GPL-2.0-or-later on **2030-04-02**.
+
+This is the sharpest possible mismatch with ATK: the licensed thresholds are denominated in
+exactly the units ATK's business is measured in, and ATK would cross them by design.
+
+**`mksglu/context-mode` — Elastic License 2.0.** ELv2 grants the right to use, copy,
+distribute and prepare derivative works. The binding limitation is:
+
+> *"You may not provide the software to third parties as a hosted or managed service, where
+> the service provides users with access to any substantial set of the features or
+> functionality of the software."*
+
+So the ruling depends entirely on ATK's delivery model:
+
+| ATK model | Allowed? |
+|---|---|
+| Ship it for users to self-install, routing to ATK | **Yes** |
+| Host it and offer it as an ATK service | **No** |
+
+ELv2 also forbids circumventing any license-key functionality and removing licensor notices.
+At 82/100 this is the highest-scoring candidate that a delivery-model decision could unlock.
+
+**`theopenco/llmgateway` — AGPL-3.0 plus a commercial `ee/` tier.** Two independent blocks:
+network copyleft on the open portion, and a separate commercial license on the enterprise
+directory. Either alone would be disqualifying.
+
+#### The two that passed
+
+Both MCP repositories are mid-relicensing from MIT to Apache-2.0. Contributions whose authors
+have not yet consented to relicensing **remain under MIT**, and the file is explicit that
+"no rights beyond those granted by the applicable original license are conveyed". Both
+licenses are permissive, so the mixture is workable — but any ATK NOTICE must reflect both,
+not just Apache-2.0.
+
+Neither is a fork target regardless: they are ecosystem reference infrastructure, and the
+trademark risk is high. Contribute upstream; publish into the registry.
 
 ### FAIL — no license file (2)
 
