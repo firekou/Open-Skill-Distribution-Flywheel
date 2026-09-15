@@ -1,22 +1,40 @@
 # Open Skill Distribution Flywheel
 
-> Strategy, policy and operating system for the **AI Token King (ATK) Open Skill
-> Distribution Network**.
-> Phase 1 · Snapshot 2026-09-14
-
-ATK does not try to control external open-source projects, and does not depend on other
-projects accepting its pull requests. Instead it finds AI Skills, Agents, MCP servers,
-Routing layers and developer tools the market has already validated and — where the license
-allows — forks, maintains, improves, integrates and redistributes them through GitHub and
-social assets ATK controls.
+> **Architecture R2: ATK Technical Intelligence & Distribution Engine**
+>
+> The repository is now **discovery-first**. Its primary job is to find useful AI technical material, understand it, turn it into content/experiments, and only then decide whether integration or redistribution is warranted.
+>
+> **Critical rule:** License Gate is a redistribution gate, not a discovery gate.
 
 ```
-Discover → Fork → Improve → Integrate → Publish → Distribute → Use → Feedback → Update
+Discover → Understand → Classify → Test → Contentize → Distribute → Observe → Discover
+                         ├→ Research / Tutorial / Content
+                         ├→ Experiment / Companion Adapter
+                         └→ Fork / Deep ATK Integration
 ```
+
+## R2 start here
+
+| Document | Purpose |
+|---|---|
+| [ARCHITECTURE_R2.md](./ARCHITECTURE_R2.md) | New system architecture and three-lane model |
+| [DISCOVERY_ENGINE.md](./DISCOVERY_ENGINE.md) | Technical-material mining engine |
+| [DISCOVERY_PIPELINE.md](./DISCOVERY_PIPELINE.md) | Executor runbook and 120-candidate benchmark |
+| [TREND_SCORING.md](./TREND_SCORING.md) | Material and content opportunity scoring |
+| [registry/SOURCE_REGISTRY.json](./registry/SOURCE_REGISTRY.json) | Where ATK mines signals |
+| [registry/MATERIAL_SCHEMA.json](./registry/MATERIAL_SCHEMA.json) | Canonical material-card schema |
+
+## Three lanes
+
+**Lane A — Discovery & Material Intelligence:** MCP, A2A, Agent Frameworks, Skills, Routing, Model Gateways, token/cost optimization and the wider agent stack. Discovery continues even when a project is not forkable.
+
+**Lane B — Content & Distribution:** convert qualified material into technical cards, tutorials, social briefs, experiments and ATK angles for ATK-owned distribution channels.
+
+**Lane C — Integration & Redistribution:** only this lane invokes the existing License Gate, Security Review, Maintainer Gate, Fork Policy and Upstream Sync controls.
 
 ---
 
-## Start here
+## Existing integration and redistribution framework
 
 | Document | What it is |
 |---|---|
