@@ -49,8 +49,9 @@ Agent Infrastructure
 
 ### Asset B — Social distribution
 
-Threads, X, LinkedIn, YouTube and technical articles. Working assumption: 3–5 accounts
-produce roughly **300,000–500,000 impressions per month**.
+Threads, X, LinkedIn, YouTube and technical articles. **Established:** 3–5 accounts already
+produce **300,000–500,000 impressions per month**. This is an operating channel ATK runs
+today, not a projection.
 
 That impression volume should *not* be pointed directly at ATK product pages. The
 higher-converting path is developer-first:
@@ -69,9 +70,10 @@ Developer encounters ATK Routing
 ATK API / MCP / Token consumption
 ```
 
-> **Assumption status:** the 300k–500k impression figure is an input, not a measured
-> result. `ANALYTICS_METRICS.md` defines how it gets validated. Until the funnel is
-> instrumented, every conversion number downstream of it is a projection.
+> **What this means for Phase 1:** the top of the funnel is already built and running. The
+> unknown is not whether ATK can generate reach — it can — but what the reach converts at
+> once it points into GitHub repositories instead of product pages. That is what
+> `ANALYTICS_METRICS.md` instruments.
 
 ---
 

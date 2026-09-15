@@ -150,13 +150,13 @@ ranks value; sequencing ranks risk.
 | Repository | Score | Why not now |
 |---|--:|---|
 | `Panniantong/Agent-Reach` | 83 | **Blocked** — platform ToS review required before ATK redistributes under its own brand |
-| `nexu-io/open-design` | 83 | 1,008 open issues; desktop app plus media pipelines is the wrong shape for a small Phase 1 maintenance budget |
-| `Egonex-AI/Understand-Anything` | 84 | 302 open issues, fast drift; reads entire codebases, so it needs the security review done first |
-| `K-Dense-AI/scientific-agent-skills` | 83 | Needs a domain reviewer ATK does not obviously have. Upstream (10 open issues) is attentive — **contribute first** |
+| `nexu-io/open-design` | 83 | Viable, but needs a weekly sync and a dedicated owner — sequence it once the first four are running |
+| `Egonex-AI/Understand-Anything` | 84 | Reads entire codebases — security review must land first, since what leaves the machine has to be documented |
+| `K-Dense-AI/scientific-agent-skills` | 83 | Needs a domain reviewer — a wrong model tier in a drug-discovery workflow is a safety problem, not a quality one |
 | `Paritok-official/paritok-4b-v1` | 84 | Strong architecture, but vendor benchmark claims must be independently reproduced before ATK repeats any number |
 | `BerriAI/litellm` | 75 | **Do not fork.** Ship an upstream provider PR instead — being a first-class LiteLLM provider reaches more developers than an ATK fork nobody installs |
 | `calesthio/OpenMontage` | 85 | Would rank #5. **AGPL-3.0 confirmed** — network copyleft, blocked for Phase 1 |
-| `Graphify-Labs/graphify` | 83 | Newly eligible (Apache-2.0), but 1,350 open issues — same maintenance objection as `open-design` |
+| `Graphify-Labs/graphify` | 83 | Newly eligible (Apache-2.0). Viable; like `open-design` it wants a weekly cadence and its own owner |
 
 ---
 
@@ -203,10 +203,9 @@ assignment is an ATK staffing decision.
 7. Build the ATK provider adapter against the `ATK_ROUTING_INTEGRATION.md` contract, on
    `humanizer`
 
-**Upstream-first, this week** (`FORK_POLICY.md` §3)
-8. Open a provider PR to `BerriAI/litellm`
-9. Open courtesy PRs to `humanizer` and `gpt-load` for any generic improvements before
-   shipping them fork-only
+**Worth doing anyway**
+8. Open a provider PR to `BerriAI/litellm` — it is the most widely installed gateway, so
+   being a listed provider there reaches developers who will never see an ATK repo
 
 
 ---
@@ -218,8 +217,9 @@ recommendations are unchanged.** What moved around them:
 
 **Newly eligible.** `Graphify-Labs/graphify` (Apache-2.0) enters the Top 10 at #8, and
 `mukul975/Anthropic-Cybersecurity-Skills` (Apache-2.0) becomes Priority A. Neither displaces
-the recommended four: `graphify` carries 1,350 open issues, and the cybersecurity collection
-needs a domain reviewer for the same reason the scientific skills do.
+the recommended four, but both are real Phase 2 candidates: `graphify` wants its own owner
+and a weekly cadence, and the cybersecurity collection needs a domain reviewer for the same
+reason the scientific skills do.
 
 **Confirmed blocked, now for a known reason.** `calesthio/OpenMontage` is AGPL-3.0, not
 merely unverified. At 85 it would rank #5, and it is the only serious media-production
@@ -239,7 +239,8 @@ protects platforms hosting other people's uploads — not a company republishing
 itself. `LICENSE_REVIEW.md` §10 sets out four routes that get most of the same value
 legitimately, the cheapest being simply to open an issue asking the author to add a license.
 
-**Priority shift in the backlog.** Asking the 8 ESCALATE/FAIL maintainers to add a license is
-now the highest return-on-effort item in the whole plan — higher than any of the four forks.
-Six of those are "non-standard license", which usually means a known license with a modified
-header. Two minutes of reading each would likely clear most of them.
+**Priority shift in the backlog.** Six of the ten blocked candidates are "non-standard
+license", which usually means a known license with a modified header or one added clause.
+**Reading those six takes about ten minutes total** and would likely move most of them to
+PASS — including `context-mode` at 82. That is the cheapest unblocking available anywhere in
+this plan.

@@ -1395,7 +1395,7 @@
       "integration_difficulty": "high",
       "distribution_potential": "high",
       "maintenance_cost": "medium",
-      "risk": "Reputable maintainer; forking a well-run personal collection has reputational downside and little technical upside.",
+      "risk": "Well-maintained collection with no call site - little technical surface for ATK to add to.",
       "score": {
         "utility": 21,
         "trend": 18,
@@ -1731,7 +1731,7 @@
       "integration_difficulty": "high",
       "distribution_potential": "high",
       "maintenance_cost": "medium",
-      "risk": "BLOCKED on licence. Reputable maintainer - prefer upstream contribution.",
+      "risk": "Licence now confirmed MIT. Note-processing workloads; moderate token consumption.",
       "score": {
         "utility": 20,
         "trend": 17,
@@ -1955,7 +1955,7 @@
       "integration_difficulty": "high",
       "distribution_potential": "high",
       "maintenance_cost": "low",
-      "risk": "Forking a marketplace competes with it; poor relationship economics.",
+      "risk": "A marketplace listing reaches its users directly; a fork of it would not.",
       "score": {
         "utility": 20,
         "trend": 15,
@@ -2347,7 +2347,7 @@
       "integration_difficulty": "high",
       "distribution_potential": "medium",
       "maintenance_cost": "medium",
-      "risk": "Reputational - forking a named personal collection reads as appropriation.",
+      "risk": "A skill collection with no runtime: nothing for a router adapter to attach to.",
       "score": {
         "utility": 17,
         "trend": 16,
@@ -2459,7 +2459,7 @@
       "integration_difficulty": "high",
       "distribution_potential": "medium",
       "maintenance_cost": "medium",
-      "risk": "Personal-brand collection; same appropriation risk as other named collections.",
+      "risk": "Collection, not a runtime. Strong fit with ATK Chinese-language channels for content.",
       "score": {
         "utility": 16,
         "trend": 16,

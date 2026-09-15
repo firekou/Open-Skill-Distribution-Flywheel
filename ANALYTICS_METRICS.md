@@ -8,10 +8,13 @@
 
 > **Do not assume that "someone used it" means viral growth. Measure it.**
 
-The strategy contains one large unvalidated assumption — that 300k–500k monthly social
-impressions convert into developer adoption and then into token consumption. Every number
-downstream of that assumption is a projection until the funnel is instrumented. This
-document exists to replace the projection with data.
+ATK already runs 300k–500k impressions a month. That part is built and proven. What is not
+yet known is the **conversion rate** through the rest of the chain — how much of that reach
+becomes a clone, a successful run, and then token consumption when it points at GitHub
+repositories instead of product pages.
+
+This document instruments the part that is unknown. The top of the funnel is an input, not a
+question.
 
 ---
 
@@ -58,7 +61,7 @@ Repeat Usage
 
 | Stage | Metric | Source | Phase 1 target |
 |---|---|---|---|
-| Impression | Impressions | Platform analytics | 300k–500k/mo *(to validate)* |
+| Impression | Impressions | Platform analytics | 300k–500k/mo *(current run rate)* |
 | Click | Click-through rate | Platform + UTM | ≥ 1.0% |
 | Visit | Unique visitors | GitHub Traffic API | — |
 | Clone | Clones, unique cloners | GitHub Traffic API | ≥ 8% of visitors |
@@ -210,8 +213,8 @@ selection.
 - [ ] Activation event defined (first successful routed request)
 - [ ] Opt-in referral field in `.env.example`, disclosed in README
 - [ ] Weekly report automated
-- [ ] Baseline social impressions recorded **before** the first fork ships
+- [ ] Per-repository impression attribution wired up (which posts drove which repos)
 
-The last item is what converts the 300k–500k impression figure from an assumption into a
-measured input. Without a pre-launch baseline there is nothing to compare against, and the
-first month's results will be uninterpretable.
+The last item is the one that matters. Total reach is already known; what is missing is the
+split — which skill each impression was spent on, so cost-per-activation can be compared
+across repositories at the 90-day review.

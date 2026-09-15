@@ -173,8 +173,9 @@ synthesise split maps cleanly onto tiered routing.
   what leaves the machine and when. Routing user source code through ATK by default without
   explicit disclosure would be a `ATK_ROUTING_INTEGRATION.md` §9 failure.
 
-**Technical Review: CONDITIONAL** — passes on merit; the maintenance load argues for
-deferring past Phase 1 · **Security Review: NOT PERFORMED** *(elevated priority)*
+**Technical Review: CONDITIONAL** — the open gate is the security review, not the merits.
+It reads whole codebases, so what leaves the machine must be established before anything
+ships. Sync cadence: weekly. · **Security Review: NOT PERFORMED** *(elevated priority)*
 
 ---
 
@@ -259,8 +260,8 @@ diversification away from a purely developer-tool funnel.
   a drug-discovery workflow is not a quality regression, it is a safety problem. Any ATK
   routing integration must pin model tiers per skill and refuse to silently downgrade.
 - Requires domain expertise ATK does not obviously have in-house for meaningful review.
-- Extremely clean maintenance profile (10 open issues) suggests an attentive upstream — which
-  argues for **upstream contribution first** per `FORK_POLICY.md` §3.
+- Very clean upstream (10 open issues) means low sync cost — the cheapest fork to keep
+  current on this list.
 
 **Technical Review: CONDITIONAL** — requires a domain reviewer ·
 **Security Review: NOT PERFORMED**
@@ -286,14 +287,17 @@ designed around *agent CLIs*, not raw model providers, so ATK integration is at 
 layer than the other candidates.
 
 **Concerns.**
-- **1,008 open issues.** Maintenance 5/10, the lowest in the Top 10. A desktop app with
-  media pipelines is the highest-surface project here by a wide margin.
-- Positioned explicitly as a "Claude Design alternative" — ATK redistributing it carries
-  positioning implications worth thinking through before publishing.
+- **1,008 open issues.** Maintenance 5/10, the lowest in the Top 10 — a desktop app with
+  media pipelines is the highest-surface project here. Workable on a weekly cadence; it just
+  costs more attention than the others.
+- Positioned explicitly as a "Claude Design alternative", and already BYOK across 20+ CLIs —
+  so the ATK integration sits at the agent-CLI layer, not the raw provider layer.
 - Fastest growth in the sweep also means the fastest upstream drift.
 
-**Technical Review: CONDITIONAL** — merit is clear, but this is the wrong shape for a Phase 1
-fork with a small maintenance budget · **Security Review: NOT PERFORMED**
+**Technical Review: CONDITIONAL** — merit is clear. 1,008 open issues and the fastest growth
+in the sweep mean this one needs a **weekly** sync cadence and a maintainer who owns it
+outright; it is not a fork to run casually alongside three others.
+· **Security Review: NOT PERFORMED**
 
 ---
 
@@ -337,16 +341,16 @@ credentials)*
 | 2 | humanizer | MIT | PASS | PASS | Not performed | Pending security |
 | 3 | book-to-skill | MIT | PASS | PASS | Not performed | Pending security |
 | 4 | archify | MIT | PASS | PASS | Not performed | Pending security |
-| 5 | Understand-Anything | MIT | PASS | CONDITIONAL | Not performed | Defer — maintenance load |
+| 5 | Understand-Anything | MIT | PASS | CONDITIONAL | Not performed | Pending security — reads whole codebases |
 | 6 | paritok-4b-v1 | Apache-2.0 | PASS | CONDITIONAL | Not performed | Pending benchmark repro |
 | 7 | Agent-Reach | MIT | PASS | **BLOCKED** | Not performed | **No — ToS review first** |
-| 8 | scientific-agent-skills | MIT | PASS | CONDITIONAL | Not performed | Defer — needs domain reviewer |
-| 9 | open-design | Apache-2.0 | PASS | CONDITIONAL | Not performed | Defer — 1,008 open issues |
+| 8 | scientific-agent-skills | MIT | PASS | CONDITIONAL | Not performed | Needs a domain reviewer |
+| 9 | open-design | Apache-2.0 | PASS | CONDITIONAL | Not performed | Needs weekly sync + a dedicated owner |
 | 10 | gpt-load | MIT | PASS | PASS | Not performed | Pending security |
 
 **All ten passed the License Gate.** That is the expected result — the gate ran *before*
 this review and removed the failures, which is the point of ordering it first.
 
 Differentiation came instead from technical and legal risk: one candidate is blocked on ToS,
-four are deferred on maintenance or domain-expertise grounds, and five are clean enough to
-proceed once security review completes.
+one needs a domain reviewer, two need a weekly sync cadence and a dedicated owner, and five
+are clean enough to proceed once security review completes.

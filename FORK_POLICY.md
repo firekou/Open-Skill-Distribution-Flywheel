@@ -30,19 +30,20 @@ Missing any one → no fork. This is enforced by the registry `decision` field: 
 
 ---
 
-## 3. Upstream-First Courtesy
+## 3. Upstream Contribution — Optional, on Maintenance Grounds
 
-ATK's strategy does not *depend* on upstream accepting contributions — but where a change is
-obviously good for everyone (a bug fix, a provider seam that costs upstream nothing), **open
-the PR first and wait one review cycle** before shipping it only in the ATK fork.
+Where a fix is generic and would apply to everyone (a bug fix, a dependency bump), sending it
+upstream is usually worth it for one practical reason: **anything merged upstream is code ATK
+no longer has to carry through every future sync.** It lowers `invasive_change_ratio`
+(`UPSTREAM_SYNC.md` §7) permanently.
 
-Reason: the entire distribution strategy is built on developer trust. A maintainer who finds
-out about ATK by discovering a rebranded copy of their work reacts differently than one who
-first saw a useful PR. The cost of asking is a few days; the cost of being seen as a
-value-extractor is the strategy itself.
+This is an efficiency judgement, not a gate. Ship fork-only whenever that is faster, and
+always for ATK-specific work — a router adapter belongs in the fork, not upstream.
 
-This is a courtesy rule, not a blocker. If upstream declines, is unresponsive for 14 days, or
-the change is genuinely ATK-specific (an ATK Router adapter is), ship it in the fork.
+**Attribution is separate and not optional.** §5 of `LICENSE_REVIEW.md` applies to every ATK
+fork regardless of whether anything was contributed upstream: original LICENSE, NOTICE,
+`CHANGES-ATK.md`, and upstream credit above the fold. That requirement comes from the
+licenses, not from etiquette.
 
 ---
 
