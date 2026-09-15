@@ -1,7 +1,7 @@
 # ATK Execution Status
 
-**Date:** 2026-09-15 · **Branch:** `main` @ `3bd10a2` · **Purpose:** position confirmation only
-**Nothing was executed, changed or re-planned to produce this document.**
+**Date:** 2026-09-15 · **Branch:** `main` · **Updated:** after Phase D
+**Position: mandatory review stop. Lab 001 execution not started.**
 
 ---
 
@@ -75,21 +75,18 @@ Written as a document ≠ done. Every row below exists **only as a specification
 
 ## 4. In progress
 
-**Strictly: nothing is mid-execution.** Every started item is either complete or blocked at the
+**Nothing is mid-execution.** Phase D completed 2026-09-15; everything else is blocked at the
 review stop.
-
-**One assigned-but-unstarted item:** `CLAUDE_EXECUTION_START.md` **Phase D — Ledgers**.
 
 | Ledger | Data rows | State |
 |---|--:|---|
-| `ledgers/HYPOTHESIS_LEDGER.md` | 10 | Populated by GPT (H001–H010) |
-| `ledgers/EVIDENCE_LEDGER.md` | **0** | **Empty** |
-| `ledgers/DECISION_LEDGER.md` | **0** | **Empty** |
+| `ledgers/HYPOTHESIS_LEDGER.md` | 10 | Populated by GPT. **Confidence column unchanged by Claude** |
+| `ledgers/EVIDENCE_LEDGER.md` | **14** | ✅ Populated from Phases A/B/C |
+| `ledgers/DECISION_LEDGER.md` | **10** | ✅ Populated — **2 marked STRATEGIC BET** |
 
-Phases A, B and C produced evidence and decisions that were **never recorded in the ledgers**.
-That is the gap between what the repo has done and what the repo can prove it has done.
-
----
+Evidence and decisions from Phases A–C are now traceable. Two decisions (D007 Measurement &
+Trust priority, D008 strategic-conflict rejections) carry no demand data and are labelled bets
+rather than findings.
 
 ## 5. Hypothesis confidence — as recorded, unchanged
 
@@ -132,32 +129,76 @@ runs.** This is stated as a sequencing fact, not as a request to upgrade anythin
 
 ## 7. The single most reasonable next gate
 
-**Complete Phase D, then enter the mandatory review stop.**
+**The mandatory review stop — now.** All four phases in `CLAUDE_EXECUTION_START.md` are
+complete. The seven Forward-Motion answers are below.
 
-Phase D is the only remaining **unblocked** work in the entire plan. Everything else is
-gated behind a review that the doctrine says cannot happen until the ledgers are maintained and
-the seven Forward-Motion questions are answered.
+The review decides **LG1 methodology freeze: grant or refuse.** Nothing further proceeds
+without it.
 
-It is also not busywork: Phases A–C generated evidence and decisions that currently exist only
-inside reports. Until they are in the Evidence and Decision Ledgers, they are **not traceable**,
-and the doctrine's own rule — *"a decision without traceable evidence must be marked STRATEGIC
-BET"* — means ATK cannot presently distinguish which of its decisions are evidence-backed.
-
-**Explicitly NOT the next gate:** Lab 001 execution (LG2 security review onward). It stays
-blocked until the Editor-in-Chief grants LG1.
-
-### Order
-
-1. **Phase D** — populate the Evidence and Decision Ledgers from A/B/C; prepare, but do not
-   apply, evidence-backed confidence proposals for H001 / H002 / H005
-2. **Answer the seven Forward-Motion questions**
-3. **STOP** for Editor-in-Chief / ChatGPT review
-4. Review decides: **LG1 methodology freeze — grant or refuse**
-
----
+**Explicitly NOT next:** Lab 001 execution (LG2 security review onward).
 
 ## Open items for the Editor-in-Chief
 
 1. **Disambiguate the two G0–G9 gate namespaces** (top of this document). Claude flagged, did not change.
 2. **Resolve the ~100× price gap** (`TOP30_R3.md` §6 item 1, ~10 min) before approving any benchmark spend.
 3. **Confirm Phase D is authorised to proceed** before the review stop, or say the stop happens now without it.
+
+
+---
+
+## Seven Forward-Motion answers (`EXECUTION_DOCTRINE.md`)
+
+### 1. What uncertainty was reduced?
+
+Three things moved from assumption to observation:
+
+- **What the two market leaders actually claim.** ATK had been working from secondary
+  paraphrases. Both primary sources are materially more careful (E001, E002).
+- **Whether the biggest token tool's numbers are trusted.** They are disputed by its own users,
+  14 times, with a >10,000× over-count repro (E003).
+- **Whether two candidate Scout components are usable.** One conditionally, one not (E009, E010).
+
+### 2. Which hypothesis changed confidence?
+
+**None — Claude may not change confidence.** One upgrade is *proposed*: **H005 H0 → H1 Signal**.
+Three explicit non-upgrades are recorded, including for both ACTIVE hypotheses. See
+`ledgers/HYPOTHESIS_LEDGER.md`.
+
+### 3. What new evidence was produced?
+
+14 evidence entries. 9 OBSERVED, 4 REPORTED, 1 recorded as a LIMITATION. **Nothing is TESTED or
+above** — no third-party code was executed.
+
+### 4. What failed or contradicted us?
+
+- **ATK published two inflated figures** by trusting search summaries instead of reading files
+  one HTTP request away. The failure occurred in the repository that defines the evidence ladder.
+- **Counterevidence against both ACTIVE hypotheses.** E008 against H001 (every measurement/trust
+  project is small); E005 against H002 (platform vendors reported to give routing away free).
+- **A query failure recorded as a failure** (E013): two searches of `headroom`'s issues returned
+  nothing despite 643 open issues. That is not a clean bill of health.
+- **Three operations blocked by environment policy**: repository settings write, branch
+  deletion, and the GitHub commits API. SHAs were obtained via `git ls-remote` instead.
+
+### 5. What decision is now justified?
+
+10 decisions recorded. 8 evidence-backed; **2 labelled STRATEGIC BET** (D007, D008) because they
+rest on reasoning rather than demand data.
+
+The newly justified one is **D010**: resolve the ~100× price gap from primary pricing pages
+*before* approving benchmark spend. It underpins the routing economics and costs ~10 minutes.
+
+### 6. What is the single next gate?
+
+**LG1 — methodology freeze.** Grant or refuse. If refused, name the condition, allocation or
+quality floor to change now, while changing it is still free; after LG1 a change voids the runs.
+
+### 7. What requires Editor-in-Chief / ChatGPT review?
+
+1. **LG1 grant or refusal** — the blocking decision
+2. **H005 H0→H1 proposal**, and the three non-upgrades
+3. **Two STRATEGIC BETs (D007, D008)** — both concern ATK's core commercial premise and neither
+   has demand data
+4. **The duplicate G0–G9 gate namespaces** — flagged, not changed
+5. **E005 is REPORTED and load-bearing** — if platform vendors genuinely commoditise routing,
+   H002's wedge narrows. Worth one hour of reading vendor documentation before the next cycle
