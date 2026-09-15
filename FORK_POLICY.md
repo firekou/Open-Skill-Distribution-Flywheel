@@ -1,5 +1,8 @@
 # FORK_POLICY.md
 
+> **Architecture R2 scope:** This policy governs **Lane C only**: fork, redistribution and deep integration. It MUST NOT block Discovery, Research, Content or upstream-link/tutorial work. See `ARCHITECTURE_R2.md`.
+
+
 > ATK Fork SOP · Version 1.0 · Last updated: 2026-09-14
 
 ---
