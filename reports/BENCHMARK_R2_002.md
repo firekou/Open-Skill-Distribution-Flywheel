@@ -94,7 +94,7 @@ Refreshed across all 188 materials. Non-repository items now rank here too — a
 | [YouTube: Claude Code tutorial demand is enormous](https://developereducators.com/best/claude-code/) | video channel | 2026 | **67** | The most-watched Claude Code tutorial reportedly sits near 2.37M… |
 | [`headroomlabs-ai/headroom`](https://github.com/headroomlabs-ai/headroom) | code repository | 8764 | **91** | Compresses tool output, logs, files and RAG chunks before they reach… |
 | [`mvanhorn/last30days-skill`](https://github.com/mvanhorn/last30days-skill) | code repository | 8034 | **91** | Researches a topic across Reddit, X, YouTube, HN, Polymarket and the… |
-| [`rtk-ai/rtk`](https://github.com/rtk-ai/rtk) | code repository | 10380 | **87** | CLI proxy cutting LLM token use 60-90% on common dev commands |
+| [`rtk-ai/rtk`](https://github.com/rtk-ai/rtk) | code repository | 10380 | **87** | CLI proxy that cuts up to 90% of the BASH OUTPUT an agent reads |
 | [DeepSeek open-sources its agent harness under MIT](https://thenewstack.io/deepseek-harness-open-source-plugins/) | news | 2026-08-13 | **87** | Model adapter, tool registry and agent loop are all swappable… |
 | [`Egonex-AI/Understand-Anything`](https://github.com/Egonex-AI/Understand-Anything) | code repository | 13686 | **86** | Turns a codebase into an interactive, queryable knowledge graph |
 | [`Panniantong/Agent-Reach`](https://github.com/Panniantong/Agent-Reach) | code repository | 12157 | **86** | Gives an agent read/search access to Twitter, Reddit, YouTube… |
@@ -127,7 +127,7 @@ Companion adapter or deep integration — not a fork. Licence-gated, so licence 
 | [`ENTERPILOT/GoModel`](https://github.com/ENTERPILOT/GoModel) | 20 | MIT | **74** | Go AI gateway with unified OpenAI- and Anthropic-compatible… |
 | [`headroomlabs-ai/headroom`](https://github.com/headroomlabs-ai/headroom) | 19 | Apache-2.0 | **91** | Compresses tool output, logs, files and RAG chunks before they… |
 | [`mvanhorn/last30days-skill`](https://github.com/mvanhorn/last30days-skill) | 19 | MIT | **91** | Researches a topic across Reddit, X, YouTube, HN, Polymarket… |
-| [`rtk-ai/rtk`](https://github.com/rtk-ai/rtk) | 19 | Apache-2.0 | **87** | CLI proxy cutting LLM token use 60-90% on common dev commands |
+| [`rtk-ai/rtk`](https://github.com/rtk-ai/rtk) | 19 | Apache-2.0 | **87** | CLI proxy that cuts up to 90% of the BASH OUTPUT an agent reads |
 | [`virgiliojr94/book-to-skill`](https://github.com/virgiliojr94/book-to-skill) | 19 | MIT | **87** | Turns a technical book PDF into a usable Claude Code skill |
 | [`Paritok-official/paritok-4b-v1`](https://github.com/Paritok-official/paritok-4b-v1) | 19 | Apache-2.0 | **81** | Non-destructive compression gateway backed by an open 4B… |
 | [`RelayPlane/proxy`](https://github.com/RelayPlane/proxy) | 19 | MIT | **70** | Local-first proxy that meters what every agent run costs and… |
@@ -145,7 +145,7 @@ The only list where the full `LICENSE_REVIEW.md` + `FORK_POLICY.md` gate applies
 |---|---|--:|---|---|
 | [`headroomlabs-ai/headroom`](https://github.com/headroomlabs-ai/headroom) | Apache-2.0 | 19 | **91** | Compresses tool output, logs, files and RAG chunks before… |
 | [`mvanhorn/last30days-skill`](https://github.com/mvanhorn/last30days-skill) | MIT | 19 | **91** | Researches a topic across Reddit, X, YouTube, HN… |
-| [`rtk-ai/rtk`](https://github.com/rtk-ai/rtk) | Apache-2.0 | 19 | **87** | CLI proxy cutting LLM token use 60-90% on common dev… |
+| [`rtk-ai/rtk`](https://github.com/rtk-ai/rtk) | Apache-2.0 | 19 | **87** | CLI proxy that cuts up to 90% of the BASH OUTPUT an agent… |
 | [`virgiliojr94/book-to-skill`](https://github.com/virgiliojr94/book-to-skill) | MIT | 19 | **87** | Turns a technical book PDF into a usable Claude Code skill |
 | [`Paritok-official/paritok-4b-v1`](https://github.com/Paritok-official/paritok-4b-v1) | Apache-2.0 | 19 | **81** | Non-destructive compression gateway backed by an open 4B… |
 | [`blader/humanizer`](https://github.com/blader/humanizer) | MIT | 18 | **87** | Removes tells of AI-generated writing from text |

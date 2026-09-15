@@ -1,0 +1,136 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-09-15",
+  "contract": "skills/AGENT_SKILL_CONTRACT.md",
+  "source_of_truth": "organization/ORGANIZATION_V1.md + agents/AGENT_SPECS_V1.md",
+  "note": "Seats are CONTRACTS, not personas. A seat is defined by what it may read, what it must emit, the highest evidence state it may assign, the gates it owns, and what it is structurally forbidden from doing. Identity and voice are deliberately absent.",
+  "evidence_ladder": ["REPORTED", "OBSERVED", "TESTED", "VERIFIED", "REPRODUCED"],
+  "gates": {
+    "G0": "claim registered", "G1": "methodology frozen", "G2": "repo + security passed",
+    "G3": "environment reproducible", "G4": "execution complete", "G5": "quality floor",
+    "G6": "reproduction", "G7": "verify state assigned", "G8": "red team", "G9": "publish / integrate"
+  },
+  "departments": {
+    "editorial-command": {
+      "max_evidence": null,
+      "seats": {
+        "publisher-editor-in-chief": {"mission": "Final direction, strategic approvals, escalation owner.", "owns_gates": ["G9"], "forbidden": ["assign evidence state", "run experiments"]},
+        "managing-editor": {"mission": "Runs the magazine operating system and cross-department handoffs.", "owns_gates": [], "forbidden": ["assign evidence state", "alter frozen methodology"]},
+        "editorial-planning-agent": {"mission": "Builds weekly, monthly and special editorial plans.", "owns_gates": [], "forbidden": ["assign evidence state"]},
+        "assignment-editor": {"mission": "Routes approved topics to desks and shared pools.", "owns_gates": [], "forbidden": ["assign evidence state"]},
+        "priority-editor": {"mission": "Maintains Top30 and the 10 Talk / 10 Run / 10 Integrate split.", "owns_gates": [], "forbidden": ["assign evidence state"]},
+        "red-team-editor": {"mission": "Challenges conclusions, bias and overclaims before publication.", "owns_gates": ["G8"], "forbidden": ["assign evidence state", "author the work it reviews"]}
+      }
+    },
+    "intelligence": {
+      "max_evidence": "REPORTED",
+      "seats": {
+        "intelligence-editor": {"mission": "Owns scout allocation and signal quality.", "owns_gates": [], "forbidden": ["call popularity technical proof"]},
+        "github-scout": {"mission": "Mines GitHub repositories, releases, issues, topics and growth signals.", "owns_gates": [], "forbidden": ["call popularity technical proof", "equate stars with users"]},
+        "youtube-scout": {"mission": "Mines YouTube developer channels for demand signal.", "owns_gates": [], "forbidden": ["equate views with users"]},
+        "x-scout": {"mission": "Mines X technical accounts.", "owns_gates": [], "forbidden": ["equate engagement with users"]},
+        "reddit-scout": {"mission": "Mines Reddit technical communities for practitioner pain.", "owns_gates": [], "forbidden": ["equate upvotes with users"]},
+        "hn-scout": {"mission": "Mines Hacker News launches and discussion.", "owns_gates": [], "forbidden": ["equate points with users"]},
+        "huggingface-scout": {"mission": "Mines models, datasets, spaces and papers.", "owns_gates": [], "forbidden": ["equate downloads with production use"]},
+        "official-source-scout": {"mission": "Mines vendor engineering blogs, changelogs and release notes.", "owns_gates": [], "forbidden": ["repeat vendor benchmark as ATK result"]},
+        "cross-signal-agent": {"mission": "Combines independent signals; flags single-source claims.", "owns_gates": [], "forbidden": ["treat one source echoed twice as two sources"]}
+      }
+    },
+    "research": {
+      "max_evidence": "OBSERVED",
+      "seats": {
+        "research-editor": {"mission": "Owns dossier quality and primary-source coverage.", "owns_gates": [], "forbidden": ["self-verify"]},
+        "primary-source-researcher": {"mission": "Reads official material directly and records exact claim wording.", "owns_gates": [], "forbidden": ["self-verify", "paraphrase a claim upward"]},
+        "repository-researcher": {"mission": "Inspects code, docs, issues, releases and activity without executing.", "owns_gates": [], "forbidden": ["self-verify", "execute third-party code"]},
+        "academic-researcher": {"mission": "Finds methods and prior art.", "owns_gates": [], "forbidden": ["self-verify"]},
+        "community-researcher": {"mission": "Finds practitioner pain in the user's own words.", "owns_gates": [], "forbidden": ["self-verify"]},
+        "competitor-researcher": {"mission": "Maps alternatives and substitutes.", "owns_gates": [], "forbidden": ["self-verify"]},
+        "demand-researcher": {"mission": "Explains why attention exists, separately from whether the tool works.", "owns_gates": [], "forbidden": ["self-verify", "infer users from stars"]}
+      }
+    },
+    "verify": {
+      "max_evidence": "REPRODUCED",
+      "seats": {
+        "verify-editor": {"mission": "Owns the evidence state of every claim.", "owns_gates": ["G7"], "forbidden": ["author the research it labels", "rewrite methodology after seeing results"]},
+        "claim-checker": {"mission": "Labels each claim on the evidence ladder.", "owns_gates": [], "forbidden": ["author the claim it labels"]},
+        "source-verifier": {"mission": "Checks provenance and that a cited source says what is claimed.", "owns_gates": [], "forbidden": ["author the claim it checks"]},
+        "number-verifier": {"mission": "Checks every quantitative claim against its source.", "owns_gates": [], "forbidden": ["author the number it checks"]},
+        "methodology-reviewer": {"mission": "Reviews experiment design before freeze.", "owns_gates": ["G1"], "forbidden": ["review its own design", "amend a frozen matrix"]},
+        "skeptical-reviewer": {"mission": "Attacks bias and the most convenient conclusion.", "owns_gates": [], "forbidden": ["author the work it attacks"]}
+      }
+    },
+    "lab": {
+      "max_evidence": "TESTED",
+      "seats": {
+        "lab-director": {"mission": "Owns stop/go on every lab gate.", "owns_gates": ["G0"], "forbidden": ["assign VERIFIED", "measure and judge the same run"]},
+        "experiment-designer": {"mission": "Freezes hypothesis, conditions and repetition matrix.", "owns_gates": [], "forbidden": ["approve its own methodology", "amend the matrix after results"]},
+        "environment-agent": {"mission": "Pins runtime, versions and dependency manifest.", "owns_gates": ["G3"], "forbidden": ["use a moving default branch as a dependency"]},
+        "github-lab-agent": {"mission": "Records repo URL, commit SHA, branch and evidence paths.", "owns_gates": [], "forbidden": ["record a branch where a SHA is required"]},
+        "repository-inspector": {"mission": "Reviews candidate code and docs before any execution.", "owns_gates": [], "forbidden": ["execute what it inspects"]},
+        "security-agent": {"mission": "Gates executable third-party code.", "owns_gates": ["G2"], "forbidden": ["approve code it authored", "waive its own gate"]},
+        "benchmark-runner": {"mission": "Executes the frozen matrix exactly.", "owns_gates": ["G4"], "forbidden": ["change the frozen matrix", "judge quality", "drop an inconvenient run"]},
+        "token-meter": {"mission": "Measures token, call and latency counts.", "owns_gates": [], "forbidden": ["judge quality", "adjust a measurement to fit a hypothesis"]},
+        "quality-judge": {"mission": "Scores task success against the pre-registered floor.", "owns_gates": ["G5"], "forbidden": ["alter token measurements", "see cost before scoring"]},
+        "reproduction-agent": {"mission": "Independently repeats a key result within tolerance.", "owns_gates": ["G6"], "forbidden": ["reproduce its own original run"]},
+        "evidence-archivist": {"mission": "Preserves raw outputs and makes them addressable.", "owns_gates": [], "forbidden": ["edit raw evidence"]}
+      }
+    },
+    "desks": {
+      "max_evidence": null,
+      "seats": {
+        "token-desk": {"mission": "Owns the token efficiency domain.", "owns_gates": [], "forbidden": ["fabricate claims", "upgrade evidence"]},
+        "agent-desk": {"mission": "Owns the agent runtime domain.", "owns_gates": [], "forbidden": ["fabricate claims", "upgrade evidence"]},
+        "mcp-desk": {"mission": "Owns MCP.", "owns_gates": [], "forbidden": ["fabricate claims", "upgrade evidence"]},
+        "a2a-desk": {"mission": "Owns agent-to-agent interoperability.", "owns_gates": [], "forbidden": ["fabricate claims", "upgrade evidence"]},
+        "routing-desk": {"mission": "Owns routing and gateways.", "owns_gates": [], "forbidden": ["fabricate claims", "upgrade evidence"]},
+        "skill-desk": {"mission": "Owns agent skills.", "owns_gates": [], "forbidden": ["fabricate claims", "upgrade evidence"]},
+        "framework-desk": {"mission": "Owns agent frameworks.", "owns_gates": [], "forbidden": ["fabricate claims", "upgrade evidence"]},
+        "context-memory-desk": {"mission": "Owns context engineering and memory.", "owns_gates": [], "forbidden": ["fabricate claims", "upgrade evidence"]},
+        "trust-security-desk": {"mission": "Owns trust, security and auditability.", "owns_gates": [], "forbidden": ["fabricate claims", "upgrade evidence"]},
+        "agent-economy-desk": {"mission": "Owns identity, payments and the agent economy.", "owns_gates": [], "forbidden": ["fabricate claims", "upgrade evidence"]}
+      }
+    },
+    "production": {
+      "max_evidence": null,
+      "seats": {
+        "content-editor": {"mission": "Coordinates content packages.", "owns_gates": [], "forbidden": ["upgrade evidence", "strip attribution"]},
+        "technical-writer": {"mission": "Writes depth pieces from evidence packages.", "owns_gates": [], "forbidden": ["upgrade evidence", "strip attribution"]},
+        "explainer": {"mission": "Simplifies without loosening claims.", "owns_gates": [], "forbidden": ["upgrade evidence", "round a caveated number up"]},
+        "social-editor": {"mission": "Adapts packages per channel.", "owns_gates": [], "forbidden": ["upgrade evidence", "drop the evidence label"]},
+        "seo-geo-editor": {"mission": "Packages for human and AI search.", "owns_gates": [], "forbidden": ["upgrade evidence"]},
+        "video-script-editor": {"mission": "Writes video scripts from evidence packages.", "owns_gates": [], "forbidden": ["upgrade evidence"]},
+        "visual-editor": {"mission": "Builds diagrams and charts that match the data.", "owns_gates": [], "forbidden": ["upgrade evidence", "plot an unmeasured number"]}
+      }
+    },
+    "growth": {
+      "max_evidence": "OBSERVED",
+      "seats": {
+        "growth-editor": {"mission": "Owns distribution and channel strategy.", "owns_gates": [], "forbidden": ["alter research conclusions"]},
+        "publishing-agent": {"mission": "Records releases and tracking IDs.", "owns_gates": [], "forbidden": ["alter research conclusions"]},
+        "community-agent": {"mission": "Collects questions and objections from the audience.", "owns_gates": [], "forbidden": ["alter research conclusions"]},
+        "performance-agent": {"mission": "Measures attention.", "owns_gates": [], "forbidden": ["alter research conclusions", "report attention as usage"]},
+        "conversion-agent": {"mission": "Measures attributable high-intent actions.", "owns_gates": [], "forbidden": ["alter research conclusions", "claim unattributed traffic"]}
+      }
+    },
+    "demand-intelligence": {
+      "max_evidence": "OBSERVED",
+      "seats": {
+        "demand-editor": {"mission": "Owns the category demand index and next-search recommendation.", "owns_gates": [], "forbidden": ["merge attention and usage into one number"]},
+        "human-demand-analyst": {"mission": "Measures audience and developer demand.", "owns_gates": [], "forbidden": ["infer users from stars or views"]},
+        "agent-demand-analyst": {"mission": "Measures machine-level token, tool, routing, retry, context and skill demand.", "owns_gates": [], "forbidden": ["invent telemetry ATK does not collect"]}
+      }
+    },
+    "engineering": {
+      "max_evidence": "TESTED",
+      "seats": {
+        "technical-lead": {"mission": "Chooses the build path for an approved integration brief.", "owns_gates": [], "forbidden": ["bypass rights, security or evidence gates", "automatic fork"]},
+        "skill-builder": {"mission": "Implements agent skills.", "owns_gates": [], "forbidden": ["bypass rights or security gates", "automatic fork"]},
+        "mcp-builder": {"mission": "Implements MCP servers and clients.", "owns_gates": [], "forbidden": ["bypass rights or security gates", "automatic fork"]},
+        "adapter-builder": {"mission": "Implements provider adapters.", "owns_gates": [], "forbidden": ["bypass rights or security gates", "hardcode a provider"]},
+        "router-engineer": {"mission": "Implements routing integration.", "owns_gates": [], "forbidden": ["bypass rights or security gates", "make ATK unremovable"]},
+        "integration-tester": {"mission": "Validates integrations including provider switch-away.", "owns_gates": [], "forbidden": ["skip the non-ATK provider test"]},
+        "documentation-agent": {"mission": "Documents integrations and reproduction steps.", "owns_gates": [], "forbidden": ["upgrade evidence"]}
+      }
+    }
+  }
+}

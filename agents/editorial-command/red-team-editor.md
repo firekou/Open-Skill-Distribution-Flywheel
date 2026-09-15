@@ -1,4 +1,4 @@
-# publisher-editor-in-chief
+# red-team-editor
 
 > Generated from `agents/SEAT_REGISTRY.json`. Do not edit by hand — edit the registry and
 > re-run `python3 tools/emit_seat_contracts.py`. Constraints are enforced by
@@ -7,13 +7,13 @@
 **Department:** `editorial-command`
 
 ## Mission
-Final direction, strategic approvals, escalation owner.
+Challenges conclusions, bias and overclaims before publication.
 
 ## Evidence authority
 **None.** This seat holds no evidence authority. It must carry the state assigned by Verify through unchanged, including the caveats attached to it.
 
 ## Gates owned
-- **G9** — publish / integrate
+- **G8** — red team
 
 ## Inputs
 Assigned handoff packets, approved sources, registry records and evidence relevant to this
@@ -25,7 +25,7 @@ handoff target. Every claim carries its evidence state and the path to its evide
 
 ## Forbidden
 - Must not assign evidence state.
-- Must not run experiments.
+- Must not author the work it reviews.
 - Must not invent a metric it cannot observe.
 - Must not equate stars, views or downloads with users.
 - Must not remove upstream attribution.

@@ -102,8 +102,8 @@ Two projects created in January 2026 each passed 70,000 GitHub stars within eigh
 
 | Project | Stars | Created | Licence | What it does |
 |---|--:|---|---|---|
-| `rtk-ai/rtk` | 80,473 | 2026-01-22 | Apache-2.0 | CLI proxy, claims 60–90% token reduction on dev commands |
-| `headroomlabs-ai/headroom` | 72,266 | 2026-01-07 | Apache-2.0 | Compresses tool output, logs, RAG chunks before they reach the model |
+| `rtk-ai/rtk` | 80,473 | 2026-01-22 | Apache-2.0 | CLI proxy; cuts up to 90% of **bash output**, which its README states is explicitly not a 90% bill cut |
+| `headroomlabs-ai/headroom` | 72,266 | 2026-01-07 | Apache-2.0 | Compresses tool output, logs and RAG chunks; own scenario table reports **21–57%** |
 
 Neither is a model, a framework, or an agent. Both are **cost-reduction plumbing**. Around
 them sit 26 more token-optimisation projects, and the theme has independent community
@@ -261,11 +261,22 @@ reasoning. **There is no evidence anyone pays for it.** The star counts weakly s
 opposite. This is also precisely where the commissioning bias noted in §0 would show up — it
 is the conclusion most favourable to ATK, and the one with the thinnest support.
 
-### 6.3 Zero measurements were taken
+### 6.3 Zero measurements were taken — and two figures here were wrong
 
-Every efficiency figure quoted — 60–90%, 60–95%, 40–70%, 40–85%, 97–99% — is a claim by the
-party that benefits from it. **None was reproduced.** A report that repeats vendor benchmarks
-without testing them is marketing with footnotes.
+Every efficiency figure quoted is a claim by the party that benefits from it. **None was
+reproduced.** A report that repeats vendor benchmarks without testing them is marketing with
+footnotes.
+
+> **Correction, 2026-09-15.** An earlier version of this report quoted `rtk` as claiming
+> "60–90% token reduction" and `headroom` as claiming "60–95% fewer tokens". Both came from
+> search-engine summaries. Both READMEs were subsequently read directly and **neither project
+> claims what this report said it claimed**: `rtk` cuts up to 90% of *bash output* and
+> explicitly says that is not a 90% bill reduction, while `headroom`'s own scenario table
+> reports 21–57%. The primary sources are markedly more careful than the coverage of them.
+> Full detail: `reports/TOP30_R3.md` §1.
+>
+> This is the exact failure the evidence ladder exists to prevent, committed in the document
+> that defines the ladder. It is recorded rather than quietly patched.
 
 ### 6.4 Stars are a weak adoption proxy
 

@@ -4,6 +4,17 @@ import json, pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 D = json.loads((ROOT / "registry" / "materials.json").read_text(encoding="utf-8"))
 M, C = D["materials"], D["counts"]
+
+# R2-001 is a HISTORICAL report describing a 164-material, GitHub-only registry. Regenerating it
+# against a registry that has since grown would silently rewrite history with numbers the report's
+# own narrative contradicts. Refuse instead.
+if any(m["source_type"] != "code_repository" for m in M):
+    raise SystemExit(
+        "refusing to regenerate BENCHMARK_R2_001.md: the registry now contains non-repository\n"
+        "materials, so this run would no longer describe the R2-001 snapshot.\n"
+        "R2-001 is frozen as a historical record. Use tools/render_benchmark_002.py for the\n"
+        "current registry."
+    )
 L = []; w = L.append
 
 def row(m, extra=None):

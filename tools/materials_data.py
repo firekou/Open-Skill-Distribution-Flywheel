@@ -15,9 +15,9 @@ reduce the score and does NOT block discovery - it only constrains redistributio
 # ── Token optimization / cost ──────────────────────────────────────────────
 TOKEN_OPT = [
  ("rtk-ai/rtk",80473,5108,1621,"2026-01-22","token-optimization","Apache-2.0",23,19,14,
-  "CLI proxy cutting LLM token use 60-90% on common dev commands. Single Rust binary, zero deps."),
+  "CLI proxy that cuts up to 90% of the BASH OUTPUT an agent reads. Its README states this is explicitly NOT a 90% bill reduction, and that token counts are estimated as bytes/4 with no tokenizer shipped, so percentages are reliable but absolute numbers are approximate. 14 open issues dispute the savings dashboard; one repro reports a >10,000x over-count."),
  ("headroomlabs-ai/headroom",72266,5531,643,"2026-01-07","token-optimization","Apache-2.0",23,19,14,
-  "Compresses tool output, logs, files and RAG chunks before they reach the model. Library, proxy and MCP server."),
+  "Compresses tool output, logs, files and RAG chunks before they reach the model. Its own scenario table reports 21-57% (90% only on highly repetitive payloads), measured with the provider tokenizer, with published quality benchmarks (SQuAD v2 97% at 19% compression, BFCL 97% at 32%) and a seeded offline reproduction command."),
  ("yvgude/lean-ctx",3788,346,7,"2026-03-23","token-optimization","Apache-2.0",20,18,12,
   "Rust context-intelligence layer for coding agents."),
  ("jgravelle/jcodemunch-mcp",2686,367,0,"2026-02-09","token-optimization","?",20,16,13,

@@ -1,0 +1,9 @@
+# Lab 001 candidate pins — resolved 2026-09-15T15:59:26Z via git ls-remote
+headroomlabs-ai/headroom                   32d7ca4577d599b8a5f811ada74cf31504302c9d	v0.37.0
+rtk-ai/rtk                                 b1c0dc00649c50fbe8930f849c800d4d6ca12091	v0.49.0
+Paritok-official/paritok-4b-v1             509b5f9640255b26070e5ea68a071b6aaf8d7bd4	v1.3.12
+yvgude/lean-ctx                            38a8e5a4a84982d953020a37da23746d79f3338a	vscode-v0.2.0
+NadirRouter/NadirClaw                      63275a49f4e6542f1abf9d5a28be990c01064761	v0.23.1
+toby-bridges/api-relay-audit               571b97142c0d22aae305ac2919e45137bc424dcc	v2.4.0
+crwdla/tokentab                            d9e8cb405642d368d2f6a19147cc7f3088e3d886	(no tag) default=refs/heads/main
+juyterman1000/entroly                      28e685f4c9793b26f7372c41c0ad0430f4e8e547	v1.0.3
