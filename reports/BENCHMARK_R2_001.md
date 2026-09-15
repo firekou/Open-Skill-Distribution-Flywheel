@@ -3,6 +3,8 @@
 > Run ID `R2-001` · Snapshot **2026-09-15** · Scoring: `TREND_SCORING.md`
 > Runbook: `DISCOVERY_PIPELINE.md` · Architecture: `ARCHITECTURE_R2.md`
 > **No repository was forked during this run**, as the runbook requires.
+>
+> **Superseded for registry counts by [`BENCHMARK_R2_002.md`](./BENCHMARK_R2_002.md)**, which adds the four source classes this run left unmined. The findings below still stand; the totals describe R2-001 only.
 
 ---
 

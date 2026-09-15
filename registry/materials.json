@@ -1,26 +1,82 @@
 {
   "schema": "registry/MATERIAL_SCHEMA.json v2.0",
-  "run_id": "R2-001",
+  "run_id": "R2-002",
   "generated_at": "2026-09-15",
   "scoring_model": "TREND_SCORING.md",
   "method_note": "technical_utility, atk_relevance and content_potential are assigned by review. momentum, experimentability and source_credibility are derived by fixed public rules in tools/build_materials.py from snapshot metrics.",
   "license_policy": "Licence is a flag, not a discovery veto (ARCHITECTURE_R2). '?' means unresolved in this run and constrains redistribution only.",
   "counts": {
-    "total": 164,
+    "total": 188,
     "by_category": {
-      "token-optimization": 21,
-      "agent-skill": 36,
-      "routing": 30,
+      "routing": 42,
+      "token-optimization": 28,
+      "agent-skill": 37,
+      "agent-framework": 28,
       "a2a": 25,
-      "mcp": 27,
-      "agent-framework": 25
+      "mcp": 28
     },
-    "priority_a": 38,
-    "priority_b": 105,
-    "watch": 20,
+    "by_source_type": {
+      "code_repository": 164,
+      "community_signal": 3,
+      "curated_index": 3,
+      "engineering_blog": 4,
+      "engineering_docs": 3,
+      "model_hub": 1,
+      "news": 3,
+      "paper": 6,
+      "video_channel": 1
+    },
+    "non_repo": 24,
+    "verified_primary": 5,
+    "search_summary_only": 19,
+    "priority_a": 52,
+    "priority_b": 113,
+    "watch": 22,
     "license_unresolved": 79
   },
   "materials": [
+    {
+      "id": "cf-ai-gateway",
+      "title": "Cloudflare AI Gateway",
+      "source_url": "https://developers.cloudflare.com/ai-gateway/",
+      "source_type": "engineering_docs",
+      "category": "routing",
+      "summary": "Managed AI routing and observability proxy, FREE on every Cloudflare plan, with analytics, caching and rate limiting at no charge. Routes to 24 native providers; a universal REST endpoint added May 2026 speaks OpenAI and Anthropic request formats. THE most significant competitive fact in this run: a platform company with enormous distribution is giving away the layer ATK sells.",
+      "problem_solved": "Managed AI routing and observability proxy, FREE on every Cloudflare plan, with analytics, caching and rate limiting at no charge. Routes to 24 native providers; a universal REST endpoint added May 2026 speaks OpenAI and Anthropic request formats. THE most significant competitive fact in this run: a platform company with enormous distribution is giving away the layer ATK sells.",
+      "technical_value": "Managed AI routing and observability proxy, FREE on every Cloudflare plan, with analytics, caching and rate limiting at no charge. Routes to 24 native providers; a universal REST endpoint added May 2026 speaks OpenAI and Anthropic request formats. THE most significant competitive fact in this run: a platform company with enormous distribution is giving away the layer ATK sells.",
+      "why_now": "published 2026-05",
+      "atk_relevance": "ATK relevance 20/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial",
+        "experiment"
+      ],
+      "scores": {
+        "technical_utility": 23,
+        "momentum": 18,
+        "atk_relevance": 20,
+        "content_potential": 14,
+        "experimentability": 9,
+        "source_credibility": 10,
+        "material_score": 94
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026-05",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
     {
       "id": "headroom",
       "title": "headroomlabs-ai/headroom",
@@ -112,6 +168,132 @@
         "snapshot_at": "2026-09-15"
       },
       "_origin": "sweep-R1"
+    },
+    {
+      "id": "anthropic-code-exec-mcp",
+      "title": "Code execution with MCP: building more efficient AI agents",
+      "source_url": "https://www.anthropic.com/engineering/code-execution-with-mcp",
+      "source_type": "engineering_blog",
+      "category": "token-optimization",
+      "summary": "Loading every tool definition upfront and passing intermediate results through context is the dominant hidden token cost in MCP-heavy agents. Having the agent write code to call tools instead cuts both. The single most actionable primary-source technique found in this run.",
+      "problem_solved": "Loading every tool definition upfront and passing intermediate results through context is the dominant hidden token cost in MCP-heavy agents. Having the agent write code to call tools instead cuts both. The single most actionable primary-source technique found in this run.",
+      "technical_value": "Loading every tool definition upfront and passing intermediate results through context is the dominant hidden token cost in MCP-heavy agents. Having the agent write code to call tools instead cuts both. The single most actionable primary-source technique found in this run.",
+      "why_now": "published 2025-11-04",
+      "atk_relevance": "ATK relevance 19/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial",
+        "experiment"
+      ],
+      "scores": {
+        "technical_utility": 24,
+        "momentum": 14,
+        "atk_relevance": 19,
+        "content_potential": 14,
+        "experimentability": 8,
+        "source_credibility": 10,
+        "material_score": 89
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2025-11-04",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "primary",
+      "_origin": "benchmark-R2-002"
+    },
+    {
+      "id": "supra-router-51m",
+      "title": "Supra-Router-51M (Hugging Face)",
+      "source_url": "https://huggingface.co/models?search=Supra-Router",
+      "source_type": "model_hub",
+      "category": "routing",
+      "summary": "A 51M-parameter router model for selecting the optimal LLM path in a multi-model setup. A router small enough to run in-process is the cheapest possible form of cost routing.",
+      "problem_solved": "A 51M-parameter router model for selecting the optimal LLM path in a multi-model setup. A router small enough to run in-process is the cheapest possible form of cost routing.",
+      "technical_value": "A 51M-parameter router model for selecting the optimal LLM path in a multi-model setup. A router small enough to run in-process is the cheapest possible form of cost routing.",
+      "why_now": "published 2026",
+      "atk_relevance": "ATK relevance 20/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial",
+        "experiment"
+      ],
+      "scores": {
+        "technical_utility": 22,
+        "momentum": 17,
+        "atk_relevance": 20,
+        "content_potential": 13,
+        "experimentability": 8,
+        "source_credibility": 8,
+        "material_score": 88
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
+      "id": "anthropic-compaction-cookbook",
+      "title": "Context engineering: memory, compaction and tool clearing",
+      "source_url": "https://platform.claude.com/cookbook/tool-use-context-engineering-context-engineering-tools",
+      "source_type": "engineering_docs",
+      "category": "token-optimization",
+      "summary": "Runnable cookbook covering memory, compaction and tool clearing - directly testable.",
+      "problem_solved": "Runnable cookbook covering memory, compaction and tool clearing - directly testable.",
+      "technical_value": "Runnable cookbook covering memory, compaction and tool clearing - directly testable.",
+      "why_now": "published 2026-03-20",
+      "atk_relevance": "ATK relevance 18/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial",
+        "experiment"
+      ],
+      "scores": {
+        "technical_utility": 22,
+        "momentum": 16,
+        "atk_relevance": 18,
+        "content_potential": 13,
+        "experimentability": 9,
+        "source_credibility": 10,
+        "material_score": 88
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026-03-20",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "primary",
+      "_origin": "benchmark-R2-002"
     },
     {
       "id": "openmontage",
@@ -294,6 +476,47 @@
       "_origin": "sweep-R1"
     },
     {
+      "id": "cf-agents-week",
+      "title": "Cloudflare Agents Week 2026 (20+ launches)",
+      "source_url": "https://shattered.io/cloudflare-agents-week-ai-wallet-2026/",
+      "source_type": "news",
+      "category": "routing",
+      "summary": "Cloudflare shipped 20+ agent products in two weeks of August 2026: Cloudflare Wallet giving an agent verifiable identity and spending power, an Identity-Aware AI Gateway, a persistent Agent Memory service, and DeepSeek models with ~1M-token context on Workers AI.",
+      "problem_solved": "Cloudflare shipped 20+ agent products in two weeks of August 2026: Cloudflare Wallet giving an agent verifiable identity and spending power, an Identity-Aware AI Gateway, a persistent Agent Memory service, and DeepSeek models with ~1M-token context on Workers AI.",
+      "technical_value": "Cloudflare shipped 20+ agent products in two weeks of August 2026: Cloudflare Wallet giving an agent verifiable identity and spending power, an Identity-Aware AI Gateway, a persistent Agent Memory service, and DeepSeek models with ~1M-token context on Workers AI.",
+      "why_now": "published 2026-08",
+      "atk_relevance": "ATK relevance 19/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial"
+      ],
+      "scores": {
+        "technical_utility": 21,
+        "momentum": 19,
+        "atk_relevance": 19,
+        "content_potential": 14,
+        "experimentability": 6,
+        "source_credibility": 8,
+        "material_score": 87
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026-08",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
       "id": "humanizer",
       "title": "blader/humanizer",
       "source_url": "https://github.com/blader/humanizer",
@@ -384,6 +607,89 @@
         "snapshot_at": "2026-09-15"
       },
       "_origin": "sweep-R1"
+    },
+    {
+      "id": "deepseek-harness-launch",
+      "title": "DeepSeek open-sources its agent harness under MIT",
+      "source_url": "https://thenewstack.io/deepseek-harness-open-source-plugins/",
+      "source_type": "news",
+      "category": "agent-framework",
+      "summary": "Model adapter, tool registry and agent loop are all swappable plugins; four runtime modes. Reportedly passed 33,000 stars within hours of release. The plugin seam is where an ATK provider would attach.",
+      "problem_solved": "Model adapter, tool registry and agent loop are all swappable plugins; four runtime modes. Reportedly passed 33,000 stars within hours of release. The plugin seam is where an ATK provider would attach.",
+      "technical_value": "Model adapter, tool registry and agent loop are all swappable plugins; four runtime modes. Reportedly passed 33,000 stars within hours of release. The plugin seam is where an ATK provider would attach.",
+      "why_now": "published 2026-08-13",
+      "atk_relevance": "ATK relevance 16/20. Useful background or content input.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial",
+        "experiment"
+      ],
+      "scores": {
+        "technical_utility": 21,
+        "momentum": 20,
+        "atk_relevance": 16,
+        "content_potential": 14,
+        "experimentability": 7,
+        "source_credibility": 9,
+        "material_score": 87
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026-08-13",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
+      "id": "vercel-ai-gateway",
+      "title": "Vercel AI Gateway",
+      "source_url": "https://vercel.com/ai-gateway",
+      "source_type": "engineering_docs",
+      "category": "routing",
+      "summary": "Hundreds of models across ~45 providers behind one endpoint and one key, BYOK with NO MARKUP. No native guardrails and no semantic cache - the two gaps a differentiated router could fill.",
+      "problem_solved": "Hundreds of models across ~45 providers behind one endpoint and one key, BYOK with NO MARKUP. No native guardrails and no semantic cache - the two gaps a differentiated router could fill.",
+      "technical_value": "Hundreds of models across ~45 providers behind one endpoint and one key, BYOK with NO MARKUP. No native guardrails and no semantic cache - the two gaps a differentiated router could fill.",
+      "why_now": "published 2026",
+      "atk_relevance": "ATK relevance 19/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "experiment"
+      ],
+      "scores": {
+        "technical_utility": 21,
+        "momentum": 16,
+        "atk_relevance": 19,
+        "content_potential": 12,
+        "experimentability": 8,
+        "source_credibility": 10,
+        "material_score": 86
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
     },
     {
       "id": "understand-anything",
@@ -516,6 +822,47 @@
       "_origin": "sweep-R1"
     },
     {
+      "id": "arxiv-cluster-route-escalate",
+      "title": "Cluster, Route, Escalate: Cascaded Framework for Cost-Aware LLM Serving",
+      "source_url": "https://arxiv.org/abs/2606.27457",
+      "source_type": "paper",
+      "category": "routing",
+      "summary": "Two-stage cascade: cluster queries to the cheapest adequate model, then escalate on a quality estimate. Reported to retain 97-99% of the strongest model's accuracy. This is the academic form of exactly what ATK routing claims to do.",
+      "problem_solved": "Two-stage cascade: cluster queries to the cheapest adequate model, then escalate on a quality estimate. Reported to retain 97-99% of the strongest model's accuracy. This is the academic form of exactly what ATK routing claims to do.",
+      "technical_value": "Two-stage cascade: cluster queries to the cheapest adequate model, then escalate on a quality estimate. Reported to retain 97-99% of the strongest model's accuracy. This is the academic form of exactly what ATK routing claims to do.",
+      "why_now": "published 2026-06",
+      "atk_relevance": "ATK relevance 19/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial"
+      ],
+      "scores": {
+        "technical_utility": 23,
+        "momentum": 16,
+        "atk_relevance": 19,
+        "content_potential": 13,
+        "experimentability": 5,
+        "source_credibility": 9,
+        "material_score": 85
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026-06",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
       "id": "opencodex",
       "title": "lidge-jun/opencodex",
       "source_url": "https://github.com/lidge-jun/opencodex",
@@ -561,6 +908,89 @@
       "_origin": "benchmark-R2-001"
     },
     {
+      "id": "anthropic-context-eng",
+      "title": "Effective context engineering for AI agents",
+      "source_url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+      "source_type": "engineering_blog",
+      "category": "token-optimization",
+      "summary": "Anthropic's reference treatment of context as a managed budget rather than a container.",
+      "problem_solved": "Anthropic's reference treatment of context as a managed budget rather than a container.",
+      "technical_value": "Anthropic's reference treatment of context as a managed budget rather than a container.",
+      "why_now": "published 2025-09-29",
+      "atk_relevance": "ATK relevance 18/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial",
+        "experiment"
+      ],
+      "scores": {
+        "technical_utility": 23,
+        "momentum": 13,
+        "atk_relevance": 18,
+        "content_potential": 14,
+        "experimentability": 7,
+        "source_credibility": 10,
+        "material_score": 85
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2025-09-29",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "primary",
+      "_origin": "benchmark-R2-002"
+    },
+    {
+      "id": "anthropic-harness-design",
+      "title": "Harness design for long-running application development",
+      "source_url": "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+      "source_type": "engineering_blog",
+      "category": "agent-framework",
+      "summary": "Primary-source harness design guidance for long-running agents.",
+      "problem_solved": "Primary-source harness design guidance for long-running agents.",
+      "technical_value": "Primary-source harness design guidance for long-running agents.",
+      "why_now": "published 2026-03-24",
+      "atk_relevance": "ATK relevance 17/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial"
+      ],
+      "scores": {
+        "technical_utility": 23,
+        "momentum": 16,
+        "atk_relevance": 17,
+        "content_potential": 13,
+        "experimentability": 6,
+        "source_credibility": 10,
+        "material_score": 85
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026-03-24",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "primary",
+      "_origin": "benchmark-R2-002"
+    },
+    {
       "id": "ui-ux-pro-max-skill",
       "title": "nextlevelbuilder/ui-ux-pro-max-skill",
       "source_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
@@ -602,6 +1032,87 @@
         "snapshot_at": "2026-09-15"
       },
       "_origin": "sweep-R1"
+    },
+    {
+      "id": "arxiv-route-receipts",
+      "title": "Model Routing as a Trust Problem: Route Receipts for Adaptive AI Systems",
+      "source_url": "https://arxiv.org/pdf/2605.01710",
+      "source_type": "paper",
+      "category": "routing",
+      "summary": "Frames routing as a TRUST problem and proposes verifiable route receipts. Independent academic support for the measurement-and-trust position, which is the one differentiator price competition cannot erase.",
+      "problem_solved": "Frames routing as a TRUST problem and proposes verifiable route receipts. Independent academic support for the measurement-and-trust position, which is the one differentiator price competition cannot erase.",
+      "technical_value": "Frames routing as a TRUST problem and proposes verifiable route receipts. Independent academic support for the measurement-and-trust position, which is the one differentiator price competition cannot erase.",
+      "why_now": "published 2026-05",
+      "atk_relevance": "ATK relevance 20/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial"
+      ],
+      "scores": {
+        "technical_utility": 22,
+        "momentum": 15,
+        "atk_relevance": 20,
+        "content_potential": 14,
+        "experimentability": 4,
+        "source_credibility": 9,
+        "material_score": 84
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026-05",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
+      "id": "hn-headroom",
+      "title": "Show HN: Headroom - reversible context compression (~60% cost reduction)",
+      "source_url": "https://news.ycombinator.com/item?id=46628278",
+      "source_type": "community_signal",
+      "category": "token-optimization",
+      "summary": "Independent HN validation of the headroom project already in the registry. The framing that landed: by turn 10 teams pay for 100k+ tokens on every call, and truncation, summarisation and bigger windows each have a fundamental tradeoff.",
+      "problem_solved": "Independent HN validation of the headroom project already in the registry. The framing that landed: by turn 10 teams pay for 100k+ tokens on every call, and truncation, summarisation and bigger windows each have a fundamental tradeoff.",
+      "technical_value": "Independent HN validation of the headroom project already in the registry. The framing that landed: by turn 10 teams pay for 100k+ tokens on every call, and truncation, summarisation and bigger windows each have a fundamental tradeoff.",
+      "why_now": "published 2026",
+      "atk_relevance": "ATK relevance 18/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content"
+      ],
+      "scores": {
+        "technical_utility": 18,
+        "momentum": 18,
+        "atk_relevance": 18,
+        "content_potential": 15,
+        "experimentability": 8,
+        "source_credibility": 7,
+        "material_score": 84
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
     },
     {
       "id": "open-code-review",
@@ -1085,6 +1596,47 @@
       "_origin": "sweep-R1"
     },
     {
+      "id": "price-gap-100x",
+      "title": "~100x price gap between cheapest usable and frontier models",
+      "source_url": "https://www.digitalapplied.com/blog/llm-model-routing-2026-cost-quality-optimization-engineering-guide",
+      "source_type": "community_signal",
+      "category": "routing",
+      "summary": "DeepSeek V4 around $0.44/M tokens against GPT-5.5-pro at $30/$180. UNVERIFIED pricing from a secondary source - but if even roughly right, the arbitrage a router captures is ~100x, and that spread IS the routing business.",
+      "problem_solved": "DeepSeek V4 around $0.44/M tokens against GPT-5.5-pro at $30/$180. UNVERIFIED pricing from a secondary source - but if even roughly right, the arbitrage a router captures is ~100x, and that spread IS the routing business.",
+      "technical_value": "DeepSeek V4 around $0.44/M tokens against GPT-5.5-pro at $30/$180. UNVERIFIED pricing from a secondary source - but if even roughly right, the arbitrage a router captures is ~100x, and that spread IS the routing business.",
+      "why_now": "published 2026",
+      "atk_relevance": "ATK relevance 20/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial"
+      ],
+      "scores": {
+        "technical_utility": 20,
+        "momentum": 17,
+        "atk_relevance": 20,
+        "content_potential": 15,
+        "experimentability": 3,
+        "source_credibility": 6,
+        "material_score": 81
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
       "id": "paritok-4b-v1",
       "title": "Paritok-official/paritok-4b-v1",
       "source_url": "https://github.com/Paritok-official/paritok-4b-v1",
@@ -1479,6 +2031,47 @@
         "snapshot_at": "2026-09-15"
       },
       "_origin": "benchmark-R2-001"
+    },
+    {
+      "id": "cf-openai-agent-cloud",
+      "title": "Cloudflare and OpenAI launch Agent Cloud for enterprises",
+      "source_url": "https://www.forbes.com/sites/janakirammsv/2026/04/16/cloudflare-and-openai-launch-agent-cloud-for-enterprises/",
+      "source_type": "news",
+      "category": "routing",
+      "summary": "Agent Cloud integrates OpenAI GPT-5.4 and Codex alongside open-source models through a unified catalogue built on Cloudflare's Replicate acquisition.",
+      "problem_solved": "Agent Cloud integrates OpenAI GPT-5.4 and Codex alongside open-source models through a unified catalogue built on Cloudflare's Replicate acquisition.",
+      "technical_value": "Agent Cloud integrates OpenAI GPT-5.4 and Codex alongside open-source models through a unified catalogue built on Cloudflare's Replicate acquisition.",
+      "why_now": "published 2026-04",
+      "atk_relevance": "ATK relevance 18/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial"
+      ],
+      "scores": {
+        "technical_utility": 20,
+        "momentum": 17,
+        "atk_relevance": 18,
+        "content_potential": 13,
+        "experimentability": 4,
+        "source_credibility": 8,
+        "material_score": 80
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026-04",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
     },
     {
       "id": "tokentab",
@@ -1915,6 +2508,48 @@
         "snapshot_at": "2026-09-15"
       },
       "_origin": "benchmark-R2-001"
+    },
+    {
+      "id": "anthropic-writing-tools",
+      "title": "Writing effective tools for AI agents",
+      "source_url": "https://www.anthropic.com/engineering/writing-tools-for-agents",
+      "source_type": "engineering_blog",
+      "category": "mcp",
+      "summary": "How tool design itself drives token consumption and agent reliability.",
+      "problem_solved": "How tool design itself drives token consumption and agent reliability.",
+      "technical_value": "How tool design itself drives token consumption and agent reliability.",
+      "why_now": "published 2025-09-11",
+      "atk_relevance": "ATK relevance 15/20. Useful background or content input.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial",
+        "experiment"
+      ],
+      "scores": {
+        "technical_utility": 22,
+        "momentum": 12,
+        "atk_relevance": 15,
+        "content_potential": 13,
+        "experimentability": 7,
+        "source_credibility": 10,
+        "material_score": 79
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "qualified",
+      "_metrics": {
+        "published": "2025-09-11",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "primary",
+      "_origin": "benchmark-R2-002"
     },
     {
       "id": "frontend-slides",
@@ -2392,6 +3027,45 @@
       "_origin": "sweep-R1"
     },
     {
+      "id": "arxiv-graph-context-compression",
+      "title": "Training-free LLM Context Compression with Hybrid Graph Priors",
+      "source_url": "https://arxiv.org/pdf/2604.23277",
+      "source_type": "paper",
+      "category": "token-optimization",
+      "summary": "Training-free context compression - no fine-tuning required, so cheap to trial.",
+      "problem_solved": "Training-free context compression - no fine-tuning required, so cheap to trial.",
+      "technical_value": "Training-free context compression - no fine-tuning required, so cheap to trial.",
+      "why_now": "published 2026-04",
+      "atk_relevance": "ATK relevance 17/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream"
+      ],
+      "scores": {
+        "technical_utility": 21,
+        "momentum": 14,
+        "atk_relevance": 17,
+        "content_potential": 11,
+        "experimentability": 5,
+        "source_credibility": 9,
+        "material_score": 77
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "qualified",
+      "_metrics": {
+        "published": "2026-04",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
       "id": "token-optimizer",
       "title": "alexgreensh/token-optimizer",
       "source_url": "https://github.com/alexgreensh/token-optimizer",
@@ -2741,6 +3415,45 @@
       "_origin": "benchmark-R2-001"
     },
     {
+      "id": "arxiv-escalation-worth-it",
+      "title": "Is Escalation Worth It? A Decision-Theoretic Characterization of LLM Cascades",
+      "source_url": "https://arxiv.org/pdf/2605.06350",
+      "source_type": "paper",
+      "category": "routing",
+      "summary": "When escalating to a stronger model actually pays, using confidence, token probabilities and self-consistency signals.",
+      "problem_solved": "When escalating to a stronger model actually pays, using confidence, token probabilities and self-consistency signals.",
+      "technical_value": "When escalating to a stronger model actually pays, using confidence, token probabilities and self-consistency signals.",
+      "why_now": "published 2026-05",
+      "atk_relevance": "ATK relevance 17/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream"
+      ],
+      "scores": {
+        "technical_utility": 21,
+        "momentum": 14,
+        "atk_relevance": 17,
+        "content_potential": 11,
+        "experimentability": 4,
+        "source_credibility": 9,
+        "material_score": 76
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "qualified",
+      "_metrics": {
+        "published": "2026-05",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
       "id": "codebase-memory-mcp",
       "title": "DeusData/codebase-memory-mcp",
       "source_url": "https://github.com/DeusData/codebase-memory-mcp",
@@ -3042,6 +3755,45 @@
       "_origin": "sweep-R1"
     },
     {
+      "id": "hf-lclm",
+      "title": "Latent Context Language Models as long-horizon agent backbones",
+      "source_url": "https://huggingface.co/papers?q=Latent+Context+Language+Models",
+      "source_type": "paper",
+      "category": "token-optimization",
+      "summary": "Agent skims a compressed long context and adaptively expands only the relevant segments.",
+      "problem_solved": "Agent skims a compressed long context and adaptively expands only the relevant segments.",
+      "technical_value": "Agent skims a compressed long context and adaptively expands only the relevant segments.",
+      "why_now": "published 2026",
+      "atk_relevance": "ATK relevance 16/20. Useful background or content input.",
+      "actions": [
+        "research",
+        "link_upstream"
+      ],
+      "scores": {
+        "technical_utility": 21,
+        "momentum": 15,
+        "atk_relevance": 16,
+        "content_potential": 11,
+        "experimentability": 4,
+        "source_credibility": 8,
+        "material_score": 75
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "qualified",
+      "_metrics": {
+        "published": "2026",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
       "id": "haystack",
       "title": "deepset-ai/haystack",
       "source_url": "https://github.com/deepset-ai/haystack",
@@ -3167,6 +3919,45 @@
         "snapshot_at": "2026-09-15"
       },
       "_origin": "benchmark-R2-001"
+    },
+    {
+      "id": "arxiv-routing-cascades-choice",
+      "title": "Routing, Cascades, and User Choice for LLMs",
+      "source_url": "https://arxiv.org/pdf/2602.09902",
+      "source_type": "paper",
+      "category": "routing",
+      "summary": "Survey-style treatment of ensemble, cascade and direct-routing strategies.",
+      "problem_solved": "Survey-style treatment of ensemble, cascade and direct-routing strategies.",
+      "technical_value": "Survey-style treatment of ensemble, cascade and direct-routing strategies.",
+      "why_now": "published 2026-02",
+      "atk_relevance": "ATK relevance 17/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream"
+      ],
+      "scores": {
+        "technical_utility": 20,
+        "momentum": 13,
+        "atk_relevance": 17,
+        "content_potential": 11,
+        "experimentability": 4,
+        "source_credibility": 9,
+        "material_score": 74
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "qualified",
+      "_metrics": {
+        "published": "2026-02",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
     },
     {
       "id": "fast-agent",
@@ -3900,6 +4691,46 @@
         "snapshot_at": "2026-09-15"
       },
       "_origin": "benchmark-R2-001"
+    },
+    {
+      "id": "routing-savings-range",
+      "title": "Reported routing savings cluster at 40-85%",
+      "source_url": "https://www.ayautomate.com/blog/open-source-llm-orchestration-tools",
+      "source_type": "community_signal",
+      "category": "routing",
+      "summary": "Multiple secondary sources report 40-85% bill reduction from a tuned routing layer. UNVERIFIED and self-reported; useful as a hypothesis to test, never as a number to publish.",
+      "problem_solved": "Multiple secondary sources report 40-85% bill reduction from a tuned routing layer. UNVERIFIED and self-reported; useful as a hypothesis to test, never as a number to publish.",
+      "technical_value": "Multiple secondary sources report 40-85% bill reduction from a tuned routing layer. UNVERIFIED and self-reported; useful as a hypothesis to test, never as a number to publish.",
+      "why_now": "published 2026",
+      "atk_relevance": "ATK relevance 18/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content"
+      ],
+      "scores": {
+        "technical_utility": 17,
+        "momentum": 15,
+        "atk_relevance": 18,
+        "content_potential": 14,
+        "experimentability": 3,
+        "source_credibility": 5,
+        "material_score": 72
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "qualified",
+      "_metrics": {
+        "published": "2026",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
     },
     {
       "id": "bindu",
@@ -5691,6 +6522,46 @@
       "_origin": "benchmark-R2-001"
     },
     {
+      "id": "yt-claude-code-tutorials",
+      "title": "YouTube: Claude Code tutorial demand is enormous",
+      "source_url": "https://developereducators.com/best/claude-code/",
+      "source_type": "video_channel",
+      "category": "agent-skill",
+      "summary": "The most-watched Claude Code tutorial reportedly sits near 2.37M views (Nick Saraev). Cole Medin, Fireship and LangChain's channel are the recurring names for production agent content. Confirms YouTube demand for exactly the tutorials ATK plans to make.",
+      "problem_solved": "The most-watched Claude Code tutorial reportedly sits near 2.37M views (Nick Saraev). Cole Medin, Fireship and LangChain's channel are the recurring names for production agent content. Confirms YouTube demand for exactly the tutorials ATK plans to make.",
+      "technical_value": "The most-watched Claude Code tutorial reportedly sits near 2.37M views (Nick Saraev). Cole Medin, Fireship and LangChain's channel are the recurring names for production agent content. Confirms YouTube demand for exactly the tutorials ATK plans to make.",
+      "why_now": "published 2026",
+      "atk_relevance": "ATK relevance 15/20. Useful background or content input.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content"
+      ],
+      "scores": {
+        "technical_utility": 14,
+        "momentum": 16,
+        "atk_relevance": 15,
+        "content_potential": 15,
+        "experimentability": 2,
+        "source_credibility": 5,
+        "material_score": 67
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "qualified",
+      "_metrics": {
+        "published": "2026",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
       "id": "headroom-desktop",
       "title": "gglucass/headroom-desktop",
       "source_url": "https://github.com/gglucass/headroom-desktop",
@@ -5901,6 +6772,45 @@
         "snapshot_at": "2026-09-15"
       },
       "_origin": "benchmark-R2-001"
+    },
+    {
+      "id": "agents-radar",
+      "title": "agents-radar (automated Hugging Face trending digest)",
+      "source_url": "https://github.com/duanyytop/agents-radar",
+      "source_type": "curated_index",
+      "category": "agent-framework",
+      "summary": "Bot-maintained repos that post Hugging Face trending models as dated GitHub issues. An already-automated feed the Discovery Engine can consume directly instead of scraping HF.",
+      "problem_solved": "Bot-maintained repos that post Hugging Face trending models as dated GitHub issues. An already-automated feed the Discovery Engine can consume directly instead of scraping HF.",
+      "technical_value": "Bot-maintained repos that post Hugging Face trending models as dated GitHub issues. An already-automated feed the Discovery Engine can consume directly instead of scraping HF.",
+      "why_now": "published 2026",
+      "atk_relevance": "ATK relevance 15/20. Useful background or content input.",
+      "actions": [
+        "research",
+        "link_upstream"
+      ],
+      "scores": {
+        "technical_utility": 13,
+        "momentum": 16,
+        "atk_relevance": 15,
+        "content_potential": 10,
+        "experimentability": 7,
+        "source_credibility": 5,
+        "material_score": 66
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "qualified",
+      "_metrics": {
+        "published": "2026",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
     },
     {
       "id": "registry",
@@ -6497,6 +7407,46 @@
       "_origin": "benchmark-R2-001"
     },
     {
+      "id": "awesome-llm-token-optimization",
+      "title": "awesome-llm-token-optimization",
+      "source_url": "https://github.com/pleasedodisturb/awesome-llm-token-optimization",
+      "source_type": "curated_index",
+      "category": "token-optimization",
+      "summary": "Curated strategies, tools, papers and resources for cutting LLM token cost. Feed it to the Trend Scout; do not fork it.",
+      "problem_solved": "Curated strategies, tools, papers and resources for cutting LLM token cost. Feed it to the Trend Scout; do not fork it.",
+      "technical_value": "Curated strategies, tools, papers and resources for cutting LLM token cost. Feed it to the Trend Scout; do not fork it.",
+      "why_now": "published 2026",
+      "atk_relevance": "ATK relevance 16/20. Useful background or content input.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content"
+      ],
+      "scores": {
+        "technical_utility": 12,
+        "momentum": 14,
+        "atk_relevance": 16,
+        "content_potential": 12,
+        "experimentability": 3,
+        "source_credibility": 6,
+        "material_score": 63
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "signal",
+      "_metrics": {
+        "published": "2026",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
+    },
+    {
       "id": "clauditor",
       "title": "IyadhKhalfallah/clauditor",
       "source_url": "https://github.com/IyadhKhalfallah/clauditor",
@@ -6871,6 +7821,45 @@
         "snapshot_at": "2026-09-15"
       },
       "_origin": "sweep-R1"
+    },
+    {
+      "id": "awesome-routing-llms",
+      "title": "Awesome-Routing-LLMs (MilkThink-Lab)",
+      "source_url": "https://github.com/MilkThink-Lab/Awesome-Routing-LLMs",
+      "source_type": "curated_index",
+      "category": "routing",
+      "summary": "Curated index of the Routing-LLMs research paradigm. Best single input for keeping the routing literature current.",
+      "problem_solved": "Curated index of the Routing-LLMs research paradigm. Best single input for keeping the routing literature current.",
+      "technical_value": "Curated index of the Routing-LLMs research paradigm. Best single input for keeping the routing literature current.",
+      "why_now": "published 2026",
+      "atk_relevance": "ATK relevance 16/20. Useful background or content input.",
+      "actions": [
+        "research",
+        "link_upstream"
+      ],
+      "scores": {
+        "technical_utility": 12,
+        "momentum": 13,
+        "atk_relevance": 16,
+        "content_potential": 11,
+        "experimentability": 3,
+        "source_credibility": 6,
+        "material_score": 61
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "signal",
+      "_metrics": {
+        "published": "2026",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "search",
+      "_origin": "benchmark-R2-002"
     },
     {
       "id": "claude-token-optimizer",

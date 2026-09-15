@@ -15,12 +15,15 @@ Per ARCHITECTURE_R2: licence is a FLAG, never a discovery veto.
 import importlib.util, json, pathlib, re
 from datetime import date
 
-RUN_ID = "R2-001"
+RUN_ID = "R2-002"
 SNAPSHOT = "2026-09-15"
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-spec = importlib.util.spec_from_file_location("md", ROOT / "tools" / "materials_data.py")
-MD = importlib.util.module_from_spec(spec); spec.loader.exec_module(MD)
+def _load(name):
+    sp = importlib.util.spec_from_file_location(name, ROOT / "tools" / f"{name}.py")
+    mod = importlib.util.module_from_spec(sp); sp.loader.exec_module(mod); return mod
+MD = _load("materials_data")
+MS = _load("materials_sources")
 
 # Organisations publishing as a named vendor / foundation / research lab.
 VENDOR = {
@@ -155,6 +158,42 @@ for c in R1["candidates"]:
         CATMAP.get(c["category"], c["category"]), lic,
         s["utility"], s["atk_fit"], s["distribution"], c["use_case"], origin="sweep-R1")
 
+def add_source(sid, title, url, stype, category, published, verified,
+               tu, mom, atk, cp, exp, cred, note):
+    if sid in seen: return
+    seen.add(sid)
+    total = tu + mom + atk + cp + exp + cred
+    m = {
+      "id": sid, "title": title, "source_url": url, "source_type": stype,
+      "category": category, "summary": note, "problem_solved": note,
+      "technical_value": note, "why_now": f"published {published}",
+      "atk_relevance": None, "actions": [],
+      "scores": {"technical_utility": tu, "momentum": mom, "atk_relevance": atk,
+                 "content_potential": cp, "experimentability": exp,
+                 "source_credibility": cred, "material_score": total},
+      "rights": {"license": "n/a-editorial", "attribution": "required",
+                 "redistribution_allowed": False, "commercial_distribution_allowed": False,
+                 "notes": "Third-party writing or research. Cite and link; never reproduce at length."},
+      "status": None,
+      "_metrics": {"published": published, "snapshot_at": SNAPSHOT},
+      "_verification": verified,
+      "_origin": "benchmark-R2-002",
+    }
+    # Editorial/research material is never a code action - it is read, cited and tested.
+    a = ["research", "link_upstream"]
+    if cp >= 12: a.append("content")
+    if cp >= 13 and tu >= 20: a.append("tutorial")
+    if exp >= 7 and tu >= 20: a.append("experiment")
+    m["actions"] = a
+    m["status"] = status(total, a)
+    m["atk_relevance"] = (f"ATK relevance {atk}/20. " +
+        ("Directly informs ATK routing or token strategy." if atk >= 17 else
+         "Useful background or content input." if atk >= 13 else "Reference only."))
+    materials.append(m)
+
+for row in MS.SOURCES:
+    add_source(*row)
+
 materials.sort(key=lambda m: (-m["scores"]["material_score"], -m["scores"]["atk_relevance"]))
 
 cats = {}
@@ -171,6 +210,11 @@ out = {
   "license_policy": ("Licence is a flag, not a discovery veto (ARCHITECTURE_R2). "
                      "'?' means unresolved in this run and constrains redistribution only."),
   "counts": {"total": len(materials), "by_category": cats,
+             "by_source_type": {t: sum(1 for m in materials if m["source_type"] == t)
+                                for t in sorted({m["source_type"] for m in materials})},
+             "non_repo": sum(1 for m in materials if m["source_type"] != "code_repository"),
+             "verified_primary": sum(1 for m in materials if m.get("_verification") == "primary"),
+             "search_summary_only": sum(1 for m in materials if m.get("_verification") == "search"),
              "priority_a": sum(1 for m in materials if m["scores"]["material_score"] >= 80),
              "priority_b": sum(1 for m in materials if 65 <= m["scores"]["material_score"] < 80),
              "watch": sum(1 for m in materials if 50 <= m["scores"]["material_score"] < 65),

@@ -55,6 +55,9 @@ Discover → Understand → Classify → Test → Contentize → Distribute → 
 | [`reports/TOP10_SHORTLIST.md`](./reports/TOP10_SHORTLIST.md) | Top 10 by score, among license-eligible candidates |
 | [`reports/TOP10_DEEP_REVIEW.md`](./reports/TOP10_DEEP_REVIEW.md) | Technical + license review of the Top 10 |
 | [`reports/FORK_RECOMMENDATIONS.md`](./reports/FORK_RECOMMENDATIONS.md) | The recommended first 4 forks — **and the gate that blocks them** |
+| [`reports/BENCHMARK_R2_001.md`](./reports/BENCHMARK_R2_001.md) | R2 discovery benchmark: 164 materials from GitHub, four ranked lists |
+| [`reports/BENCHMARK_R2_002.md`](./reports/BENCHMARK_R2_002.md) | **Current run** — adds the four unmined source classes; 188 materials |
+| [`registry/materials.json`](./registry/materials.json) | The R2 material registry (MATERIAL_SCHEMA v2.0) |
 
 ### Headline numbers
 
