@@ -1,0 +1,78 @@
+{
+  "version": "2.0",
+  "purpose": "Where the Discovery Engine mines technical signals",
+  "source_classes": [
+    {
+      "id": "github",
+      "type": "code",
+      "priority": "primary",
+      "targets": [
+        "repositories",
+        "releases",
+        "issues",
+        "topics",
+        "trending signals"
+      ]
+    },
+    {
+      "id": "mcp-registry",
+      "type": "protocol_registry",
+      "priority": "primary",
+      "targets": [
+        "MCP servers",
+        "MCP ecosystem changes"
+      ]
+    },
+    {
+      "id": "primary-engineering",
+      "type": "official",
+      "priority": "primary",
+      "targets": [
+        "OpenAI",
+        "Anthropic",
+        "Google",
+        "Microsoft",
+        "AWS",
+        "Cloudflare",
+        "Vercel",
+        "ByteDance/BytePlus",
+        "Alibaba/Qwen",
+        "Tencent",
+        "Baidu",
+        "DeepSeek"
+      ]
+    },
+    {
+      "id": "huggingface",
+      "type": "model_research",
+      "priority": "primary",
+      "targets": [
+        "models",
+        "datasets",
+        "spaces",
+        "agent tooling"
+      ]
+    },
+    {
+      "id": "community",
+      "type": "signal",
+      "priority": "secondary",
+      "targets": [
+        "Hacker News",
+        "Reddit technical communities",
+        "X technical accounts",
+        "YouTube developer channels"
+      ]
+    },
+    {
+      "id": "curated-lists",
+      "type": "discovery_index",
+      "priority": "secondary",
+      "targets": [
+        "awesome lists",
+        "agent skill lists",
+        "MCP lists"
+      ]
+    }
+  ]
+}
