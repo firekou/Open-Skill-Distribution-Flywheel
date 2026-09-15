@@ -1,129 +1,118 @@
-# Open Skill Distribution Flywheel
+# ATK Token Intelligence Magazine / Open Skill Distribution Flywheel
 
-> **Architecture R2: ATK Technical Intelligence & Distribution Engine**
+> **Current operating model:** ATK Token Intelligence Magazine + Evidence-Driven Company Learning System
 >
-> The repository is now **discovery-first**. Its primary job is to find useful AI technical material, understand it, turn it into content/experiments, and only then decide whether integration or redistribution is warranted.
->
-> **Critical rule:** License Gate is a redistribution gate, not a discovery gate.
+> This repository began as an Open Skill Distribution Flywheel. It now operates at a higher layer: discover important Agent-economy signals, research them, verify them, run reproducible labs, publish technical intelligence, measure demand, and only then decide what ATK should integrate or build.
 
-```
-Discover → Understand → Classify → Test → Contentize → Distribute → Observe → Discover
-                         ├→ Research / Tutorial / Content
-                         ├→ Experiment / Companion Adapter
-                         └→ Fork / Deep ATK Integration
-```
-
-## R2 start here
+## Start here
 
 | Document | Purpose |
 |---|---|
-| [ARCHITECTURE_R2.md](./ARCHITECTURE_R2.md) | New system architecture and three-lane model |
-| [DISCOVERY_ENGINE.md](./DISCOVERY_ENGINE.md) | Technical-material mining engine |
-| [DISCOVERY_PIPELINE.md](./DISCOVERY_PIPELINE.md) | Executor runbook and 120-candidate benchmark |
-| [TREND_SCORING.md](./TREND_SCORING.md) | Material and content opportunity scoring |
-| [registry/SOURCE_REGISTRY.json](./registry/SOURCE_REGISTRY.json) | Where ATK mines signals |
-| [registry/MATERIAL_SCHEMA.json](./registry/MATERIAL_SCHEMA.json) | Canonical material-card schema |
+| [`EXECUTION_DOCTRINE.md`](./EXECUTION_DOCTRINE.md) | Governing principle: 大膽假設，小心求證; Hypothesis → Evidence → Decision → Execution |
+| [`MAGAZINE_MASTER_PLAN.md`](./MAGAZINE_MASTER_PLAN.md) | Full ATK Token Intelligence Magazine structure |
+| [`MAGAZINE_DESK_SPEC.md`](./MAGAZINE_DESK_SPEC.md) | Ten permanent technical desks and their scope |
+| [`ATK_TECHNICAL_GROWTH_PLAN.md`](./ATK_TECHNICAL_GROWTH_PLAN.md) | Research-to-distribution and technical growth plan |
+| [`ATK_VERIFY_STANDARD.md`](./ATK_VERIFY_STANDARD.md) | REPORTED → OBSERVED → TESTED → VERIFIED → REPRODUCED |
+| [`DEMAND_SENSOR_SPEC.md`](./DEMAND_SENSOR_SPEC.md) | Human + Agent demand sensing |
+| [`organization/ORGANIZATION_V1.md`](./organization/ORGANIZATION_V1.md) | Agent-native magazine organization |
+| [`agents/AGENT_SPECS_V1.md`](./agents/AGENT_SPECS_V1.md) | Agent role contracts |
+| [`skills/AGENT_SKILL_CONTRACT.md`](./skills/AGENT_SKILL_CONTRACT.md) | Standard skill contract |
+| [`workflows/MAGAZINE_PRODUCTION_V1.md`](./workflows/MAGAZINE_PRODUCTION_V1.md) | Magazine production workflow |
+| [`CLAUDE_EXECUTION_START.md`](./CLAUDE_EXECUTION_START.md) | Claude execution entrypoint and mandatory review stop |
 
-## Three lanes
+## Three ledgers
 
-**Lane A — Discovery & Material Intelligence:** MCP, A2A, Agent Frameworks, Skills, Routing, Model Gateways, token/cost optimization and the wider agent stack. Discovery continues even when a project is not forkable.
+| Ledger | Purpose |
+|---|---|
+| [`ledgers/HYPOTHESIS_LEDGER.md`](./ledgers/HYPOTHESIS_LEDGER.md) | H001–H010 hypotheses and confidence |
+| [`ledgers/EVIDENCE_LEDGER.md`](./ledgers/EVIDENCE_LEDGER.md) | Traceable evidence and verification state |
+| [`ledgers/DECISION_LEDGER.md`](./ledgers/DECISION_LEDGER.md) | Decisions linked back to hypotheses and evidence |
 
-**Lane B — Content & Distribution:** convert qualified material into technical cards, tutorials, social briefs, experiments and ATK angles for ATK-owned distribution channels.
+## Operating loop
 
-**Lane C — Integration & Redistribution:** only this lane invokes the existing License Gate, Security Review, Maintainer Gate, Fork Policy and Upstream Sync controls.
+**Signal → Intelligence → Research → Lab → Verify → Benchmark → Magazine → Distribution → Demand → Decision → Engineering → ATK**
 
----
+Commercial exploration:
+
+**Media → Intelligence → Measurement → Execution**
+
+The repository must not optimize for file count, autonomous activity, forks or article volume. It must optimize for:
+
+**less uncertainty + stronger evidence + better decisions + reusable verified assets + measurable demand + validated product learning.**
+
+## Magazine desks
+
+1. Token Intelligence
+2. Agent Intelligence
+3. MCP Intelligence
+4. A2A Intelligence
+5. Routing Intelligence
+6. Skill Intelligence
+7. Framework Intelligence
+8. Context & Memory
+9. Trust & Security
+10. Agent Economy
+
+## Editorial formats
+
+SIGNAL · EXPLAINED · ATK VERIFY · ATK LAB · TOP PICKS · BENCHMARK · DEEP DIVE · BUILD
+
+## Top 30 operating model
+
+Each cycle produces three overlapping lists:
+- 10 Worth Talking About
+- 10 Worth Running
+- 10 Worth Integrating
+
+Discovery can continue in the background, but execution capacity goes to the highest-value items.
+
+## Current Lab
+
+[`benchmarks/TOKEN_EFFICIENCY_LAB_001.md`](./benchmarks/TOKEN_EFFICIENCY_LAB_001.md)
+
+Research question: **Where do Agents waste tokens, and which interventions reduce total task cost without materially reducing task success?**
+
+The Lab team and GitHub evidence workflow are defined in [`workflows/TOKEN_EFFICIENCY_LAB_001_TEAM.md`](./workflows/TOKEN_EFFICIENCY_LAB_001_TEAM.md).
+
+## Discovery architecture
+
+The R2 discovery-first architecture remains valid and now serves the Magazine Intelligence layer.
+
+| Document | Purpose |
+|---|---|
+| [`ARCHITECTURE_R2.md`](./ARCHITECTURE_R2.md) | Discovery-first architecture |
+| [`DISCOVERY_ENGINE.md`](./DISCOVERY_ENGINE.md) | Technical-material mining engine |
+| [`DISCOVERY_PIPELINE.md`](./DISCOVERY_PIPELINE.md) | Discovery runbook |
+| [`TREND_SCORING.md`](./TREND_SCORING.md) | Material opportunity scoring |
+| [`registry/SOURCE_REGISTRY.json`](./registry/SOURCE_REGISTRY.json) | Signal sources |
+| [`registry/MATERIAL_SCHEMA.json`](./registry/MATERIAL_SCHEMA.json) | Material schema |
+| [`registry/materials.json`](./registry/materials.json) | Current material registry |
+
+**Critical rule:** License Gate is a redistribution gate, not a discovery gate.
 
 ## Existing integration and redistribution framework
 
-| Document | What it is |
+These documents remain active for the Engineering / Integration lane:
+
+| Document | Purpose |
 |---|---|
-| [`ATK_OPEN_SKILL_STRATEGY.md`](./ATK_OPEN_SKILL_STRATEGY.md) | The strategy of record |
-| [`SKILL_SCORING.md`](./SKILL_SCORING.md) | The 100-point `skill_score` rubric |
-| [`LICENSE_REVIEW.md`](./LICENSE_REVIEW.md) | The License Gate — an independent veto |
-| [`FORK_POLICY.md`](./FORK_POLICY.md) | When to fork, required value-add, branch model |
-| [`UPSTREAM_SYNC.md`](./UPSTREAM_SYNC.md) | Keeping forks alive against upstream drift |
-| [`ATK_ROUTING_INTEGRATION.md`](./ATK_ROUTING_INTEGRATION.md) | Provider interface contract and reference adapter |
-| [`CONTENT_DISTRIBUTION.md`](./CONTENT_DISTRIBUTION.md) | 1 repository → 5–20 content assets |
-| [`ANALYTICS_METRICS.md`](./ANALYTICS_METRICS.md) | Funnel, metrics and the MAAPP north star |
+| [`ATK_OPEN_SKILL_STRATEGY.md`](./ATK_OPEN_SKILL_STRATEGY.md) | Original open skill strategy |
+| [`SKILL_SCORING.md`](./SKILL_SCORING.md) | Skill scoring |
+| [`LICENSE_REVIEW.md`](./LICENSE_REVIEW.md) | License review |
+| [`FORK_POLICY.md`](./FORK_POLICY.md) | Fork policy |
+| [`UPSTREAM_SYNC.md`](./UPSTREAM_SYNC.md) | Upstream sync |
+| [`ATK_ROUTING_INTEGRATION.md`](./ATK_ROUTING_INTEGRATION.md) | Routing integration |
+| [`CONTENT_DISTRIBUTION.md`](./CONTENT_DISTRIBUTION.md) | Content distribution |
+| [`ANALYTICS_METRICS.md`](./ANALYTICS_METRICS.md) | Analytics metrics |
 
-## Phase 1 findings
+## Research reports
 
-| Report | Contents |
-|---|---|
-| [`reports/CANDIDATE_REGISTRY.md`](./reports/CANDIDATE_REGISTRY.md) | 68 candidates discovered, scored and gated |
-| [`reports/TOP10_SHORTLIST.md`](./reports/TOP10_SHORTLIST.md) | Top 10 by score, among license-eligible candidates |
-| [`reports/TOP10_DEEP_REVIEW.md`](./reports/TOP10_DEEP_REVIEW.md) | Technical + license review of the Top 10 |
-| [`reports/FORK_RECOMMENDATIONS.md`](./reports/FORK_RECOMMENDATIONS.md) | The recommended first 4 forks — **and the gate that blocks them** |
-| [`reports/BENCHMARK_R2_001.md`](./reports/BENCHMARK_R2_001.md) | R2 discovery benchmark: 164 materials from GitHub, four ranked lists |
-| [`reports/BENCHMARK_R2_002.md`](./reports/BENCHMARK_R2_002.md) | **Current run** — adds the four unmined source classes; 188 materials |
-| [`registry/materials.json`](./registry/materials.json) | The R2 material registry (MATERIAL_SCHEMA v2.0) |
+Current evidence base includes R2 discovery runs and the market research report. New Claude execution should continue from current work rather than restarting prior research.
 
-### Headline numbers
+## Governing rule for Claude and all Agents
 
-| | |
-|---|---|
-| Candidates discovered | **68** |
-| Priority A (score ≥ 80) | 21 |
-| License Gate PASS | 58 |
-| Blocked — copyleft or source-available license | 6 |
-| Blocked — no license file at all | 2 |
-| Rejected — strategic conflict | 3 |
-| Recommended first forks | **4** |
-| Forks approved to execute | **0** — security review and maintainer assignment outstanding |
-
-The last row is the important one. Two `FORK_POLICY.md` entry conditions — security review
-and a named maintainer — are unmet, so **this phase stops at recommendation**, exactly as the
-brief requires.
-
-## Tools
-
-```bash
-python3 tools/build_registry.py                  # rebuild the registry from the candidate table
-python3 tools/score.py --eligible-only --top 10  # validate scores and print the Top 10
-python3 tools/render_candidates.py               # regenerate the candidate report
-```
-
-`tools/score.py` recomputes every total from its six components and fails loudly on mismatch,
-so a hand-edited score can never silently drift from the reasoning behind it. It also
-enforces the License Gate invariant: a candidate whose license is unverified cannot carry any
-decision other than `blocked`.
-
-## Templates
-
-[`templates/README_TEMPLATE.md`](./templates/README_TEMPLATE.md) ·
-[`templates/env.example`](./templates/env.example) ·
-[`templates/CONTENT_BRIEF_TEMPLATE.md`](./templates/CONTENT_BRIEF_TEMPLATE.md)
-
----
-
-## Two principles that constrain everything else
-
-**1. The License Gate is independent of the score.** A repository may score 100 and still be
-blocked. 8 of 68 are — `OpenMontage` at 85 (AGPL-3.0), `context-mode` at 82 (Elastic License
-2.0, no hosted service), `ThinkWatch` (Business Source License, free only to 10M tokens a
-month), and `anthropics/skills`, the most-starred project in the sweep, which has no LICENSE
-file at all. Attribution does not substitute for a license; see `LICENSE_REVIEW.md` §9–10 for
-why, and for the four legitimate ways to get the same value.
-
-Every license was read or verified against GitHub metadata — the six that GitHub could not
-identify were fetched and read in full. Two cleared; four turned out to be deliberately
-restrictive.
-
-**2. ATK Routing must be transparent, replaceable, documented and optional.** ATK may be the
-Quick Start default; it may never be the only path. Locking a provider would convert ATK's
-distribution advantage into the reason developers avoid ATK forks — the one outcome this
-strategy cannot survive. See [`ATK_ROUTING_INTEGRATION.md`](./ATK_ROUTING_INTEGRATION.md) §1
-and §8.
-
-## Data provenance
-
-All repository metrics are a point-in-time snapshot from the GitHub repository search API,
-verified in two passes (**2026-09-14** and **2026-09-15**). Licenses were confirmed against GitHub's own license metadata; a README badge
-or a repository description was never accepted as evidence. Star and issue counts move —
-re-run `tools/build_registry.py` to refresh.
+Every major execution must answer the seven Forward-Motion questions in `EXECUTION_DOCTRINE.md`. If the work cannot show what uncertainty was reduced, what evidence was produced, what decision is now justified, and what the next gate is, it is not considered complete.
 
 ## License
 
-[MIT](./LICENSE) — this repository contains ATK's own strategy and tooling. Licenses of the
-projects it catalogues remain with their respective authors.
+MIT for ATK-authored repository material unless otherwise stated. Third-party project licenses remain with their respective authors.
