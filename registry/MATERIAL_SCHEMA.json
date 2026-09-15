@@ -1,0 +1,52 @@
+{
+  "version": "2.0",
+  "required_fields": [
+    "id",
+    "title",
+    "source_url",
+    "source_type",
+    "category",
+    "summary",
+    "problem_solved",
+    "technical_value",
+    "why_now",
+    "atk_relevance",
+    "actions",
+    "scores",
+    "rights",
+    "status"
+  ],
+  "action_enum": [
+    "research",
+    "content",
+    "tutorial",
+    "experiment",
+    "link_upstream",
+    "companion_adapter",
+    "fork_candidate",
+    "deep_integration"
+  ],
+  "rights": {
+    "note": "Rights constrain reuse/redistribution, not discovery.",
+    "fields": [
+      "license",
+      "attribution",
+      "redistribution_allowed",
+      "commercial_distribution_allowed",
+      "notes"
+    ]
+  },
+  "scores": {
+    "material_score": 100,
+    "content_opportunity_score": 35
+  },
+  "status_enum": [
+    "signal",
+    "qualified",
+    "material_ready",
+    "content_ready",
+    "experiment_ready",
+    "integration_review",
+    "archived"
+  ]
+}
