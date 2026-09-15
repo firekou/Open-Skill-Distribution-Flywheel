@@ -30,15 +30,15 @@ w(f"| Priority A (score ≥ 80) | {c_['priority_a']} |")
 w(f"| Priority B (65–79) | {c_['priority_b']} |")
 w(f"| Watchlist (50–64) | {c_['watchlist']} |")
 w(f"| License Gate PASS | {c_['license_pass']} |")
-w(f"| **Blocked — license unverified** | **{c_['license_blocked']}** |")
+w(f"| Blocked — non-standard license (ESCALATE) | {c_['license_escalate']} |")
+w(f"| Blocked — **no license at all** (FAIL) | {c_['license_fail']} |")
 w(f"| Rejected — strategic conflict | {c_['rejected_strategic']} |")
 w("")
-w("> **The blocked count is the headline finding.** "
-  f"{c_['license_blocked']} of {c_['total']} candidates could not have their license "
-  "resolved by the automated gate. Per `LICENSE_REVIEW.md` §1 these are treated exactly "
-  "like repositories with no license: they cannot enter the Fork Pipeline until a human "
-  "reads the LICENSE file. Several of them score highly, which is precisely why the gate "
-  "is independent of the score.")
+w("> **Second-pass correction (2026-09-15).** The first sweep left 22 candidates "
+  "unresolved. That was a gap in the *query coverage*, not a finding about those projects: "
+  "the topic-scoped searches simply never covered them. A targeted re-check resolved all "
+  f"22. Only **{c_['license_escalate'] + c_['license_fail']}** of {c_['total']} are now "
+  "genuinely blocked, and the remainder are cleanly usable.")
 w("")
 w("## Method")
 w("")
@@ -70,7 +70,8 @@ for cat in CATS:
     for c in rows:
         m, lic = c["metrics"], c["license"]
         spdx = lic["spdx"] or "—"
-        gate = {"PASS": "PASS", "ESCALATE": "ESCALATE", "UNVERIFIED": "BLOCKED"}[lic["ruling"]]
+        gate = {"PASS": "PASS", "ESCALATE": "ESCALATE", "FAIL": "FAIL",
+                "UNVERIFIED": "BLOCKED"}[lic["ruling"]]
         w(f"| [`{c['repository']}`]({c['original_url']}) | {m['stars']:,} | {m['forks']:,} | "
           f"{m['open_issues']:,} | {m['stars_per_month']:,} | {spdx} | {gate} | "
           f"**{c['score']['total']}** | {c['priority']} | {c['decision']} |")
@@ -94,20 +95,25 @@ w("These three are collectively the fastest-growing routing projects in the swee
   "ATK's differentiation has to be reliability, cost transparency and maintained "
   "distribution — not price.")
 w("")
-w("## Blocked — License Unverified")
+w("## Blocked — License Gate")
 w("")
-w("Highest-scoring blocked candidates, in score order. Each needs a manual LICENSE read "
-  "before it can be reconsidered:")
+w("Every remaining block is a real licence problem, not a missing lookup:")
 w("")
 w("| Repository | Score | Stars | Note |")
 w("|---|--:|--:|---|")
 for c in cands:
-    if c["decision"] == "blocked" and c["score"]["total"] >= 74:
-        note = c["risk"].split(".")[0].replace("BLOCKED on licence", "License unresolved")
-        w(f"| `{c['repository']}` | {c['score']['total']} | {c['metrics']['stars']:,} | {note} |")
+    if c["decision"] == "blocked":
+        r = c["license"]["ruling"]
+        why = ("AGPL-3.0 network copyleft" if c["license"]["spdx"] == "AGPL-3.0"
+               else "No LICENSE file — all rights reserved" if r == "FAIL"
+               else "Non-standard licence — needs a human read")
+        w(f"| `{c['repository']}` | {c['score']['total']} | {c['metrics']['stars']:,} | {why} |")
 w("")
-w("`anthropics/skills` (176,286 stars) and `calesthio/OpenMontage` (85/100) are the two "
-  "most consequential blocks — OpenMontage would otherwise rank second overall.")
+w("`calesthio/OpenMontage` (85/100) is the most consequential block: AGPL-3.0 network "
+  "copyleft means hosting a modified version as a service obliges ATK to publish complete "
+  "corresponding source. `anthropics/skills` (176,354 stars) has **no LICENSE file at all**, "
+  "which is all-rights-reserved by default — the most-starred project in the sweep is also "
+  "the one ATK has the least right to redistribute.")
 
 out = root / "reports" / "CANDIDATE_REGISTRY.md"
 out.write_text("\n".join(L) + "\n", encoding="utf-8")

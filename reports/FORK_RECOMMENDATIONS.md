@@ -1,7 +1,8 @@
 # First Fork Recommendations (TASK 13)
 
-> Snapshot: 2026-09-14 · Input: `reports/TOP10_DEEP_REVIEW.md`
+> Snapshot: 2026-09-15 · Input: `reports/TOP10_DEEP_REVIEW.md`
 > **Status: recommendation only. No fork has been executed, and none should be until §5 clears.**
+> **Revised** after the second-pass license check — the four recommendations are unchanged; see §7.
 
 ---
 
@@ -154,7 +155,8 @@ ranks value; sequencing ranks risk.
 | `K-Dense-AI/scientific-agent-skills` | 83 | Needs a domain reviewer ATK does not obviously have. Upstream (10 open issues) is attentive — **contribute first** |
 | `Paritok-official/paritok-4b-v1` | 84 | Strong architecture, but vendor benchmark claims must be independently reproduced before ATK repeats any number |
 | `BerriAI/litellm` | 75 | **Do not fork.** Ship an upstream provider PR instead — being a first-class LiteLLM provider reaches more developers than an ATK fork nobody installs |
-| `calesthio/OpenMontage` | 85 | Would rank #3. **Blocked on license** — resolving it is the highest-value item in the license backlog |
+| `calesthio/OpenMontage` | 85 | Would rank #5. **AGPL-3.0 confirmed** — network copyleft, blocked for Phase 1 |
+| `Graphify-Labs/graphify` | 83 | Newly eligible (Apache-2.0), but 1,350 open issues — same maintenance objection as `open-design` |
 
 ---
 
@@ -205,3 +207,39 @@ assignment is an ATK staffing decision.
 8. Open a provider PR to `BerriAI/litellm`
 9. Open courtesy PRs to `humanizer` and `gpt-load` for any generic improvements before
    shipping them fork-only
+
+
+---
+
+## 7. Revision Note — 2026-09-15
+
+The second-pass license check resolved all 22 previously-unverified candidates. **The four
+recommendations are unchanged.** What moved around them:
+
+**Newly eligible.** `Graphify-Labs/graphify` (Apache-2.0) enters the Top 10 at #8, and
+`mukul975/Anthropic-Cybersecurity-Skills` (Apache-2.0) becomes Priority A. Neither displaces
+the recommended four: `graphify` carries 1,350 open issues, and the cybersecurity collection
+needs a domain reviewer for the same reason the scientific skills do.
+
+**Confirmed blocked, now for a known reason.** `calesthio/OpenMontage` is AGPL-3.0, not
+merely unverified. At 85 it would rank #5, and it is the only serious media-production
+candidate — but network copyleft means hosting a modified version as a service would oblige
+ATK to publish complete corresponding source. It stays out of Phase 1.
+
+**`tbphp/gpt-load` moved from #10 to #11.** Nothing about it changed; two better-scoring
+candidates were unblocked above it. It stays in the recommended four because the selection
+was never rank-ordered — it is the **routing anchor**, and that role is not filled by
+anything else on the list. A ranking one place lower does not change what it is for.
+
+**On the "attribute and take down" approach.** The proposal to publish license-unclear
+projects with clear attribution, and remove them only if challenged, is addressed in
+`LICENSE_REVIEW.md` §9. Short version: attribution is mandatory and ATK should do it
+everywhere, but it does not supply the permission a fork requires, and notice-and-takedown
+protects platforms hosting other people's uploads — not a company republishing the work
+itself. `LICENSE_REVIEW.md` §10 sets out four routes that get most of the same value
+legitimately, the cheapest being simply to open an issue asking the author to add a license.
+
+**Priority shift in the backlog.** Asking the 8 ESCALATE/FAIL maintainers to add a license is
+now the highest return-on-effort item in the whole plan — higher than any of the four forks.
+Six of those are "non-standard license", which usually means a known license with a modified
+header. Two minutes of reading each would likely clear most of them.

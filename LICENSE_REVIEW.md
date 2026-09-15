@@ -143,11 +143,16 @@ copyleft subdirectory, and a permissive project that vendors a GPL dependency.
 
 ## 7. Phase 1 Verification Status
 
-All licenses below were verified on **2026-09-14** against GitHub's license metadata
-(`license:` qualifier on the repository search API). Entries not verified by that method are
-marked explicitly — they are **blocked** until a manual read is performed.
+Verified in two passes against GitHub license metadata: **2026-09-14** (topic-scoped sweeps)
+and **2026-09-15** (targeted re-check of everything the first pass left open).
 
-### PASS — MIT
+> **Correction.** The first pass reported 22 candidates as "license unverified". That was a
+> gap in *query coverage*, not a finding about those projects — the topic-scoped searches
+> simply never covered them. The re-check resolved all 22. Fourteen turned out to be cleanly
+> licensed. Reporting them as blocked was over-cautious in a way that would have cost real
+> opportunities.
+
+### PASS — MIT (35)
 
 `blader/humanizer` · `mvanhorn/last30days-skill` · `tt-a1i/archify` ·
 `cathrynlavery/diagram-design` · `virgiliojr94/book-to-skill` ·
@@ -158,42 +163,57 @@ marked explicitly — they are **blocked** until a manual read is performed.
 `VoltAgent/awesome-openclaw-skills` · `sickn33/agentic-awesome-skills` · `phuryn/pm-skills` ·
 `JimLiu/baoyu-skills` · `titanwings/distilly` · `KKKKhazix/khazix-skills` ·
 `zarazhangrui/frontend-slides` · `github/awesome-copilot` · `reactive-resume/reactive-resume` ·
-`pascalorg/editor` · `oraios/serena` · `DeusData/codebase-memory-mcp` ·
-`tbphp/gpt-load` · `ENTERPILOT/GoModel` · `Portkey-AI/gateway` · `BerriAI/litellm` ·
-`diegosouzapw/OmniRoute` · `decolua/9router` · `router-for-me/CLIProxyAPI`
+`pascalorg/editor` · `oraios/serena` · `DeusData/codebase-memory-mcp` · `tbphp/gpt-load` ·
+`ENTERPILOT/GoModel` · `Portkey-AI/gateway` · `BerriAI/litellm` · `diegosouzapw/OmniRoute` ·
+`decolua/9router` · `router-for-me/CLIProxyAPI`
 
-### PASS — Apache-2.0
+**Newly resolved in the second pass:** `upstash/context7` · `github/github-mcp-server` ·
+`czlonkowski/n8n-mcp` · `coreyhaines31/marketingskills` · `kepano/obsidian-skills` ·
+`getsentry/XcodeBuildMCP` · `zcaceres/markdownify-mcp` · `brightdata/brightdata-mcp`
+
+### PASS — Apache-2.0 (17)
 
 `nexu-io/open-design` · `googleworkspace/cli` · `topoteretes/cognee` ·
 `agentskills/agentskills` · `alibaba/open-code-review` · `Kong/kong` · `coaidev/coai` ·
 `maximhq/bifrost` · `katanemo/plano` · `APIParkLab/APIPark` ·
 `Paritok-official/paritok-4b-v1` · `Fast-Editor/Lynkr`
 
+**Newly resolved in the second pass:** `Graphify-Labs/graphify` · `thedotmack/claude-mem` ·
+`mukul975/Anthropic-Cybersecurity-Skills` · `ChromeDevTools/chrome-devtools-mcp` ·
+`mobile-next/mobile-mcp`
+
 *Apache-2.0 additionally requires: retain NOTICE, state changes in `CHANGES-ATK.md`.*
 
-### ESCALATE — AGPL-3.0
+### ESCALATE — AGPL-3.0 (2)
 
-| Repository | Ruling |
-|---|---|
-| `bestruirui/octopus` | Network copyleft. Blocked for Phase 1 per §3. Watchlist only. |
+| Repository | Score | Ruling |
+|---|--:|---|
+| `calesthio/OpenMontage` | 85 | Network copyleft. Would otherwise rank in the Top 5. Blocked for Phase 1 per §3. |
+| `bestruirui/octopus` | 72 | Network copyleft. Watchlist only. |
 
-### BLOCKED — license not verified
+Hosting a modified version of either as a service obliges ATK to publish complete
+corresponding source — including anything the courts would treat as part of the same work.
 
-These were **not** resolved by the automated license filter and must not enter the pipeline
-until a human reads the LICENSE file directly:
+### ESCALATE — non-standard license (6)
 
-`anthropics/skills` · `theopenco/llmgateway` · `ThinkWatchProject/ThinkWatch` ·
-`Graphify-Labs/graphify` · `mksglu/context-mode` · `thedotmack/claude-mem` ·
-`calesthio/OpenMontage` · `coreyhaines31/marketingskills` · `kepano/obsidian-skills` ·
-`mukul975/Anthropic-Cybersecurity-Skills` · `ComposioHQ/awesome-claude-skills` ·
-`hesreallyhim/awesome-claude-code`
+GitHub detected a license file but could not identify it as a known license. These need a
+human to read the actual text; the automated gate cannot rule on them either way.
 
-> `anthropics/skills` is a notable case: it carries the `agent-skills` topic and 176k stars
-> but did not match either the MIT or Apache-2.0 filter. It is **blocked pending manual
-> review** rather than assumed permissive.
->
-> `mukul975/Anthropic-Cybersecurity-Skills` *describes itself* as Apache-2.0 in its
-> repository description. A self-description in prose is not verification — see §1.
+`modelcontextprotocol/servers` · `modelcontextprotocol/registry` · `theopenco/llmgateway` ·
+`ThinkWatchProject/ThinkWatch` · `hesreallyhim/awesome-claude-code` · `mksglu/context-mode`
+
+> Most of these will turn out to be a standard license with a modified header, a dual
+> license, or a license plus an extra clause. Reading one takes about two minutes and would
+> likely move most of them to PASS.
+
+### FAIL — no license file (2)
+
+| Repository | Stars | Ruling |
+|---|--:|---|
+| `anthropics/skills` | 176,354 | **No LICENSE file.** Confirmed: the API record carries no license field at all. |
+| `ComposioHQ/awesome-claude-skills` | 75,025 | No LICENSE file detected under any license filter. |
+
+**No license means all rights reserved**, not public domain. See §9.
 
 ---
 
@@ -221,3 +241,117 @@ until a human reads the LICENSE file directly:
 `ruling` ∈ `PASS` · `CONDITIONAL` · `ESCALATE` · `FAIL` · `UNVERIFIED`.
 
 Only `PASS` and a signed-off `CONDITIONAL` may proceed to fork.
+
+
+---
+
+## 9. "Attribute It and Take It Down If Challenged" — Why This Does Not Work
+
+A reasonable-sounding proposal comes up often: *where the license is unclear, publish anyway
+but state the original source clearly; we are not claiming it as ours, and if a rights holder
+ever objects, we take it down.*
+
+The instinct is right — **attribution is mandatory and ATK should do it everywhere.** But
+attribution does not supply the permission that a fork requires, and the takedown model does
+not apply to ATK's position. Four reasons:
+
+### 9.1 Attribution and permission are different things
+
+Copyright attaches automatically the moment a work is written. No registration, no notice
+required. It splits into two separate rights:
+
+| Right | What satisfies it |
+|---|---|
+| To be **credited** as the author | Attribution — a NOTICE file, a README credit |
+| To control **copying, adapting and distributing** | A **license**. Only the rights holder can grant it. |
+
+Crediting someone discharges the first. It does nothing about the second. Copying a whole
+repository, modifying it, and redistributing it under an ATK name exercises the second right,
+and no amount of credit creates permission to do so.
+
+### 9.2 The academic-citation analogy does not carry over
+
+Citing a paper means quoting a short passage and pointing at the source. That is a small,
+transformative use — the kind fair use / fair dealing exists to protect.
+
+Forking a repository means copying **the entire work**, modifying it, and redistributing it.
+Same intent, completely different scale of use. The citation norm does not extend to it, and
+no academic publisher would treat republishing a whole paper under a new masthead as
+"citation".
+
+### 9.3 Notice-and-takedown protects hosts, not republishers
+
+Safe-harbour regimes (DMCA §512 and its equivalents) shield **intermediaries** that host
+content other people uploaded — GitHub, YouTube, a CDN. The protection is conditional on the
+platform not being the one who chose to copy the work.
+
+If ATK forks, modifies, brands and publishes, ATK is the **direct** party doing the copying.
+There is no intermediary role to claim. "We would take it down if asked" is a mitigation
+after the fact, not a defence — the infringement, if any, already happened at publication.
+
+### 9.4 Commercial use makes the position worse, not better
+
+ATK monetises through routing. Commercial use is weighed against almost every fair-use
+factor, and it raises the damages exposure. The same act carries more risk for ATK than for
+an individual doing it privately.
+
+### 9.5 There is also a business reason, separate from the legal one
+
+The entire distribution strategy runs on developer trust. Being publicly called out for
+republishing someone's unlicensed work — with credit, but without permission — would damage
+exactly the asset the strategy depends on. That cost arrives faster than any legal one, and
+it is not reversible by taking the repository down.
+
+---
+
+## 10. What To Do Instead
+
+The good news: after the second-pass check, only **10 of 68** candidates are genuinely
+blocked. For those, four legitimate routes, in order of preference:
+
+### 10.1 Just ask — the fastest route
+
+Open an issue:
+
+> Hi — really useful project. We would like to build on it, but there is no LICENSE file, so
+> the terms aren't clear. Would you consider adding one? MIT or Apache-2.0 would both work
+> for us. Happy to send a PR with the file if that helps.
+
+Most maintainers of an unlicensed repository simply never got round to it. This is answered
+in days more often than not, costs nothing, and converts a blocked candidate into a clean
+PASS — with goodwill attached instead of risk.
+
+**Do this first for all 8 ESCALATE and FAIL candidates.** It is the highest
+return-on-effort item in the entire license backlog.
+
+### 10.2 Link instead of fork — always available
+
+Linking to a public repository needs no permission whatsoever. `awesome-ai-skills` can list
+**anything**, including all 10 blocked candidates, with a description, a review and a rating.
+
+This captures most of the discovery and SEO value with zero license exposure. For a project
+ATK cannot fork, a genuinely useful review is often worth more than a fork would have been.
+
+### 10.3 Write a companion package, not a fork
+
+Ship the ATK routing adapter as a **separate add-on** that works alongside the upstream
+project without copying it. The user installs upstream from its own source and installs the
+ATK layer next to it.
+
+ATK owns 100% of what it publishes, there is no license question at all, and there is no
+sync burden — the pattern `UPSTREAM_SYNC.md` §8 already recommends when a fork becomes too
+expensive to maintain.
+
+### 10.4 Fork on GitHub, but understand the limit
+
+GitHub's Terms of Service do grant other users the right to view and **fork** public
+repositories *through GitHub*. So pressing the Fork button is permitted even with no license.
+
+What that does **not** grant: redistributing outside GitHub (npm, PyPI, Docker Hub, a
+download on ATK's site), relicensing, or presenting it as an ATK product. The fork can exist;
+turning it into a distribution is the step that needs an actual license.
+
+### 10.5 Attribution is mandatory regardless
+
+Everything in §5 applies to every ATK fork, including the cleanly-licensed ones. Attribution
+is the floor, not the workaround — necessary always, sufficient never.
