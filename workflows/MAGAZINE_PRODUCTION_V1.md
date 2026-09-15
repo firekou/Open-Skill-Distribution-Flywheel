@@ -1,26 +1,11 @@
 # Magazine Production Workflow v1
+Scout → Signal → Cross Signal → Material → Editorial Top30.
 
-## Daily/continuous
-Scout → normalized Signal → Cross-Signal review → Material Registry.
+Top30 splits, overlap allowed:
+10 Worth Talking → Research → Verify labels → Desk → Content Package → Production → Distribution → Human Demand.
+10 Worth Running → Research → Experiment Design → Method Review → Security/Environment → Run → Token Meter + Quality Judge → Archive → Reproduce → Verify → Lab Report.
+10 Worth Integrating → demand/evidence → rights/security → Engineering → Integration Test → Docs → release.
 
-## Editorial meeting
-Priority Editor + Managing Editor select Top 30:
-- 10 Worth Talking About
-- 10 Worth Running
-- 10 Worth Integrating
-Overlap is allowed.
+Growth + appropriate Agent telemetry → Demand Intelligence → next Editorial priorities → Scout allocation.
 
-## Talk lane
-Material → Research dossier → Verify evidence labels → Desk Editor → Content Package → Production → Distribution → Human Demand Sensor.
-
-## Run lane
-Material/claim → Research dossier → Experiment Designer → Methodology Review → Security/Environment → Benchmark Runner → Token Meter + Quality Judge → Evidence Archivist → Reproduction → Verify → Lab Report → Content Package.
-
-## Integrate lane
-Verified demand + technical value → rights/security review → Technical Lead → Skill/MCP/Adapter/Router build → Integration Test → Docs → GitHub/ATK release.
-
-## Feedback
-Growth metrics + Agent telemetry where appropriate → Demand Intelligence → Editorial priority → Scout allocation.
-
-## Required handoff packet
-Every handoff carries: material_id, source/provenance, desk, requested action, evidence_state, open questions, files/evidence paths, risks, next owner.
+Every handoff packet carries material_id, provenance, desk, requested action, evidence state, open questions, evidence paths, risks and next owner.
