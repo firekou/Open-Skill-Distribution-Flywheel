@@ -196,12 +196,14 @@ w("- **Still nothing executed.** No experiment from list 2 has been run, so ever
   "figure in this registry — vendor or community — remains unverified.")
 w("- **X and Reddit were reached only through secondary write-ups**, not their own surfaces. "
   "Same for YouTube: view counts come from an aggregator page, not from YouTube.")
-w("- **Pricing moves fast.** The ~100× model price gap is the load-bearing assumption under the "
-  "whole routing thesis and it is the single number most worth confirming first-hand.")
+w("- **Pricing was the load-bearing assumption and has since been verified.** The ~100× gap "
+  "quoted in this run was corrected on 2026-09-15 from primary vendor pricing pages: "
+  "like-for-like it is **11.4×**. See `PRICING_SNAPSHOT_2026-09-15.md` and Evidence Ledger "
+  "E007/E015.")
 w("")
 w("## R2-003")
 w("")
-w("1. Confirm the price gap from provider pricing pages directly — it underpins everything")
+w("1. ~~Confirm the price gap from provider pricing pages~~ — **done 2026-09-15, corrected to 11.4×**")
 w("2. Run the Anthropic context-engineering cookbook and record measured token deltas")
 w("3. Run `api-relay-audit` against ATK's own routing")
 w("4. Stand up Cloudflare AI Gateway and Vercel AI Gateway and document, concretely, what ATK "

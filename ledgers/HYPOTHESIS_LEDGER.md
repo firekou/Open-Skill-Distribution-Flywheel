@@ -6,7 +6,7 @@
 | H002 | Token Cost is a strong wedge into Agent Resource Intelligence | Product | H1 Signal | Compare with reliability, security, budget control, attribution and routing | ACTIVE |
 | H003 | Technical Intelligence Magazine can be a low-CAC ATK distribution/trust engine | Distribution | H0 Idea | Instrument content IDs and downstream actions | ACTIVE |
 | H004 | Agent-native organization increases verified output per human hour | Operating Model | H0 Idea | Measure AI cost, review time, rework and verified output | ACTIVE |
-| H005 | Verification gains value as AI generation becomes cheaper | Market/Product | H0 Idea | Compare verified vs unverified asset behavior | ACTIVE |
+| H005 | Verification gains value as AI generation becomes cheaper | Market/Product | **H1 Signal** | Compare verified vs unverified asset behavior | ACTIVE |
 | H006 | Agent Unit Economics becomes a management discipline | Market | H0 Idea | Research vocabulary, tooling and buying behavior | WATCH |
 | H007 | Cost per successful task beats raw token price for many decisions | Product | H0 Idea | Benchmark + decision-use testing | WATCH |
 | H008 | Quality-adjusted routing beats cheapest routing | Product | H0 Idea | Routing benchmark | WATCH |
@@ -18,7 +18,22 @@ Confidence: H0 Idea; H1 Signal; H2 Supported; H3 Tested; H4 Validated; H5 Commer
 
 ---
 
-## Pending confidence proposals — Phase D, 2026-09-15
+## Review decisions applied — 2026-09-15
+
+**Editor-in-Chief / ChatGPT review, 2026-09-15.**
+
+- **H005 H0 Idea → H1 Signal — APPROVED and applied above.** Rationale: multiple cases show a
+  material gap between secondary reporting and primary source, including ATK's own incorrect
+  savings figure. Sufficient for Signal; **not** sufficient for H2 Supported.
+- **H001, H002, H003, H004, H006–H010 — maintained at current levels.** No change applied.
+
+**New this cycle, not yet reflected in any confidence level:** E007 was upgraded to OBSERVED and
+its figures corrected. Per the review guardrails, a successful price-gap verification **does not**
+establish H002, and price gap is **not** willingness-to-pay evidence. H002 stays at H1 Signal.
+
+---
+
+## Pending confidence proposals — Phase D, 2026-09-15 (superseded by the decisions above)
 
 **The Confidence column above is unchanged.** Claude may not alter strategic confidence.
 These are proposals for Editor-in-Chief decision, with the evidence and the counterevidence.

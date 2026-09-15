@@ -205,7 +205,7 @@ Stated as a chain so each link can be attacked separately.
 >
 > **L2** That pain is large enough to drive 70k+ stars in eight months for pure cost plumbing. **[OBSERVED — F1]**
 >
-> **L3** The price spread between cheap and frontier models is wide enough that routing captures real value. **[REPORTED — the ~100× figure is unverified; see §6.1]**
+> **L3** The price spread between cheap and frontier models is wide enough that routing captures real value. **[OBSERVED — verified 2026-09-15. The spread is real but smaller than ATK claimed: 11.4× like-for-like, not ~100×. See §6.1]**
 >
 > **L4** But platform vendors now give routing away free, bundled with distribution ATK cannot match. **[REPORTED — F2]**
 >
@@ -244,17 +244,35 @@ and the distinction decides whether the strategy is sound. §7 proposes how to f
 
 Ranked by how much damage each would do if wrong.
 
-### 6.1 The ~100× price gap is unverified and load-bearing
+### 6.1 ~~The ~100× price gap is unverified~~ — RESOLVED 2026-09-15, and it was wrong
 
-The reported spread — DeepSeek V4 at ~$0.44/M tokens against GPT-5.5-pro at $30/$180 — comes
-from a **secondary source**. Every routing economics argument rests on it. If the real spread
-is 10× rather than 100×, the value a router captures shrinks by an order of magnitude and L3
-weakens badly.
+**Verified from primary vendor pricing pages.** Snapshot:
+`benchmarks/token-efficiency-lab-001/evidence/PRICING_SNAPSHOT_2026-09-15.md`.
 
-**Fix:** read the three provider pricing pages directly. Perhaps ten minutes. Nothing else in
-this report is this cheap to verify or this consequential.
+The frontier half of the claim was right: **gpt-5.5-pro is $30 in / $180 out**. The cheap half
+was not: **no DeepSeek price of $0.44 exists.** deepseek-v4-pro cache-miss is $0.66/$1.32 input
+and $1.98/$3.96 output. The nearest real figure to $0.44 is **$0.044 — the cache-*hit* peak
+input rate**, an order of magnitude out, which suggests the original comparison set a cache-hit
+price against a cache-miss price.
 
-### 6.2 "Measurement is defensible" has no demand evidence
+**Computed gaps, all cache-miss, blended 3:1 input:output:**
+
+| Comparison | Gap |
+|---|--:|
+| **gpt-5.5 vs deepseek-v4-pro — like-for-like tiers** | **11.4×** |
+| gpt-5.5 vs deepseek-flash | 42.9× |
+| gpt-5.5-**pro** vs deepseek-v4-pro | 68.2× |
+| gpt-5.5-**pro** vs deepseek-flash | 257.1× |
+| flash peak *input* vs gpt-5.5-pro *input* | exactly 100× |
+
+**The finding is not "the gap is smaller".** It is that **a single price-gap multiple is
+meaningless without its pairing.** DeepSeek publishes four input prices per model (cache
+hit/miss × peak/off-peak); OpenAI prices by context tier; Anthropic's own range spans 10×
+internally. Almost any multiple between 11× and 300× can be produced honestly by choosing
+different, defensible endpoints.
+
+Routing still captures real value — **but tier-adjacent routing, the common case, is worth
+~10×, not ~100×.** Any ATK material must state the pairing (Decision Ledger D011).### 6.2 "Measurement is defensible" has no demand evidence
 
 §5 argues it from supply-side observations (vendor gaps, academic framing) and my own
 reasoning. **There is no evidence anyone pays for it.** The star counts weakly suggest the

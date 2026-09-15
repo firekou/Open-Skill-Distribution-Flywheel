@@ -1,7 +1,7 @@
-# Token Efficiency Lab 001 — Precheck (S4 gate G0→G1)
+# Token Efficiency Lab 001 — Precheck (S4 gate LG0→LG1)
 
 **Date:** 2026-09-15 · **Status:** **PRECHECK ONLY — no run executed, no run authorised**
-**Gate position:** G0 claim registered. Requesting **G1 methodology freeze**.
+**Gate position:** LG0 claim registered. Requesting **LG1 methodology freeze**.
 
 > Per `CLAUDE_EXECUTION_START.md`: the 100-run benchmark does **not** start until
 > Editor-in-Chief / ChatGPT review of this document and `reports/TOP30_R3.md`.
@@ -52,7 +52,7 @@ minimum that exposes variance without manufacturing runs.
 | **C2** | Tool-result filtering / compression | H2 |
 | **C3** | Context compaction / clearing | H4 |
 | **C4** | Routing by task complexity | H3 |
-| **C5** | Third-party optimisation tool (**only after G2 security pass**) | H2 |
+| **C5** | Third-party optimisation tool (**only after LG2 security pass**) | H2 |
 
 ### 2.3 Allocation
 
@@ -71,7 +71,7 @@ single-tool workload would produce a real number that means nothing.
 | C2+C4 combined | A, B, D | 3 | **9** | Only after both singles report |
 | C3+C4 combined | B, E | 3 | **6** | Only after both singles report |
 | | | | **78** | |
-| **Reproduction** | 2 strongest single results | 5 | **10** | G6 — independent repeat by a different seat |
+| **Reproduction** | 2 strongest single results | 5 | **10** | LG6 — independent repeat by a different seat |
 | **Cache-state control** | Cold-cache verification across conditions | — | **6** | Guardrail: cached and uncached runs must never be silently mixed |
 | **Meter calibration** | ATK Token Meter vs provider `usage` field | — | **6** | If the meter disagrees with the provider, every number is void |
 | | | | **100** | |
@@ -81,9 +81,33 @@ guardrails that, if skipped, invalidate the other 88. `rtk`'s `bytes/4` estimato
 `TOP30_R3.md` §1) is the cautionary example: an unvalidated meter produced figures its own
 users report as off by >10,000× in one repro.
 
-### 2.4 Freeze rule
+### 2.4 Pre-freeze amendment — C4 model pairing (added 2026-09-15)
 
-Once G1 is granted, this matrix is immutable. Changing an allocation after seeing results
+The E007 price verification changed one thing in this design, and it must be fixed **before**
+freeze rather than discovered afterwards.
+
+The corrected pricing (`PS-2026-09-15`) shows the gap between **tier-adjacent** models is
+**~11×**, while cheapest-vs-most-expensive reaches 257×. A routing experiment that pairs the
+cheapest available model against a pro-tier frontier model would measure a real number that
+**systematically overstates** what routing delivers in practice, because production routing
+almost always steps one tier, not five.
+
+**Amendment:** condition **C4** must use **tier-adjacent pairs**, and every C4 run record must
+carry the exact pair and the snapshot ID.
+
+| C4 pair | Rationale |
+|---|---|
+| Primary: a mid-tier frontier model ↔ the next cheaper general-purpose tier | The realistic production decision |
+| Secondary (≤ 1 cell): cheapest ↔ pro-tier | Bounds the maximum, and is reported **as a bound, not as the result** |
+
+**No run-count change.** The 15 C4 runs in §2.3 are re-pointed, not added to.
+
+**Rule:** no C4 result may be reported as a cost saving without the model pair and
+`pricing_snapshot_id` beside it (Decision Ledger D011).
+
+### 2.5 Freeze rule
+
+Once LG1 is granted, this matrix is immutable. Changing an allocation after seeing results
 voids the run. A condition that cannot execute is recorded as a **failed cell with a reason**,
 never silently reallocated.
 
@@ -103,8 +127,8 @@ the floor is recorded as a **failed optimisation**, not as a trade-off.
 | E | Task completed and earlier-turn constraints honoured | ≥ 95% completion, **zero constraint violations from forgotten context** | Quality Judge |
 
 **Separation enforced by `agents/SEAT_REGISTRY.json` and `tools/validate_seats.py`:** the
-Quality Judge owns G5 and may not alter token measurements; the Token Meter may not judge
-quality; the Benchmark Runner owns G4 and may not own G5. The Quality Judge scores **before
+Quality Judge owns LG5 and may not alter token measurements; the Token Meter may not judge
+quality; the Benchmark Runner owns LG4 and may not own LG5. The Quality Judge scores **before
 seeing cost**.
 
 Any *zero-tolerance* criterion above (fabricated symbols, wrong-tool invocation, forgotten
@@ -137,12 +161,12 @@ benchmarks/token-efficiency-lab-001/
 ├── tasks/         task set + answer keys (versioned)
 ├── runs/          one record per run
 ├── evidence/      raw model I/O, unedited
-├── results/       aggregates, only after G5
+├── results/       aggregates, only after LG5
 ├── reproduction/  independent repeat instructions
 └── reports/       Lab report
 ```
 
-**Requirements before G3:**
+**Requirements before LG3:**
 
 1. Container image pinned **by digest**, not tag.
 2. Language runtimes and dependency manifests locked.
@@ -157,7 +181,7 @@ benchmarks/token-efficiency-lab-001/
 ## 6. Candidate inspection and security review — **status: NOT PERFORMED**
 
 This section is the **inventory of what the review must cover**, not the review. Per
-`agents/SEAT_REGISTRY.json`, only the Security Agent may pass G2, and it may not waive its own
+`agents/SEAT_REGISTRY.json`, only the Security Agent may pass LG2, and it may not waive its own
 gate.
 
 ### 6.1 Pins resolved **[OBSERVED]**
@@ -206,8 +230,8 @@ Ranked by what the component can see or do. **None of this has been reviewed.**
 3. **No customer or proprietary data** in any task. Task inputs are synthetic or
    public-domain, version-tagged in `tasks/`.
 4. Egress is captured per run and diffed against the declared allowlist. An undeclared
-   destination **fails the run and re-opens G2**.
-5. A candidate that fails G2 is **dropped from the matrix**, and its cells are recorded as
+   destination **fails the run and re-opens LG2**.
+5. A candidate that fails LG2 is **dropped from the matrix**, and its cells are recorded as
    failed with reason — never quietly replaced.
 
 ### 6.4 Conflict-of-interest note
@@ -215,7 +239,7 @@ Ranked by what the component can see or do. **None of this has been reviewed.**
 `rtk` and `headroom` are both Lab 001 subjects **and** Top 30 integration candidates
 (`TOP30_R3.md` §4.3, I6/I7). ATK has a stake in the outcome. Mitigations, all pre-registered:
 quality floors fixed before any result (§3); the Quality Judge scores before seeing cost; the
-Reproduction Agent may not repeat its own run; Red Team owns G8 and may not have authored the
+Reproduction Agent may not repeat its own run; Red Team owns LG8 and may not have authored the
 work. **A result favourable to an ATK integration candidate should be treated as the one most
 in need of reproduction**, not the one most ready to publish.
 
@@ -244,18 +268,18 @@ Recorded per experiment, per `TOKEN_EFFICIENCY_LAB_001_TEAM.md`:
 
 ## 8. Gate status
 
-| Gate | Owner (from `SEAT_REGISTRY.json`) | Status |
+| Gate (LG namespace) | Owner (from `SEAT_REGISTRY.json`) | Status |
 |---|---|---|
-| G0 claim registered | lab-director | ✅ this document |
-| **G1 methodology frozen** | methodology-reviewer | ⏸ **awaiting review — the requested decision** |
-| G2 repo + security passed | security-agent | ❌ not performed (§6) |
-| G3 environment reproducible | environment-agent | ◐ pins resolved; container/deps not yet built |
-| G4 execution complete | benchmark-runner | ❌ not started |
-| G5 quality floor | quality-judge | ❌ floors defined, not applied |
-| G6 reproduction | reproduction-agent | ❌ not started |
-| G7 verify state | verify-editor | ❌ nothing above OBSERVED exists |
-| G8 red team | red-team-editor | ❌ not started |
-| G9 publish / integrate | publisher-editor-in-chief | ❌ not started |
+| LG0 claim registered | lab-director | ✅ this document |
+| **LG1 methodology frozen** | methodology-reviewer | ⏸ **re-proposed 2026-09-15** after E007 verification and the §2.4 amendment |
+| LG2 repo + security passed | security-agent | ❌ not performed (§6) |
+| LG3 environment reproducible | environment-agent | ◐ pins resolved; container/deps not yet built |
+| LG4 execution complete | benchmark-runner | ❌ not started |
+| LG5 quality floor | quality-judge | ❌ floors defined, not applied |
+| LG6 reproduction | reproduction-agent | ❌ not started |
+| LG7 verify state | verify-editor | ❌ nothing above OBSERVED exists |
+| LG8 red team | red-team-editor | ❌ not started |
+| LG9 publish / integrate | publisher-editor-in-chief | ❌ not started |
 
 ---
 
@@ -279,20 +303,20 @@ Execution halts and the failure is recorded — **not improvised around** — if
 - **It does not security-review anything.** §6 is the scope of the review, not its result.
 - **It does not predict outcomes.** No expected savings figure appears anywhere above, on
   purpose — a pre-registered expectation becomes a target.
-- **It does not size the cost.** Provider spend for 100 runs is unestimated because the
-  ~100× price-gap figure is still REPORTED (`TOP30_R3.md` T10, §6 item 1). **Resolve the
-  pricing question before approving spend.**
+- **It does not size the cost.** Provider spend for 100 runs is still unestimated, but the
+  blocker is gone: pricing is now OBSERVED (`PS-2026-09-15`). A spend estimate can be produced
+  from the frozen matrix once the task set fixes expected tokens per run.
 
 ---
 
 ## 11. Requested decision
 
-**Grant or refuse G1 (methodology freeze).**
+**Grant or refuse LG1 (methodology freeze).**
 
-If granted, the next actions in order are: security review of the eight candidates (G2) →
-container and dependency pinning (G3) → task set and answer keys frozen → execution begins.
+If granted, the next actions in order are: security review of the eight candidates (LG2) →
+container and dependency pinning (LG3) → task set and answer keys frozen → execution begins.
 
 If refused, name the condition, allocation or quality floor to change **now**, while changing
-it is still free. After G1, a change voids the runs.
+it is still free. After LG1, a change voids the runs.
 
 **Stop condition reached. Awaiting Editor-in-Chief / ChatGPT review.**

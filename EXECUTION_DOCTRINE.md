@@ -46,10 +46,18 @@ Derived research: H006 Agent Unit Economics; H007 Cost per successful task; H008
 ## Three ledgers
 Maintain Hypothesis, Evidence and Decision Ledgers. A decision without traceable evidence must be marked **STRATEGIC BET**.
 
-## Progress gates
-G0 Question → G1 Hypothesis → G2 Signal → G3 Research + counterevidence → G4 Test Design → G5 Execution → G6 Verification → G7 Decision → G8 Distribution → G9 Demand Feedback → G10 Productization.
+## Progress gates — **DG** namespace
+
+**DG0** Question → **DG1** Hypothesis → **DG2** Signal → **DG3** Research + counterevidence →
+**DG4** Test Design → **DG5** Execution → **DG6** Verification → **DG7** Decision →
+**DG8** Distribution → **DG9** Demand Feedback → **DG10** Productization.
 
 Do not silently jump gates.
+
+> **Namespace rule (review decision, 2026-09-15).** Doctrine gates are always written **DG0–DG10**.
+> Lab gates are always written **LG0–LG9** (`workflows/TOKEN_EFFICIENCY_LAB_001_TEAM.md`). The two
+> ladders are different: DG4 is *Test Design*, LG4 is *Execution complete*. **Never write a bare
+> `G4`** — it is ambiguous and previously was.
 
 ## Forward-Motion Rule
 Every major Agent run ends by answering:

@@ -25,16 +25,16 @@ R2-001 mined GitHub only — four of the six `DISCOVERY_ENGINE.md` source classe
 | code_repository | 164 |
 | paper | 6 |
 | engineering_blog | 4 |
-| community_signal | 3 |
+| engineering_docs | 4 |
 | curated_index | 3 |
-| engineering_docs | 3 |
 | news | 3 |
+| community_signal | 2 |
 | model_hub | 1 |
 | video_channel | 1 |
 
 ### Verification status — read this before quoting anything
 
-Of the 24 new materials, **5 were retrieved from the primary source** and **19 come from search-engine summaries only**.
+Of the 24 new materials, **6 were retrieved from the primary source** and **18 come from search-engine summaries only**.
 
 Every item carries a `_verification` field. `"search"` means the underlying claim is **not independently confirmed**. Several of the most quotable numbers in this run are in that category — the ~100× price gap, the 40–85% routing savings, the 2.37M YouTube view count. They are useful as hypotheses to test. **They are not facts ATK may publish.**
 
@@ -89,7 +89,6 @@ Refreshed across all 188 materials. Non-repository items now rank here too — a
 | [`koala73/worldmonitor`](https://github.com/koala73/worldmonitor) | code repository | 10516 | **81** | Real-time global intelligence dashboard |
 | [Show HN: Headroom - reversible context compression (~60%…](https://news.ycombinator.com/item?id=46628278) | community signal | 2026 | **84** | Independent HN validation of the headroom project already in the… |
 | [`cathrynlavery/diagram-design`](https://github.com/cathrynlavery/diagram-design) | code repository | 7951 | **83** | 38 editorial diagram types rendered as self-contained HTML + SVG |
-| [~100x price gap between cheapest usable and frontier…](https://www.digitalapplied.com/blog/llm-model-routing-2026-cost-quality-optimization-engineering-guide) | community signal | 2026 | **81** | DeepSeek V4 around $0.44/M tokens against GPT-5.5-pro at $30/$180 |
 | [`zarazhangrui/frontend-slides`](https://github.com/zarazhangrui/frontend-slides) | code repository | 3877 | **79** | Generates presentation slides on the web using a coding agent's… |
 | [YouTube: Claude Code tutorial demand is enormous](https://developereducators.com/best/claude-code/) | video channel | 2026 | **67** | The most-watched Claude Code tutorial reportedly sits near 2.37M… |
 | [`headroomlabs-ai/headroom`](https://github.com/headroomlabs-ai/headroom) | code repository | 8764 | **91** | Compresses tool output, logs, files and RAG chunks before they reach… |
@@ -98,6 +97,7 @@ Refreshed across all 188 materials. Non-repository items now rank here too — a
 | [DeepSeek open-sources its agent harness under MIT](https://thenewstack.io/deepseek-harness-open-source-plugins/) | news | 2026-08-13 | **87** | Model adapter, tool registry and agent loop are all swappable… |
 | [`Egonex-AI/Understand-Anything`](https://github.com/Egonex-AI/Understand-Anything) | code repository | 13686 | **86** | Turns a codebase into an interactive, queryable knowledge graph |
 | [`Panniantong/Agent-Reach`](https://github.com/Panniantong/Agent-Reach) | code repository | 12157 | **86** | Gives an agent read/search access to Twitter, Reddit, YouTube… |
+| [`nextlevelbuilder/ui-ux-pro-max-skill`](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | code repository | 13438 | **85** | Design intelligence for building professional UI/UX across platforms |
 
 ## 2. What should ATK test?
 
@@ -170,14 +170,14 @@ Wiring these three into the Monday scout replaces most of the manual searching t
 
 ## Honest limits
 
-- **19 of 24 new materials are search-summary only.** Their claims are unconfirmed. The cheapest fix is fetching the primary pages directly — `raw.githubusercontent.com` and normal HTTPS both work from this environment.
+- **18 of 24 new materials are search-summary only.** Their claims are unconfirmed. The cheapest fix is fetching the primary pages directly — `raw.githubusercontent.com` and normal HTTPS both work from this environment.
 - **Still nothing executed.** No experiment from list 2 has been run, so every savings figure in this registry — vendor or community — remains unverified.
 - **X and Reddit were reached only through secondary write-ups**, not their own surfaces. Same for YouTube: view counts come from an aggregator page, not from YouTube.
-- **Pricing moves fast.** The ~100× model price gap is the load-bearing assumption under the whole routing thesis and it is the single number most worth confirming first-hand.
+- **Pricing was the load-bearing assumption and has since been verified.** The ~100× gap quoted in this run was corrected on 2026-09-15 from primary vendor pricing pages: like-for-like it is **11.4×**. See `PRICING_SNAPSHOT_2026-09-15.md` and Evidence Ledger E007/E015.
 
 ## R2-003
 
-1. Confirm the price gap from provider pricing pages directly — it underpins everything
+1. ~~Confirm the price gap from provider pricing pages~~ — **done 2026-09-15, corrected to 11.4×**
 2. Run the Anthropic context-engineering cookbook and record measured token deltas
 3. Run `api-relay-audit` against ATK's own routing
 4. Stand up Cloudflare AI Gateway and Vercel AI Gateway and document, concretely, what ATK does that they do not

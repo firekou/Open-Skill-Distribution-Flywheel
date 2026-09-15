@@ -200,7 +200,7 @@ Overlap between lists is intentional and marked. Verify state is per-claim, not 
 | T7 | `tt-a1i/archify` (61,985★, MIT) | Diagram generation; strongest visual asset in the registry. | **REPORTED** |
 | T8 | `calesthio/OpenMontage` (59,020★, **AGPL-3.0**) | Talk only — network copyleft blocks redistribution. | **OBSERVED** (licence read) |
 | T9 | **`Agent-Reach`'s own ban-risk warning** | A maintainer telling users to use a throwaway account is an honest-tooling story worth telling. | **OBSERVED** (§3.2) |
-| T10 | **The ~100× model price gap** | The load-bearing number under all routing economics. | **REPORTED — do not publish until §6 item 1** |
+| T10 | **The model price gap, corrected** | Verified from primary pricing pages 2026-09-15. **The ~100× figure was half wrong.** Like-for-like it is **11.4×**; ~100× requires cherry-picking tiers. The story is now *how easy it is to manufacture any multiple you want*. | **OBSERVED** — E007, E015 |
 
 ### 4.2 Ten Worth Running
 
@@ -257,7 +257,7 @@ Integration brief only. **No fork, no adapter, and no execution is authorised by
 
 | # | Item | Resolves | Est. |
 |---|---|---|---|
-| 1 | Read DeepSeek / OpenAI / Anthropic pricing pages directly | T10 — the load-bearing number | ~10 min |
+| 1 | ~~Read DeepSeek / OpenAI / Anthropic pricing pages directly~~ | ~~T10~~ | **DONE 2026-09-15 — gap is 11.4× like-for-like, not ~100×** |
 | 2 | Read `liaohch3/claude-tap` LICENSE | I4 gate | ~2 min |
 | 3 | Re-query `headroom` issues with different terms; report result either way | §5 gap | ~15 min |
 | 4 | Read Cloudflare AI Gateway + Vercel AI Gateway docs directly | T3 → OBSERVED | ~1 hr |

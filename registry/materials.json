@@ -17,18 +17,18 @@
     },
     "by_source_type": {
       "code_repository": 164,
-      "community_signal": 3,
+      "community_signal": 2,
       "curated_index": 3,
       "engineering_blog": 4,
-      "engineering_docs": 3,
+      "engineering_docs": 4,
       "model_hub": 1,
       "news": 3,
       "paper": 6,
       "video_channel": 1
     },
     "non_repo": 24,
-    "verified_primary": 5,
-    "search_summary_only": 19,
+    "verified_primary": 6,
+    "search_summary_only": 18,
     "priority_a": 52,
     "priority_b": 113,
     "watch": 22,
@@ -822,6 +822,47 @@
       "_origin": "sweep-R1"
     },
     {
+      "id": "price-gap-verified",
+      "title": "Cross-provider price gap, verified from primary pricing pages",
+      "source_url": "https://developers.openai.com/api/docs/pricing",
+      "source_type": "engineering_docs",
+      "category": "routing",
+      "summary": "VERIFIED FROM PRIMARY SOURCES, and the earlier ~100x claim was half wrong. gpt-5.5-pro is indeed $30 in / $180 out, but no DeepSeek price of $0.44 exists: deepseek-v4-pro cache-miss is $0.66/$1.32 in and $1.98/$3.96 out. Like-for-like (gpt-5.5 vs deepseek-v4-pro, blended 3:1, cache-miss off-peak) the gap is 11.4x. ~100x needs cherry-picked tiers. Full snapshot: benchmarks/token-efficiency-lab-001/evidence/PRICING_SNAPSHOT_2026-09-15.md",
+      "problem_solved": "VERIFIED FROM PRIMARY SOURCES, and the earlier ~100x claim was half wrong. gpt-5.5-pro is indeed $30 in / $180 out, but no DeepSeek price of $0.44 exists: deepseek-v4-pro cache-miss is $0.66/$1.32 in and $1.98/$3.96 out. Like-for-like (gpt-5.5 vs deepseek-v4-pro, blended 3:1, cache-miss off-peak) the gap is 11.4x. ~100x needs cherry-picked tiers. Full snapshot: benchmarks/token-efficiency-lab-001/evidence/PRICING_SNAPSHOT_2026-09-15.md",
+      "technical_value": "VERIFIED FROM PRIMARY SOURCES, and the earlier ~100x claim was half wrong. gpt-5.5-pro is indeed $30 in / $180 out, but no DeepSeek price of $0.44 exists: deepseek-v4-pro cache-miss is $0.66/$1.32 in and $1.98/$3.96 out. Like-for-like (gpt-5.5 vs deepseek-v4-pro, blended 3:1, cache-miss off-peak) the gap is 11.4x. ~100x needs cherry-picked tiers. Full snapshot: benchmarks/token-efficiency-lab-001/evidence/PRICING_SNAPSHOT_2026-09-15.md",
+      "why_now": "published 2026-09-15",
+      "atk_relevance": "ATK relevance 20/20. Directly informs ATK routing or token strategy.",
+      "actions": [
+        "research",
+        "link_upstream",
+        "content",
+        "tutorial"
+      ],
+      "scores": {
+        "technical_utility": 21,
+        "momentum": 17,
+        "atk_relevance": 20,
+        "content_potential": 14,
+        "experimentability": 3,
+        "source_credibility": 10,
+        "material_score": 85
+      },
+      "rights": {
+        "license": "n/a-editorial",
+        "attribution": "required",
+        "redistribution_allowed": false,
+        "commercial_distribution_allowed": false,
+        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
+      },
+      "status": "material_ready",
+      "_metrics": {
+        "published": "2026-09-15",
+        "snapshot_at": "2026-09-15"
+      },
+      "_verification": "primary",
+      "_origin": "benchmark-R2-002"
+    },
+    {
       "id": "arxiv-cluster-route-escalate",
       "title": "Cluster, Route, Escalate: Cascaded Framework for Cost-Aware LLM Serving",
       "source_url": "https://arxiv.org/abs/2606.27457",
@@ -1594,47 +1635,6 @@
         "snapshot_at": "2026-09-15"
       },
       "_origin": "sweep-R1"
-    },
-    {
-      "id": "price-gap-100x",
-      "title": "~100x price gap between cheapest usable and frontier models",
-      "source_url": "https://www.digitalapplied.com/blog/llm-model-routing-2026-cost-quality-optimization-engineering-guide",
-      "source_type": "community_signal",
-      "category": "routing",
-      "summary": "DeepSeek V4 around $0.44/M tokens against GPT-5.5-pro at $30/$180. UNVERIFIED pricing from a secondary source - but if even roughly right, the arbitrage a router captures is ~100x, and that spread IS the routing business.",
-      "problem_solved": "DeepSeek V4 around $0.44/M tokens against GPT-5.5-pro at $30/$180. UNVERIFIED pricing from a secondary source - but if even roughly right, the arbitrage a router captures is ~100x, and that spread IS the routing business.",
-      "technical_value": "DeepSeek V4 around $0.44/M tokens against GPT-5.5-pro at $30/$180. UNVERIFIED pricing from a secondary source - but if even roughly right, the arbitrage a router captures is ~100x, and that spread IS the routing business.",
-      "why_now": "published 2026",
-      "atk_relevance": "ATK relevance 20/20. Directly informs ATK routing or token strategy.",
-      "actions": [
-        "research",
-        "link_upstream",
-        "content",
-        "tutorial"
-      ],
-      "scores": {
-        "technical_utility": 20,
-        "momentum": 17,
-        "atk_relevance": 20,
-        "content_potential": 15,
-        "experimentability": 3,
-        "source_credibility": 6,
-        "material_score": 81
-      },
-      "rights": {
-        "license": "n/a-editorial",
-        "attribution": "required",
-        "redistribution_allowed": false,
-        "commercial_distribution_allowed": false,
-        "notes": "Third-party writing or research. Cite and link; never reproduce at length."
-      },
-      "status": "material_ready",
-      "_metrics": {
-        "published": "2026",
-        "snapshot_at": "2026-09-15"
-      },
-      "_verification": "search",
-      "_origin": "benchmark-R2-002"
     },
     {
       "id": "paritok-4b-v1",

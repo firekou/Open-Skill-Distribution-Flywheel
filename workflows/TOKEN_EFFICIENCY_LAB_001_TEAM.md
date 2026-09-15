@@ -5,6 +5,8 @@ GitHub evidence per experiment: repository URL; exact commit SHA/tag; ATK branch
 
 Layout: benchmarks/token-efficiency-lab-001/{methodology,environment,tasks,runs,evidence,results,reproduction,reports}/
 
-Gates: G0 claim → G1 methodology frozen → G2 repo/security passed → G3 environment reproducible → G4 execution complete → G5 quality floor → G6 reproduction → G7 Verify state → G8 Red Team → G9 publish/integrate.
+Gates — **LG** namespace: **LG0** claim → **LG1** methodology frozen → **LG2** repo/security passed → **LG3** environment reproducible → **LG4** execution complete → **LG5** quality floor → **LG6** reproduction → **LG7** Verify state → **LG8** Red Team → **LG9** publish/integrate.
+
+> **Namespace rule (review decision, 2026-09-15).** Lab gates are always **LG0–LG9**; doctrine gates are always **DG0–DG10** (`EXECUTION_DOCTRINE.md`). DG4 is *Test Design*; LG4 is *Execution complete*. **Never write a bare `G4`.**
 
 Stop if permissions/credentials are missing, token accounting is incomparable, environment cannot be pinned, executable fails security, or quality cannot be measured. Record failure; do not improvise.

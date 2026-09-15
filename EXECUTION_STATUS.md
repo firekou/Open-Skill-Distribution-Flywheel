@@ -7,18 +7,22 @@
 
 ## ⚠️ Blocker to resolve before any gate answer is unambiguous
 
-**Two different gate systems are both labelled G0–G9/G10.**
+**RESOLVED by review decision 2026-09-15.** Doctrine gates are now **DG0–DG10**; Lab gates are
+**LG0–LG9**. Bare `G4` is no longer written anywhere. The collision below is kept as the record
+of why the namespaces exist.
+
+**Previously: two different gate systems were both labelled G0–G9/G10.**
 
 | Source | Sequence |
 |---|---|
-| `EXECUTION_DOCTRINE.md` | G0 Question → G1 Hypothesis → G2 Signal → G3 Research+counterevidence → G4 Test Design → G5 Execution → G6 Verification → G7 Decision → G8 Distribution → G9 Demand Feedback → G10 Productization |
-| `workflows/TOKEN_EFFICIENCY_LAB_001_TEAM.md` | G0 claim → G1 methodology frozen → G2 repo/security → G3 environment → G4 execution complete → G5 quality floor → G6 reproduction → G7 Verify state → G8 Red Team → G9 publish |
+| `EXECUTION_DOCTRINE.md` (now **DG**) | G0 Question → G1 Hypothesis → G2 Signal → G3 Research+counterevidence → G4 Test Design → G5 Execution → G6 Verification → G7 Decision → G8 Distribution → G9 Demand Feedback → G10 Productization |
+| `workflows/TOKEN_EFFICIENCY_LAB_001_TEAM.md` (now **LG**) | G0 claim → G1 methodology frozen → G2 repo/security → G3 environment → G4 execution complete → G5 quality floor → G6 reproduction → G7 Verify state → G8 Red Team → G9 publish |
 
 They are not the same ladder. "G4" means *Test Design* in one and *Execution complete* in the other.
 `reports/TOKEN_EFFICIENCY_LAB_001_PRECHECK.md` §8 uses the **Lab** set.
 
-This document writes **DG0–DG10** (doctrine) and **LG0–LG9** (lab) to stay unambiguous.
-**Renaming them in the source files is an Editor-in-Chief decision, not a Claude one** — flagged, not changed.
+**Renaming was approved and applied 2026-09-15.** Both source files now carry an explicit
+namespace rule.
 
 ---
 
@@ -68,8 +72,9 @@ Written as a document ≠ done. Every row below exists **only as a specification
 | Content Package schema | Named in growth plan §15 | **Not created** |
 | H003 / H004 / H005 | Hypotheses stated | **No test designed for any of them** |
 
-> The single most load-bearing unverified item remains the **~100× model price gap**
-> (`TOP30_R3.md` T10). It underpins the routing economics argument and is still REPORTED.
+> ~~The ~100× model price gap~~ **RESOLVED 2026-09-15.** Verified from primary pricing pages and
+> **corrected: 11.4× like-for-like**, not ~100×. See E007/E015 and
+> `benchmarks/token-efficiency-lab-001/evidence/PRICING_SNAPSHOT_2026-09-15.md`.
 
 ---
 
@@ -140,7 +145,7 @@ without it.
 ## Open items for the Editor-in-Chief
 
 1. **Disambiguate the two G0–G9 gate namespaces** (top of this document). Claude flagged, did not change.
-2. **Resolve the ~100× price gap** (`TOP30_R3.md` §6 item 1, ~10 min) before approving any benchmark spend.
+2. ~~Resolve the ~100× price gap~~ — **DONE 2026-09-15.** Corrected to 11.4× like-for-like.
 3. **Confirm Phase D is authorised to proceed** before the review stop, or say the stop happens now without it.
 
 
@@ -185,8 +190,8 @@ above** — no third-party code was executed.
 10 decisions recorded. 8 evidence-backed; **2 labelled STRATEGIC BET** (D007, D008) because they
 rest on reasoning rather than demand data.
 
-The newly justified one is **D010**: resolve the ~100× price gap from primary pricing pages
-*before* approving benchmark spend. It underpins the routing economics and costs ~10 minutes.
+**D010 is now closed** — the price gap was verified and corrected. **D011 is new**: state the
+price gap as a range with its pairing, never as a single multiple.
 
 ### 6. What is the single next gate?
 

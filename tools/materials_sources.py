@@ -120,13 +120,15 @@ SOURCES = [
   "Independent HN validation of the headroom project already in the registry. The framing that "
   "landed: by turn 10 teams pay for 100k+ tokens on every call, and truncation, summarisation and "
   "bigger windows each have a fundamental tradeoff."),
- ("price-gap-100x","~100x price gap between cheapest usable and frontier models",
-  "https://www.digitalapplied.com/blog/llm-model-routing-2026-cost-quality-optimization-engineering-guide",
-  "community_signal","routing","2026","search",
-  20,17,20,15,3,6,
-  "DeepSeek V4 around $0.44/M tokens against GPT-5.5-pro at $30/$180. UNVERIFIED pricing from a "
-  "secondary source - but if even roughly right, the arbitrage a router captures is ~100x, and "
-  "that spread IS the routing business."),
+ ("price-gap-verified","Cross-provider price gap, verified from primary pricing pages",
+  "https://developers.openai.com/api/docs/pricing",
+  "engineering_docs","routing","2026-09-15","primary",
+  21,17,20,14,3,10,
+  "VERIFIED FROM PRIMARY SOURCES, and the earlier ~100x claim was half wrong. gpt-5.5-pro is "
+  "indeed $30 in / $180 out, but no DeepSeek price of $0.44 exists: deepseek-v4-pro cache-miss "
+  "is $0.66/$1.32 in and $1.98/$3.96 out. Like-for-like (gpt-5.5 vs deepseek-v4-pro, blended "
+  "3:1, cache-miss off-peak) the gap is 11.4x. ~100x needs cherry-picked tiers. Full snapshot: "
+  "benchmarks/token-efficiency-lab-001/evidence/PRICING_SNAPSHOT_2026-09-15.md"),
  ("routing-savings-range","Reported routing savings cluster at 40-85%",
   "https://www.ayautomate.com/blog/open-source-llm-orchestration-tools","community_signal","routing","2026","search",
   17,15,18,14,3,5,
