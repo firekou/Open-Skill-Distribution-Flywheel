@@ -1264,24 +1264,62 @@ def _strings_in(node: Any) -> Set[str]:
     return out
 
 
+# A governing source is a FILE NAME.  `_strings_in` used to absorb every
+# string it could reach, which is how a 108-character English `note` inside a
+# C-002 key became a mandatory, uncitable governing source and failed that
+# task's own perfect answer at traceability 0.72 in every condition.  Parsing
+# is structural now: a citation-support value is a list of file names, and
+# anything that is not shaped like one is rejected and recorded, never
+# promoted into a requirement.
+_SOURCE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+/-]*\.[A-Za-z0-9]{1,8}$")
+
+
+def _source_like(value: Any) -> Optional[str]:
+    """The file name this value names, or None if it does not name one."""
+    if not isinstance(value, str):
+        return None
+    v = value.strip()
+    if not v or len(v) > 255 or " " in v:
+        return None
+    return v if _SOURCE_NAME_RE.match(v) else None
+
+
+def _source_names(node: Any, rejected: Optional[Set[str]] = None) -> Set[str]:
+    """File names inside a list, or a nested map of lists.  Nothing else."""
+    out: Set[str] = set()
+    if isinstance(node, str):
+        name = _source_like(node)
+        if name:
+            out.add(name)
+        elif rejected is not None:
+            rejected.add(node.strip()[:120])
+    elif isinstance(node, dict):
+        for v in node.values():
+            out |= _source_names(v, rejected)
+    elif isinstance(node, (list, tuple)):
+        for v in node:
+            out |= _source_names(v, rejected)
+    return out
+
+
 def _citation_support(view: Dict[str, Any], key_payload: Any,
-                      key_index: Dict[str, Any],
-                      id_field: str) -> Dict[str, Dict[str, Set[str]]]:
-    """record_id -> {field: {files stating the key's value}, "*": {record-level}}.
+                      key_index: Dict[str, Any], id_field: str,
+                      rejected: Optional[Set[str]] = None
+                      ) -> Dict[str, Dict[str, Set[str]]]:
+    """record_id -> {field: {governing sources of that field}, "*": ..., "_all": ...}.
 
-    Built from the key itself.  Three shapes are accepted, because the three
-    workload-C keys use three:
+    Built from the key itself, never from the run.
 
-      * a per-field map on each key record (`citation_support: {field: [files]}`)
-        - C-001 and C-003;
-      * a nested map with no per-field breakdown (`{"per_award": {...}}`)
-        - C-002, where no single file states the summed total.  Every file name
-        anywhere inside it joins the record-level set;
-      * a top-level `citation_support` on the answer key, `{record: {...}}`.
-
-    The record-level `"*"` set also absorbs the key record's own `sources`.
-    Every file in it is drawn from the KEY, never from the run, so a file that
-    states a different value is still unsupported (SCORING_SPEC UG-11).
+      * `field -> [file, ...]` on a key record's `citation_support` is the
+        PER-FIELD breakdown.  All three delivered v1.1.0 keys use it.
+      * `"*"` is the record-level FALLBACK, for a key that gives no per-field
+        breakdown at all (v1.0.0's C-002 `{"per_award": {...}}` shape).  It is
+        the key record's own `sources` plus the file names in any part of the
+        blob that is not a per-field list.  Under v1.1.0 it is used only when
+        there is no per-field breakdown - adding it on top of one was the
+        defect that made the breakdown a no-op.
+      * `"_all"` is the union of everything, and exists only so the v1.0.0
+        replay path can reproduce its documented record-level union (UG-11).
     """
     out: Dict[str, Dict[str, Set[str]]] = {}
 
@@ -1289,15 +1327,33 @@ def _citation_support(view: Dict[str, Any], key_payload: Any,
         rid = str(rid).strip()
         entry = out.setdefault(rid, {})
         star = entry.setdefault("*", set())
+        allset = entry.setdefault("_all", set())
         if isinstance(blob, dict):
             for fld, val in blob.items():
                 if isinstance(val, (list, tuple)) and all(isinstance(x, str) for x in val):
-                    entry.setdefault(str(fld), set()).update(x.strip() for x in val)
-            star |= _strings_in(blob)
+                    # a per-field list of file names
+                    names = set()
+                    for x in val:
+                        name = _source_like(x)
+                        if name:
+                            names.add(name)
+                        elif rejected is not None:
+                            rejected.add(x.strip()[:120])
+                    entry.setdefault(str(fld), set()).update(names)
+                    allset |= names
+                else:
+                    # not a per-field list: record-level material only
+                    names = _source_names(val, rejected)
+                    star |= names
+                    allset |= names
         elif isinstance(blob, (list, tuple)):
-            star |= _strings_in(blob)
+            names = _source_names(blob, rejected)
+            star |= names
+            allset |= names
         if extra_star is not None:
-            star |= _strings_in(extra_star)
+            names = _source_names(extra_star, rejected)
+            star |= names
+            allset |= names
 
     for rid, krec in key_index.items():
         if isinstance(krec, dict):
@@ -1312,8 +1368,40 @@ def _citation_support(view: Dict[str, Any], key_payload: Any,
         for rid, blob in top.items():
             absorb(rid, blob)
 
-    # A record-level set that names nothing is not a support map at all.
+    # A support map that names no file at all is not a support map.
     return {r: e for r, e in out.items() if any(e.values())}
+
+
+def _support_field_names(entry: Dict[str, Set[str]]) -> List[str]:
+    """The per-field keys of one record's support entry."""
+    return [k for k in entry if k not in ("*", "_all")]
+
+
+def _governing_sources(entry: Dict[str, Set[str]], rec: dict, cells: Sequence[str],
+                       id_field: str, v11: bool) -> Tuple[Set[str], str]:
+    """(allowed, basis) - the governing sources this record's citations answer to.
+
+    v1.1.0 metric, verbatim: "the governing sources of that record's REPORTED
+    values".  A field the run did not report owes nothing and grants nothing.
+    The id field is how the record is matched, not a value claimed from a
+    source, so it is not one of the reported values (as in v1.0.0).
+    """
+    if not entry:
+        return set(), "absent"
+    if not v11:
+        # v1.0.0 replay: the documented record-level union (UG-11).
+        return set(entry.get("_all") or set()), "v1.0.0_record_level_union"
+    per_field = _support_field_names(entry)
+    if not per_field:
+        return set(entry.get("*") or set()), "record_level_fallback"
+    allowed: Set[str] = set()
+    for fld in cells:
+        if fld == id_field:
+            continue
+        if _get(rec, fld) is _MISSING:
+            continue
+        allowed |= entry.get(fld) or set()
+    return allowed, "per_field_over_reported_values"
 
 
 def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
@@ -1358,8 +1446,13 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
     ev = view.get("required_evidence") if isinstance(view.get("required_evidence"), dict) else {}
     corpus_files = _str_set(ev.get("corpus_files")) if ev else set()
     detail["corpus_file_list_available"] = bool(corpus_files)
-    support = _citation_support(view, key_payload, res["key_index"], id_field)
+    rejected: Set[str] = set()
+    support = _citation_support(view, key_payload, res["key_index"], id_field, rejected)
     detail["citation_support_available"] = bool(support)
+    if rejected:
+        # Visible, not silent: a key that names something which is not a file
+        # has a defect, and the scorer refuses to turn it into a requirement.
+        detail["citation_support_rejected_strings"] = sorted(rejected)[:20]
 
     if view.get("_mv") == V1_1_0 and not support:
         # The key carries no governing-source set at all.  Traceability is the
@@ -1376,6 +1469,7 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
     unsupported: List[Dict[str, Any]] = []
     nonexistent_files: List[str] = []
     v11 = view.get("_mv") == V1_1_0
+    support_basis: Set[str] = set()
 
     for rec in reported:
         if not isinstance(rec, dict):
@@ -1392,23 +1486,11 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
         rec_support = support.get(rid, {}) if rid is not None else {}
 
         # The record's GOVERNING SOURCES, taken entirely from the key.
-        allowed: Set[str] = set()
-        if krec is not None and rec_support:
-            allowed |= set(rec_support.get("*") or set())
-            for fld in cells:
-                if fld == id_field:
-                    continue
-                if v11:
-                    # "the governing sources of that record's REPORTED values"
-                    reported_value = _get(rec, fld)
-                    if reported_value is _MISSING:
-                        continue
-                else:
-                    # v1.0.0: only fields the run reported CORRECTLY.
-                    if not _values_equal(_get(rec, fld), _get(krec, fld),
-                                         sorted_list=(fld in sorted_cells)):
-                        continue
-                allowed |= rec_support.get(fld) or set()
+        if krec is None:
+            allowed, basis = set(), "record_not_in_key"
+        else:
+            allowed, basis = _governing_sources(rec_support, rec, cells, id_field, v11)
+        support_basis.add(basis)
 
         if not files:
             total_citations += 1
@@ -1449,6 +1531,7 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
                                     "why": "governing_source_not_cited"})
 
     detail["missing_citations"] = missing_citations
+    detail["citation_support_basis"] = sorted(support_basis)
     trace_denom = total_citations + missing_citations
     traceability = (supported / trace_denom) if trace_denom else 0.0
     detail["traceability"] = _round4(traceability)

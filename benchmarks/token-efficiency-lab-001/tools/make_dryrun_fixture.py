@@ -33,12 +33,19 @@ def assert_snapshot_can_price(snapshot_path: pathlib.Path, emit_cached: bool) ->
 
     Failing here, loudly and before any run, beats producing 10 records that all error out.
     """
-    rates = json.loads(pathlib.Path(snapshot_path).read_text())["rates"]
+    data = json.loads(pathlib.Path(snapshot_path).read_text())
+    # Both snapshot shapes: v1.1.0's per-model entries, and v1.0.0's flat rate table.
+    if "models" in data:
+        rates = {k: v.get("rates", {}) for k, v in data["models"].items()}
+        cached_key = "cache_read"
+    else:
+        rates = data["rates"]
+        cached_key = "cached_input_per_mtok"
     for provider, model in (CHEAP, MID):
         key = f"{provider}/{model}"
         if key not in rates:
             raise SystemExit(f"{key} is not in the pricing snapshot; the fixture cannot be priced")
-        if emit_cached and rates[key].get("cached_input_per_mtok") is None:
+        if emit_cached and rates[key].get(cached_key) is None:
             raise SystemExit(
                 f"{key} has no cached input rate in the snapshot, but this fixture emits cached "
                 "tokens. Folding them in at the full input rate would overstate cost, so the "
@@ -152,6 +159,8 @@ def main() -> int:
         if wl not in ("A", "D"):
             continue
         rid = f"dry_run-{item['task_id']}-{item['condition']}-r{item.get('repetition', 1)}"
+        task = json.loads((task_root / "tasks" / wl / f"{item['task_id']}.json").read_text())
+        corpus = task["input"].get("corpus_paths", []) or ["corpora/"]
         for n in range(2):
             seq += 1
             audit_lines.append(json.dumps({
@@ -159,6 +168,16 @@ def main() -> int:
                 "tool": "catalog.list_tools" if n == 0 else "catalog.describe_tool",
                 "family": "meta", "arguments": {},
                 "synthetic": True,
+            }, sort_keys=True))
+        # Corpus reads. A-001's only anti-shortcut guard is "the answer was produced without
+        # reading the corpus", and it is scored from this log. A fixture that logs no reads
+        # exercises only the fail-closed path - which it did, correctly, on the first attempt.
+        for cp in corpus[:2]:
+            seq += 1
+            audit_lines.append(json.dumps({
+                "seq": seq, "run_id": rid, "mode": "read",
+                "tool": "fs.read", "family": "corpus",
+                "arguments": {"path": cp}, "synthetic": True,
             }, sort_keys=True))
     audit_out = pathlib.Path(args.out).with_name("TOOL_AUDIT.jsonl")
     audit_out.write_text("\n".join(audit_lines) + ("\n" if audit_lines else ""))

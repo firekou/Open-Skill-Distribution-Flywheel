@@ -1108,32 +1108,47 @@ class TestDeliveredKeyShapes(unittest.TestCase):
         self.assertEqual(r["quality_score"], 1.0)
 
     def test_c_per_record_citation_support(self):
+        """The shape the v1.1.0 keys actually ship: a per-field map whose
+        union equals `sources` by construction.  The withdrawn v1.0.0 shape -
+        a curated `sources` beside a `non_authoritative_files_stating_the_same_*`
+        list - is exactly what RT-04 rejected and is not fixtured here."""
         key = {"task_id": "C-001", "derived_by": "answer-key-builder",
                "flags": [{"flag": "adaptive_shard_split", "introduced_in": "2.2",
                           "removed_in": None,
                           "sources": ["release_notes_kestrel_2_2.md"],
                           "citation_support": {
+                              "flag": ["release_notes_kestrel_2_2.md"],
                               "introduced_in": ["release_notes_kestrel_2_2.md"],
-                              "removed_in": []},
-                          "non_authoritative_files_stating_the_same_introduced_in":
-                              ["forum_thread_4111.md"]}],
+                              "removed_in": []}}],
                "count": 1}
         ev = {"corpus_files": ["release_notes_kestrel_2_2.md", "forum_thread_4111.md"]}
         good = {"flags": [{"flag": "adaptive_shard_split", "introduced_in": "2.2",
                           "removed_in": None,
                           "sources": ["release_notes_kestrel_2_2.md"]}], "count": 1}
-        r = judge.score_packet(packet("C-001", "C", j(good), key, ev))
-        self.assertEqual(r["detail"]["traceability"], 1.0)
-        self.assertEqual(r["quality_score"], 1.0)
-        self.assertTrue(r["task_success"])
+        for mv in ("1.0.0", "1.1.0"):
+            with self.subTest(v=mv):
+                e = dict(ev, **hashes("C-001")) if mv == "1.1.0" else ev
+                r = judge.score_packet(packet("C-001", "C", j(good), key, e,
+                                              methodology_version=mv))
+                self.assertEqual(r["detail"]["traceability"], 1.0)
+                self.assertEqual(r["quality_score"], 1.0)
+                self.assertTrue(r["task_success"], r["failure_reason"])
 
+        # a forum thread that states the same value is still not a governing
+        # source, under either version
         bad = json.loads(j(good))
         bad["flags"][0]["sources"] = ["forum_thread_4111.md"]
-        r = judge.score_packet(packet("C-001", "C", j(bad), key, ev))
-        self.assertLess(r["detail"]["traceability"], 1.0)
-        self.assertTrue(r["zero_tolerance_breached"])
+        for mv in ("1.0.0", "1.1.0"):
+            with self.subTest(v=mv, case="non_governing"):
+                e = dict(ev, **hashes("C-001")) if mv == "1.1.0" else ev
+                r = judge.score_packet(packet("C-001", "C", j(bad), key, e,
+                                              methodology_version=mv))
+                self.assertLess(r["detail"]["traceability"], 1.0)
+                self.assertTrue(r["zero_tolerance_breached"])
 
-    def test_c002_per_award_support_has_no_field_breakdown(self):
+    def test_c002_legacy_per_award_support_has_no_field_breakdown(self):
+        """The withdrawn v1.0.0 C-002 shape, kept only as a v1.0.0 replay
+        case: no per-field breakdown, so the record-level fallback applies."""
         key = {"projects": [{
             "project": "Project Halyard", "total_awarded_eur": 621500,
             "awards_included": ["GA-0001"], "awards_excluded": [],
@@ -2659,3 +2674,243 @@ class TestUnadjudicatedProseMentions(unittest.TestCase):
         r = judge.score_packet(e2_packet11(
             E2_KEY_11, {8: "This is just the drain."}))
         self.assertIn("V2_banned_word", codes(r))
+
+
+# ===========================================================================
+# The per-field breakdown must actually be per-field.
+#
+# `_citation_support` used to do `star |= _strings_in(blob)` over the whole
+# map before the per-field loop, so `allowed` was the record's entire union
+# and the breakdown had no effect.  Two consequences, tested separately: a
+# citation governing an UNREPORTED field counted as supported, and a run that
+# reported a subset of fields owed citations for fields it never reported.
+# Both tests below invert against the pre-fix code.
+# ===========================================================================
+
+C_SPLIT_KEY = {
+    "task_id": "C-001",
+    "flags": [{
+        "flag": "edge_cache_v2",
+        "introduced_in": "2.2",
+        "removed_in": "2.6",
+        "sources": ["release_notes_kestrel_2_2.md", "release_notes_kestrel_2_6.md"],
+        # the two data fields have DISJOINT governing sources, which is what
+        # makes the per-field rule observable at all
+        "citation_support": {
+            "flag": ["release_notes_kestrel_2_2.md"],
+            "introduced_in": ["release_notes_kestrel_2_2.md"],
+            "removed_in": ["release_notes_kestrel_2_6.md"],
+        },
+    }],
+    "count": 1,
+}
+C_SPLIT_EV = {"corpus_files": ["release_notes_kestrel_2_2.md",
+                               "release_notes_kestrel_2_6.md",
+                               "forum_thread_4111.md"]}
+
+
+def c_split_packet(record, mv="1.1.0"):
+    ev = dict(C_SPLIT_EV)
+    if mv == "1.1.0":
+        ev.update(hashes("C-001"))
+    return packet("C-001", "C", j({"flags": [record], "count": 1}),
+                  C_SPLIT_KEY, ev, methodology_version=mv)
+
+
+class TestCitationSupportIsPerField(unittest.TestCase):
+
+    def test_a_citation_governing_an_unreported_field_is_not_supported(self):
+        """Reports `introduced_in` only, cites `removed_in`'s source too.
+
+        Pre-fix: `allowed` was the whole union, so the second file counted as
+        supported, `missing` was 0 and traceability was 1.0 - no breach.
+        """
+        rec = {"flag": "edge_cache_v2", "introduced_in": "2.2",
+               "sources": ["release_notes_kestrel_2_2.md",
+                           "release_notes_kestrel_2_6.md"]}
+        r = judge.score_packet(c_split_packet(rec))
+        d = r["detail"]
+        self.assertEqual(d["citation_support_basis"], ["per_field_over_reported_values"])
+        self.assertEqual(d["supported_citations"], 1)
+        self.assertEqual(d["total_citations"], 2)
+        self.assertEqual(d["missing_citations"], 0)
+        self.assertEqual(d["traceability"], 0.5)
+        self.assertTrue(r["zero_tolerance_breached"])
+        self.assertIn("release_notes_kestrel_2_6.md",
+                      [u["file"] for u in d["unsupported_citations"]])
+
+    def test_a_run_owes_nothing_for_a_field_it_did_not_report(self):
+        """Reports `introduced_in` only, cites exactly its governing source.
+
+        Pre-fix: `removed_in`'s source was in `allowed` and uncited, so it was
+        counted as a missing citation and traceability fell to 0.5 with a
+        zero-tolerance breach, for a citation the run had no claim to make.
+        """
+        rec = {"flag": "edge_cache_v2", "introduced_in": "2.2",
+               "sources": ["release_notes_kestrel_2_2.md"]}
+        r = judge.score_packet(c_split_packet(rec))
+        d = r["detail"]
+        self.assertEqual(d["missing_citations"], 0)
+        self.assertEqual(d["traceability"], 1.0)
+        self.assertFalse(r["zero_tolerance_breached"])
+        # coverage still falls, because an omitted field is still a mismatch
+        self.assertLess(d["coverage"], 1.0)
+
+    def test_reporting_every_field_owes_every_governing_source(self):
+        rec = {"flag": "edge_cache_v2", "introduced_in": "2.2", "removed_in": "2.6",
+               "sources": ["release_notes_kestrel_2_2.md"]}
+        r = judge.score_packet(c_split_packet(rec))
+        self.assertEqual(r["detail"]["missing_citations"], 1)
+        self.assertTrue(r["zero_tolerance_breached"])
+
+    def test_the_complete_answer_passes(self):
+        rec = json.loads(j(C_SPLIT_KEY["flags"][0]))
+        rec.pop("citation_support")
+        r = judge.score_packet(c_split_packet(rec))
+        self.assertEqual(r["detail"]["traceability"], 1.0)
+        self.assertEqual(r["detail"]["missing_citations"], 0)
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_v1_0_0_still_replays_its_record_level_union(self):
+        """What the fix changed, stated as a difference."""
+        rec = {"flag": "edge_cache_v2", "introduced_in": "2.2",
+               "sources": ["release_notes_kestrel_2_2.md",
+                           "release_notes_kestrel_2_6.md"]}
+        r = judge.score_packet(c_split_packet(rec, mv="1.0.0"))
+        self.assertEqual(r["detail"]["citation_support_basis"],
+                         ["v1.0.0_record_level_union"])
+        self.assertEqual(r["detail"]["traceability"], 1.0)
+
+    def test_a_key_with_no_per_field_breakdown_falls_back_to_record_level(self):
+        key = {"projects": [{
+            "project": "Project Halyard", "total_awarded_eur": 621500,
+            "awards_included": ["GA-0001"], "awards_excluded": [],
+            "sources": ["bulletin_bul_2031_01.md", "correction_CORR-002.md"],
+            "citation_support": {"per_award": {"GA-0001": {
+                "stated_by": "correction_CORR-002.md",
+                "listed_in_bulletin": "bulletin_bul_2031_01.md"}}}}],
+            "count": 1}
+        ev = {"corpus_files": ["bulletin_bul_2031_01.md", "correction_CORR-002.md"],
+              "document_award_ids": ["GA-0001"]}
+        ev.update(hashes("C-002"))
+        out = {"projects": [{k: v for k, v in key["projects"][0].items()
+                             if k != "citation_support"}], "count": 1}
+        r = judge.score_packet(packet("C-002", "C", j(out), key, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["detail"]["citation_support_basis"], ["record_level_fallback"])
+        self.assertEqual(r["detail"]["traceability"], 1.0)
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+
+class TestCitationSupportParsingIsStructural(unittest.TestCase):
+    """A prose string in a key may not become a mandatory governing source.
+
+    The delivered v1.0.0 C-002 key carried a `note` inside `citation_support`.
+    `_strings_in` absorbed it, so a 108-character English sentence became an
+    uncitable governing source and the key's own perfect answer scored
+    traceability 0.72 with 7 missing citations and a zero-tolerance breach -
+    every C-002 attempt, in every condition, would have failed outright.
+    """
+
+    NOTE = ("no single file states total_awarded_eur; it is the sum of the awards "
+            "listed above after applying every correction notice")
+
+    def _key(self, extra_support):
+        support = {"project": ["bulletin_bul_2031_01.md"],
+                   "total_awarded_eur": ["bulletin_bul_2031_01.md",
+                                         "correction_CORR-002.md"],
+                   "awards_included": ["bulletin_bul_2031_01.md",
+                                       "correction_CORR-002.md"],
+                   "awards_excluded": []}
+        support.update(extra_support)
+        return {"projects": [{
+            "project": "Project Halyard", "total_awarded_eur": 621500,
+            "awards_included": ["GA-0001"], "awards_excluded": [],
+            "sources": ["bulletin_bul_2031_01.md", "correction_CORR-002.md"],
+            "citation_support": support}], "count": 1}
+
+    def _score(self, key):
+        ev = {"corpus_files": ["bulletin_bul_2031_01.md", "correction_CORR-002.md"],
+              "document_award_ids": ["GA-0001"]}
+        ev.update(hashes("C-002"))
+        out = {"projects": [{k: v for k, v in key["projects"][0].items()
+                             if k != "citation_support"}], "count": 1}
+        return judge.score_packet(packet("C-002", "C", j(out), key, ev,
+                                         methodology_version="1.1.0"))
+
+    def test_a_prose_note_cannot_become_a_governing_source(self):
+        r = self._score(self._key({"note": self.NOTE}))
+        self.assertEqual(r["detail"]["traceability"], 1.0)
+        self.assertEqual(r["detail"]["missing_citations"], 0)
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+        self.assertIn(self.NOTE[:120],
+                      r["detail"]["citation_support_rejected_strings"])
+
+    def test_a_prose_string_inside_a_per_field_list_is_rejected_too(self):
+        r = self._score(self._key({
+            "total_awarded_eur": ["bulletin_bul_2031_01.md",
+                                  "correction_CORR-002.md",
+                                  "derived by summing the awards above"]}))
+        self.assertEqual(r["detail"]["traceability"], 1.0)
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_a_clean_key_rejects_nothing(self):
+        r = self._score(self._key({}))
+        self.assertNotIn("citation_support_rejected_strings", r["detail"])
+
+    def test_the_filename_test_is_structural_not_a_guess(self):
+        self.assertIsNotNone(judge._source_like("release_notes_kestrel_2_2.md"))
+        self.assertIsNotNone(judge._source_like("registry_export_2032-02.csv"))
+        self.assertIsNone(judge._source_like(self.NOTE))
+        self.assertIsNone(judge._source_like("no single file states this"))
+        self.assertIsNone(judge._source_like(""))
+        self.assertIsNone(judge._source_like(42))
+
+
+class TestDeliveredCKeysRoundTrip(unittest.TestCase):
+    """Score each shipped v1.1.0 workload-C key against its own payload.
+
+    This is the test that would have caught the C-002 `note`: the key's own
+    perfect answer must be traceable, or the task is unpassable by anyone.
+    """
+
+    KEYS_V11 = os.path.normpath(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..", "..", "tasks", "TASK_SET_v1.1.0", "answer_keys"))
+    CORPUS_C = os.path.normpath(os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..", "..", "tasks", "TASK_SET_v1.1.0", "corpora", "research_c"))
+    SPEC = {"C-001": ("flags", "flag"), "C-002": ("projects", "project"),
+            "C-003": ("plugins", "plugin_id")}
+
+    def test_every_delivered_c_key_scores_its_own_answer_at_1_0(self):
+        if not os.path.isdir(self.KEYS_V11) or not os.path.isdir(self.CORPUS_C):
+            self.skipTest("v1.1.0 answer keys or corpus not present")
+        corpus_files = sorted(os.listdir(self.CORPUS_C))
+        for tid, (arr, _idf) in sorted(self.SPEC.items()):
+            path = os.path.join(self.KEYS_V11, tid + ".json")
+            if not os.path.exists(path):
+                continue
+            with self.subTest(task=tid):
+                with open(path, encoding="utf-8") as fh:
+                    key = json.load(fh)
+                out = {arr: [{k: v for k, v in rec.items() if k != "citation_support"}
+                             for rec in key[arr]],
+                       "count": key.get("count", len(key[arr]))}
+                ev = {"corpus_files": corpus_files}
+                ev.update(hashes(tid))
+                if tid == "C-002":
+                    ev["document_award_ids"] = sorted(
+                        {a for rec in key[arr]
+                         for a in rec.get("awards_included", []) +
+                         rec.get("awards_excluded", [])})
+                if tid == "C-003":
+                    ev["registry_plugin_ids"] = [rec["plugin_id"] for rec in key[arr]]
+                r = judge.score_packet(packet(tid, "C", j(out), key, ev,
+                                              methodology_version="1.1.0"))
+                self.assertEqual(r["detail"]["traceability"], 1.0,
+                                 json.dumps(r["detail"].get("unsupported_citations"))[:400])
+                self.assertEqual(r["detail"]["missing_citations"], 0)
+                self.assertEqual(r["detail"]["coverage"], 1.0)
+                self.assertNotIn("citation_support_rejected_strings", r["detail"])
+                self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
