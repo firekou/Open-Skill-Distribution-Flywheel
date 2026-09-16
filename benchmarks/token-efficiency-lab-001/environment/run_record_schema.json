@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lab 001 run record",
+  "type": "object",
+  "required": [
+    "run_id",
+    "task_id",
+    "condition",
+    "workload",
+    "repetition",
+    "model",
+    "provider",
+    "model_version",
+    "model_calls",
+    "tool_calls",
+    "input_tokens",
+    "output_tokens",
+    "total_tokens",
+    "cost",
+    "pricing_snapshot_id",
+    "latency_ms",
+    "retries",
+    "escalations",
+    "cache_state",
+    "task_success",
+    "quality_score",
+    "environment_id",
+    "raw_evidence_path",
+    "methodology_version"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "condition": {
+      "enum": [
+        "C0",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C2+C4",
+        "C3+C4",
+        "CALIB",
+        "CACHE"
+      ]
+    },
+    "workload": {
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "repetition": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "model": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "model_version": {
+      "type": "string"
+    },
+    "model_pair": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "REQUIRED for C4. Tier-adjacent pair."
+    },
+    "model_calls": {
+      "type": "integer"
+    },
+    "tool_calls": {
+      "type": "integer"
+    },
+    "input_tokens": {
+      "type": "integer"
+    },
+    "output_tokens": {
+      "type": "integer"
+    },
+    "total_tokens": {
+      "type": "integer"
+    },
+    "tool_schema_tokens": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "tool_result_tokens": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "token_source": {
+      "enum": [
+        "provider_usage_field",
+        "atk_meter"
+      ],
+      "description": "bytes/4 and other uncalibrated estimators are PROHIBITED as ground truth"
+    },
+    "cost": {
+      "type": "number"
+    },
+    "pricing_snapshot_id": {
+      "type": "string"
+    },
+    "latency_ms": {
+      "type": "integer"
+    },
+    "retries": {
+      "type": "integer"
+    },
+    "escalations": {
+      "type": "integer"
+    },
+    "cache_state": {
+      "enum": [
+        "cold",
+        "warm",
+        "unknown"
+      ],
+      "description": "'unknown' voids the run - methodology v1.0.0 section 9"
+    },
+    "task_success": {
+      "type": "boolean"
+    },
+    "quality_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "quality_judged_before_cost": {
+      "type": "boolean"
+    },
+    "failure_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "environment_id": {
+      "type": "string"
+    },
+    "container_digest": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "candidate_commit_sha": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "prompt_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "config_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "task_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "raw_evidence_path": {
+      "type": "string"
+    },
+    "methodology_version": {
+      "const": "1.0.0"
+    },
+    "egress_destinations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

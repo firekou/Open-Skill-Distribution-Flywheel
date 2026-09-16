@@ -1,0 +1,32 @@
+{
+  "environment_id": "lab001-env-v1",
+  "status": "LG3 FAIL \u2014 specified but NOT verified",
+  "recorded_at": "2026-09-16",
+  "verified": {
+    "candidate_pins": "PASS \u2014 all 8 cloned and HEAD compared to pin; 2 defects found and corrected (E017)",
+    "harness_dependency_layer": "PASS \u2014 httpx 0.27.2, pydantic 2.9.2, jsonschema 4.23.0 installed cleanly in a clean venv",
+    "run_record_schema": "PASS \u2014 schema is valid Draft 2020-12; accepts a valid record; rejects methodology_version != 1.0.0",
+    "container_image": "FAIL \u2014 could not build",
+    "container_digest": null,
+    "end_to_end_rebuild_from_zero": "FAIL \u2014 not demonstrated"
+  },
+  "blocking_reason": "Docker CLI is present but no daemon is reachable (/var/run/docker.sock absent). The image specified in environment/Dockerfile was never built, so no digest exists and no second seat can be shown to reproduce it.",
+  "consequence": "LG3 cannot pass. Per the review instruction ('\u5982\u679c\u7121\u6cd5\u91cd\u5efa\uff1aLG3 FAIL') this is recorded as a failure, not waived.",
+  "what_would_clear_it": [
+    "A runtime with a working container daemon, or an equivalent pinned build path",
+    "Build environment/Dockerfile, record the image digest here",
+    "Have a different seat rebuild from this repository alone and match the digest"
+  ],
+  "artifacts_ready": [
+    "environment/Dockerfile",
+    "environment/requirements.lock.txt",
+    "environment/run_record_schema.json",
+    "environment/EGRESS_POLICY.md",
+    "environment/PINS.txt"
+  ],
+  "not_yet_created": [
+    "tasks/ task set + answer keys",
+    "prompt/config hashes (depend on the task set)"
+  ],
+  "pricing_snapshot_id": "PS-2026-09-15"
+}
