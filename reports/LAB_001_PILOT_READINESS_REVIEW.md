@@ -61,9 +61,19 @@ three were found by doing the work rather than by inspecting it.
 
 | | |
 |---|---|
-| Image manifest digest | `sha256:6edd71a6adff7eab4fca99b9b8fb2e9298c62256f5587ee9109cf02047811261` |
-| Clean rebuild | Manifest, config, blob set, dependency manifest and runtime all match after a full prune and base re-pull |
+| Image manifest digest | `sha256:5a302f2f24b817adb7f42343c8206132c8392d99bf534bebb375a327c876885c` |
+| Config digest | `sha256:754310225fa0b3c4a6dc5c3a8eafaf45d0122a5ec72941d909e161637b9916c1` · 13 layers |
+| Self-derived attestation | `image_content_sha256 0c73322f…`, `dependency_manifest_sha256 8273d0e2…` — computed inside the container, not asserted on the command line |
+| Clean rebuild | Manifest, config, blob set, dependency manifest and runtime all match after a full prune and a base re-pull from an empty store |
+| Cache-insensitive | A contaminated working tree and a clean checkout now produce the same digest (E029) |
 | Self-check | 8 of 8, with a negative control that fails when egress is allowed |
+
+The digest moved twice during the round as the harness gained `judge.py`, `attest.py`,
+`finalize.py` and the calibration fixture. The earlier values — `6edd71a6…` (11 layers, before
+the calibration and pricing directories) and `780e1f25…` (13 layers, but a pre-E027 `blind.py`
+and no `judge.py`) — are recorded in `ENVIRONMENT_LOCK.json` under `superseded_digests` with what
+each one was, rather than deleted. `780e1f25…` in particular is the image the first dry run
+stamped on its records and **could not have produced them**; that is E030.
 
 The previous round recorded LG3 FAIL with the reason *"no docker daemon in this environment."*
 **That reason was wrong.** The daemon binaries were present; the daemon had not been started. The

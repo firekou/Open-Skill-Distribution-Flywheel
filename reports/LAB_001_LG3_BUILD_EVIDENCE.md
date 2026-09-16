@@ -193,3 +193,39 @@ validate.
 **It does not mean** any candidate has been executed — none has. It does not mean the benchmark
 has run. It does not mean the harness has ever spoken to a model provider; it has not. And a
 green self-check is not a product-quality claim about anything.
+
+
+---
+
+## Addendum — the digest moved after this report was written
+
+This report documents builds 1 through 4, which established reproducibility for the environment
+as it stood at that point: `sha256:6edd71a6adff…`, 11 layers.
+
+The harness then grew `judge.py`, `attest.py` and `finalize.py`, the calibration fixture and the
+pricing snapshot were copied in, and a `.dockerignore` was added. The **current** image is:
+
+| | |
+|---|---|
+| Manifest digest | `sha256:5a302f2f24b817adb7f42343c8206132c8392d99bf534bebb375a327c876885c` |
+| Config digest | `sha256:754310225fa0b3c4a6dc5c3a8eafaf45d0122a5ec72941d909e161637b9916c1` |
+| Layers | 13 |
+
+It was re-verified the same way: full prune of images and build cache, base re-pulled by digest
+from an empty store, `--no-cache` rebuild, digest compared. **It reproduces.** Self-check 8 of 8,
+negative control still fails correctly.
+
+Two further findings came out of that re-verification and are not in the body above:
+
+- **E029** — the first `.dockerignore` did nothing, because docker ignore patterns match
+  relative to the context root and `__pycache__/` does not match `harness/__pycache__/`.
+  A contaminated working tree built to `sha256:2226698c…` and a clean one to `sha256:5a302f2f…`
+  with the ignore file in place. With `**/`-prefixed patterns both now produce `5a302f2f…` and
+  the image contains zero `.pyc` files.
+- **E030** — `container_digest` in a run record was an operator-supplied string that nothing
+  verified. Every run record now also carries `image_content_sha256`, computed inside the running
+  container over the harness and fixed payload, which a command-line flag cannot forge.
+
+The superseded digests are recorded in `ENVIRONMENT_LOCK.json` with an explanation of what each
+one was, rather than deleted. A digest that silently disappears is how a stale attestation
+survives.
