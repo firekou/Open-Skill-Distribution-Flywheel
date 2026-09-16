@@ -10,7 +10,7 @@
 | **Methodology SHA-256** | `c1810b0481d1442937771c124c7c30668490470f00dcf71098bdf139ee7089bc` |
 | **Meter calibration SHA-256** | `3ed9dac60aa537f3…` (see `METHODOLOGY_LOCK.json`) |
 | **Pricing snapshot** | `PS-2026-09-15` |
-| **Freeze commit SHA** | recorded in the commit that adds this file — see `git log` for `methodology/METHODOLOGY_v1.0.0.md` |
+| **Freeze commit SHA** | `f023dc0d5a679c3cd4567de3a0ec1e133d9e8533` |
 
 ## Immutability
 

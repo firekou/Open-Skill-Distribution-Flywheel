@@ -2,7 +2,7 @@
   "methodology_version": "1.0.0",
   "status": "FROZEN",
   "frozen_at": "2026-09-16",
-  "authority": "Editor-in-Chief / ChatGPT review \u2014 LG1 granted",
+  "authority": "Editor-in-Chief / ChatGPT review — LG1 granted",
   "gate": "LG1",
   "gate_owner_seat": "methodology-reviewer",
   "document": "methodology/METHODOLOGY_v1.0.0.md",
@@ -24,7 +24,7 @@
   ],
   "pricing_snapshot_id": "PS-2026-09-15",
   "amendment_policy": "Immutable. Create a new version file; never overwrite. Runs stay attributed to the version they executed under.",
-  "freeze_commit_sha": "PENDING \u2014 recorded post-commit in FREEZE_RECORD.md",
+  "freeze_commit_sha": "f023dc0d5a679c3cd4567de3a0ec1e133d9e8533",
   "meter_calibration_document": "methodology/METER_CALIBRATION_v1.0.0.md",
   "meter_calibration_sha256": "3ed9dac60aa537f3e37503cec2c6eb91c4abebcb746658369f534ac2e21a98aa"
 }
