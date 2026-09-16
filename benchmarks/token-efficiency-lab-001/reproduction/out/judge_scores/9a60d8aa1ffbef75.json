@@ -1,0 +1,28 @@
+{
+  "blind_treatment_id": "Treatment C",
+  "detail": {
+    "completion": 0.0,
+    "constraint_violations": 0,
+    "final_turn_number": 0,
+    "format_strict": false,
+    "ignored_packet_keys": [],
+    "methodology_version": "1.0.0",
+    "parse_mode": "unparseable",
+    "reached_final_turn": true,
+    "spec_version": "1.0.0",
+    "truncation_suspected": false,
+    "turns_seen": 1,
+    "violation_checks_unverifiable": [
+      "catalog_part_ids",
+      "halberd_part_ids"
+    ],
+    "violations": []
+  },
+  "failure_reason": "unparseable_output",
+  "packet_id": "9a60d8aa1ffbef75",
+  "quality_score": 0.0,
+  "task_id": "E-001",
+  "task_success": false,
+  "workload": "E",
+  "zero_tolerance_breached": false
+}

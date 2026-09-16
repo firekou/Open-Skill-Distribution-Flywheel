@@ -1,0 +1,61 @@
+{
+  "packet_id": "ba55fb1519090342",
+  "task_id": "D-001",
+  "workload": "D",
+  "blind_treatment_id": "Treatment B",
+  "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=D-001 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=D-001 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+  "required_evidence": [],
+  "answer_key": {
+    "task_id": "D-001",
+    "derived_by": "answer-key-builder",
+    "derivation_method": "Called rota.get_effective_oncall (the override-resolving sibling, not the template tools) for kestrel-billing at the incident instant, then resolved the handle it returned with directory.get_person_by_handle (the live single-record lookup, not the fuzzy search or the lagging sync). Script: scripts/derive_D.py",
+    "derivation_script": "scripts/derive_D.py",
+    "contested_families": [
+      "oncall-resolution",
+      "person-resolution"
+    ],
+    "required_tools": [
+      "rota.get_effective_oncall",
+      "directory.get_person_by_handle"
+    ],
+    "tool_calls_made_by_this_derivation": [
+      {
+        "tool": "rota.get_effective_oncall",
+        "family": "oncall-resolution",
+        "args": {
+          "service": "kestrel-billing",
+          "at_utc": "2032-03-14T02:40:00Z"
+        }
+      },
+      {
+        "tool": "directory.get_person_by_handle",
+        "family": "person-resolution",
+        "args": {
+          "handle": "m.okonjo"
+        }
+      }
+    ],
+    "answer": {
+      "engineer_full_name": "Adaeze M. Okonjo",
+      "team": "Billing Platform",
+      "escalation_tier": 2
+    },
+    "derivation_diagnostics": {
+      "template_handle_before_overrides": "t.ferreira",
+      "override_chain": [
+        {
+          "approved_at_utc": "2032-03-11T16:02:00Z",
+          "approved_by": "s.varga",
+          "override_id": "OVR-2032-0119",
+          "replaces_handle": "t.ferreira",
+          "type": "swap",
+          "window_end_utc": "2032-03-14T06:00:00Z",
+          "window_start_utc": "2032-03-13T18:00:00Z",
+          "with_handle": "m.okonjo"
+        }
+      ]
+    }
+  },
+  "quality_metric": "Two components, both reported.\n(a) answer_correct: the emitted object is compared field by field against the answer key; strings compare case-sensitively after stripping surrounding whitespace, numbers compare numerically, booleans identically. answer_correct = true iff all 3 fields match.\n(b) tool_selection: the run's tool-call record (the JSONL written by the server when `LAB001_TOOL_AUDIT` is set) is read. `contested_families` for this task are [\"oncall-resolution\", \"person-resolution\"]. A WRONG-TOOL INVOCATION is any recorded call to a tool whose declared `family` is in contested_families and which is not in the required tool set named by the answer key. Calls to tools in the `meta` family are never wrong-tool invocations. Calls to tools in families outside contested_families are recorded as extraneous calls and do not affect the score.\nquality_score = 1.0 if answer_correct and wrong_tool_invocations == 0; 0.0 otherwise. task_success = (quality_score == 1.0).",
+  "failure_condition": "Outright failure if any of: (1) one or more wrong-tool invocations, as defined in quality_metric over contested_families [\"oncall-resolution\", \"person-resolution\"] - this is the frozen workload-D zero-tolerance criterion (methodology v1.0.0 section 6); (2) any answer field does not match the answer key; (3) the reply is not parseable as a single JSON object with exactly the required keys; (4) the run answers without calling any tool; (5) the run edits `corpora/mcp_toolset/`; (6) the run reads any file under `corpora/mcp_toolset/fixtures/`, which makes the tool-selection measurement meaningless."
+}

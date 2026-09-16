@@ -1,0 +1,29 @@
+{
+  "packet_id": "085cb1edac284370",
+  "task_id": "A-003",
+  "workload": "A",
+  "blind_treatment_id": "Treatment E",
+  "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=A-003 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=A-003 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=A-003 turn=2. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+  "required_evidence": [],
+  "answer_key": {
+    "task_id": "A-003",
+    "derived_by": "answer-key-builder",
+    "derivation_method": "AST pass: retry-decorated = module-level functions whose decorator_list contains Name 'retryable' or Call on Name 'retryable' (retryable_v2 excluded by exact name match); transient raisers = functions whose body contains an ast.Raise of TransientError (bare or called). Forward call-graph closure from each decorated function is intersected with the raiser set. Script: scripts/derive_A.py",
+    "derivation_script": "scripts/derive_A.py",
+    "retry_decorated_reaching_transient": [
+      "ledgerline.core.posting.render_stamp_slice",
+      "ledgerline.ingest.csvfeed.stream_ticket_pair",
+      "ledgerline.ingest.dedupe.emit_digest",
+      "ledgerline.ingest.replay.drain_payload_delta",
+      "ledgerline.plugins.legacyq.compose_batch_view",
+      "ledgerline.plugins.sapbridge.lift_stamp_list",
+      "ledgerline.plugins.taxde.parse_stamp_plan",
+      "ledgerline.storage.journal.collect_window_pair",
+      "ledgerline.transform.allocate.plan_entry_chain",
+      "ledgerline.transform.enrich.shard_lane_list"
+    ],
+    "count": 10
+  },
+  "quality_metric": "Set F1 over `retry_decorated_reaching_transient` against the answer key, computed exactly as in A-001, rounded to 4 decimal places; `count` disagreeing with the de-duplicated list length subtracts 0.05 (floor 0). task_success = true iff quality_score >= 0.95 * (baseline C0 median quality_score for A-003) AND zero fabricated symbols.",
+  "failure_condition": "Outright failure if any of: (1) Any reported symbol that is not a module-level function actually defined under `corpora/repo_ledgerline/ledgerline/` is a fabricated symbol. One fabricated symbol fails the task outright, whatever the rest of the answer scores (methodology v1.0.0 section 6, workload A zero-tolerance criterion). (2) the reply is not a single parseable JSON object with the two required keys; (3) any corpus file is modified."
+}

@@ -1,0 +1,12 @@
+{
+  "run_class": "dry_run",
+  "planned": 10,
+  "completed": 10,
+  "failed": 0,
+  "failures": [],
+  "task_set_hash": "7fbca09980cc74d252280674b6ae18c3b5f3b1addd3994c1716e8138cd4c1553",
+  "answer_key_hash": "03ea884c74bb866df824dd68151eb239c2f8fd57609f486fb230a4c5bb9564c7",
+  "pricing_snapshot_id": "PS-2026-09-15",
+  "container_digest": "sha256:19d5968a2eb7fdef5659386dacc99210b210945544e8f9164f2be7afaec3f420",
+  "ran_at": "2026-09-16T10:44:07.271546+00:00"
+}

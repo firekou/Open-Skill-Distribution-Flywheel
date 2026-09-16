@@ -1,0 +1,114 @@
+{
+  "calls": [
+    {
+      "accepted": true,
+      "cache_state": "cold",
+      "latency_ms": 848,
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+      "provider": "deepseek",
+      "role": "primary",
+      "task_id": "E-001",
+      "tool_calls": 0,
+      "usage": {
+        "cached_tokens": 0,
+        "input_tokens": 11447,
+        "output_tokens": 631
+      }
+    },
+    {
+      "accepted": true,
+      "cache_state": "cold",
+      "latency_ms": 2427,
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+      "provider": "deepseek",
+      "role": "primary",
+      "task_id": "E-001",
+      "tool_calls": 0,
+      "usage": {
+        "cached_tokens": 4944,
+        "input_tokens": 12362,
+        "output_tokens": 955
+      }
+    },
+    {
+      "accepted": true,
+      "cache_state": "cold",
+      "latency_ms": 744,
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=2. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+      "provider": "deepseek",
+      "role": "primary",
+      "task_id": "E-001",
+      "tool_calls": 0,
+      "usage": {
+        "cached_tokens": 2908,
+        "input_tokens": 7270,
+        "output_tokens": 589
+      }
+    },
+    {
+      "accepted": true,
+      "cache_state": "cold",
+      "latency_ms": 1310,
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=3. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+      "provider": "deepseek",
+      "role": "primary",
+      "task_id": "E-001",
+      "tool_calls": 0,
+      "usage": {
+        "cached_tokens": 3218,
+        "input_tokens": 8045,
+        "output_tokens": 999
+      }
+    },
+    {
+      "accepted": true,
+      "cache_state": "cold",
+      "latency_ms": 2188,
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=4. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+      "provider": "deepseek",
+      "role": "primary",
+      "task_id": "E-001",
+      "tool_calls": 0,
+      "usage": {
+        "cached_tokens": 3662,
+        "input_tokens": 9156,
+        "output_tokens": 785
+      }
+    },
+    {
+      "accepted": true,
+      "cache_state": "cold",
+      "latency_ms": 1380,
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=5. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+      "provider": "deepseek",
+      "role": "primary",
+      "task_id": "E-001",
+      "tool_calls": 0,
+      "usage": {
+        "cached_tokens": 4078,
+        "input_tokens": 10195,
+        "output_tokens": 308
+      }
+    }
+  ],
+  "condition": "C3",
+  "cross_provider_warning": null,
+  "fixture_sha256": "41a6e166287ff4a524911ecf2db9fce8756f675bcf8e54c47be26bd05a1e1ee0",
+  "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=2. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=3. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=4. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=5. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+  "run_class": "dry_run",
+  "run_id": "dry_run-E-001-C3-r1",
+  "task_id": "E-001",
+  "written_at": "2026-09-16T10:44:07.230517+00:00"
+}

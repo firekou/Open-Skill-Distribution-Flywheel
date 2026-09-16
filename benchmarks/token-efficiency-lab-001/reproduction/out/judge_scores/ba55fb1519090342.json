@@ -1,0 +1,27 @@
+{
+  "blind_treatment_id": "Treatment B",
+  "detail": {
+    "contested_families": [
+      "oncall-resolution",
+      "person-resolution"
+    ],
+    "format_strict": false,
+    "ignored_packet_keys": [],
+    "methodology_version": "1.0.0",
+    "parse_mode": "unparseable",
+    "required_tools": [
+      "directory.get_person_by_handle",
+      "rota.get_effective_oncall"
+    ],
+    "spec_version": "1.0.0",
+    "tool_audit_available": false,
+    "truncation_suspected": false
+  },
+  "failure_reason": "required_evidence_missing:tool_calls",
+  "packet_id": "ba55fb1519090342",
+  "quality_score": 0.0,
+  "task_id": "D-001",
+  "task_success": false,
+  "workload": "D",
+  "zero_tolerance_breached": false
+}

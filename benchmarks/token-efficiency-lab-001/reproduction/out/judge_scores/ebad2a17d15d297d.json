@@ -1,0 +1,18 @@
+{
+  "blind_treatment_id": "Treatment B",
+  "detail": {
+    "format_strict": false,
+    "ignored_packet_keys": [],
+    "methodology_version": "1.0.0",
+    "parse_mode": "unparseable",
+    "spec_version": "1.0.0",
+    "truncation_suspected": false
+  },
+  "failure_reason": "unparseable_output",
+  "packet_id": "ebad2a17d15d297d",
+  "quality_score": 0.0,
+  "task_id": "A-001",
+  "task_success": false,
+  "workload": "A",
+  "zero_tolerance_breached": false
+}

@@ -1,0 +1,46 @@
+{
+  "calls": [
+    {
+      "accepted": true,
+      "cache_state": "cold",
+      "latency_ms": 2461,
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=D-002 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+      "provider": "deepseek",
+      "role": "primary",
+      "task_id": "D-002",
+      "tool_calls": 1,
+      "usage": {
+        "cached_tokens": 0,
+        "input_tokens": 14694,
+        "output_tokens": 934
+      }
+    },
+    {
+      "accepted": true,
+      "cache_state": "cold",
+      "latency_ms": 1004,
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=D-002 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+      "provider": "deepseek",
+      "role": "primary",
+      "task_id": "D-002",
+      "tool_calls": 1,
+      "usage": {
+        "cached_tokens": 5706,
+        "input_tokens": 14266,
+        "output_tokens": 446
+      }
+    }
+  ],
+  "condition": "C1",
+  "cross_provider_warning": null,
+  "fixture_sha256": "41a6e166287ff4a524911ecf2db9fce8756f675bcf8e54c47be26bd05a1e1ee0",
+  "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=D-002 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=D-002 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+  "run_class": "dry_run",
+  "run_id": "dry_run-D-002-C1-r1",
+  "task_id": "D-002",
+  "written_at": "2026-09-16T10:44:07.216712+00:00"
+}

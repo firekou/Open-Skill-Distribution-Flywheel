@@ -1,0 +1,27 @@
+{
+  "blind_treatment_id": "Treatment F",
+  "detail": {
+    "contested_families": [
+      "image-digest-resolution",
+      "vuln-findings"
+    ],
+    "format_strict": false,
+    "ignored_packet_keys": [],
+    "methodology_version": "1.0.0",
+    "parse_mode": "unparseable",
+    "required_tools": [
+      "registry.resolve_digest_pinned",
+      "vulndb.get_image_findings_by_digest"
+    ],
+    "spec_version": "1.0.0",
+    "tool_audit_available": false,
+    "truncation_suspected": false
+  },
+  "failure_reason": "required_evidence_missing:tool_calls",
+  "packet_id": "057621551f8dedef",
+  "quality_score": 0.0,
+  "task_id": "D-002",
+  "task_success": false,
+  "workload": "D",
+  "zero_tolerance_breached": false
+}

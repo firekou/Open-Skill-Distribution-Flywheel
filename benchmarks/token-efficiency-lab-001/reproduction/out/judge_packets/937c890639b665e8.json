@@ -1,0 +1,293 @@
+{
+  "packet_id": "937c890639b665e8",
+  "task_id": "B-002",
+  "workload": "B",
+  "blind_treatment_id": "Treatment C",
+  "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=B-002 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+  "required_evidence": [],
+  "answer_key": {
+    "task_id": "B-002",
+    "derived_by": "answer-key-builder",
+    "derivation_method": "Parsed the 48-row Appendix A markdown table of KESTREL_RELIABILITY_2031.md, parsed all 8 Appendix B correction notices with a regex capturing (incident, field, old value, new value), asserted each old value against the register before overwriting it, then kept the records whose post-correction severity is S1 or S2. The quarterly narrative is never read. Script: scripts/derive_B.py",
+    "derivation_script": "scripts/derive_B.py",
+    "corrections_applied": [
+      {
+        "notice": "CN-003",
+        "incident_id": "INC-2031-003",
+        "field": "customer_impacting",
+        "from": "yes",
+        "to": "no"
+      },
+      {
+        "notice": "CN-010",
+        "incident_id": "INC-2031-010",
+        "field": "final_severity",
+        "from": "S4",
+        "to": "S1"
+      },
+      {
+        "notice": "CN-015",
+        "incident_id": "INC-2031-015",
+        "field": "customer_impacting",
+        "from": "no",
+        "to": "yes"
+      },
+      {
+        "notice": "CN-021",
+        "incident_id": "INC-2031-021",
+        "field": "final_severity",
+        "from": "S3",
+        "to": "S4"
+      },
+      {
+        "notice": "CN-028",
+        "incident_id": "INC-2031-028",
+        "field": "root_cause_code",
+        "from": "RC-EXT",
+        "to": "RC-SW"
+      },
+      {
+        "notice": "CN-034",
+        "incident_id": "INC-2031-034",
+        "field": "final_severity",
+        "from": "S2",
+        "to": "S3"
+      },
+      {
+        "notice": "CN-041",
+        "incident_id": "INC-2031-041",
+        "field": "final_severity",
+        "from": "S4",
+        "to": "S1"
+      },
+      {
+        "notice": "CN-046",
+        "incident_id": "INC-2031-046",
+        "field": "duration_minutes",
+        "from": "88",
+        "to": "115"
+      }
+    ],
+    "incidents": [
+      {
+        "incident_id": "INC-2031-001",
+        "service": "kestrel-rota",
+        "start_utc": "2031-11-17T05:18:00Z",
+        "duration_minutes": 190,
+        "final_severity": "S1",
+        "root_cause_code": "RC-DEP",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-003",
+        "service": "kestrel-billing",
+        "start_utc": "2031-05-18T15:58:00Z",
+        "duration_minutes": 58,
+        "final_severity": "S1",
+        "root_cause_code": "RC-EXT",
+        "customer_impacting": false
+      },
+      {
+        "incident_id": "INC-2031-006",
+        "service": "kestrel-cdn",
+        "start_utc": "2031-09-17T02:30:00Z",
+        "duration_minutes": 44,
+        "final_severity": "S2",
+        "root_cause_code": "RC-CFG",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-008",
+        "service": "kestrel-vault",
+        "start_utc": "2031-01-08T10:58:00Z",
+        "duration_minutes": 118,
+        "final_severity": "S2",
+        "root_cause_code": "RC-CFG",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-010",
+        "service": "kestrel-gateway",
+        "start_utc": "2031-10-21T01:18:00Z",
+        "duration_minutes": 190,
+        "final_severity": "S1",
+        "root_cause_code": "RC-EXT",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-013",
+        "service": "kestrel-rota",
+        "start_utc": "2031-07-11T06:18:00Z",
+        "duration_minutes": 34,
+        "final_severity": "S1",
+        "root_cause_code": "RC-EXT",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-014",
+        "service": "kestrel-indexer",
+        "start_utc": "2031-11-07T03:47:00Z",
+        "duration_minutes": 143,
+        "final_severity": "S2",
+        "root_cause_code": "RC-SW",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-016",
+        "service": "kestrel-indexer",
+        "start_utc": "2031-09-16T13:05:00Z",
+        "duration_minutes": 134,
+        "final_severity": "S1",
+        "root_cause_code": "RC-HUM",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-019",
+        "service": "kestrel-mailer",
+        "start_utc": "2031-03-16T06:00:00Z",
+        "duration_minutes": 246,
+        "final_severity": "S1",
+        "root_cause_code": "RC-EXT",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-020",
+        "service": "kestrel-gateway",
+        "start_utc": "2031-09-21T17:05:00Z",
+        "duration_minutes": 88,
+        "final_severity": "S2",
+        "root_cause_code": "RC-SW",
+        "customer_impacting": false
+      },
+      {
+        "incident_id": "INC-2031-023",
+        "service": "kestrel-vault",
+        "start_utc": "2031-09-24T11:41:00Z",
+        "duration_minutes": 372,
+        "final_severity": "S2",
+        "root_cause_code": "RC-NET",
+        "customer_impacting": false
+      },
+      {
+        "incident_id": "INC-2031-024",
+        "service": "kestrel-search",
+        "start_utc": "2031-05-18T16:47:00Z",
+        "duration_minutes": 143,
+        "final_severity": "S2",
+        "root_cause_code": "RC-HUM",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-025",
+        "service": "kestrel-indexer",
+        "start_utc": "2031-03-24T21:30:00Z",
+        "duration_minutes": 29,
+        "final_severity": "S1",
+        "root_cause_code": "RC-NET",
+        "customer_impacting": false
+      },
+      {
+        "incident_id": "INC-2031-026",
+        "service": "kestrel-vault",
+        "start_utc": "2031-07-02T18:05:00Z",
+        "duration_minutes": 46,
+        "final_severity": "S2",
+        "root_cause_code": "RC-HW",
+        "customer_impacting": false
+      },
+      {
+        "incident_id": "INC-2031-028",
+        "service": "kestrel-cdn",
+        "start_utc": "2031-11-25T16:47:00Z",
+        "duration_minutes": 134,
+        "final_severity": "S2",
+        "root_cause_code": "RC-SW",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-029",
+        "service": "kestrel-gateway",
+        "start_utc": "2031-10-26T19:52:00Z",
+        "duration_minutes": 143,
+        "final_severity": "S1",
+        "root_cause_code": "RC-HUM",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-032",
+        "service": "kestrel-vault",
+        "start_utc": "2031-08-17T20:12:00Z",
+        "duration_minutes": 44,
+        "final_severity": "S2",
+        "root_cause_code": "RC-CFG",
+        "customer_impacting": false
+      },
+      {
+        "incident_id": "INC-2031-033",
+        "service": "kestrel-indexer",
+        "start_utc": "2031-12-12T04:30:00Z",
+        "duration_minutes": 29,
+        "final_severity": "S1",
+        "root_cause_code": "RC-SW",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-038",
+        "service": "kestrel-search",
+        "start_utc": "2031-11-14T06:52:00Z",
+        "duration_minutes": 58,
+        "final_severity": "S2",
+        "root_cause_code": "RC-CFG",
+        "customer_impacting": false
+      },
+      {
+        "incident_id": "INC-2031-039",
+        "service": "kestrel-billing",
+        "start_utc": "2031-01-02T23:52:00Z",
+        "duration_minutes": 72,
+        "final_severity": "S2",
+        "root_cause_code": "RC-DEP",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-040",
+        "service": "kestrel-vault",
+        "start_utc": "2031-05-18T11:58:00Z",
+        "duration_minutes": 44,
+        "final_severity": "S1",
+        "root_cause_code": "RC-SW",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-041",
+        "service": "kestrel-gateway",
+        "start_utc": "2031-11-12T16:12:00Z",
+        "duration_minutes": 143,
+        "final_severity": "S1",
+        "root_cause_code": "RC-HUM",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-047",
+        "service": "kestrel-search",
+        "start_utc": "2031-03-11T19:47:00Z",
+        "duration_minutes": 44,
+        "final_severity": "S2",
+        "root_cause_code": "RC-HUM",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-048",
+        "service": "kestrel-search",
+        "start_utc": "2031-07-16T13:07:00Z",
+        "duration_minutes": 17,
+        "final_severity": "S2",
+        "root_cause_code": "RC-EXT",
+        "customer_impacting": true
+      }
+    ],
+    "count": 24
+  },
+  "quality_metric": "Records are matched on `incident_id`. Let K be the answer key's records and P the reported records. Comparable cells = 7 * |K|. A cell is matched when the reported record for that incident_id exists and its value equals the key's after normalisation (numbers numerically, strings case-sensitively, booleans identically). Every cell of a key record with no reported counterpart counts as 7 mismatches. Every reported record whose incident_id is not in the key adds 7 to the denominator and contributes 0 matches. quality_score = matched_cells / denominator, rounded to 4 decimal places. `count` disagreeing with the length of `incidents` subtracts 0.05 (floor 0). task_success = true iff quality_score >= 0.97.",
+  "failure_condition": "Outright failure if any of: (1) the reply is not parseable as a single JSON object with the two required keys; (2) quality_score < 0.97 (frozen workload-B floor); (3) any record reports an `incident_id` that does not appear in the document - a fabricated incident; (4) the run edits the source document."
+}

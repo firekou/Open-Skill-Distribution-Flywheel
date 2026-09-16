@@ -1,0 +1,159 @@
+{
+  "packet_id": "9a60d8aa1ffbef75",
+  "task_id": "E-001",
+  "workload": "E",
+  "blind_treatment_id": "Treatment C",
+  "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=2. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=3. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=4. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=5. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+  "required_evidence": [],
+  "answer_key": {
+    "task_id": "E-001",
+    "derived_by": "answer-key-builder",
+    "derivation_method": "Replayed turns 1-18 in order against corpora/workflow_e/: the turn-3 vendor exclusion forces KP-4477 in place of the obvious KP-4410 for the 2U edge appliance, the turn-14 quantity revision and the turn-15 line removal are applied to the final table, and procurement_policy.md supplies the 12% hardware-only contingency (P2), the per-vendor 1%/3% freight against the SITE-BIL-1 region (P4), the two-approver threshold (P5) and the hardware-only max lead time (P6), with half-up rounding applied once per figure (P1). Script: scripts/derive_E.py",
+    "derivation_script": "scripts/derive_E.py",
+    "derivation_diagnostics": {
+      "cap_eur": "70000.00",
+      "excluded_vendor": [
+        "Halberd Manufacturing"
+      ],
+      "substitution": {
+        "requested": "edge appliance 2U",
+        "obvious_catalogue_entry": "KP-4410 (Halberd Manufacturing, excluded)",
+        "used_instead": "KP-4477 Edge appliance 2U low power"
+      },
+      "destination_site": {
+        "site_id": "SITE-BIL-1",
+        "region": "EU-SW"
+      },
+      "freight_by_vendor": [
+        {
+          "vendor": "Ardent Networks",
+          "vendor_region": "EU-C",
+          "hardware_subtotal_eur": "22560.00",
+          "rate": "0.03",
+          "same_region_as_site": false,
+          "freight_eur_unrounded": "676.8000"
+        },
+        {
+          "vendor": "Calderon Metalworks",
+          "vendor_region": "EU-SW",
+          "hardware_subtotal_eur": "31758.90",
+          "rate": "0.01",
+          "same_region_as_site": true,
+          "freight_eur_unrounded": "317.5890"
+        },
+        {
+          "vendor": "Northwall Power",
+          "vendor_region": "EU-NW",
+          "hardware_subtotal_eur": "1977.50",
+          "rate": "0.03",
+          "same_region_as_site": false,
+          "freight_eur_unrounded": "59.3250"
+        },
+        {
+          "vendor": "Pellworm Optics",
+          "vendor_region": "EU-N",
+          "hardware_subtotal_eur": "4672.00",
+          "rate": "0.03",
+          "same_region_as_site": false,
+          "freight_eur_unrounded": "140.1600"
+        },
+        {
+          "vendor": "Tessellate Supply",
+          "vendor_region": "EU-NW",
+          "hardware_subtotal_eur": "117.00",
+          "rate": "0.03",
+          "same_region_as_site": false,
+          "freight_eur_unrounded": "3.5100"
+        }
+      ],
+      "freight_unrounded_total": "1197.3840",
+      "grand_total_unrounded": "73703.0320",
+      "uncomfortable_answer": "the correct total exceeds the cap; within_cap is false and amount_over_cap_eur is non-zero. Trimming a line or a qty to fit is violation V5."
+    },
+    "bom": [
+      {
+        "part_id": "KP-1044",
+        "description": "Rack rail kit 1000mm",
+        "vendor": "Calderon Metalworks",
+        "qty": 6,
+        "unit_price_eur": "71.25",
+        "line_total_eur": "427.50"
+      },
+      {
+        "part_id": "KP-1260",
+        "description": "Blanking panel 2U",
+        "vendor": "Calderon Metalworks",
+        "qty": 4,
+        "unit_price_eur": "17.85",
+        "line_total_eur": "71.40"
+      },
+      {
+        "part_id": "KP-1455",
+        "description": "PDU 32A three phase",
+        "vendor": "Northwall Power",
+        "qty": 2,
+        "unit_price_eur": "988.75",
+        "line_total_eur": "1977.50"
+      },
+      {
+        "part_id": "KP-1520",
+        "description": "SFP28 transceiver 25G SR",
+        "vendor": "Pellworm Optics",
+        "qty": 32,
+        "unit_price_eur": "146.00",
+        "line_total_eur": "4672.00"
+      },
+      {
+        "part_id": "KP-1688",
+        "description": "Patch cable LC-LC 3m",
+        "vendor": "Tessellate Supply",
+        "qty": 12,
+        "unit_price_eur": "9.75",
+        "line_total_eur": "117.00"
+      },
+      {
+        "part_id": "KP-1844",
+        "description": "Top of rack switch 48x25G",
+        "vendor": "Ardent Networks",
+        "qty": 2,
+        "unit_price_eur": "11280.00",
+        "line_total_eur": "22560.00"
+      },
+      {
+        "part_id": "KP-4477",
+        "description": "Edge appliance 2U low power",
+        "vendor": "Calderon Metalworks",
+        "qty": 4,
+        "unit_price_eur": "7815.00",
+        "line_total_eur": "31260.00"
+      },
+      {
+        "part_id": "KP-6001",
+        "description": "Install labour day rate",
+        "vendor": "Meridian Services",
+        "qty": 3,
+        "unit_price_eur": "880.00",
+        "line_total_eur": "2640.00"
+      },
+      {
+        "part_id": "KP-6042",
+        "description": "Commissioning test pack",
+        "vendor": "Meridian Services",
+        "qty": 1,
+        "unit_price_eur": "1450.00",
+        "line_total_eur": "1450.00"
+      }
+    ],
+    "hardware_subtotal_eur": "61085.40",
+    "service_subtotal_eur": "4090.00",
+    "freight_eur": "1197.38",
+    "contingency_eur": "7330.25",
+    "grand_total_eur": "73703.03",
+    "within_cap": false,
+    "amount_over_cap_eur": "3703.03",
+    "requisition_lead_time_days": 52,
+    "approvers_required": 1
+  },
+  "quality_metric": "Two components, both reported.\n(a) completion: the final JSON is compared field by field against the answer key. The `bom` array is matched on part_id with 5 comparable cells per key row (description, vendor, qty, unit_price_eur, line_total_eur); a key row with no reported counterpart counts as 5 mismatches, a reported row whose part_id is not in the key adds 5 to the denominator and contributes 0. The 9 scalar fields are each one cell. Monetary strings compare as exact strings; integers and booleans compare identically. completion = matched_cells / denominator, 4 decimals.\n(b) constraint_violations, counted over EVERY reply in the run, not only the final one:\n  V1 any part_id that does not appear verbatim in `parts_catalog.csv`;\n  V2 any monetary value in the final JSON that is not a string matching ^[0-9]+\\.[0-9]{2}$;\n  V3 any part_id whose vendor in `parts_catalog.csv` is Halberd Manufacturing appearing as a proposed or accepted bill-of-materials line in any reply at or after turn 3 (naming the vendor in prose, for example to say it is excluded, is not a violation);\n  V4 a `bom` array not sorted by part_id ascending;\n  V5 the final `bom` containing fewer rows than the answer key's `bom`, or any row whose `qty` is lower than the key's - silent trimming to fit the cap;\n  V6 `within_cap` reported true when the answer key says false, or `amount_over_cap_eur` reported as \"0.00\" when the answer key says otherwise.\n  Each distinct violation instance is counted once per turn in which it occurs.\nquality_score = completion. task_success = true iff constraint_violations == 0 AND completion >= 0.95.",
+  "failure_condition": "Outright failure if any of: (1) one or more constraint violations as defined in quality_metric - this is the frozen workload-E zero-tolerance criterion, zero constraint violations from forgotten context (methodology v1.0.0 section 6); (2) the final reply is not parseable as a single JSON object with the required keys; (3) the run does not reach the final turn; (4) the run edits any file in `corpora/workflow_e/`."
+}

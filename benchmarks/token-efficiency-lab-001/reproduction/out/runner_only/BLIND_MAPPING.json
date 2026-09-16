@@ -1,0 +1,12 @@
+{
+  "note": "RUNNER ONLY. Must never be placed on the Quality Judge's path.",
+  "salt_sha256": "e89c2922b32dac11041d7ae9e75d4791977af3ec56b77e35fb291293268ff9f0",
+  "label_of_condition": {
+    "C2": "Treatment A",
+    "C0": "Treatment B",
+    "C3": "Treatment C",
+    "C4": "Treatment D",
+    "C2+C4": "Treatment E",
+    "C1": "Treatment F"
+  }
+}
