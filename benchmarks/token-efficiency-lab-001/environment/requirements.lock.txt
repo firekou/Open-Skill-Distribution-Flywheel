@@ -1,5 +1,62 @@
-# ATK harness dependencies only. No candidate dependency appears here.
-# Regenerate with: pip-compile --generate-hashes
-httpx==0.27.2
-pydantic==2.9.2
-jsonschema==4.23.0
+# ATK Token Efficiency Lab 001 — harness dependency lock (COMPLETE CLOSURE).
+#
+# No candidate dependency appears here. Candidates are installed per-run from their
+# pinned commit SHA, never into this base image.
+#
+# Every distribution in the transitive closure is pinned AND hash-verified. Installing
+# with --require-hashes makes the build fail closed if any artifact differs by one byte.
+#
+# Defect this file fixes: v1 pinned only the 3 direct dependencies. The 13 transitive
+# dependencies below were unpinned and would drift between builds. See EVIDENCE_LEDGER E019.
+#
+# Resolved: 2026-09-16, CPython 3.11.15, manylinux_2_17_x86_64.
+# Regenerate: pip download --only-binary=:all: <direct deps>, then hash every wheel.
+
+# transitive
+annotated-types==0.8.0 \
+    --hash=sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0
+# transitive
+anyio==4.15.1 \
+    --hash=sha256:6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101
+# transitive
+attrs==26.1.0 \
+    --hash=sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309
+# transitive
+certifi==2026.7.22 \
+    --hash=sha256:62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775
+# transitive
+h11==0.16.0 \
+    --hash=sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86
+# transitive
+httpcore==1.0.9 \
+    --hash=sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55
+# direct
+httpx==0.27.2 \
+    --hash=sha256:7bb2708e112d8fdd7829cd4243970f0c223274051cb35ee80c03301ee29a3df0
+# transitive
+idna==3.19 \
+    --hash=sha256:815e7be7a7806d54abb586dc943addc79e8b2ee16915059658cbeff4b1b43bf4
+# direct
+jsonschema==4.23.0 \
+    --hash=sha256:fbadb6f8b144a8f8cf9f0b89ba94501d143e50411a1278633f56a7acf7fd5566
+# transitive
+jsonschema-specifications==2025.9.1 \
+    --hash=sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe
+# direct
+pydantic==2.9.2 \
+    --hash=sha256:f048cec7b26778210e28a0459867920654d48e5e62db0958433636cde4254f12
+# transitive
+pydantic-core==2.23.4 \
+    --hash=sha256:216f9b2d7713eb98cb83c80b9c794de1f6b7e3145eef40400c62e86cee5f4e1e
+# transitive
+referencing==0.37.0 \
+    --hash=sha256:381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231
+# transitive
+rpds-py==2026.6.3 \
+    --hash=sha256:9c1255b302953c86a486b81d330d5ee1d5bd937691ce271b6be0ef0e299eaab7
+# transitive
+sniffio==1.3.1 \
+    --hash=sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2
+# transitive
+typing-extensions==4.16.0 \
+    --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8

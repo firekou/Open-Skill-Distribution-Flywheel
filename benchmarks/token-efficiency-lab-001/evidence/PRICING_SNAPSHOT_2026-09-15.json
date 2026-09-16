@@ -1,0 +1,31 @@
+{
+  "pricing_snapshot_id": "PS-2026-09-15",
+  "captured_at": "2026-09-15",
+  "source_document": "evidence/PRICING_SNAPSHOT_2026-09-15.md",
+  "units": "USD per 1,000,000 tokens",
+  "note": "Machine-readable form of the snapshot. The markdown remains authoritative; this file exists so the harness can price a run without parsing prose. Any disagreement between the two is a defect in this file.",
+  "confidence": {
+    "openai": "OBSERVED - vendor pricing page read directly",
+    "deepseek": "OBSERVED - vendor pricing page read directly",
+    "anthropic": "REPORTED - from a cached reference dated 2026-06-24, not re-fetched. Refresh before any Anthropic-specific cost claim."
+  },
+  "deepseek_note": "DeepSeek publishes four input prices per model (cache-hit/cache-miss x peak/off-peak). The rates below are OFF-PEAK cache-miss for input and off-peak for output. A run that crosses the peak boundary (01:00-04:00 and 06:00-10:00 UTC, Mon-Fri) is priced wrong by this table and must record the boundary crossing.",
+  "rates": {
+    "openai/gpt-5.5-pro": {"input_per_mtok": 30.00, "output_per_mtok": 180.00},
+    "openai/gpt-5-pro": {"input_per_mtok": 15.00, "output_per_mtok": 120.00},
+    "openai/gpt-5.5": {"input_per_mtok": 5.00, "output_per_mtok": 30.00},
+    "openai/gpt-5": {"input_per_mtok": 1.25, "output_per_mtok": 10.00},
+    "openai/gpt-5.1": {"input_per_mtok": 1.25, "output_per_mtok": 10.00},
+    "openai/gpt-5-mini": {"input_per_mtok": 0.25, "output_per_mtok": 2.00},
+    "openai/gpt-5-nano": {"input_per_mtok": 0.05, "output_per_mtok": 0.40},
+    "openai/o1-pro": {"input_per_mtok": 150.00, "output_per_mtok": 600.00},
+    "deepseek/deepseek-v4-pro": {"input_per_mtok": 0.66, "output_per_mtok": 1.98, "cached_input_per_mtok": 0.022},
+    "deepseek/deepseek-flash": {"input_per_mtok": 0.15, "output_per_mtok": 0.60, "cached_input_per_mtok": 0.003},
+    "anthropic/claude-fable-5-1": {"input_per_mtok": 10.00, "output_per_mtok": 50.00},
+    "anthropic/claude-opus-5": {"input_per_mtok": 5.00, "output_per_mtok": 25.00},
+    "anthropic/claude-sonnet-5": {"input_per_mtok": 2.00, "output_per_mtok": 10.00},
+    "anthropic/claude-haiku-4-5": {"input_per_mtok": 1.00, "output_per_mtok": 5.00},
+    "lab/replay-synthetic": {"input_per_mtok": 1.00, "output_per_mtok": 5.00, "cached_input_per_mtok": 0.10}
+  },
+  "replay_synthetic_note": "lab/replay-synthetic is NOT a real model. It exists so that offline harness dry-runs price deterministically. Any figure produced under it is plumbing verification, never a benchmark result."
+}

@@ -1,32 +1,91 @@
 {
-  "environment_id": "lab001-env-v1",
-  "status": "LG3 FAIL \u2014 specified but NOT verified",
-  "recorded_at": "2026-09-16",
-  "verified": {
-    "candidate_pins": "PASS \u2014 all 8 cloned and HEAD compared to pin; 2 defects found and corrected (E017)",
-    "harness_dependency_layer": "PASS \u2014 httpx 0.27.2, pydantic 2.9.2, jsonschema 4.23.0 installed cleanly in a clean venv",
-    "run_record_schema": "PASS \u2014 schema is valid Draft 2020-12; accepts a valid record; rejects methodology_version != 1.0.0",
-    "container_image": "FAIL \u2014 could not build",
-    "container_digest": null,
-    "end_to_end_rebuild_from_zero": "FAIL \u2014 not demonstrated"
+  "lab": "token-efficiency-lab-001",
+  "gate": "LG3",
+  "status": "PASS",
+  "verified_at": "2026-09-16",
+  "previous_status": "FAIL",
+  "previous_blocking_reason": "Recorded as 'no docker daemon in this environment'. That reason was inaccurate: the docker, dockerd, containerd and runc binaries were all present; the daemon had simply not been started. The FAIL verdict itself was correct - LG3 had genuinely not been demonstrated - but the reason attached to it was wrong. See reports/LAB_001_LG3_BUILD_EVIDENCE.md.",
+  "methodology_version": "1.0.0",
+  "environment_id": "lab001-env-2026-09-16",
+
+  "image": {
+    "manifest_digest": "sha256:6edd71a6adff7eab4fca99b9b8fb2e9298c62256f5587ee9109cf02047811261",
+    "config_digest": "sha256:8e357881f18e4b74bfba85e7dbec869954f2a904fc9fa1676013f39fac09072b",
+    "layers": 11,
+    "base_image": "python:3.11.15-slim-bookworm",
+    "base_image_digest": "sha256:d29f48a31a8b408ed19272ca1e7b10ebae13b240a27e862d3d4217c528e2e0c3",
+    "reproducible_artifact": "manifest_digest",
+    "not_reproducible_artifact": "the exported OCI tarball bytes differ between builds (archive wrapper metadata), while every blob inside is identical. Verify the manifest digest, never the tarball."
   },
-  "blocking_reason": "Docker CLI is present but no daemon is reachable (/var/run/docker.sock absent). The image specified in environment/Dockerfile was never built, so no digest exists and no second seat can be shown to reproduce it.",
-  "consequence": "LG3 cannot pass. Per the review instruction ('\u5982\u679c\u7121\u6cd5\u91cd\u5efa\uff1aLG3 FAIL') this is recorded as a failure, not waived.",
-  "what_would_clear_it": [
-    "A runtime with a working container daemon, or an equivalent pinned build path",
-    "Build environment/Dockerfile, record the image digest here",
-    "Have a different seat rebuild from this repository alone and match the digest"
+
+  "runtime": {
+    "python": "3.11.15",
+    "implementation": "cpython",
+    "libc": "glibc 2.36",
+    "machine": "x86_64",
+    "dependency_manifest_sha256": "93d9ecce47dada939398eed486029d76e1d8c58a512f0c2c0a98320008f892fd",
+    "distributions_installed": 20,
+    "distributions_locked": 16,
+    "distributions_from_base_image": ["pip", "setuptools", "wheel", "packaging"]
+  },
+
+  "build": {
+    "engine": "Docker 29.3.1 / BuildKit, containerd snapshotter, overlayfs",
+    "command": "benchmarks/token-efficiency-lab-001/environment/build.sh",
+    "network": "none",
+    "hermetic": true,
+    "wheelhouse_vendored": true,
+    "wheelhouse_bytes": 3600000,
+    "source_date_epoch": 1789516800,
+    "no_cache": true,
+    "provenance_attestation": false,
+    "sbom_attestation": false
+  },
+
+  "clean_rebuild": {
+    "performed": true,
+    "procedure": "docker system prune -a -f && docker buildx prune -a -f, base image re-pulled by digest from an empty store, rebuilt with --no-cache",
+    "manifest_digest_matches": true,
+    "config_digest_matches": true,
+    "blob_set_matches": true,
+    "dependency_manifest_matches": true,
+    "runtime_version_matches": true,
+    "first_attempt_failed": true,
+    "first_attempt_root_cause": "pip compiled bytecode at install time; each .pyc embeds the source file's mtime (the build wall clock) in its 16-byte header, so bodies were identical and headers differed by one byte at offset 8. BuildKit rewrite-timestamp rewrites tar header mtimes and cannot reach a timestamp inside a file's own bytes.",
+    "fix": "pip install --no-compile, plus an explicit __pycache__ sweep"
+  },
+
+  "selfcheck": {
+    "module": "harness.selfcheck",
+    "report": "benchmarks/token-efficiency-lab-001/evidence/lg3/SELFCHECK_REPORT.json",
+    "checks_passed": 8,
+    "checks_failed": 0,
+    "negative_control": {
+      "performed": true,
+      "description": "the same image run with --network bridge fails check 5 and exits non-zero, confirming the egress check discriminates rather than always passing",
+      "result": "check 5 FAILED as required; reachable: 1.1.1.1:443, pypi.org:443, github.com:443"
+    }
+  },
+
+  "defects_found_and_fixed": [
+    {"id": "E019", "defect": "requirements.lock.txt pinned 3 of 16 distributions; 13 transitive dependencies were unpinned and would drift", "fix": "complete closure pinned and hash-pinned"},
+    {"id": "E020", "defect": "pip install --require-hashes ... || pip install ... - the fallback silently defeated hash verification", "fix": "fallback removed; the build fails closed"},
+    {"id": "E021", "defect": "install-time bytecode compilation embedded the build wall clock in .pyc headers, making the image non-reproducible", "fix": "--no-compile plus a __pycache__ sweep"}
   ],
-  "artifacts_ready": [
-    "environment/Dockerfile",
-    "environment/requirements.lock.txt",
-    "environment/run_record_schema.json",
-    "environment/EGRESS_POLICY.md",
-    "environment/PINS.txt"
+
+  "hardening_applied": [
+    "the apt-get layer was removed entirely: it installed git, curl, jq and ca-certificates with loose version globs, and the base image already ships ca-certificates while shipping none of the network tools",
+    "no general-purpose network client (git, curl, wget, jq, nc, ssh) exists inside the measured container",
+    "the build is hermetic: --network=none, all wheels installed from a vendored wheelhouse with --no-index"
   ],
-  "not_yet_created": [
-    "tasks/ task set + answer keys",
-    "prompt/config hashes (depend on the task set)"
-  ],
-  "pricing_snapshot_id": "PS-2026-09-15"
+
+  "candidates_installed": [],
+  "candidates_installed_note": "NONE. No candidate is installed in this image. Candidates are added per-run from their pinned commit SHA under CANDIDATE_RUNTIME_PROFILES.md, and four of the seven non-failed candidates are currently blocked on an incomplete runtime profile.",
+
+  "what_this_does_not_establish": [
+    "no candidate has been executed",
+    "no benchmark run has been performed",
+    "the harness has never contacted a model provider",
+    "a green self-check is not a product-quality claim"
+  ]
 }

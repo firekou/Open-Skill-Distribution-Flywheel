@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Lab 001 run record",
+  "title": "Lab 001 run record (schema v1.1.0)",
   "type": "object",
   "required": [
     "run_id",
@@ -26,7 +26,10 @@
     "quality_score",
     "environment_id",
     "raw_evidence_path",
-    "methodology_version"
+    "methodology_version",
+    "run_class",
+    "token_source",
+    "quality_judged_before_cost"
   ],
   "properties": {
     "run_id": {
@@ -196,7 +199,48 @@
       "items": {
         "type": "string"
       }
+    },
+    "run_class": {
+      "enum": [
+        "benchmark",
+        "pilot",
+        "calibration",
+        "reproduction",
+        "dry_run"
+      ],
+      "description": "benchmark = an official LG4 run. pilot = a Calibration Pilot run. calibration = a meter calibration run. reproduction = an independent repeat. dry_run = offline plumbing verification with NO model in the loop; a dry_run record may never be reported as a benchmark result or used to support any hypothesis."
+    },
+    "blind_treatment_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reproduces_run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "task_set_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "answer_key_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "notes": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "description": "Schema v1.1.0. Changes from v1.0.0, all additive or tightening: run_class is new and required, so an offline plumbing dry-run can never be mistaken for a benchmark result; token_source and quality_judged_before_cost move from optional to required, because an omitted token_source leaves no way to tell a provider-reported count from an estimate; blind_treatment_id, reproduces_run_id, task_set_hash and answer_key_hash are added for the blind-evaluation and reproduction protocols. methodology_version stays pinned at 1.0.0 - the frozen methodology is untouched."
 }
