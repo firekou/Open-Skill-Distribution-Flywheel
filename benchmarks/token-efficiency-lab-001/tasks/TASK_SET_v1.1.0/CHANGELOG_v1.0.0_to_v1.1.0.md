@@ -20,6 +20,7 @@ This seat wrote **no answer key** and edited none. It did not edit `SCORING_SPEC
 | what the Answer Key Builder must rebuild | `answer_keys/STALE_v1.0.0_KEYS.md` |
 | what is arguable | §5, "Judgement calls a reviewer may contest" |
 | what is still open | §6, "Not fixed, and why" |
+| what independent verification found after the repair | §8 (F1 fixed, F4 recorded, F2 no action) |
 
 ---
 
@@ -41,6 +42,8 @@ This seat wrote **no answer key** and edited none. It did not edit `SCORING_SPEC
 | **RT-17** | MINOR | `retryable` defined in `util/retry.py`; `TransientError`, `ConfigError`, `instrumented` and `deprecated` also defined. The corpus now imports cleanly, all 75 modules | corpus + A rule R2 |
 | **RT-19** | MINOR | both dead branches removed by generalising the rule rather than by adding a caveat: A-003's D3 now defines reachability over call edges only; C-002's all-retracted sentence folded into the definition of the total | `A-003`, `C-002` prompts |
 | **RT-20** | MINOR | kept, with the consequence written into `DESIGN_NOTES.md` §5 and §8 — a D wrong-tool failure is evidence about schema visibility and must be reported as such | `DESIGN_NOTES.md` |
+| **F1** | HIGH (verifier) | C-001's claim-to-source mapping restated as set algebra — EVERY release note recording the flag as added, MINUS the one an erratum corrects, PLUS that erratum — killing the singular reading that failed a perfect answer at traceability 0.8889 | `C-001` prompt; see §8 |
+| **F4** | informational | C-001's `expected_behavior` and `notes` corrected to stop claiming a blog/forum-only exclusion the corpus does not instantiate; corpus deliberately unchanged | `C-001` `expected_behavior`, `notes`; see §8 |
 
 | UG item | the judge's rule | what v1.1.0 does |
 |---|---|---|
@@ -2164,3 +2167,133 @@ _after_
 task_success = true iff traceability == 1.0 AND coverage >= 0.90. Both floors are ABSOLUTE. The coverage floor replaces v1.0.0's `0.90 x (baseline C0 median coverage for this task)` for the reasons given in RT-05: a blind judge cannot compute a batch median, the relative form forced a two-pass scoring order that the run matrix does not describe, and it moved down with a weak baseline. traceability was already absolute at 1.00 and is unchanged.
 ```
 
+---
+
+## 8. Addendum — independent semantic verification (F1, F4, F2)
+
+An Independent Semantic Verifier re-derived all 17 tasks from the corpora by different methods
+and agreed with every committed key on every value. It returned one defect that belongs to this
+seat, plus two observations. This section records what was done about each.
+
+### F1 (HIGH) — C-001's claim-to-source mapping was under-determined. **Fixed.**
+
+The v1.1.0 mapping used a definite singular — "*the* official release note whose feature-flag list
+records the flag as added" — which has no unique referent where **two** release notes record the
+same flag as added. Verified against the corpus: that is the case for **all three** erratum flags.
+
+| flag | records it as added | corrected by | survives |
+|---|---|---|---|
+| `opportunistic_gc` | `release_notes_kestrel_2_0.md` (2.0), `release_notes_kestrel_2_2.md` (2.2) | ERR-001 corrects the 2.0 note | the 2.2 note |
+| `nested_span_export` | `release_notes_kestrel_1_0.md` (1.0), `release_notes_kestrel_1_2.md` (1.2) | ERR-002 corrects the 1.0 note | the 1.2 note |
+| `parallel_compaction` | `release_notes_kestrel_1_0.md` (1.0), `release_notes_kestrel_2_1.md` (2.1) | ERR-003 corrects the 1.0 note | the 2.1 note |
+
+A run taking the singular reading — governing = {erratum} alone — cites three fewer files than
+the key requires and scores traceability **24/(24+3) = 0.8889** against a `== 1.0` zero-tolerance
+floor: an outright failure on an otherwise perfect answer, for a wording reason. Same class as
+RT-04 and RT-07, and it gets the same treatment.
+
+**The plural reading is the correct one, on the corpus rather than on the grammar.** Four reasons,
+checked rather than assumed:
+
+1. Each erratum's own scope. ERR-001 names only the 2.0 release notes and says *"No other statement
+   in those release notes is affected by this erratum."* The prompt's override rule says a notice
+   overrides *"the specific statement and source it names, and nothing else."* Nothing touches the
+   2.2 note, which independently and correctly records the flag as added at the top tier.
+2. Rule (a)'s own definition — the file that decides the value *once the authority order and the
+   override rules have been applied* — leaves the surviving note deciding.
+3. The exception clause's trailing *"and the release note it corrects is not"* is redundant unless
+   some other release note survives.
+4. Rule (b) does not exclude the surviving note. (b) is about files that are right *by coincidence*
+   — the forum threads. A top-tier release note making the claim in its own feature-flag list is
+   governing on authority, not on agreement.
+
+The singular reading would also have made C-001 **easier** in exactly the direction RT-04 objected
+to: a run that found the erratum and never read the surviving release note would have a complete
+`sources` list.
+
+C-003 is left alone and is not the same case. Its identical construction resolves to the erratum
+alone because there is exactly one registry export and it *is* the corrected file, so nothing
+survives the subtraction. Same rule, different corpus, different outcome — which is what the rule
+should do.
+
+**Verification of the fix.** The new mapping was applied mechanically to the corpus and its output
+compared against the rebuilt `answer_keys/C-001.json`: **16 of 16 flags match, 0 mismatches**,
+including the three erratum flags and `nested_span_export`'s three-member set (two added-claims
+plus a removal note). The task text and the key now agree by construction rather than by
+coincidence.
+
+**`input.prompt`** — closes F1
+
+_before_
+```
+  `flag`, `introduced_in`
+      the official release note whose feature-flag list records the flag as added - unless an
+      erratum names that release note and that flag, in which case the erratum is the governing
+      source for `introduced_in` and the release note it corrects is not.
+```
+_after_
+```
+  `flag`, `introduced_in`
+      EVERY official release note whose feature-flag list records the flag as added, MINUS any
+      such release note that an erratum corrects for that flag, PLUS that erratum. More than one
+      official release note may record the same flag as added. An erratum displaces only the one
+      release note it names for that flag - it says so itself - so any other release note that
+      records that flag as added is untouched by it and remains a governing source. Where an
+      erratum applies, the governing set is therefore what the subtraction and the addition leave
+      behind, which is not in general the erratum on its own.
+```
+
+### F4 (informational) — C-001 overstated what it measures. **Text corrected; corpus not changed.**
+
+Verified independently: the seven blog posts and twelve forum threads between them name **12**
+backticked flags, and all 12 are a subset of the **16** named in the official release notes. There
+is no blog-only or forum-only flag, so the prompt's rule that such a name "must not appear in your
+answer" cannot separate a run that applies it from one that does not, and `expected_behavior`'s
+claim that a correct run "excludes flag-like names that appear only in blog or forum sources"
+described a discrimination the corpus does not instantiate.
+
+**The corpus was deliberately not changed.** Arming the rule would have cost one flag name in one
+blog post and would not have moved a single key value — but the Independent Semantic Verifier had
+just completed a full pass over all 17 tasks against this corpus, and the Answer Key Builder had
+just rebuilt C-001 against it. Invalidating a completed independent verification to arm an
+unexercised guard is a bad trade at this point in the lab. It is recorded instead.
+
+**The prompt sentence is kept**, unlike the two dead branches removed under RT-19. Those were
+conditional branches a run had to reason through; this is a *guard* against over-reporting, and
+removing it would give a run that promoted a forum-sourced name a defence. What changed is the
+text that over-claimed: `expected_behavior` now describes the citation discipline that C-001
+actually exercises, and `notes` states in terms that this rule is unexercised and that **C-001 must
+not be reported as evidence that a run can discriminate low-authority-only entities.**
+
+**`expected_behavior`** — closes F1, F4
+
+_before_
+```
+reports null rather than guessing where no removal is recorded, excludes flag-like names that appear only in blog or forum sources, and cites for each value a file that actually states it.
+```
+_after_
+```
+reports null rather than guessing where no removal is recorded, admits no flag that no official release note records as added, and cites for each value every file that governs it and no other. Where an erratum corrects one release note's claim about a flag, a correct run cites the erratum together with whatever other release note still records that flag as added, and does not cite the release note the erratum corrected.
+```
+
+**`notes`** — closes F4
+
+_before_
+```
+The corpus mixes three unrelated subject areas, so roughly two thirds of the files are distractors for this task; forum threads assert flag versions confidently and are wrong.
+```
+_after_
+```
+The corpus mixes three unrelated subject areas, so roughly two thirds of the files are distractors for this task; forum threads assert flag versions confidently and are wrong. Two limits on what this task measures, recorded so it is not over-claimed. (1) F4: the prompt's rule that a flag named only in a blog post or a forum thread is not a runtime flag is a guard against over-reporting, not an exercised discrimination - all twelve flag names that appear in the seven blogs and twelve forum threads are a subset of the sixteen named in the official release notes, so no blog-only or forum-only flag exists and the rule cannot separate a run that applies it from one that does not. The sentence is kept because without it a run that promoted a forum-sourced name would have a defence; it is not evidence that a run can discriminate low-authority-only entities, and C-001 must not be reported as though it were. (2) The coincidentally-correct low-authority files (RT-04) remain the live citation trap.
+```
+
+### F2 (no action) — the B-001 fix holds, and the exposure it closed was larger than estimated
+
+The verifier checked whether the "only one amendment ever applies" reading of B-001 is genuinely
+available and found that it is **not**: the order-of-precedence list is expressly conditioned on
+*"Where a conflict or inconsistency arises"*, and Amendments 1 and 2 touch disjoint clauses, so no
+conflict arises between them and both apply. The RT-07 repair stands unchanged.
+
+One correction to the record: a run holding that reading would also have had to revert A1.1 and
+A1.2, giving **33/36 = 0.9167**, not the 34/36 that was floated. The exposure RT-07's fix closed was
+larger than it was credited with, not smaller. No task text changes as a result.

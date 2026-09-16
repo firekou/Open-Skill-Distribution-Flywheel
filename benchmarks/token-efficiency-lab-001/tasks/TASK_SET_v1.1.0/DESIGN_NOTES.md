@@ -222,6 +222,16 @@ authority order.
 
 * **Three unrelated subject areas share one directory.** Roughly two thirds of the files are
   distractors for any given task, so retrieval has to discriminate, not just fetch.
+* **One claimed discrimination is not instantiated, and C-001 must not be reported as though it
+  were (F4, found by independent verification).** C-001's prompt says a flag named only in a blog
+  post or a forum thread is not a runtime flag and must not appear in the answer. Counted: the
+  blogs and forum threads between them name 12 backticked flags, and all 12 are a subset of the 16
+  named in the official release notes. There is no blog-only or forum-only flag, so that rule
+  cannot separate a run that applies it from one that does not. The sentence is kept — it is a
+  guard against over-reporting, not a branch, and without it a run that promoted a forum-sourced
+  name would have a defence — but `expected_behavior` no longer claims the discrimination is
+  exercised. The live low-authority trap in C-001 is the *coincidentally correct* forum thread
+  (RT-04), not an invented flag.
 * **The low-authority sources are confidently wrong.** Forum threads assert flag versions,
   plugin minimums and funding totals in the register of someone who was there. Under the stated
   authority order they never decide anything; C-003 additionally requires them to be *found and
@@ -258,6 +268,18 @@ Each C task then gives a **claim-to-source mapping** (which file governs `introd
 `removed_in`, a project total, a plugin minimum) and restates the conflict precedence for
 citations. The ruling on the forum threads is: a low-authority file that states the correct value
 is **not** a valid citation, and that is now stated in advance rather than sprung.
+
+**One under-determination survived the first pass and was caught by independent verification
+(F1).** The claim-to-source mapping originally said "*the* official release note whose feature-flag
+list records the flag as added". For all three erratum-corrected flags **two** release notes record
+the flag as added — the one the erratum corrects, and a later one that states the corrected version
+independently — so the definite singular had no referent, and a run reading it as "the erratum
+alone" cited three fewer files and scored traceability 0.8889 against a 1.00 floor. The mapping is
+now set algebra: *every* release note recording the flag as added, *minus* the one an erratum
+corrects for that flag, *plus* that erratum. Applied mechanically to the corpus it reproduces the
+rebuilt key's `sources` for 16 of 16 flags. C-003 keeps the singular because its corpus has one
+registry export and the erratum corrects it, so nothing survives the subtraction — the same rule,
+resolving differently because the corpus differs, which is what a rule should do.
 
 **Symmetry.** `sources` must name every governing source and no other file. A governing source
 left out is a *missing citation* and costs what an unsupported one costs. Breadth and narrowness
@@ -491,6 +513,15 @@ overstated in v1.0.0 and is not reintroduced here: a citation is supported when 
 governs *at least one* value of its record, so a record with one wrong field keeps its
 traceability provided another field is right and cited. Nobody should fix a problem that is not
 there.
+
+**What independent verification changed after the fact.** An Independent Semantic Verifier
+re-derived all 17 tasks by different methods and agreed with every committed key on every value. It
+returned one defect of this seat's — F1 above, now fixed and re-verified against the rebuilt key —
+and one over-claim, F4, now recorded rather than armed. It also checked and **rejected** a
+suspected second B-001 ambiguity: the "only one amendment ever applies" reading is not available,
+because the order-of-precedence list is conditioned on *"Where a conflict or inconsistency arises"*
+and Amendments 1 and 2 touch disjoint clauses. The RT-07 repair stands, and the exposure it closed
+was 33/36 rather than the 34/36 first estimated — larger than credited, not smaller.
 
 **The isolation posture held.** `environment/PINS.txt`, `environment/CANDIDATE_RUNTIME_PROFILES.md`,
 `reports/LAB_001_LG2_SECURITY_REVIEW.md` and `registry/` were not read during the v1.1.0 repair,
