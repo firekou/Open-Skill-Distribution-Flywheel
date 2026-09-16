@@ -337,8 +337,8 @@ def c003():
 def main():
     write = "--write" in sys.argv
     c1, d1 = c001()
-    c2, notices = c002()
-    c3, fix3 = c003()
+    c2, notices, per_award = c002()
+    c3, fix3, coincidental3 = c003()
 
     keys = {
         "C-001": {
@@ -347,8 +347,13 @@ def main():
             "derivation_method": (
                 "Parsed the '## Feature flags' list of every official release note for "
                 "'added'/'removed' entries, then applied the three errata that name a flag and "
-                "correct the release it was added in. Blog and forum statements are recorded but "
-                "never allowed to decide a value. Script: scripts/derive_C.py"
+                "correct the release it was added in. Each record's `sources` is the COMPLETE "
+                "governing-source set the v1.1.0 traceability metric requires, built from the "
+                "task's claim-to-source mapping: the release notes recording the flag as added, "
+                "minus the one an erratum corrects for that flag, plus that erratum, plus the "
+                "release note recording the removal. Blog and forum statements are recorded in "
+                "derivation_diagnostics and are never governing sources, whether they agree "
+                "with the answer or not. Script: scripts/derive_C.py"
             ),
             "derivation_script": "scripts/derive_C.py",
             "derivation_diagnostics": d1,
@@ -361,10 +366,20 @@ def main():
                 "Parsed the award table of all eight bulletins, applied the three correction "
                 "notices (asserting each stated original amount against the bulletin before "
                 "replacing it) and the two retraction notices, then summed the surviving amounts "
-                "per project. Forum totals are ignored. Script: scripts/derive_C.py"
+                "per project. Forum totals are ignored. Each record's `sources` is the COMPLETE "
+                "governing-source set the v1.1.0 traceability metric requires: every bulletin "
+                "publishing one of the project's awards plus every correction and retraction "
+                "notice affecting one of them. Script: scripts/derive_C.py"
             ),
             "derivation_script": "scripts/derive_C.py",
             "notices_applied": notices,
+            "derivation_diagnostics": {
+                "per_award_standing_values": per_award,
+                "note": ("no single file states total_awarded_eur; it is the sum of the "
+                         "per-award amounts that stand after the notices are applied. This "
+                         "block is a diagnostic and is NOT part of any record's "
+                         "governing-source set."),
+            },
             **c2,
         },
         "C-003": {
@@ -379,11 +394,17 @@ def main():
             "derivation_script": "scripts/derive_C.py",
             "errata_applied": fix3,
             "contradicted_by_reading": (
-                "literal: any corpus file that states a different min version for the plugin, "
-                "including registry_export_2032-02.csv for the two erratum-corrected plugins. "
-                "See BUILDER_NOTES.md C-003 ambiguity 1 and the per-record "
-                "contradicted_by_alternate_reading_low_authority_only field."
+                "literal, and settled by RT-16: any corpus file of any tier that states a "
+                "different min version for the plugin, including registry_export_2032-02.csv "
+                "for the two erratum-corrected plugins. The v1.0.0 key's "
+                "`contradicted_by_alternate_reading_low_authority_only` field is withdrawn."
             ),
+            "derivation_diagnostics": {
+                "coincidentally_correct_non_governing_files": coincidental3,
+                "note": ("files that state the governing value but do not govern it. Kept off "
+                         "the records: under the v1.1.0 citation rule they are neither citable "
+                         "nor required."),
+            },
             **c3,
         },
     }

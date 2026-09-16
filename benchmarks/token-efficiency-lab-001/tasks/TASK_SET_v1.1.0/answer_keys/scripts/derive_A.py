@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Derive answer keys for workload A (A-001..A-004) of TASK_SET_v1.0.0.
+"""Derive answer keys for workload A (A-001..A-004) of TASK_SET_v1.1.0.
 
 Everything is computed from the Python AST of the corpus under
 corpora/repo_ledgerline/ledgerline/ (tests/ excluded, per rule R3).  Using the
@@ -212,10 +212,16 @@ def a003():
                     target = exc.func if isinstance(exc, ast.Call) else exc
                     if isinstance(target, ast.Name) and target.id == "TransientError":
                         raisers.add(fqn)
-    result = sorted(
-        f for f in retry_decorated
-        if f in raisers or (closure(f, EDGES) & raisers)
-    )
+    # D3: "a function is not held to reach a transient raiser merely by being
+    # one itself" -- reachability needs at least one call edge.  The two
+    # readings are computed and asserted equal, so the key can never depend on
+    # which one is taken: no retry-decorated function in this corpus is itself
+    # a transient raiser.
+    strict = sorted(f for f in retry_decorated if closure(f, EDGES) & raisers)
+    lenient = sorted(f for f in retry_decorated
+                     if f in raisers or (closure(f, EDGES) & raisers))
+    assert strict == lenient, sorted(set(lenient) - set(strict))
+    result = strict
     return ({"retry_decorated_reaching_transient": result, "count": len(result)},
             sorted(retry_decorated), sorted(raisers))
 

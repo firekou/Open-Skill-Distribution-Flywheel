@@ -1,0 +1,52 @@
+[
+  {
+    "workload": "A",
+    "condition": "C0",
+    "planned_attempts": 1
+  },
+  {
+    "workload": "A",
+    "condition": "C1",
+    "planned_attempts": 1
+  },
+  {
+    "workload": "A",
+    "condition": "C2+C4",
+    "planned_attempts": 1
+  },
+  {
+    "workload": "B",
+    "condition": "C0",
+    "planned_attempts": 1
+  },
+  {
+    "workload": "B",
+    "condition": "C3",
+    "planned_attempts": 1
+  },
+  {
+    "workload": "C",
+    "condition": "C2",
+    "planned_attempts": 1
+  },
+  {
+    "workload": "D",
+    "condition": "C0",
+    "planned_attempts": 1
+  },
+  {
+    "workload": "D",
+    "condition": "C1",
+    "planned_attempts": 1
+  },
+  {
+    "workload": "E",
+    "condition": "C3",
+    "planned_attempts": 1
+  },
+  {
+    "workload": "E",
+    "condition": "C4",
+    "planned_attempts": 1
+  }
+]

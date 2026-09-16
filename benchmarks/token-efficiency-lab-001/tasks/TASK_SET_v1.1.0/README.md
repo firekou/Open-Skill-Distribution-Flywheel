@@ -48,7 +48,7 @@ TASK_SET_v1.1.0/
     research_c/                      workload C — 50 synthetic sources across four authority tiers
     mcp_toolset/                     workload D — 85 tool schemas, deterministic offline server, fixtures
     workflow_e/                      workload E — CSV/Markdown inputs for the multi-turn scenarios
-  answer_keys/                       THE v1.0.0 KEYS, STALE — see answer_keys/STALE_v1.0.0_KEYS.md
+  answer_keys/                       rebuilt for v1.1.0 by the Answer Key Builder; 4 of 17 keys changed (B-002 and the three C tasks)
 ```
 
 ## Precedence between this directory's documents

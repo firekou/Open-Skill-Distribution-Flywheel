@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Derive answer keys for workload D (D-001..D-004) of TASK_SET_v1.0.0.
+"""Derive answer keys for workload D (D-001..D-004) of TASK_SET_v1.1.0.
 
 Every value is obtained by invoking the offline MCP toolset the task itself
 points at:  `python3 corpora/mcp_toolset/server.py call <tool> '<json>'`.

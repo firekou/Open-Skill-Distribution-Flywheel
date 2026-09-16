@@ -1,13 +1,32 @@
-# BUILDER_NOTES.md — ATK Token Efficiency Lab 001, answer keys
+# BUILDER_NOTES.md — ATK Token Efficiency Lab 001, TASK_SET_v1.1.0 answer keys
 
 Seat: **Answer Key Builder**. Scope: all 17 tasks (A×4, B×3, C×3, D×4, E×3).
+Supersedes the v1.0.0 notes of the same name, and supersedes `STALE_v1.0.0_KEYS.md`.
 
-Every key in this directory was derived **against the frozen task set whose manifest is
-`MANIFEST.sha256`, sha256 `9bc84e9f1307175a3d83f111ded05aa03eb15acd18baca0571e0fe36de0e3105`**.
-All 155 manifest entries were verified to match on disk before the keys were written, and
-verified again afterwards (155/155 OK), so nothing under `tasks/` or `corpora/` was modified by
-this seat. `DESIGN_NOTES.md` was not read; every key was derived independently from the task
-statement and the corpus.
+Every key here was derived independently from the task statement and the corpus.
+`DESIGN_NOTES.md` was **not** read and `shortcut_probe/` was **not** read, so no key is a
+restatement of the designer's own extractor. The claims in `STALE_v1.0.0_KEYS.md` were treated
+as a hypothesis and re-tested by running every derivation script against the v1.1.0 corpora;
+one of its claims turned out to understate a defect (see **Defect 1**).
+
+Nothing under `tasks/TASK_SET_v1.1.0/tasks/`, `corpora/`, `SCORING_SPEC.md`, `judge.py` or
+`TASK_SET_v1.0.0/` was modified by this seat. The only files written are the 17 `*.json` keys,
+`scripts/derive_*.py`, this file, and the superseded stub `STALE_v1.0.0_KEYS.md`.
+
+## Corpus delta actually observed (not taken on trust)
+
+A full sha256 diff of `TASK_SET_v1.0.0/corpora/` against `TASK_SET_v1.1.0/corpora/` shows
+exactly seven changed files and one added tool, and nothing else:
+
+| file | change |
+|---|---|
+| `docs_b/KESTREL_RELIABILITY_2031.md` | rebuilt (RT-03) |
+| `workflow_e/procurement_policy.md` | P1 and P4 rewritten (RT-06) |
+| `mcp_toolset/{tools.json,server.py,fixtures/responses.json}` | +1 tool, 8 tools moved family (RT-11) |
+| `repo_ledgerline/ledgerline/util/{retry,errors,clock,text}.py` | +3 module-level functions (RT-17) |
+
+`docs_b/MSA_ORBITAL_HARBOR_consolidated.md` and `docs_b/SDX7_PROTOCOL_SPEC_v3.1.md` are
+byte-identical to v1.0.0, so B-001 and B-003 could only change if their *metrics* had changed.
 
 ## How to re-derive
 
@@ -19,519 +38,433 @@ python3 answer_keys/scripts/derive_D.py --write     # D-001..D-004
 python3 answer_keys/scripts/derive_E.py --write     # E-001..E-003
 ```
 
-Without `--write` each script prints the same payloads to stdout. All five are offline,
-deterministic and read only from `corpora/`. Verification performed: all 17 keys were written,
-their sha256 recorded, all five scripts re-run, and every file came back **byte-identical**
-(17/17). Every key file parses as JSON and carries `task_id`, `derived_by`,
-`derivation_method` and `derivation_script`.
+Without `--write` each script prints the same payloads to stdout. All five are offline and
+deterministic and read only from `corpora/`. `derive_D.py` reaches its data only by invoking
+the task's own offline MCP server (`server.py call <tool> '<json>'`); it never opens
+`corpora/mcp_toolset/fixtures/` and never scrapes `server.py`, and it strips
+`LAB001_TOOL_AUDIT` from the environment so it cannot contaminate a run's audit file.
 
-`derive_D.py` obtains its values by calling the task's own offline MCP server
-(`python3 corpora/mcp_toolset/server.py call <tool> '<json>'`). It never reads
-`corpora/mcp_toolset/fixtures/` and never scrapes `server.py`, so it also demonstrates that the
-`required_tools` set named in each D key is sufficient to answer the task. It strips
-`LAB001_TOOL_AUDIT` from the environment so it can never contaminate a run's audit file.
+## Verification performed
+
+1. All 17 keys written, sha256 recorded, all five scripts re-run, sha256 compared:
+   **17/17 byte-identical**.
+2. All 17 keys parse as JSON and carry `task_id`, `derived_by: "answer-key-builder"`,
+   `derivation_method` and `derivation_script`.
+3. **End-to-end shape check against the live judge.** For each of the 17 tasks a synthetic
+   "ideal" model output was constructed *from the key itself* (the key's own record array plus
+   a consistent `count`, and for C the key's own `sources`) and scored through
+   `environment/harness/judge.py` at `methodology_version 1.1.0`, with the evidence each task's
+   contract requires. Result: **17/17 scored `quality_score = 1.0000`, `task_success = true`,
+   no zero-tolerance breach**; C-001/C-002/C-003 each scored `traceability = 1.0` and
+   `coverage = 1.0`. This is the check that caught Defect 1 — the v1.0.0 C-002 key fails it.
+   (judge.py was read and executed, never edited.)
+4. Independent arithmetic cross-checks against the task metrics' own stated numbers: B-002's
+   metric quotes "a key of 26 records (denominator 183)" — the key has 26 records and
+   7×26+1 = 183. B-003's metric quotes "a key of 22 records (denominator 89)" — 4×22+1 = 89.
+   A-001's notes quote 126 in-scope functions — measured 126, of which 63 reach the sink.
+
+---
+
+# Changes versus the v1.0.0 keys
+
+Scored content (everything except derivation metadata and diagnostics):
+
+| key | scored content | why |
+|---|---|---|
+| A-001..A-004 | **unchanged**, proven by re-running `derive_A.py` | RT-17 added 3 module-level functions (394 → 397) in `util/`, none of which is reachable-to-sink, referenced-nowhere, `@retryable`, or in a cycle |
+| B-001 | **unchanged** | corpus byte-identical; the v1.0.0 key already carried `Amendment No. n` and the bare `England and Wales` / `London`, which RT-07 has now *mandated* rather than left to the builder |
+| B-002 | **rewritten** — 24 records → **26** | different document: four per-quarter registers, a Register Amendments layer, and a withdrawal |
+| B-003 | **unchanged** | corpus byte-identical |
+| C-001 | records **re-shaped**; `flag`/`introduced_in`/`removed_in`/`sources` values unchanged | RT-04: the two `non_authoritative_*` fields are removed from the records |
+| C-002 | records **re-shaped**; scored cells and `sources` unchanged | RT-04 + Defect 1: `citation_support` rebuilt as a clean per-field file map |
+| C-003 | records **re-shaped**; scored cells and `sources` unchanged | RT-04 + RT-16: `citation_support` now the *governing* set, not the *agreeing* set; `contradicted_by_alternate_reading_low_authority_only` removed |
+| D-001..D-004 | **unchanged**, including `required_tools` | RT-11 moved 8 tools *out of* contested families and added one *into* one; every tool in a `required_tools` set kept its family, and every tool the derivation calls outside a contested family is still outside one |
+| E-001 | **unchanged**, but re-derived under the new P1/P4 | see E-001 below — the repair removes the rival reading rather than moving the answer |
+| E-002, E-003 | **unchanged** | corpora byte-identical, turn sequences unchanged |
+
+So: **4 of 17 keys changed** (B-002 in value, C-001/C-002/C-003 in shape), 13 re-derived and
+proven identical.
 
 ---
 
-# Per-task derivation and confidence
+# Per-task derivation, confidence and ambiguities
 
-## A-001 … A-004 — call-graph analysis over `repo_ledgerline`
+## A-001 … A-004 — call graph over `repo_ledgerline`
 
-**Method.** `derive_A.py` parses every `.py` file under `ledgerline/` with Python's `ast`
-module (never `tests/`, per R3). Module-level `FunctionDef`s are the node set; a call edge is a
-`ast.Call` whose `func` is an `ast.Name` naming one of those functions, found anywhere inside a
-function body. Using the AST rather than text search makes R5 (comments / docstrings / string
-literals are not code) true *by construction* rather than by filtering, and makes R6 (the
-`getattr` dispatch table in `dynamic.py`) fall out for free — those are string constants, not
-calls.
+**Method.** `derive_A.py` parses every `.py` under `ledgerline/` with `ast` (never `tests/`,
+R3). Module-level `FunctionDef`/`AsyncFunctionDef` are the nodes; an edge is an `ast.Call`
+whose `func` is an `ast.Name` naming one of those functions, found anywhere in a function body.
+Using the AST makes R5 (comments / docstrings / string literals are not code) true *by
+construction*, and R6 (`dynamic.py`'s `getattr` table) falls out for free because those are
+string constants, not calls. Decorators are excluded from the body scan, which is what makes
+A-003's `@retryable` a decorator rather than a call edge.
 
-Checks the script performs and that passed:
+Checks that pass on the v1.1.0 corpus: **397** module-level functions; **no duplicate short
+names** (so R4's "globally unique" holds); **no self-recursive function**; the only bare
+`Name` load of a function name that is neither a callee nor an import is `retryable` used as a
+decorator, and `retryable` is imported in each of those four modules anyway.
 
-* 394 module-level functions; **no duplicate short names**, so R4's "names are globally unique"
-  holds and a bare name resolves to exactly one definition.
-* **No self-recursive functions**, so the A-002 question "does a self-call count as a reference
-  to yourself?" never arises.
-* **No `Name` load of a function name that is neither a call callee nor an import** — so U1's
-  narrow definition of a reference (callee or import only) and a broader one (any code-level
-  mention) give the *same* answer here. This was the ambiguity I most expected to bite; it does
-  not.
+Results: A-001 **63** reaching functions out of exactly **126** in `api/`+`plugins/`+`cli/`;
+A-002 **11** unreferenced; A-003 **10** of 23 retry-decorated functions reach one of 6 transient
+raisers; A-004 **4** components of sizes 2, 3, 3, 2.
 
-Results: A-001 63 reaching functions (out of exactly 126 functions in `api/`+`plugins/`+`cli/`
-— a 63/63 split, so a blanket guess scores ~0.5 F1 as the task notes claim); A-002 11
-unreferenced functions; A-003 10 functions; A-004 4 components.
+**Confidence: high.** The answers are structural and the corpus asserts its own regularity.
 
-**Confidence: high** for all four. These are mechanical questions with a mechanical answer and
-the rules R1–R8 are unusually tight.
+**Ambiguity A-1 (resolved, no effect).** A-003 D3 says "a function is not held to reach a
+transient raiser merely by being one itself", but the v1.0.0 script scored
+`f in raisers or (closure(f) & raisers)` — the *lenient* reading. `derive_A.py` now computes
+both readings and asserts them equal; they are, because no retry-decorated function in this
+corpus is itself a transient raiser. The key cannot depend on the choice. No action needed.
 
-### Ambiguities / defects (A)
+**Ambiguity A-2 (no effect).** A-002 U1 counts a name as referenced when it is a call callee or
+appears in an import. A function used *only* as a bare decorator would be neither, and would be
+reported unreferenced. Only `retryable` is used that way and it is imported, so the case does
+not arise.
 
-1. **`retryable` does not exist. (Defect, low scoring impact, real corpus bug.)**
-   Fifteen modules do `from ledgerline.util.retry import retryable`, but
-   `ledgerline/util/retry.py` **does not define `retryable`**. The corpus is not importable.
-   It does not change any key (D1 is satisfied by the import statement naming the module, and
-   `retryable` is not itself a module-level function so it cannot appear in an answer), but a
-   run that tries to *execute* the corpus, or that reasons "this import must be wrong, so the
-   decorator must be `retryable_v2`", will go astray. `retryable_v2` *is* defined
-   (`plugins/legacy_retry.py`), which makes the asymmetry more misleading, not less.
-
-2. **A-002 U1 does not say what to do with a bare-name mention that is neither a call nor an
-   import** (e.g. `handler = some_func`). Moot in this corpus — there are none — but the rule
-   is under-specified and would bite if the corpus were regenerated with a callback passed by
-   reference.
-
-3. **A-002 `__all__` and `dynamic.py`.** `ledgerline/dynamic.py` has
-   `__all__ = ["dispatch", "DISPATCH"]`, which makes `dispatch` referenced under U2. Correct,
-   but note that U2 rescues a function whose *only* mention is a string in an `__all__` list,
-   while R5 says strings are not code. The two rules point opposite ways and only the explicit
-   U2 carve-out resolves it. A careful reader gets this right; a fast one may not.
-
-4. **A-003 D3 "F is itself a transient raiser" is untested.** No retry-decorated function is
-   itself a `raise TransientError` site in this corpus, so the self-inclusion half of D3 does
-   no work and a run that ignores it scores identically. Not a defect in the key, but the trap
-   the task thinks it is setting is not armed.
-
----
+**Ambiguity A-3 (no effect).** `derive_A.py` credits `import a.b.c` with a reference to the
+bare name `c`. No module basename in this corpus collides with a function name, so no function
+is made "referenced" by a module import.
 
 ## B-001 — MSA as in effect on 2031-11-30
 
-**Method.** `derive_B.py` pulls each value with a regex anchored on the exact clause, Schedule B
-paragraph or amendment sub-clause that states it (`grab()` asserts the pattern matches exactly
-once, so a corpus change breaks the script instead of silently changing the key). It then
-applies the document's own ORDER OF PRECEDENCE: Schedule C is parsed **and discarded** (the
-script asserts Schedule C says it is subordinate), Schedule B supplies the service levels, and
-Amendments 1 (2031-03-01) and 2 (2031-09-15) are applied while Amendment 3 (2032-01-01) is not.
+**Method.** `derive_B.py` pulls each of the 36 fields out of the numbered clause, Schedule B
+paragraph or amendment sub-clause that states it, then applies the document's own ORDER OF
+PRECEDENCE: Schedule C is read and asserted subordinate, then discarded; Schedule B supplies
+the service levels; Amendments 1 (2031-03-01) and 2 (2031-09-15) apply, Amendment 3
+(2032-01-01) does not because it post-dates the as-of date.
 
-Key values that the traps turn on: `payment_terms_days` 45 (Amd 1, not the body's 30, and not
-coincidentally Schedule C's 45), `audit_notice_business_days` 20 (Amd 1),
-`liability_cap_percent_of_charges` 150 (Amd 2), `availability_target_percent` 99.95 (Amd 2),
-`p1_restoration_hours` 3 (Amd 2), `subprocessor_objection_days` 21 (Amd 2),
-`termination_for_convenience_notice_days` **180** (body — *not* Schedule C's 90 and *not*
-Amd 3's 90, which happen to agree with each other and disagree with the right answer),
-`liability_cap_absolute_eur` 2000000, `renewal_term_months` 12, `non_renewal_notice_days` 90.
+**Confidence: high** on all 36 values; the key reproduces v1.0.0's byte for byte, which is
+independent evidence that the extraction is stable.
 
-**Confidence: high on 33 of 36 fields, medium on 3.** The three soft ones are below.
+**Ambiguity B-1 (medium — could cost the task outright).** ORDER OF PRECEDENCE item 1 reads
+"*any Amendment, taking the Amendment with the latest Amendment Effective Date that is on or
+before the date on which the question falls to be determined*". Read narrowly, that says only
+**one** amendment — the latest in force, i.e. Amendment No. 2 — is ever applied, which would
+leave `payment_terms_days` at the body's value and `audit_notice_business_days` at clause 13.1's,
+scoring 34/36 = 0.9444 and failing the 0.97 floor. Read as a conflict tie-break between
+amendments that speak to the same question, both apply, and Amendments 1 and 2 touch disjoint
+clauses so there is no conflict at all. I have taken the second reading. It is supported by the
+task text, which asks for `amendments_in_force_on_as_of_date` as a **list** and says "if no
+amendment is in force, use an empty list" — a field that would be pointless under the
+one-amendment reading. **Recommendation:** the designer should consider a sentence in the
+ORDER OF PRECEDENCE section making the tie-break explicit; the current wording makes a losing
+reading defensible.
 
-### Ambiguities / defects (B-001), worst first
+**Ambiguity B-2 (resolved by RT-07, recorded for the audit trail).** In v1.0.0 the builder
+*chose* `Amendment No. 1` over the heading's own `AMENDMENT No. 1`, and chose the bare
+`England and Wales` over `the laws of England and Wales`. In v1.1.0 the prompt's N4/N4a fix
+both, and the key's values are unchanged. This is the one place where a v1.0.0 key value was a
+judgement call and is now mandated.
 
-1. **`amendments_in_force_on_as_of_date` — the document and the prompt disagree on spelling.
-   (High impact: the metric compares strings case-sensitively, and this is 1 of 36 fields, i.e.
-   exactly the one field a run is allowed to miss before it drops under the 0.97 floor.)**
-   The document headings are `## AMENDMENT No. 1` (upper case). The prompt's example is
-   `"Amendment No. 1"`, and N4 says text is "copied verbatim from the document". A run that
-   obeys N4 emits `AMENDMENT No. 1`; a run that follows the prompt's example emits
-   `Amendment No. 1`. **I keyed the prompt's spelling** (`"Amendment No. 1"`,
-   `"Amendment No. 2"`), because the prompt gives it as the expected form for this specific
-   field, but this is a coin-flip that should be fixed in the task text, not in the key.
+## B-002 — final-severity incident table (**rewritten**)
 
-2. **`governing_law` — how much of the clause is "the value"?** Clause 24.1 reads "governed by
-   the laws of England and Wales". I keyed `"England and Wales"`. `"the laws of England and
-   Wales"` is a defensible verbatim copy. The field name argues for mine; N4's "verbatim"
-   argues for the other. 1 of 36 fields.
+**Method.** Four per-quarter registers (§2.9, 3.9, 4.9, 5.9) give 48 base records — the script
+asserts 48 distinct ids and that each row's `start_utc` month falls in the quarter whose
+register holds it. Then §1.4's precedence is applied in rank order:
 
-3. **`price_increase_frequency_per_twelve_months` and `audit_frequency_per_twelve_months` are
-   not printed as numerals.** The document says "**once** in any twelve month period" (5.3 and
-   13.1). N5 only covers "spelled out … and repeated as a numeral in brackets"; here there is no
-   bracketed numeral, so the value `1` is an inference, not an extraction. Both keyed as `1`.
-   Low risk (no competent reader says anything else) but the normalisation rules do not
-   actually cover the case.
+1. **Appendix A — Register Amendments** (9 rows) over the registers. `RA-2032-03` has
+   `field = withdrawn`, which under rule **R-2** removes `INC-2031-047` from the reporting year
+   in full. `INC-2031-047` is `S2` in the Q1 register, so a run that misses the withdrawal
+   reports 27 records and adds 7 to the denominator.
+2. **Appendix B — Correction Notices** (8 notices) over everything, *including* over an
+   Amendment naming the same incident and field. Two incidents are amended and then corrected:
+   `INC-2031-021` (register S3 → RA-2032-07 S2 → CN-021 S4, so it leaves the S1/S2 set) and
+   `INC-2031-024` (register S2 → RA-2032-04 S4 → CN-024 S2, so it stays).
+3. **R-3**: the S1/S2 selection is made last, on the final severity.
 
-4. **Minor: `annual_price_increase_cap_percent` is printed `3.0%`.** N2 says "no trailing
-   zeroes beyond what the document prints", which argues for `3.0`; the metric says numbers
-   compare numerically, so `3` also passes. Keyed as `3.0`. No impact under the stated metric,
-   but a strict string comparator would break.
+Every layer's stated prior value is asserted against the value actually standing before it is
+overwritten — all 17 assertions pass, which is a strong independent check that I applied the
+layers in the right order (CN-021 states it supersedes `S2`, which is the *post-amendment*
+value, not the register's `S3`).
 
----
+**Result: 26 records**, `count = 26`. The quarterly narrative is never read; it ranks below the
+registers and decides nothing.
 
-## B-002 — incident register as corrected
+Incidents that enter or leave the S1/S2 set only because of a superseding layer: **in** —
+`INC-2031-009`, `INC-2031-017`, `INC-2031-031`, `INC-2031-010`, `INC-2031-041`; **out** —
+`INC-2031-021`, `INC-2031-034`, `INC-2031-047` (withdrawn).
 
-**Method.** Parse the 48-row Appendix A table; parse all 8 Appendix B notices with a regex
-capturing `(incident, field, old value, new value)`; **assert each stated old value against the
-register before overwriting it** (all 8 matched — the notices are internally consistent with the
-register); then select records whose post-correction severity is S1 or S2. The quarterly
-narrative is never read, per the precedence rule in §1.4. Result: **24 records**.
+**Confidence: high.** The 26-record key matches the denominator (183) the task's own metric
+quotes, which is an independent confirmation from a document I did not write.
 
-Membership changes: CN-010 promotes INC-2031-010 (S4→S1) *in*; CN-041 promotes INC-2031-041
-(S4→S1) *in*; CN-034 demotes INC-2031-034 (S2→S3) *out*. CN-021 (S3→S4) changes nothing about
-membership. That is the "three corrections change set membership" the task claims. Non-severity
-corrections that land inside the reported set: CN-003 flips INC-2031-003 `customer_impacting`
-to `false`, CN-028 changes INC-2031-028 `root_cause_code` to `RC-SW`. CN-015 and CN-046 touch
-incidents that are not in the S1/S2 set and are therefore invisible in the answer.
-
-**Confidence: high.**
-
-### Ambiguities / defects (B-002)
-
-1. **The notices name a field that the register does not have.** Appendix A's column is
-   `severity`; the correction notices say "the value recorded in Appendix A for
-   `final_severity`". The task's output key is `final_severity`, so the intent is obvious, but
-   strictly there is no `final_severity` column in Appendix A for a notice to correct. Cosmetic.
-
-2. **The task note is factually wrong about the corpus.** It says the correction notices are
-   "placed ~120 KB after the register". The whole document is 147 KB and Appendix B
-   *immediately follows* Appendix A (lines 367 and 420 of 462). The long-range-retrieval
-   difficulty the note claims is not present: both ends of the document are adjacent. This does
-   not affect the key but it does mean B-002 is easier than the design intends, which matters
-   if anyone calibrates a baseline against that claim.
-
----
+**Ambiguity B-3 (low).** §1.2 says figures are recorded "in four places and nowhere else", then
+lists the narrative, the registers, Appendix A and Appendix B — but §6 (service reliability
+commentary) and the §n.2 availability tables also print per-service figures. None of them names
+an incident id or a `severity`/`duration_minutes` for an incident, so nothing in the answer
+depends on it, but the "and nowhere else" is literally false of the document. Recorded, not
+fixed (corpus is the designer's).
 
 ## B-003 — MUST requirements after errata
 
-**Method.** Parse every `**SDX-REQ-nnnn** An implementation …` line; section number from the
-enclosing `## n.` heading; constrained field from the backticked identifier; level from the
-modal verb with **longest match first**, so "must not" is never read as "must". Then apply §10:
-`Withdrawn` drops the requirement, a corrected level replaces the body level and sets
-`level_source: "errata"`, `Clarified` leaves the body level and `level_source: "body"`.
+**Method.** Every `**SDX-REQ-nnnn** An implementation ...` line, section from the enclosing
+`## n.` heading, constrained field from the backticked identifier, level from the modal verb
+matched longest-first so `must not` never reads as `must`. Then §10: `Withdrawn` drops the
+requirement, a corrected level replaces the body's and sets `level_source = "errata"`,
+`Clarified` is editorial and leaves `level_source = "body"`.
 
-96 requirements in the body, 17 errata entries (3 clarified, 3 withdrawn, 11 relevelled).
-Result: **22 MUST requirements**, of which 3 come from the errata (SDX-REQ-0040, -0070, -0073).
+**Result: 22 records**, matching the denominator (89) the metric quotes. Corpus byte-identical
+to v1.0.0 and the key reproduces byte for byte. **Confidence: high.** No new ambiguity.
 
-Confirmation that the task's own note is accurate: ignoring the errata entirely also yields 22
-requirements, differing in exactly six members (body-only adds -0001, -0008, -0082; misses
--0040, -0070, -0073). The script asserts every errata `req_id` exists in the body.
+## C-001 — feature-flag lifecycle (**re-shaped**)
+
+**Method.** The `## Feature flags` list of every official release note, then the three errata.
+16 flags; 8 have a recorded removal.
+
+**Governing-source rule I applied**, from the task's own claim-to-source mapping:
+
+* `flag` and `introduced_in`: every official release note whose feature-flag list records the
+  flag as added, **minus** the release note an erratum corrects for that flag, **plus** that
+  erratum.
+* `removed_in` when it is a version: the release note recording the removal.
+* `removed_in` when it is null: nothing — a null is not a claim.
+
+**Ambiguity C-1 (medium — traceability is zero-tolerance).** The three erratum flags each have
+**two** release notes recording them as added, not one. For `opportunistic_gc`, release notes
+2.0 and 2.2 both record it as added; ERR-001 names 2.0 and corrects it to 2.2; release note 2.2
+independently states 2.2. The mapping's singular "*the* official release note whose feature-flag
+list records the flag as added" does not anticipate two, so a competent reader can land on
+either `{ERR-001}` or `{ERR-001, release_notes_kestrel_2_2.md}`. I take the second: the
+exception in the mapping removes only "the release note it corrects", and RN 2.2 is not that
+note. The cost of the other reading is not a fraction of a point — it is one missing citation
+per erratum flag out of 27 total, traceability 24/27 = 0.8889, and the task **fails outright**.
+The same structure applies to `nested_span_export` (ERR-002 + RN 1.2 + RN 2.3) and
+`parallel_compaction` (ERR-003 + RN 2.1). **Recommendation:** the designer should either make
+the mapping plural ("every official release note that records ... , minus the one an erratum
+corrects") or stop the corrected release note from also recording the flag.
+
+**Ambiguity C-2 (resolved).** Two forum threads state the correct `introduced_in` by
+coincidence (`forum_thread_4111.md` for `adaptive_shard_split`, `forum_thread_4106.md` for
+`opportunistic_gc`). Under rule (b) they are not governing sources and citing one is an
+unsupported citation. They are recorded in `derivation_diagnostics` and deliberately kept **off
+the records**, because anything inside a record's `citation_support` or `sources` is absorbed
+into the judge's governing set (see **Defect 3**) and would become either citable or mandatory.
+
+**Confidence: high** on all 48 scored cells; **medium** on the erratum records' `sources`, for
+the reason in C-1.
+
+## C-002 — Meridian award totals (**re-shaped; this is where the worst defect was**)
+
+**Method.** The award table of all eight bulletins (24 awards), then the three correction
+notices (each stated original amount asserted against the bulletin before replacing it) and the
+two retraction notices, then the surviving amounts summed per project. 7 projects, 18 governing
+citations in total.
+
+**Governing set per record**, from the mapping: every bulletin publishing one of the project's
+awards, plus every correction and retraction notice that changes the amount or the status of
+one of them. `total_awarded_eur` is stated by no file; its support is the set of files stating
+the standing amount or standing status of the awards it is built from. `citation_support` is
+now a per-field map of **file names only**, and the script asserts that the union of its
+per-field sets is exactly the record's `sources`.
+
+**Confidence: high.** Every value is a sum of asserted figures.
+
+**Ambiguity C-3 (low).** A retraction notice is a governing source of `awards_excluded` and of
+`total_awarded_eur` (it states the standing status of a constituent award) but is not a
+governing source of `project`. Because of **Defect 3** the distinction has no scoring effect,
+but the per-field map records it honestly.
+
+## C-003 — plugin compatibility (**re-shaped**)
+
+**Method.** `registry_export_2032-02.csv` (8 plugins), overridden for the two plugins named by
+ERR-004/ERR-005. `governing_source_tier` is the tier of whichever of those decides the value.
+`contradicted_by` is the **literal** reading settled by RT-16: every corpus file of any tier
+that states a different minimum version, *including the registry export itself* for the two
+erratum-corrected plugins. `sources` is `[erratum]` for those two and `[registry export]` for
+the other six.
+
+**Change made:** `citation_support.min_kestrel_version` used to hold "every file that states
+the value I report". It now holds the **governing** set, derived from the claim-to-source
+mapping and never from string agreement, and the script asserts the governing file is among the
+files that state the value. `contradicted_by_alternate_reading_low_authority_only` is removed.
+
+**Ambiguity C-4 (latent, no effect here).** In this corpus no vendor blog or forum thread
+happens to state the governing minimum version for any plugin, so the old "files that state the
+value" set and the correct governing set coincide, and the v1.0.0 C-003 key scores 1.0 against
+an ideal answer. It was a trap waiting for one more corpus file: had the designer added a blog
+post that agreed with the registry, the key would silently have **required** a run to cite that
+blog post to reach traceability 1.0 — the exact inversion of rule (b). Fixed by construction.
 
 **Confidence: high.**
 
-### Ambiguities / defects (B-003)
-
-1. **The body never prints the keywords.** §1 declares "The key words MUST, MUST NOT, SHOULD…",
-   but every requirement is written in lower case prose ("An implementation must populate…").
-   Mapping lower-case modal verbs onto the declared levels is obvious but is nowhere stated.
-   Low risk.
-
-2. **`level_source` for a `Clarified` entry.** The task says `"errata"` only "if this
-   requirement's level comes from an errata entry that gave a corrected level". A clarified
-   entry gives no corrected level, so `"body"`. Keyed that way. The three clarified requirements
-   (-0022, -0029, -0042, -0074) are not all MUST, so the blast radius is small, but a run that
-   reads "the errata mentions it, so the source is errata" loses a cell.
-
----
-
-## C-001 — Kestrel feature-flag lifecycle
-
-**Method.** Parse the `## Feature flags` list of every official release note for added/removed
-entries; apply the three errata (ERR-001 `opportunistic_gc` 2.0→2.2, ERR-002
-`nested_span_export` 1.0→1.2, ERR-003 `parallel_compaction` 1.0→2.1). Result: **16 flags**, 8
-with a removal release and 8 with `removed_in: null`.
-
-Each key record carries `sources` (the authoritative files), plus a `citation_support` block
-giving, per value, the files that literally state it, plus
-`non_authoritative_files_stating_the_same_introduced_in` — see ambiguity 2.
-
-**Confidence: high on the data; medium on the citation sets**, for the reasons below.
-
-### Ambiguities / defects (C-001), worst first
-
-1. **`sources` is per record, but traceability is defined per value. (High impact — traceability
-   must be exactly 1.0 or the task fails outright.)** The output schema gives one `sources` list
-   per flag, while the metric says "a citation is supported when the cited file … states the
-   value it is cited for (the answer key lists, per value, the set of files that state it)".
-   For a flag with `removed_in: null` there is *no* file that states the null, and for a flag
-   with both values the cited files split between them. The only workable reading is "each
-   cited file must state at least one of this record's values", and the key's
-   `citation_support` block is written so a grader can implement either reading. **This needs
-   a ruling from whoever writes the judge, not from me.**
-
-2. **A forum thread can state the right answer. (High impact, same reason.)**
-   `forum_thread_4106.md` says `opportunistic_gc` "landed in 2.2" and `forum_thread_4111.md`
-   says `adaptive_shard_split` "landed in 2.2" — both are the correct introduced_in. Under the
-   metric's literal words ("the cited file … states the value it is cited for") citing them is
-   *supported*; under the task's framing (forum threads "are wrong", low authority) citing them
-   is clearly not intended. I keyed `sources` to the authoritative files only and recorded the
-   coincidentally-correct low-authority files separately. A run that cites one of them is
-   either fine or instantly failed depending on the grader's reading. **Rule this explicitly.**
-
-3. **An erratum-corrected flag has two files stating its (now) correct release.** For
-   `opportunistic_gc`, both `erratum_ERR-001.md` and `release_notes_kestrel_2_2.md` state 2.2;
-   the same for the other two corrected flags. Citing only one of the pair should be fine
-   (nothing requires completeness of citations), but the metric never says whether an
-   *incomplete* citation set costs anything. Under the literal formula it does not.
-
----
-
-## C-002 — Meridian Infrastructure Fund award totals
-
-**Method.** Parse the award table in all eight bulletins (24 awards, GA-0001…GA-0024), apply
-the three correction notices (asserting the stated original amount against the bulletin first —
-all three matched) and the two retraction notices, then sum per project. Result: **7 projects**.
-
-| project | total_eur | excluded |
-|---|---|---|
-| Project Halyard | 621500 | — |
-| Project Ironwood | 574000 | GA-0008 |
-| Project Junction | 472000 | — |
-| Project Kilnwork | 880500 | — |
-| Project Lodestar | 358000 | GA-0017 |
-| Project Marrowbone | 807000 | — |
-| Project Nettleford | 386000 | — |
-
-**Confidence: high on the arithmetic; the citation half of this task is broken — see below.**
-
-### Ambiguities / defects (C-002), worst first
-
-1. **No file states `total_awarded_eur`, so under the literal traceability definition every
-   possible run fails C-002. (Severity: highest in the whole set.)** traceability is
-   `supported_citations / total_citations`, where "supported" means the cited file "literally
-   states the value it is cited for", and traceability must equal 1.0 or the task fails
-   outright. `total_awarded_eur` is a *sum*; it appears in no bulletin and in no notice. Under
-   a literal grader, any citation attached to a project record is unsupported for that field,
-   traceability < 1.0, outright failure — for a perfect answer. The key therefore records
-   `sources` as "every bulletin publishing one of this project's awards, plus every notice that
-   changed one of them", and a `citation_support.per_award` block naming, per award, the file
-   that states its standing amount. **The judge must be told that a record-level citation is
-   supported when it states any constituent award amount or status; otherwise C-002 is
-   unscoreable.**
-
-2. **The "empty `awards_included`, total 0" branch is dead.** The prompt specifies behaviour
-   for a project whose awards were all retracted; no such project exists (Ironwood and Lodestar
-   each lose one award of three or four). Harmless, but it is untested instruction text that a
-   run may waste reasoning on.
-
-3. **Notices identify bulletins by number, not by file name.** CORR-001 says "bulletin
-   BUL-2031-07", the file is `bulletin_bul_2031_07.md`, and the citation rule demands file
-   names "exactly as the file name appears in SOURCE_INDEX.md". The mapping is obvious but the
-   corpus never states it outside `SOURCE_INDEX.md`, which the same rule forbids citing as a
-   source of facts.
-
----
-
-## C-003 — plugin minimum Kestrel versions
-
-**Method.** Read `registry_export_2032-02.csv` (8 plugins), override `kp-csv-bridge` → 0.9
-(ERR-004) and `kp-fx-lookup` → 2.3 (ERR-005), then sweep every file for a statement of a
-different minimum version to build `contradicted_by`. `governing_source_tier` is `erratum` for
-the two corrected plugins and `registry_export` for the other six.
-
-**Confidence: high on `min_kestrel_version` and `governing_source_tier`; the `contradicted_by`
-cell is a genuine fork — see below.**
-
-### Ambiguities / defects (C-003), worst first
-
-1. **Does `contradicted_by` include the registry export itself? (High impact: it changes 2 of
-   8 records, i.e. up to 0.0625 of coverage, and coverage is the quality score.)** The task
-   says `contradicted_by` is "an array of source file names that state a DIFFERENT minimum
-   version for this plugin". For `kp-csv-bridge` the reported version is 0.9 and
-   `registry_export_2032-02.csv` states 3.0 — literally a different version, so it belongs.
-   The task's `expected_behavior` instead says the run "sweeps the blog and forum files to
-   populate `contradicted_by`", which implies only low-authority files. **I keyed the literal
-   reading** (registry export included for `kp-csv-bridge` and `kp-fx-lookup`) and recorded the
-   other reading in each record as
-   `contradicted_by_alternate_reading_low_authority_only`. Two competent readers produce
-   different keys here; the task text needs one sentence to settle it.
-
-2. **`sources` for the two erratum-corrected plugins.** Only the erratum states the corrected
-   version, so `sources` is a single-element list. A run that also cites the registry export
-   (which states the *wrong* version) fails traceability outright. Correct per the citation
-   rule, but worth flagging as the sharpest edge in workload C: the obvious "cite your
-   sources, all of them" instinct is fatal here.
-
----
-
-## D-001 … D-004 — tool selection under sibling pressure
-
-**Method.** `derive_D.py` calls the offline server directly. Each key records
-`contested_families`, the `required_tools` a correct run must use, the exact calls the
-derivation made (all of which are either the required tools or tools in uncontested families),
-the answer, and diagnostics naming the decoy value that the sibling tool would have returned.
-The script asserts that it made no contested-family call outside `required_tools`.
-
-| task | required tools | answer |
-|---|---|---|
-| D-001 | `rota.get_effective_oncall`, `directory.get_person_by_handle` | Adaeze M. Okonjo / Billing Platform / tier 2 |
-| D-002 | `registry.resolve_digest_pinned`, `vulndb.get_image_findings_by_digest` | `sha256:bd7745e1…1d33` / 3 / KSA-2032-0117 / debian-12 / 2.9.4-3 |
-| D-003 | `billing.get_invoice`, `fiscal.convert_calendar_to_fiscal` | 2032-01-03 / FY2032 / Q4 / 12 / 2032-02-06 |
-| D-004 | `metrics.get_error_budget_after_exclusions`, `tickets.get_effective_sla` | 4.4 / 240 / 255 / **true** |
-
-Decoys confirmed live: D-001 the template holds `t.ferreira`, overridden by swap OVR-2032-0119;
-D-002 the publish-time digest `sha256:aa11c6f0…7710` differs and the CVSS-9.4 CRITICAL
-KSA-2031-0388 is *fixed*, not open, so a run that filters on severity but not status reports 4
-findings and the wrong top advisory; D-003 the billing date 2032-02-09 falls in a different
-fiscal year from the ship date 2032-01-03; D-004 the queue-default target would turn the breach
-into a pass, and elapsed 350 − 95 stopped = 255 > 240 is a breach — the uncomfortable answer.
-
-**Confidence: high.** These are tool round-trips against a deterministic server.
-
-### Ambiguities / defects (D)
-
-1. **`required_tools` is an answer-key field the task depends on but never defines.** Each
-   task's metric says a wrong-tool invocation is a contested-family call "not in the required
-   tool set named by the answer key". I have named a *minimal* set. If the judge treats
-   `required_tools` as exhaustive-and-mandatory (i.e. a run that skips one fails), that is a
-   different, stricter test than the text describes. Worth pinning down. Note in particular
-   D-004: `tickets.get_ticket` is genuinely needed for the timestamps, but its family
-   (`ticket-record`) is uncontested, so I did not list it as required. A judge that reads
-   `required_tools` as "the calls a correct run makes" would need it added.
-
-2. **D-002 `critical_open_count` is ambiguous only if a run never asks for non-open findings.**
-   `vulndb.get_image_findings_by_digest` defaults to `status: "open"`, so the natural call
-   returns 3 CRITICAL findings and the trap (the fixed 9.4) is invisible. A run that passes
-   `status: "all"` sees the trap and must filter. Both paths reach the keyed answer, so this
-   is fine — but it means the D-002 trap only catches runs that deliberately widen the filter
-   and then forget to narrow it again.
-
-3. **D-004 `remaining_error_budget_minutes` is `4.4`, a float.** The output schema says
-   `<number>`, and the metric compares numerically, so this is fine; flagged only because the
-   other three D tasks emit integers and strings and a stringly-typed comparator would break
-   on it.
-
----
-
-## E-001 — hardware requisition over 18 turns
-
-**Method.** `derive_E.py` replays the turns in order. Turn 3 excludes Halberd Manufacturing, so
-the 2U edge appliance becomes **KP-4477** (Calderon, 7815.00), not the obvious KP-4410 (Halberd,
-7200.00). Turn 14 raises the transceivers to 32; turn 15 removes the management switch
-(KP-1905). `procurement_policy.md` supplies the 12% hardware-only contingency (P2), the
-per-vendor 1% / 3% freight against SITE-BIL-1's region EU-SW (P4), the EUR 200000 two-approver
-threshold (P5) and the hardware-only max lead time (P6), with half-up rounding applied once per
-figure (P1). The script asserts no line's vendor is suspended or failed-audit.
-
-Final: 9 BOM rows sorted by part_id; hardware 61085.40, service 4090.00, freight 1197.38,
-contingency 7330.25, **grand total 73703.03**, `within_cap: false`, over by **3703.03**,
-lead time 52 days, 1 approver.
-
-**The uncomfortable answer is encoded as correct:** the requisition exceeds the 70000.00 cap and
-the key says so. Nothing is trimmed.
-
-**Confidence: high on the BOM rows and the two subtotals; medium on freight / grand total /
-amount over cap** — see ambiguity 1.
-
-### Ambiguities / defects (E-001), worst first
-
-1. **Freight rounding changes three of the nine scalar cells. (High impact.)** P4's rate is
-   chosen per vendor, so freight is a sum of five products:
-   Calderon 31758.90×1% = 317.5890, Ardent 22560.00×3% = 676.8000, Pellworm 4672.00×3% =
-   140.1600, Northwall 1977.50×3% = 59.3250, Tessellate 117.00×3% = 3.5100.
-   * Carrying full precision and rounding once (P1 as written) → **1197.38**, grand total
-     **73703.03**, over cap **3703.03**. This is what I keyed.
-   * Rounding each vendor's freight to 2dp first and summing → **1197.39**, grand total
-     73703.04, over cap 3703.04.
-   P1 says "only the final figure for a line or a total is rounded", which supports my reading —
-   but a per-vendor freight figure is arguably "a line". Since monetary values are compared as
-   **exact strings**, a run that rounds per vendor loses `freight_eur`, `grand_total_eur` and
-   `amount_over_cap_eur` — three of nine scalar cells, dropping completion to about 0.93 and
-   failing the 0.95 threshold **for an otherwise perfect answer**. This is the single most
-   likely cause of a spurious E-001 failure.
-
-2. **P4 could be read as one blended rate.** "Freight is charged at 3% of the hardware subtotal
-   … for vendors outside the destination site's region, and at 1% for vendors in the same
-   region" uses the definite article and the singular for a quantity that is obviously
-   per-vendor. Per-vendor apportionment is the only coherent reading and is what I used, but
-   the sentence does not say "of that vendor's share".
-
-3. **The substitution at turn 7 is a judgement call the task never authorises explicitly.**
-   Turn 7 asks for "4 edge appliances, 2U form factor". The only 2U appliances in the catalogue
-   are KP-4410 (excluded vendor) and KP-4477 "Edge appliance 2U low power" (Calderon). A run
-   could equally correctly say "no eligible 2U appliance exists, tell me what you want" — which
-   would be a *good* behaviour under the turn-3 constraint and would score 0 on the BOM. I
-   keyed the substitution (KP-4477), which is what `expected_behavior` describes, but the turn
-   text never tells the agent it may substitute.
-
-4. **`within_cap` semantics at the boundary.** The cap is "70000.00 … inclusive of freight and
-   contingency". I keyed `within_cap = grand_total <= cap`. Not exercised here (73703.03 is
-   well over), so no impact.
-
----
-
-## E-002 — migration runbook over 16 turns
-
-**Method.** Replay: turn 3 removes `kestrel-vault` from scope and treats dependencies on it as
-satisfied; turn 9 drops `kestrel-mailer`; turn 5's wave rule is computed over the remaining
-in-scope dependency graph; ordering is wave asc, tier asc, name asc; turn 11 inserts a `verify`
-step immediately after each tier-1 `migrate` step; ids are `MIG-001`… gapless; start times
-accumulate in 45-minute steps from 2032-05-10T22:00:00Z.
-
-Waves: rota 1, indexer 1, gateway 2, billing 3, search 3, cdn 3, ledger 4, reports 5.
-**11 steps, 495 minutes**, last step starts 2032-05-11T05:30:00Z. Verify steps are MIG-004
-(gateway), MIG-006 (billing), MIG-008 (search).
-
-**Confidence: high.** The script asserts no step references an out-of-scope or deferred service
-and detects dependency cycles (there are none).
-
-### Ambiguities / defects (E-002)
-
-1. **The metric's cell count contradicts itself.** "(a) completion: the `steps` array is matched
-   positionally … with 5 comparable cells per key step (step_id, action, service, wave,
-   owner_team, start_utc counts as 6 - use 6)". It lists six fields, says five, then says use
-   six. Resolvable, but it is in a frozen scoring rule and should be cleaned up.
-
-2. **Turn 11 vs turn 5's "fixed for the rest of this job".** Turn 5 fixes an ordering; turn 11
-   inserts steps that are not migrations and therefore have no place in that ordering except
-   "immediately after". The instructions are compatible as written but a run could reasonably
-   re-sort the whole list by (wave, tier, name) and detach verify steps from their migrations.
-   Keyed as insert-in-place, which is what turn 11 says.
-
-3. **Turn 10's answer changes after turn 11.** Turn 10 asks for the third step's start before
-   verification steps exist (23:30:00Z, `kestrel-gateway`); after turn 11 the third step is
-   still `kestrel-gateway` by luck. Only the final turn is scored so this does not matter, but
-   V5 scans *every* reply for timestamp-format violations, so the intermediate answer is still
-   live for violation counting.
-
-4. **`kestrel-mailer` is a dependency of nothing** (as the task note says), so re-including it
-   would add a 12th step at wave 2 without disturbing any other wave. The key omits it.
-
----
-
-## E-003 — shift assignment over 20 turns
-
-**Method.** Apply the six rules from turns 2–7 as a cascade — exact certification match (turn 2:
-C1/C2/C3 are labels, not levels), same site (turn 3), not `on_leave` (turn 4, plus PR-014 from
-turn 12), night-qualified for night shifts (turn 5), `max_shifts` (turn 6) — and report anything
-with no eligible person as UNFILLED (turn 7) with the first applicable reason string.
-
-Result: 10 shifts filled, **SH-105 and SH-106 UNFILLED**, both with
-`"all_eligible_on_leave"`. `unfilled_count: 2`. PR-016 takes both SH-111 and SH-112 (2 shifts,
-max 2), which is why turn 16's raise of PR-016's `max_shifts` to 3 is a genuine no-op.
-
-**The uncomfortable answer is encoded as correct:** SITE-DUB-1 has exactly two C2 holders
-(PR-008, already on leave; PR-014, on leave from turn 12) and PR-007 holds C3. Both DUB-1 shifts
-are unfilled. Assigning PR-007 "since C3 is higher" or PR-014 "with an apology" is precisely
-what turns 2 and 7 forbid.
-
-The script **asserts that every fillable shift has exactly one eligible candidate**, so the key
-can never depend on an undefined tie-break. That assertion passes for all 10 filled shifts.
-Turn 17 (PR-011 → SH-111) is `false`: PR-011 is C3, SH-111 needs exactly C2. Turn 18 (PR-012 →
-SH-110) is `false`: PR-012 is `night_qualified: no` and SH-110 is a night shift.
+## D-001 … D-004 — tool selection
+
+**Method.** `derive_D.py` obtains every value by calling the offline MCP server, exactly as a
+correct run would, so the key doubles as proof that each `required_tools` set is sufficient.
+Values and `required_tools` reproduce v1.0.0 byte for byte.
+
+**RT-11 re-verified, not trusted.** Diffing `tools.json` between versions: 85 tools (was 84),
+`calendar.get_calendar_period` added into the contested family `calendar-period-resolution`,
+and 8 tools moved *out of* contested families (`billing.search_orders`, `calendar.get_iso_week`,
+`calendar.get_month_boundaries`, `metrics.get_slo`, `registry.search_images`, `rota.search_rota`,
+`tickets.get_queue`, `vulndb.search_advisories`). Every tool named in a `required_tools` set kept
+its family, and the four uncontested tools the derivation also calls
+(`vulndb.get_fix_versions`, `fiscal.get_period_close_date`, `tickets.get_ticket`) are still
+outside every contested family. The script's own assertion — that no contested-family call it
+made falls outside `required_tools` — passes for all four tasks.
 
 **Confidence: high.**
 
-### Ambiguities / defects (E-003)
+**Ambiguity D-1 (low-medium).** The TOOL DISCIPLINE text says "Tools that only search, list or
+define — and cannot return an answer to the question at all — are not in contested families."
+Three *listing* tools remain in contested families: `rota.list_shifts` (oncall-resolution),
+`directory.search_people` (person-resolution), `billing.list_invoices`
+(order-document-resolution). Each does return an adjacent answer (template shifts, candidate
+records, billing-date-only rows), so I judge them correctly classified — but a run that reads
+the prompt's sentence as a rule and calls `rota.list_shifts` "just to look" loses the whole task
+on a zero-tolerance criterion. The sentence would be safer as "tools that cannot return an
+answer at all are not contested; some listing tools can, and are."
 
-1. **The reason cascade's "eligible" is undefined.** `"all_eligible_on_leave"` — eligible on
-   what basis? I read the four strings as a cascade matching the rule order (certification at
-   site → leave → night qualification → max shifts), which is how the prompt orders them. For
-   SH-105/SH-106 every reading gives the same answer, because the two DUB-1 C2 holders are both
-   night-qualified and both on leave, so no other reason can fire first. Zero impact here, but
-   the definition would matter on a regenerated corpus.
+## E-001 — hardware requisition (values unchanged, derivation rewritten)
 
-2. **`headcount` is ignored by the output schema.** `shifts.csv` carries a `headcount` column
-   (1 for every row) and the final JSON has a single `assigned_person_id` per shift. Fine
-   today; the schema silently cannot express `headcount > 1`. The script asserts headcount == 1
-   so a regenerated corpus breaks loudly instead of quietly.
+**Method.** Turns 1–18 replayed in order. Turn 3 excludes Halberd Manufacturing, which owns the
+obvious `KP-4410 Edge appliance 2U`, so `KP-4477 Edge appliance 2U low power` is substituted
+under the turn-7 standing instruction. Turn 14 raises the optics to 32; turn 15 drops the
+management switch. P2 gives 12% contingency on hardware only; P4 gives per-vendor 1%/3% freight
+against `SITE-BIL-1`'s region EU-SW; P5 one approver; P6 hardware-only max lead time (52).
 
-3. **Turn 11's first pass legitimately assigns PR-014.** V3 only counts PR-014 assignments "at
-   or after turn 12", so the turn-11 assignment is not a violation and the turn-13 redo is the
-   correction. This is well designed; noting it so nobody "fixes" V3 into counting turn 11.
+**The P1/P4 repair, checked rather than assumed.** `derive_E.py`'s v1.0.0 regex was anchored on
+the old P4 sentence and no longer matched; it has been re-anchored, and the script now asserts
+the presence of all four P1 bullet points and of P4's "per-vendor products ... are **not**
+rounded before they are summed". The totals now follow P1 literally: four component totals each
+rounded once (P1.2), grand total = the sum of the four **as reported** (P1.3), amount over cap =
+reported grand total − cap (P1.4).
+
+Freight: `676.80 + 317.5890 + 59.3250 + 140.1600 + 3.5100 = 1197.3840` → **1197.38**.
+Grand total: `61085.40 + 4090.00 + 1197.38 + 7330.25` = **73703.03**. Over cap: **3703.03**.
+`within_cap` is **false** — the uncomfortable answer is written as correct; trimming to fit is
+violation V5/V6.
+
+**Ambiguity E-1 (resolved by the repair — this is the one RT-06 aimed at).** The rival reading
+was never really the grand total: rounding each per-vendor freight product *before* summing
+gives `676.80 + 317.59 + 59.33 + 140.16 + 3.51 = 1197.39` and a grand total of `73703.04`. The
+new P4 sentence forbids exactly that, so **only 1197.38 / 73703.03 / 3703.03 is now
+defensible**. Worth noting for the record: the other v1.0.0 reading of the *grand total* —
+summing at full precision and rounding once — gives `73703.03` too, so P1.3 tightens the text
+without moving the number. The script reports both in `derivation_diagnostics` so a reviewer
+can see they agree.
+
+**Ambiguity E-2 (low, no effect).** P2 says contingency applies to "the subtotal of hardware
+lines"; P1.2 says a component total is "computed once from full-precision inputs". Whether the
+contingency base is the *reported* hardware subtotal or the full-precision sum of hardware
+lines is not stated. Here every line total is exact to two decimals, so both are 61085.40 and
+the contingency is 7330.248 → 7330.25 either way. It would bite on a catalogue with a price
+carrying more than two decimals.
+
+**Confidence: high.**
+
+## E-002 — migration runbook
+
+**Method.** Turn 3 removes `kestrel-vault` from scope and treats dependencies on it as
+satisfied; turn 9 drops `kestrel-mailer`. Waves over the remaining in-scope dependency graph:
+indexer 1, rota 1, gateway 2, billing 3, search 3, cdn 3, ledger 4, reports 5. Order by
+(wave, tier, name); a verify step after every tier-1 migrate (gateway, billing, search).
+**11 steps, 495 minutes**, `MIG-001`…`MIG-011` gapless from `2032-05-10T22:00:00Z` in 45-minute
+increments. Key reproduces v1.0.0 byte for byte; I re-derived the wave assignment by hand and
+it agrees. **Confidence: high.** No new ambiguity.
+
+## E-003 — shift assignment
+
+**Method.** The six eligibility rules from turns 2–7 as a cascade (exact certification label,
+same site, not on leave, night qualification, `max_shifts`), plus the turn-12 change putting
+PR-014 on leave and the turn-16 no-op raising PR-016's `max_shifts` to 3.
+
+**Result: 2 unfilled.** `SH-105` and `SH-106` (both DUB-1, C2) have no eligible person once
+PR-014 joins PR-008 on leave, and are reported **unfilled** with
+`"all_eligible_on_leave"` — the uncomfortable answer written as correct. PR-007 holds C3 and C3
+is not "better than" C2 (turn 2), so assigning them would be a violation, not a fill.
+
+**Ambiguity E-3 (resolved, no effect).** Turn 11 assigns day shifts and turn 14 night shifts,
+so the true assignment order is day-then-night; the script assigns in `shift_id` order. The two
+can only diverge where `max_shifts` binds. It binds in exactly one place — PR-016 takes both
+BIL-1 shifts against a maximum of 2 — and PR-016 is the only eligible person for both, so the
+result is order-independent. The script asserts that every fillable shift has exactly **one**
+eligible candidate, so no tie-break is ever needed and the key cannot depend on one.
+
+**Confidence: high.**
 
 ---
 
-# Ranked summary of defects
+# Defects and ambiguities, ranked by how badly they would distort scoring
 
-Ranked by how badly each would distort scoring.
+### Defect 1 — CRITICAL, found and fixed: the v1.0.0 C-002 key made C-002 unpassable
+`C-002.json`'s per-record `citation_support` was `{"per_award": {...}, "note": "no single file
+states total_awarded_eur; it is the sum of the per-award amounts that stand after the notices
+are applied"}`. The judge builds a record's governing set by walking **every string** inside
+`citation_support`, so that 108-character English sentence entered the governing set as if it
+were a file name. Under the v1.1.0 rule that an uncited governing source is a missing citation,
+every reported record owed one citation to a "file" that does not exist and cannot be cited.
+Measured, not argued: scoring the key's **own perfect answer** through `judge.py` gives
+`traceability = 0.72`, `missing_citations = 7`, and
+`failure_reason = zero_tolerance:workload_C_100_percent_traceable`. **Every C-002 attempt in
+every condition would have failed outright, regardless of how good it was.** Three C-002
+observations per condition, silently zeroed, in a benchmark whose whole purpose is comparing
+conditions. Fixed: `citation_support` now holds file names only, and the per-award detail moved
+to top-level `derivation_diagnostics`, which the judge does not read.
 
-| # | Task | Defect | Why it matters |
-|---|---|---|---|
-| 1 | C-002 | Nothing in the corpus states `total_awarded_eur`; traceability is defined per stated value and must equal 1.0 | Under a literal judge, **a perfect answer fails outright**. Unscoreable until the judge's citation rule is written down. |
-| 2 | C-001 | `sources` is per record but traceability is defined per value; and two forum threads state a *correct* introduced_in | Traceability is pass/fail at 1.0, so the grader's reading decides success for an otherwise-perfect run. |
-| 3 | E-001 | Freight rounding order (round once vs round per vendor) changes `freight_eur`, `grand_total_eur`, `amount_over_cap_eur` | Monetary values compare as exact strings; 3 of 9 scalar cells → completion ≈0.93 → fails the 0.95 threshold for a correct answer. |
-| 4 | C-003 | `contradicted_by`: literal reading includes `registry_export_2032-02.csv` for the two erratum-corrected plugins; `expected_behavior` implies blog/forum only | Changes 2 of 8 records, up to 0.0625 of the quality score, with no way for a run to guess which. |
-| 5 | B-001 | `amendments_in_force_on_as_of_date`: document prints `AMENDMENT No. 1`, prompt's example is `Amendment No. 1`, N4 says verbatim | Case-sensitive string compare; 1 of 36 fields is exactly the margin allowed by the 0.97 floor. |
-| 6 | E-001 | Turn 7's substitution to KP-4477 is never authorised by the turn text | A run that refuses to substitute and asks the user is behaving well and scores ~0 on the BOM. |
-| 7 | B-001 | `governing_law` — `England and Wales` vs `the laws of England and Wales` | 1 of 36 fields, same margin as #5; two of these together fail the task. |
-| 8 | A-* | `retryable` is imported from `ledgerline.util.retry` but not defined there; the corpus is not importable | Does not change a key, but invites a run to "correct" itself toward `retryable_v2` and lose A-003 entirely. |
-| 9 | D-* | `required_tools` is load-bearing for the metric but its semantics (minimal vs mandatory vs exhaustive) are undefined | Decides whether a run that used a superset or subset passes; currently the judge would have to guess. |
-| 10 | B-002 | Task note claims the corrections sit ~120 KB after the register; they are adjacent in a 147 KB file | Key unaffected, but the task is materially easier than its own notes claim — misleading for baseline calibration. |
-| 11 | E-002 | Scoring text says "5 comparable cells" then lists 6 fields then says "use 6" | Resolvable, but it is a frozen scoring rule with a self-contradiction in it. |
-| 12 | A-002 | U1 does not cover a bare-name mention that is neither call nor import; A-003 D3's self-raiser branch is unexercised | No effect on this corpus (verified by script); both would bite on regeneration. |
-| 13 | B-001 | "once in any twelve month period" → `1` is an inference; N5 only covers bracketed numerals | Low risk, but the normalisation rules do not cover the case they are used for. |
-| 14 | C-002 | The all-retracted-project branch is dead; notices name bulletins by number while citations must use file names | Wasted instruction surface; the number→filename mapping exists only in the index the citation rule forbids citing. |
+### Defect 2 — HIGH, found and fixed: the v1.0.0 C-003 key rewarded string agreement, not authority
+`citation_support.min_kestrel_version` held "every file that states the value I report",
+including vendor blogs and forum threads. Rule (b) says precisely the opposite: a
+coincidentally-correct low-authority file is *not* a governing source and citing it is an
+unsupported citation. In this corpus no low-authority file happens to agree, so the old key
+still scores 1.0 — it is a latent defect, not an active one. But one more agreeing blog post in
+the corpus and the key would have *required* runs to cite it. Fixed by deriving the governing
+set from the claim-to-source mapping and asserting the governing file is among the files that
+state the value, rather than the other way round.
+
+### Defect 3 — HIGH, in `judge.py`, NOT mine to fix: the per-field citation map has no effect
+`_citation_support()` builds the record-level `"*"` set with `star |= _strings_in(blob)` over
+the whole `citation_support` object, so every file under every field is in `"*"` before the
+per-field loop runs. Consequences, both of which contradict the task text: (a) a citation is
+"supported" if it governs **any** field of the record, even a field the run did not report, so
+the three-part rule's separation of claim from source does no work at scoring time; (b) a run
+owes a citation to **every** governing source of the record even for fields it omitted, because
+`allowed` is the whole union regardless of which fields were reported. The v1.1.0 metric says
+`allowed` should be "the governing sources of that record's **reported** values". My keys are
+correct under either behaviour — every record's `citation_support` union equals its `sources`
+by construction, and the scripts assert it — so this cannot corrupt a key. But it does change
+what a partially-complete run scores. Flagged for the scoring/judge seat; I did not edit
+`judge.py` or `SCORING_SPEC.md`.
+
+### Defect 4 — MEDIUM: B-001's ORDER OF PRECEDENCE item 1 admits a losing reading
+See **Ambiguity B-1**. "Taking the Amendment with the latest Amendment Effective Date" can be
+read as "only one amendment ever applies". That reading scores 34/36 = 0.9444 against the 0.97
+floor and fails the task. The task prompt's plural `amendments_in_force_on_as_of_date` field is
+the only thing that rules it out, and it does so indirectly. Corpus wording, not a key problem —
+I have not touched it.
+
+### Defect 5 — MEDIUM: C-001's claim-to-source mapping is singular where the corpus is plural
+See **Ambiguity C-1**. Each of the three erratum flags is recorded as added by **two** release
+notes. "The official release note whose feature-flag list records the flag as added" does not
+say which survives when two do. My reading gives a 27-citation governing set; the narrower
+"erratum only" reading gives 24/27 = 0.8889 traceability and an outright failure. A one-word
+change to the mapping would close it.
+
+### Defect 6 — LOW-MEDIUM: three listing tools sit in contested families against the prompt's own sentence
+See **Ambiguity D-1**. `rota.list_shifts`, `directory.search_people` and `billing.list_invoices`
+are contested, while the prompt tells the agent that tools which "only search, list or define"
+are not. RT-11 moved the genuinely-inert search tools out; these three remain and are, I think,
+correctly contested — but the prompt sentence now overstates the guarantee, and the penalty for
+believing it is total.
+
+### Defect 7 — LOW: `test_judge.py` still fixtures the withdrawn C-001 key shape
+`environment/harness/test_judge.py:1118` builds a C-001 answer key carrying
+`non_authoritative_files_stating_the_same_introduced_in`, a field the v1.1.0 key no longer has.
+Harmless to scoring (the judge ignores the field) but the fixture no longer reflects a real key.
+Owned by the judge seat; not edited.
+
+### Defect 8 — LOW: `README.md` still describes this directory as the stale v1.0.0 keys
+`README.md` lines 51 and 67 say `answer_keys/` holds "THE v1.0.0 KEYS, STALE". That is no
+longer true. I have left `STALE_v1.0.0_KEYS.md` in place as a superseded stub so the README's
+link does not dangle, but the two README lines want updating by whoever owns that file.
+
+### Defect 9 — LOW: B-002's §1.2 "four places and nowhere else" is literally false
+See **Ambiguity B-3**. §6 and the availability tables print per-service figures too. Nothing in
+the answer turns on it.
+
+### Non-defects, checked and cleared
+* A-003's D3 self-raiser reading (both readings computed and asserted equal).
+* E-003's day-then-night ordering versus `shift_id` ordering (order-independent, asserted).
+* E-001's contingency base (rounded vs full-precision hardware subtotal — identical here).
+* E-001's grand total under the old "round once at the end" reading (identical here; the
+  repair bites on freight, not on the grand total).
+* D's `required_tools` after RT-11 (every family re-checked against the new `tools.json`).
