@@ -12,6 +12,7 @@
 | H008 | Quality-adjusted routing beats cheapest routing | Product | H0 Idea | Routing benchmark | WATCH |
 | H009 | Machine-readable Trust Receipts become useful in enterprise Agent operations | Product | H0 Idea | Use-case research | WATCH |
 | H010 | Human + Agent demand signals predict priorities better than editorial intuition | Operating Model | H0 Idea | Compare predicted and observed performance | WATCH |
+| H011 | ATK's value may develop in the order **Measurement → Verification → Quality-adjusted Economics → Routing**, each layer being the precondition for the next | Market/Product | **H0 Idea** | Customer evidence: who pays for measurement before they pay for routing, and in what order. **Not** more internal benchmark work | ACTIVE |
 
 Confidence: H0 Idea; H1 Signal; H2 Supported; H3 Tested; H4 Validated; H5 Commercially Proven.
 
@@ -57,3 +58,40 @@ is as strong as the supporting evidence. Recording that honestly is the point of
 
 **The fastest way to move H001 is not more research.** It is a willingness-to-pay or usage test
 (D007). Desk research has reached its limit on this question.
+
+
+---
+
+## H011 — added 2026-09-16, and what it is NOT supported by
+
+The 2026-09-16 repair round found a long list of measurement and verification defects in **ATK's
+own benchmark**: a task that was unpassable in every condition, a task that rewarded discarding
+86% of its document, evidence that was specified but produced by nothing, a zero-tolerance
+criterion that failed open on an empty container, a scorer whose per-field rule was a no-op, and
+a meter that mispriced an entire provider's caching convention.
+
+That is a genuine observation, and it is an observation about **one team's own machinery**. It
+supports a narrow claim: *building a benchmark whose numbers can be trusted is materially harder
+than it looks, and a verification process catches things reading does not.*
+
+**It does not support any of these, and none may be written anywhere:**
+
+- that a market exists for measurement or verification,
+- that any customer would pay for it, or how much,
+- that ATK has an advantage at it,
+- that ATK can deliver credible savings — **nothing has been measured yet**,
+- any upgrade to H001–H010, or to the Lab's H1–H4.
+
+**A repair round that goes well is evidence about the repair, not about the market.** If finding
+44 defects in one's own instrument were market evidence, every well-run lab would be a business.
+
+### What would actually move H011
+
+External, and none of it is desk research: which layer a customer buys **first**; whether anyone
+pays for measurement while routing is free (E005 established that routing, gateway and provider
+aggregation are commoditized to zero at two major vendors, while measurement, attribution and
+governance are metered — a vendor price list is what a vendor charges, not what a market pays);
+and whether a verified figure changes a purchasing decision.
+
+H011 is recorded at **H0 Idea** and stays there until customer evidence exists. This round did
+not build any product and must not be read as having started one.
