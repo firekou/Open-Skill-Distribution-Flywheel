@@ -1,0 +1,102 @@
+{
+  "methodology_version": "1.1.0",
+  "status": "DRAFT_REVIEW_PENDING",
+  "NOT_FROZEN": true,
+  "why_not_frozen": "No independent reviewer has signed this off. The Editor-in-Chief approved the revision DIRECTION in Prompt 3.5 section 3; that is not approval of this deliverable. Marking a draft FROZEN because its direction was approved is exactly the failure this field exists to prevent.",
+  "drafted_at": "2026-09-16",
+  "drafting_seat": "methodology-reviewer",
+  "source_commit": "a8ca352dc64e792864f351f7775e2b21681b6390",
+  "documents": {
+    "methodology/METHODOLOGY_v1.1.0.md": "f4327ca9ce7b61c88fd84c54e3eb3f91a564d986b38c567c8c58311e4a9c3436",
+    "methodology/METER_CALIBRATION_v1.1.0.md": "726d193b8e24cc4825c151e41bef09dd0027988efce33bfa069bcafc71298113",
+    "methodology/METHODOLOGY_CHANGE_REVIEW_001.md": "706eaba3c9d578baf06abdddc028dd2ff2db5a9c94db21b265dce2251f06d4cd",
+    "methodology/METHODOLOGY_CHANGE_REQUEST_001.md": "953541203b175033248823e617f9b13f816f8a6e44f723a1d7b58641ebf3106f",
+    "methodology/METHODOLOGY_CHANGE_REQUEST_002.md": "15d4c42e1c3e03c2d302cc06278bdc78c71a483e02a49051faca19b5efc38969"
+  },
+  "predecessor": {
+    "methodology/METHODOLOGY_v1.0.0.md": "c1810b0481d1442937771c124c7c30668490470f00dcf71098bdf139ee7089bc",
+    "methodology/METER_CALIBRATION_v1.0.0.md": "3ed9dac60aa537f3e37503cec2c6eb91c4abebcb746658369f534ac2e21a98aa",
+    "status": "FROZEN and UNMODIFIED",
+    "verified_unchanged_this_round": true,
+    "note": "v1.0.0 is a separate file and stays frozen. v1.1.0 does not supersede, replace or retire it, and no v1.0.0 run is re-attributed."
+  },
+  "changed_clauses": [
+    {
+      "clause": "6",
+      "change": "quality floors: baseline-relative -> answer-key-absolute",
+      "kind": "SEMANTIC - not a wording fix",
+      "cr": "CR-001-A"
+    },
+    {
+      "clause": "6.1-6.2",
+      "change": "attempt/cell/aggregate defined once; INVALID added as a third outcome",
+      "kind": "clarification with enforcement",
+      "cr": "CR-001-B"
+    },
+    {
+      "clause": "11",
+      "change": "pricing snapshots must be complete, enforced by a blocking preflight",
+      "kind": "widened beyond the request",
+      "cr": "CR-001-C"
+    }
+  ],
+  "added_clauses": [
+    "5.1 run-plan mapping",
+    "7 comparison design",
+    "12.1 evidence contract",
+    "13 versioning and refusal"
+  ],
+  "unchanged_and_not_open_for_change": [
+    "research question",
+    "H1-H4",
+    "workloads A-E",
+    "conditions C0-C5",
+    "the 100-run allocation",
+    "C4 tier-adjacent design",
+    "cache control",
+    "independent reproduction requirement",
+    "conflict-of-interest declaration",
+    "every zero-tolerance criterion"
+  ],
+  "open_for_decision": [
+    {
+      "id": "A-a",
+      "question": "non-inferiority margin and statistical method",
+      "blocks": "publication of any quality-parity claim",
+      "blocks_freeze": false
+    },
+    {
+      "id": "B-a",
+      "question": "retry budget: proposed one re-run per planned attempt, INVALID only",
+      "blocks": "nothing yet",
+      "blocks_freeze": false
+    },
+    {
+      "id": "C-a",
+      "question": "which models and API plans the LG4 run plan uses",
+      "blocks": "pricing snapshot completion and therefore the Pilot gate",
+      "blocks_freeze": false
+    },
+    {
+      "id": "CR-002",
+      "question": "ratify the run-plan unit and its 3.46x cost consequence",
+      "blocks": "the run-plan-mapping freeze gate (PENDING)",
+      "blocks_freeze": true
+    }
+  ],
+  "run_plan_arithmetic": {
+    "tasks": {
+      "A": 4,
+      "B": 3,
+      "C": 3,
+      "D": 4,
+      "E": 3
+    },
+    "experimental_runs": 78,
+    "guardrail_runs": 22,
+    "total_runs": 100,
+    "task_attempts_experimental": 270,
+    "mean_attempts_per_run": 3.46,
+    "allocation_changed": false
+  }
+}

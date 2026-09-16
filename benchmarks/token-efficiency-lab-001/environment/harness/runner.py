@@ -17,6 +17,7 @@ import sys
 import time
 from datetime import datetime, timezone
 
+from . import evidence as ev
 from .attest import dependency_manifest_hash, image_content_hash
 from .blind import BlindMapping, build_packet
 from .meter import TokenMeter
@@ -88,6 +89,8 @@ def run_one(
     answer_key_hash: str,
     run_id: str | None = None,
     reproduces_run_id: str | None = None,
+    audit_path: pathlib.Path | None = None,
+    out_records: pathlib.Path | None = None,
 ) -> tuple[dict, dict]:
     if run_class not in ("benchmark", "pilot", "calibration", "reproduction", "dry_run"):
         raise RunError(f"unknown run_class {run_class!r}")
@@ -102,15 +105,23 @@ def run_one(
             "model in the loop, so the result would describe the harness, not the intervention."
         )
 
+    # RT-08: hash the corpus before the attempt so a modification is detectable afterwards.
+    corpus_before = ev.corpus_hashes(task_root, task["input"].get("corpus_paths", []))
+
     meter = TokenMeter(snapshot)
     started = time.time()
-    raw_calls, outputs = [], []
+    raw_calls, outputs, turns = [], [], []
     for usage, raw in provider.run_task(task_id):
         meter.record(usage)
         raw_calls.append(raw)
         if raw.get("output_text"):
             outputs.append(raw["output_text"])
+        if raw.get("turn") is not None:
+            turns.append({"turn": int(raw["turn"]), "text": raw.get("output_text", "")})
     elapsed_ms = int((time.time() - started) * 1000)
+
+    corpus_after = ev.corpus_hashes(task_root, task["input"].get("corpus_paths", []))
+    corpus_modified = ev.compare_corpus_hashes(corpus_before, corpus_after)
 
     totals = meter.totals()
     warning = meter.cross_provider_guard()
@@ -185,7 +196,44 @@ def run_one(
     if condition.startswith("C4"):
         record["model_pair"] = " -> ".join(totals.models)
 
-    packet = build_packet(record, model_output, task, answer_key, mapping, CANDIDATE_NAMES)
+    record["corpus_modified"] = corpus_modified or None
+    if task["workload"] == "E":
+        record["turn_count"] = int(task["input"].get("turn_count") or task.get("turn_count") or 0)
+
+    # The Evidence Producer owns required_evidence (RT-01). Static facts come from the frozen
+    # corpus, dynamic facts from the runner's own audit - never from the model's output.
+    try:
+        produced = ev.produce(
+            task, task_root, run_id=rid,
+            audit_path=audit_path,
+            turns=turns or None,
+        )
+        required_evidence = produced.to_dict()
+        record["required_evidence_fields"] = sorted(required_evidence)
+        record["evidence_provenance"] = produced.provenance
+    except ev.EvidenceError as exc:
+        # v1.1.0 section 6.2: unmeasurable is INVALID, never a pass and never a quality failure.
+        record["outcome"] = "INVALID"
+        record["failure_reason"] = str(exc)
+        record["required_evidence_fields"] = None
+        record["evidence_provenance"] = None
+        write_record(record, out_records) if out_records else None
+        raise RunError(f"{rid}: {exc}")
+
+    if corpus_modified:
+        # RT-08: an outright failure condition in 13 of the 17 tasks, previously evaluated for
+        # workload D only, so a corpus-rewriting optimisation scored clean.
+        record["outcome"] = "FAIL_QUALITY"
+        record["failure_reason"] = (
+            "corpus_modified: " + ", ".join(corpus_modified[:5]) +
+            (f" (+{len(corpus_modified)-5} more)" if len(corpus_modified) > 5 else ""))
+    else:
+        # Placeholder until the Quality Judge scores it; finalize.py writes the real outcome.
+        record["outcome"] = "INVALID"
+        record["failure_reason"] = "awaiting Quality Judge score"
+
+    packet = build_packet(record, model_output, task, answer_key, mapping, CANDIDATE_NAMES,
+                          required_evidence=required_evidence)
     return record, packet.to_dict()
 
 
@@ -200,6 +248,8 @@ def main(argv=None) -> int:
     ap.add_argument("--environment-id", default="lab001-env-2026-09-16")
     ap.add_argument("--container-digest", default=None)
     ap.add_argument("--blind-salt", required=True)
+    ap.add_argument("--tool-audit", default=None,
+                    help="server-written tool audit JSONL; required for workloads A and D")
     args = ap.parse_args(argv)
 
     task_root = pathlib.Path(args.task_root)
@@ -232,6 +282,8 @@ def main(argv=None) -> int:
                 container_digest=args.container_digest,
                 task_set_hash=task_set_hash,
                 answer_key_hash=answer_key_hash,
+                audit_path=pathlib.Path(args.tool_audit) if args.tool_audit else None,
+                out_records=out / "records",
             )
             write_record(rec, out / "records")
             records.append(rec)

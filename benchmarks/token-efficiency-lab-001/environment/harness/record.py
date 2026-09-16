@@ -51,6 +51,24 @@ def validate(record: dict) -> None:
         )
     if record["condition"].startswith("C4") and not record.get("model_pair"):
         raise RecordError("C4 runs must record the exact tier-adjacent model_pair (D011)")
+    if record.get("outcome") not in ("PASS", "FAIL_QUALITY", "INVALID"):
+        raise RecordError(
+            f"outcome is {record.get('outcome')!r}. Methodology v1.1.0 section 6.2 defines exactly "
+            "three: PASS, FAIL_QUALITY, INVALID. A record without one cannot be aggregated, and "
+            "inferring it from task_success turns 'we could not measure it' into 'it failed'."
+        )
+    if record.get("corpus_modified"):
+        if record["outcome"] != "FAIL_QUALITY":
+            raise RecordError(
+                f"corpus_modified names {len(record['corpus_modified'])} changed file(s) but the "
+                f"outcome is {record['outcome']}. A modified corpus is an outright failure "
+                "condition in 13 of the 17 tasks (RT-08)."
+            )
+    if record.get("unpriceable_quantities") and record.get("cost"):
+        raise RecordError(
+            "unpriceable_quantities is non-empty but a cost was recorded. Methodology v1.1.0 "
+            "section 11.4: the harness does not estimate a price it does not have."
+        )
     if record.get("token_source") != "provider_usage_field":
         raise RecordError(
             f"token_source is {record.get('token_source')!r}; only provider_usage_field is "

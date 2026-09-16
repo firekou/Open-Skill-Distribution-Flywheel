@@ -1,0 +1,98 @@
+{
+  "task_id": "E-002",
+  "workload": "E",
+  "input": {
+    "corpus_paths": [
+      "corpora/workflow_e/services.csv"
+    ],
+    "turn_count": 16,
+    "protocol": "Each entry in `turns` is delivered to the agent under test as a separate user message, in order. The agent answers each turn before the next is delivered. No turn may be skipped, merged, re-ordered or summarised by the harness, and the harness must not restate an earlier turn: whether an earlier constraint survives to the final turn is the measurement. Only the reply to the final turn is scored for content; every reply is scanned for constraint violations.",
+    "turns": [
+      {
+        "turn": 1,
+        "role": "user",
+        "text": "We are planning a platform migration. The only source of truth is\n`corpora/workflow_e/services.csv` (path relative to the task-set root). Acknowledge and wait."
+      },
+      {
+        "turn": 2,
+        "role": "user",
+        "text": "Numbering rule for the whole job: every step gets an identifier `MIG-nnn`, zero padded\nto three digits, starting at MIG-001, increasing by one, with no gaps and no reused numbers."
+      },
+      {
+        "turn": 3,
+        "role": "user",
+        "text": "Scope rule: `kestrel-vault` has already been migrated and is out of scope. It never\nappears as a step. Where another service depends on it, treat that dependency as already\nsatisfied."
+      },
+      {
+        "turn": 4,
+        "role": "user",
+        "text": "Language rule: the words \"simply\" and \"just\" must not appear anywhere in anything you\nwrite for this job. Reviewers have asked for it and they will grep."
+      },
+      {
+        "turn": 5,
+        "role": "user",
+        "text": "Ordering rule. Give each in-scope service a wave number: a service with no in-scope\ndependency is wave 1; otherwise its wave is one more than the highest wave among its in-scope\ndependencies. Steps are then ordered by wave ascending, then by tier ascending, then by service\nname ascending. That ordering is fixed for the rest of this job."
+      },
+      {
+        "turn": 6,
+        "role": "user",
+        "text": "Time rule: every timestamp you write is RFC 3339 in UTC with a trailing Z, to whole\nseconds, for example 2032-05-10T22:00:00Z."
+      },
+      {
+        "turn": 7,
+        "role": "user",
+        "text": "List the in-scope services with their tier and their owner team."
+      },
+      {
+        "turn": 8,
+        "role": "user",
+        "text": "What wave does kestrel-search land in, and why?"
+      },
+      {
+        "turn": 9,
+        "role": "user",
+        "text": "Change: kestrel-mailer has been deferred to a separate project. Drop it from the\nmigration entirely. Anything that depended on it is unblocked."
+      },
+      {
+        "turn": 10,
+        "role": "user",
+        "text": "The migration window opens at 2032-05-10T22:00:00Z. Every step takes exactly 45\nminutes and the next step starts the moment the previous one ends, with no gap. What time does\nthe third step start?"
+      },
+      {
+        "turn": 11,
+        "role": "user",
+        "text": "Add a verification step immediately after the migration step of every tier-1 service.\nA verification step is a step: it takes a step number in sequence, it takes 45 minutes like\nany other, and it names the service it verifies."
+      },
+      {
+        "turn": 12,
+        "role": "user",
+        "text": "What time does the last step start?"
+      },
+      {
+        "turn": 13,
+        "role": "user",
+        "text": "Confirm that no step in the plan references a service that is out of scope."
+      },
+      {
+        "turn": 14,
+        "role": "user",
+        "text": "Every step carries an owner team taken from `services.csv`. A verification step\ncarries the owner team of the service it verifies."
+      },
+      {
+        "turn": 15,
+        "role": "user",
+        "text": "What is the total duration of the runbook in minutes?"
+      },
+      {
+        "turn": 16,
+        "role": "user",
+        "text": "Final deliverable. Give me the runbook as a single JSON object and nothing else - no\nprose, no code fence:\n\n{\n  \"steps\": [\n    {\"step_id\": \"<string>\", \"action\": \"migrate\" | \"verify\", \"service\": \"<string>\",\n     \"wave\": <integer>, \"owner_team\": \"<string>\", \"start_utc\": \"<RFC 3339 UTC>\"}\n  ],\n  \"step_count\": <integer>,\n  \"total_duration_minutes\": <integer>\n}\n\n`steps` is in execution order. `wave` on a verification step is the wave of the service it\nverifies."
+      }
+    ]
+  },
+  "expected_behavior": "The run derives wave numbers from the dependency column with the out-of-scope service treated as satisfied, honours the fixed ordering rule, drops the deferred service at turn 9 and does not resurrect it, inserts verification steps after tier-1 migration steps while keeping step identifiers gapless and sequential, computes start times by 45-minute accumulation from the stated window open, attaches owner teams, and emits the final JSON.",
+  "answer_key_reference": "answer_keys/E-002.json",
+  "quality_metric": "Two components, both reported.\n(a) completion: the `steps` array is matched positionally, index by index, with 5 comparable cells per key step (step_id, action, service, wave, owner_team, start_utc counts as 6 - use 6). A key index with no reported step counts as 6 mismatches; a reported step beyond the key's length adds 6 to the denominator and contributes 0. `step_count` and `total_duration_minutes` are one cell each. completion = matched_cells / denominator, 4 decimals.\n(b) constraint_violations, counted over EVERY reply in the run:\n  V1 the token `kestrel-vault` appearing as a step's `service`, or named as a step to be      performed, in any reply at or after turn 3;\n  V2 the word `simply` or the word `just`, case-insensitive, whole word, appearing in any      reply at or after turn 4;\n  V3 a step_id that is not of the form MIG-nnn with three digits, or a step_id sequence      with a gap, a repeat or a start other than MIG-001, in the final answer;\n  V4 `kestrel-mailer` appearing as a step's service in any reply at or after turn 9;\n  V5 any timestamp in any reply at or after turn 6 that is not RFC 3339 UTC ending in Z.\n  Each distinct violation instance is counted once per turn in which it occurs.\nquality_score = completion. task_success = true iff constraint_violations == 0 AND completion >= 0.95.",
+  "failure_condition": "Outright failure if any of: (1) one or more constraint violations as defined in quality_metric - this is the frozen workload-E zero-tolerance criterion, zero constraint violations from forgotten context (methodology v1.0.0 section 6); (2) the final reply is not parseable as a single JSON object with the required keys; (3) the run does not reach the final turn; (4) the run edits any file in `corpora/workflow_e/`.",
+  "notes": "The language constraint at turn 4 is the one most likely to be forgotten because it governs prose rather than data; the deferred service at turn 9 is a dependency of nothing, so re-including it is invisible unless the constraint is remembered."
+}

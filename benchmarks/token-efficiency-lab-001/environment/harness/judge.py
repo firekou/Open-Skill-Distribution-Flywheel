@@ -54,10 +54,19 @@ import re
 import sys
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
-SPEC_VERSION = "1.0.0"
-METHODOLOGY_VERSION = "1.0.0"
+SPEC_VERSION = "1.1.0"
 
-# The nine fields a blind packet may carry.  Nothing else is ever read.
+# Methodology versions this module knows how to score.  A packet carrying
+# anything else - including nothing at all - is REFUSED (methodology v1.1.0
+# section 13).  Silent cross-version scoring is how a v1.0.0 relative floor
+# would survive into a v1.1.0 result.
+V1_0_0 = "1.0.0"
+V1_1_0 = "1.1.0"
+SUPPORTED_METHODOLOGY_VERSIONS = (V1_0_0, V1_1_0)
+
+# The ten fields a blind packet may carry.  Nothing else is ever read.
+# `methodology_version` is treatment-neutral: it names the rulebook, not the
+# condition, and without it the packet cannot be scored at all (section 13).
 ALLOWED_PACKET_KEYS = (
     "packet_id",
     "task_id",
@@ -68,17 +77,67 @@ ALLOWED_PACKET_KEYS = (
     "answer_key",
     "quality_metric",
     "failure_condition",
+    "methodology_version",
 )
 
-# Absolute floors frozen in methodology v1.0.0 section 6.
+# ---- attempt-level quality floors -----------------------------------------
+# v1.1.0 section 6: ABSOLUTE, measured against the full answer key.  No floor
+# is a function of any other attempt's result.
+FLOOR_A = 0.95
 FLOOR_B = 0.97
+FLOOR_C_COVERAGE = 0.90
+FLOOR_C_TRACEABILITY = 1.0
 FLOOR_E_COMPLETION = 0.95
-# Relative floors: the multiplier applied to the baseline C0 median.
+# v1.0.0 only: the multiplier applied to the baseline C0 median.  Reachable
+# exclusively from the version-gated v1.0.0 replay path.
 REL_FLOOR_A = 0.95
 REL_FLOOR_C = 0.90
 
+# ---- outcome taxonomy (v1.1.0 section 6.2) --------------------------------
+PASS = "PASS"
+FAIL_QUALITY = "FAIL_QUALITY"
+INVALID = "INVALID"
+
+# Reasons that mean "we could not measure this attempt", as opposed to "this
+# attempt failed".  Prefix match: `required_evidence_missing:valid_symbols`
+# matches `required_evidence_missing:`.  Everything not listed here and not a
+# pass is FAIL_QUALITY - a scored, genuine failure.
+INVALID_REASON_PREFIXES = (
+    "required_evidence_missing:",
+    "required_evidence_empty:",
+    "evidence_from_wrong_run",
+    "evidence_incomplete:",
+    "answer_key_unavailable",
+    "packet_unreadable",
+    "judge_internal_error",
+    "unknown_task_id",
+    "unknown_workload",
+    "methodology_version_absent",
+    "methodology_version_unsupported",
+)
+
 COUNT_PENALTY = 0.05
 NUM_TOL = 1e-9
+
+# ---- the `count` penalty, per task ----------------------------------------
+# SCORING_SPEC precedence: the frozen task text is authoritative over this
+# module.  All four A tasks and B-002/B-003 state the -0.05 penalty in their
+# own `quality_metric`; none of the three C tasks does (they define
+# `quality_score = coverage` and stop), so under v1.1.0 C carries no penalty
+# (RT-09).  The table is the frozen transcription; the packet's own
+# `quality_metric` text overrides it when the two disagree, so a Designer
+# ruling in the task text takes effect without a judge-side edit (RT-10), and
+# the disagreement is recorded in `detail`.
+COUNT_PENALTY_DECLARED = {
+    "A-001": True, "A-002": True, "A-003": True, "A-004": True,
+    "B-001": False, "B-002": True, "B-003": True,
+    "C-001": False, "C-002": False, "C-003": False,
+}
+_PENALTY_RE = re.compile(r"subtract(?:s|ing)?\s+0\.05|-\s*0\.05", re.IGNORECASE)
+_NO_PENALTY_RE = re.compile(
+    r"no\s+count\s+penalty|does\s+not\s+(?:subtract|affect\s+quality_score)"
+    r"|count\s+(?:field\s+)?disagree\w*[^.]{0,80}?(?:is\s+not\s+penalis|no\s+penalty)",
+    re.IGNORECASE)
 
 _MISSING = object()
 
@@ -475,20 +534,52 @@ def split_turns(model_output: Any) -> Tuple[List[Dict[str, Any]], Any]:
 # result construction
 # ---------------------------------------------------------------------------
 
+def outcome_for(failure_reason: Optional[str], task_success: bool) -> str:
+    """The v1.1.0 section 6.2 outcome for one attempt.
+
+    Three values, never two.  `INVALID` means the attempt could not be
+    scored - missing, empty, wrongly typed or wrong-run evidence.  It is not a
+    pass and it is not a quality failure: "it failed" and "we could not measure
+    it" are different findings and are reported separately.
+    """
+    if task_success:
+        return PASS
+    reason = failure_reason or ""
+    for pre in INVALID_REASON_PREFIXES:
+        if reason.startswith(pre):
+            return INVALID
+    return FAIL_QUALITY
+
+
 def _result(view: Dict[str, Any], *, quality_score: float = 0.0,
             task_success: bool = False, failure_reason: Optional[str] = None,
             zero_tolerance_breached: bool = False,
             detail: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     d = dict(detail or {})
+    mv = view.get("_mv") or V1_0_0
     d.setdefault("spec_version", SPEC_VERSION)
-    d.setdefault("methodology_version", METHODOLOGY_VERSION)
+    d.setdefault("methodology_version", mv)
+    # Every number this module produces is attempt-level (v1.1.0 section 6.1).
+    # Cell and aggregate levels belong to the Runner / Aggregator; no threshold
+    # in this module is ever applied at more than one level.
+    d.setdefault("level", "attempt")
+    score = _round4(max(0.0, min(1.0, float(quality_score))))
+    outcome = outcome_for(failure_reason, task_success)
+    if mv == V1_1_0 and outcome == INVALID and score > 0.0:
+        # An unscorable attempt has no quality score.  The number that was
+        # computed before the measurement was found unverifiable is retained
+        # in detail so the failure is auditable, but it may not be reported as
+        # quality and may not be averaged (v1.1.0 section 6.2).
+        d["unverified_quality_score"] = score
+        score = 0.0
     return {
         "packet_id": view.get("packet_id"),
         "task_id": view.get("task_id"),
         "workload": view.get("workload"),
         "blind_treatment_id": view.get("blind_treatment_id"),
-        "quality_score": _round4(max(0.0, min(1.0, float(quality_score)))),
+        "quality_score": score,
         "task_success": bool(task_success),
+        "outcome": outcome,
         "failure_reason": failure_reason,
         "zero_tolerance_breached": bool(zero_tolerance_breached),
         "detail": d,
@@ -496,7 +587,7 @@ def _result(view: Dict[str, Any], *, quality_score: float = 0.0,
 
 
 def _view(packet: Any) -> Tuple[Dict[str, Any], List[str]]:
-    """Copy only the nine allowed keys.  Everything else is ignored."""
+    """Copy only the allowed keys.  Everything else is ignored."""
     v: Dict[str, Any] = {k: None for k in ALLOWED_PACKET_KEYS}
     ignored: List[str] = []
     if isinstance(packet, dict):
@@ -508,6 +599,37 @@ def _view(packet: Any) -> Tuple[Dict[str, Any], List[str]]:
     return v, sorted(ignored)
 
 
+_VERSION_RE = re.compile(r"^v?(\d+\.\d+\.\d+)$")
+
+
+def resolve_methodology_version(view: Dict[str, Any]) -> Tuple[Optional[str], str, Optional[str]]:
+    """(version, source, raw) for this packet, or (None, ...) if unresolvable.
+
+    v1.1.0 section 13: the scorer REFUSES a packet whose version is absent,
+    unrecognised or incompatible.  There is no default and no guess.
+    """
+    candidates: List[Tuple[str, Any]] = [("packet", view.get("methodology_version"))]
+    ak = view.get("answer_key")
+    if isinstance(ak, dict):
+        candidates.append(("answer_key", ak.get("methodology_version")))
+    ev = view.get("required_evidence")
+    if isinstance(ev, dict):
+        candidates.append(("required_evidence", ev.get("methodology_version")))
+    for source, raw in candidates:
+        if raw is None:
+            continue
+        if not isinstance(raw, str):
+            return None, source, repr(raw)
+        m = _VERSION_RE.match(raw.strip())
+        if not m:
+            return None, source, raw
+        ver = m.group(1)
+        if ver not in SUPPORTED_METHODOLOGY_VERSIONS:
+            return None, source, raw
+        return ver, source, raw
+    return None, "absent", None
+
+
 def _answer_payload(answer_key: Any) -> Any:
     """Unwrap an answer key that nests its payload under a wrapper field."""
     if isinstance(answer_key, dict):
@@ -515,6 +637,17 @@ def _answer_payload(answer_key: Any) -> Any:
             if isinstance(answer_key.get(k), (dict, list)):
                 return answer_key[k]
     return answer_key
+
+
+BASELINE_KEYS = ("baseline_reference_quality", "baseline_c0_median",
+                 "baseline_median_quality_score")
+
+
+def _baseline_keys_present(view: Dict[str, Any]) -> List[str]:
+    ev = view.get("required_evidence")
+    if not isinstance(ev, dict):
+        return []
+    return ["required_evidence.%s" % k for k in BASELINE_KEYS if k in ev]
 
 
 def _baseline_reference(view: Dict[str, Any]) -> Tuple[Optional[float], str]:
@@ -635,17 +768,53 @@ def _score_records(reported: Sequence[Any], key_records: Sequence[Any],
     }
 
 
-def _count_penalty(obj: dict, count_field: str, actual: int,
+def count_penalty_declared(view: Dict[str, Any]) -> Tuple[bool, str]:
+    """Does THIS task's frozen metric state a `count` penalty?
+
+    The task text is authoritative over this module (SCORING_SPEC precedence),
+    so the packet's own `quality_metric` decides, and the frozen table is the
+    cross-check.  Under v1.0.0 the frozen v1.0.0 behaviour is reproduced
+    unchanged: the penalty applied to A, B and C alike, including where the C
+    task text never asked for it (RT-09).
+    """
+    task_id = view.get("task_id")
+    table = COUNT_PENALTY_DECLARED.get(task_id if isinstance(task_id, str) else "")
+    if view.get("_mv") != V1_1_0:
+        return True, "v1.0.0_frozen_behaviour"
+    metric = view.get("quality_metric")
+    if isinstance(metric, str) and "count" in metric.lower():
+        if _NO_PENALTY_RE.search(metric):
+            return False, "task_quality_metric_declares_no_penalty"
+        if _PENALTY_RE.search(metric):
+            return True, "task_quality_metric_declares_penalty"
+        return False, "task_quality_metric_states_no_count_penalty"
+    if table is None:
+        return False, "task_unknown_no_penalty"
+    return bool(table), "frozen_table_no_metric_text"
+
+
+def _count_penalty(view: Dict[str, Any], obj: dict, count_field: str, actual: int,
                    detail: Dict[str, Any]) -> float:
-    """-0.05 when the declared count disagrees with the emitted list length."""
+    """-0.05 when the declared count disagrees with the emitted list length.
+
+    Applied only where the task's own `quality_metric` states the penalty.
+    """
+    declared, basis = count_penalty_declared(view)
+    table = COUNT_PENALTY_DECLARED.get(view.get("task_id") if isinstance(view.get("task_id"), str) else "")
+    detail["count_penalty_applicable"] = declared
+    detail["count_penalty_basis"] = basis
+    if table is not None and basis.startswith("task_quality_metric") and bool(table) != declared:
+        detail["count_penalty_task_text_disagrees_with_frozen_table"] = {
+            "frozen_table": bool(table), "task_text": declared}
     reported = _get(obj, count_field)
-    if reported is _MISSING or not _is_number(reported) or int(reported) != actual:
-        detail["count_field_ok"] = False
+    ok = not (reported is _MISSING or not _is_number(reported) or int(reported) != actual)
+    detail["count_field_ok"] = ok
+    if not ok:
         detail["count_reported"] = None if reported is _MISSING else reported
         detail["count_actual"] = actual
-        return COUNT_PENALTY
-    detail["count_field_ok"] = True
-    return 0.0
+    if ok or not declared:
+        return 0.0
+    return COUNT_PENALTY
 
 
 # ---------------------------------------------------------------------------
@@ -710,7 +879,7 @@ def _score_a(view: Dict[str, Any]) -> Dict[str, Any]:
                    "false_positives": sorted(P - K),
                    "false_negatives": sorted(K - P)})
 
-    score = max(0.0, score - _count_penalty(obj, "count", len(deduped), detail))
+    score = max(0.0, score - _count_penalty(view, obj, "count", len(deduped), detail))
 
     valid = _valid_symbols(view)
     fabricated: List[Any] = list(non_strings)
@@ -738,7 +907,7 @@ def _score_a(view: Dict[str, Any]) -> Dict[str, Any]:
                        failure_reason="required_evidence_missing:valid_symbols",
                        detail=detail)
 
-    return _finish_relative(view, score, detail, REL_FLOOR_A)
+    return _finish_floor(view, score, detail, FLOOR_A, REL_FLOOR_A)
 
 
 def _score_a004(view: Dict[str, Any], obj: dict, key_payload: dict,
@@ -789,7 +958,7 @@ def _score_a004(view: Dict[str, Any], obj: dict, key_payload: dict,
                    "components_emitted": emitted_count,
                    "components_distinct": len(P),
                    "undersized_components": undersized})
-    score = max(0.0, score - _count_penalty(obj, "component_count", emitted_count, detail))
+    score = max(0.0, score - _count_penalty(view, obj, "component_count", emitted_count, detail))
 
     valid = _valid_symbols(view)
     members = {m for comp in P for m in comp}
@@ -822,12 +991,30 @@ def _score_a004(view: Dict[str, Any], obj: dict, key_payload: dict,
                        failure_reason="required_evidence_missing:valid_symbols",
                        detail=detail)
 
-    return _finish_relative(view, score, detail, REL_FLOOR_A)
+    return _finish_floor(view, score, detail, FLOOR_A, REL_FLOOR_A)
 
 
-def _finish_relative(view: Dict[str, Any], score: float, detail: Dict[str, Any],
-                     multiplier: float) -> Dict[str, Any]:
-    """Apply a floor stated relative to the baseline C0 median."""
+def _finish_floor(view: Dict[str, Any], score: float, detail: Dict[str, Any],
+                  absolute_floor: float, multiplier: float) -> Dict[str, Any]:
+    """Apply the workload's quality floor.
+
+    v1.1.0 (section 6): the floor is ABSOLUTE and answer-key-anchored.  No
+    baseline is read, no baseline is defaulted, there is no second pass and no
+    re-score branch.  A `baseline_reference_quality` carried by a v1.1.0 packet
+    is ignored and listed in `detail.ignored_packet_keys`.
+
+    v1.0.0 (replay only): the frozen relative floor, multiplier x the injected
+    C0 median, falling back to a baseline of 1.0.  Reachable only when the
+    packet says it is a v1.0.0 record.
+    """
+    if view.get("_mv") == V1_1_0:
+        detail["floor"] = _round4(absolute_floor)
+        detail["floor_basis"] = "absolute_answer_key_methodology_v1.1.0_s6"
+        detail["baseline_influenced_task_success"] = False
+        ok = _round4(score) >= _round4(absolute_floor) - 1e-9
+        return _result(view, quality_score=score, task_success=ok,
+                       failure_reason=None if ok else "below_quality_floor",
+                       detail=detail)
     baseline, basis = _baseline_reference(view)
     ref = 1.0 if baseline is None else baseline
     floor = multiplier * ref
@@ -942,7 +1129,7 @@ def _score_b_records(view: Dict[str, Any], task_id: str, obj: dict,
               "reported_record_count", "missing_record_ids", "extra_record_ids",
               "duplicate_or_unusable_records"):
         detail[k] = res[k]
-    score = max(0.0, score - _count_penalty(obj, "count", len(reported), detail))
+    score = max(0.0, score - _count_penalty(view, obj, "count", len(reported), detail))
 
     # fabricated identifier -> outright failure
     real_ids = None
@@ -1155,7 +1342,7 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
     detail["unsupported_citations"] = unsupported[:50]
     detail["cited_files_not_in_corpus"] = sorted(set(nonexistent_files))
 
-    score = max(0.0, coverage - _count_penalty(obj, "count", len(reported), detail))
+    score = max(0.0, coverage - _count_penalty(view, obj, "count", len(reported), detail))
 
     # ---- fabricated identifiers ------------------------------------------
     fabricated: List[str] = []
@@ -1197,7 +1384,7 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
                        zero_tolerance_breached=True,
                        detail={**detail, "zero_tolerance": zt})
 
-    return _finish_relative(view, score, detail, REL_FLOOR_C)
+    return _finish_floor(view, score, detail, FLOOR_C_COVERAGE, REL_FLOOR_C)
 
 
 # ---------------------------------------------------------------------------

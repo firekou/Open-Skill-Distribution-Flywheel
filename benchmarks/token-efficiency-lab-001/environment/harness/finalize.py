@@ -63,6 +63,21 @@ def finalize(records_dir: pathlib.Path, scores_dir: pathlib.Path) -> dict:
         rec["quality_judged_before_cost"] = True
         if s.get("failure_reason"):
             rec["failure_reason"] = s["failure_reason"]
+
+        # v1.1.0 section 6.2. The judge decides which of the three outcomes this attempt had; the
+        # runner's placeholder is replaced here. A corpus modification already failed the attempt
+        # at run time (RT-08) and the judge cannot overturn it.
+        if rec.get("corpus_modified"):
+            rec["outcome"] = "FAIL_QUALITY"
+        elif s.get("outcome") in ("PASS", "FAIL_QUALITY", "INVALID"):
+            rec["outcome"] = s["outcome"]
+        else:
+            # A scorer that does not declare an outcome must not be silently interpreted.
+            raise FinalizeError(
+                f"score for packet {pid} carries no recognised `outcome`. Inferring it from "
+                "task_success would collapse INVALID into FAIL_QUALITY, which is the distinction "
+                "between 'it failed' and 'we could not measure it'."
+            )
         validate(rec)
         rp.write_text(json.dumps(rec, indent=2, sort_keys=True) + "\n")
         updated.append(rec["run_id"])

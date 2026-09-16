@@ -1,0 +1,19 @@
+{
+  "task_id": "A-003",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "AST pass: retry-decorated = module-level functions whose decorator_list contains Name 'retryable' or Call on Name 'retryable' (retryable_v2 excluded by exact name match); transient raisers = functions whose body contains an ast.Raise of TransientError (bare or called). Forward call-graph closure from each decorated function is intersected with the raiser set. Script: scripts/derive_A.py",
+  "derivation_script": "scripts/derive_A.py",
+  "retry_decorated_reaching_transient": [
+    "ledgerline.core.posting.render_stamp_slice",
+    "ledgerline.ingest.csvfeed.stream_ticket_pair",
+    "ledgerline.ingest.dedupe.emit_digest",
+    "ledgerline.ingest.replay.drain_payload_delta",
+    "ledgerline.plugins.legacyq.compose_batch_view",
+    "ledgerline.plugins.sapbridge.lift_stamp_list",
+    "ledgerline.plugins.taxde.parse_stamp_plan",
+    "ledgerline.storage.journal.collect_window_pair",
+    "ledgerline.transform.allocate.plan_entry_chain",
+    "ledgerline.transform.enrich.shard_lane_list"
+  ],
+  "count": 10
+}

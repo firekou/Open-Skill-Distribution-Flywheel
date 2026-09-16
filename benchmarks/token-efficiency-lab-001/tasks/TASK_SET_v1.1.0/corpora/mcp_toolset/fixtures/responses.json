@@ -1,0 +1,1718 @@
+{
+ "rota.get_nominal_shift": {
+  "key": [
+   "service",
+   "at_utc"
+  ],
+  "by_key": {
+   "kestrel-billing|2032-03-14T02:40:00Z": {
+    "service": "kestrel-billing",
+    "rotation": "billing-primary-weekly",
+    "role": "primary",
+    "handle": "t.ferreira",
+    "shift_start_utc": "2032-03-13T18:00:00Z",
+    "shift_end_utc": "2032-03-14T06:00:00Z",
+    "source": "published_rotation_template",
+    "template_version": "2032-02-28",
+    "note": "Template value. Approved overrides, swaps and coverage records are not applied here."
+   }
+  },
+  "default": {
+   "service": "unknown",
+   "handle": "unassigned",
+   "source": "published_rotation_template"
+  }
+ },
+ "rota.get_effective_oncall": {
+  "key": [
+   "service",
+   "at_utc",
+   "role"
+  ],
+  "by_key": {
+   "kestrel-billing|2032-03-14T02:40:00Z|primary": {
+    "service": "kestrel-billing",
+    "role": "primary",
+    "handle": "m.okonjo",
+    "escalation_tier": 2,
+    "resolved_at_utc": "2032-03-14T02:40:00Z",
+    "source_of_truth": "published_rotation_template + approved_overrides",
+    "override_chain": [
+     {
+      "override_id": "OVR-2032-0119",
+      "type": "swap",
+      "approved_by": "s.varga",
+      "approved_at_utc": "2032-03-11T16:02:00Z",
+      "replaces_handle": "t.ferreira",
+      "with_handle": "m.okonjo",
+      "window_start_utc": "2032-03-13T18:00:00Z",
+      "window_end_utc": "2032-03-14T06:00:00Z"
+     }
+    ],
+    "template_handle_before_overrides": "t.ferreira"
+   },
+   "kestrel-billing|2032-03-14T02:40:00Z|secondary": {
+    "service": "kestrel-billing",
+    "role": "secondary",
+    "handle": "j.adeyemi",
+    "escalation_tier": 3,
+    "source_of_truth": "published_rotation_template + approved_overrides",
+    "override_chain": []
+   }
+  },
+  "default": {
+   "service": "unknown",
+   "handle": "unassigned",
+   "escalation_tier": null,
+   "override_chain": []
+  }
+ },
+ "rota.list_shifts": {
+  "key": [
+   "service"
+  ],
+  "by_key": {
+   "kestrel-billing": {
+    "service": "kestrel-billing",
+    "source": "published_rotation_template",
+    "shifts": [
+     {
+      "role": "primary",
+      "handle": "t.ferreira",
+      "start_utc": "2032-03-13T18:00:00Z",
+      "end_utc": "2032-03-14T06:00:00Z"
+     },
+     {
+      "role": "primary",
+      "handle": "r.castellano",
+      "start_utc": "2032-03-14T06:00:00Z",
+      "end_utc": "2032-03-14T18:00:00Z"
+     },
+     {
+      "role": "secondary",
+      "handle": "j.adeyemi",
+      "start_utc": "2032-03-13T18:00:00Z",
+      "end_utc": "2032-03-14T06:00:00Z"
+     }
+    ],
+    "note": "Template only; overrides are not reflected."
+   }
+  },
+  "default": {
+   "shifts": [],
+   "source": "published_rotation_template"
+  }
+ },
+ "rota.search_rota": {
+  "key": [
+   "query"
+  ],
+  "by_key": {},
+  "default": {
+   "matches": [
+    {
+     "rotation": "billing-primary-weekly",
+     "service": "kestrel-billing",
+     "comment": "follow-the-sun handover at 06:00Z"
+    },
+    {
+     "rotation": "search-primary-weekly",
+     "service": "kestrel-search",
+     "comment": "single region"
+    }
+   ]
+  }
+ },
+ "rota.get_escalation_policy": {
+  "key": [
+   "service"
+  ],
+  "by_key": {
+   "kestrel-billing": {
+    "service": "kestrel-billing",
+    "tiers": [
+     {
+      "tier": 1,
+      "target": "team-chat",
+      "wait_minutes": 0
+     },
+     {
+      "tier": 2,
+      "target": "primary-oncall",
+      "wait_minutes": 5
+     },
+     {
+      "tier": 3,
+      "target": "secondary-oncall",
+      "wait_minutes": 15
+     },
+     {
+      "tier": 4,
+      "target": "engineering-manager",
+      "wait_minutes": 30
+     }
+    ]
+   }
+  },
+  "default": {
+   "tiers": []
+  }
+ },
+ "rota.get_handover_notes": {
+  "key": [
+   "service",
+   "date"
+  ],
+  "by_key": {},
+  "default": {
+   "notes": []
+  }
+ },
+ "rota.list_rotations": {
+  "key": [
+   "service"
+  ],
+  "by_key": {},
+  "default": {
+   "rotations": [
+    {
+     "rotation": "billing-primary-weekly",
+     "active": true
+    },
+    {
+     "rotation": "billing-primary-legacy",
+     "active": false
+    }
+   ]
+  }
+ },
+ "directory.get_person_by_handle": {
+  "key": [
+   "handle"
+  ],
+  "by_key": {
+   "m.okonjo": {
+    "handle": "m.okonjo",
+    "full_name": "Adaeze M. Okonjo",
+    "person_id": 40218,
+    "team": "Billing Platform",
+    "team_id": "TEAM-BILL-2",
+    "location": "Lisbon",
+    "status": "active",
+    "email": "adaeze.okonjo@kestrel.example",
+    "record_source": "live"
+   },
+   "t.ferreira": {
+    "handle": "t.ferreira",
+    "full_name": "Tomas Ferreira",
+    "person_id": 38901,
+    "team": "Billing Platform",
+    "team_id": "TEAM-BILL-2",
+    "location": "Porto",
+    "status": "active",
+    "email": "tomas.ferreira@kestrel.example",
+    "record_source": "live"
+   },
+   "j.adeyemi": {
+    "handle": "j.adeyemi",
+    "full_name": "Joy Adeyemi",
+    "person_id": 41550,
+    "team": "Billing Platform",
+    "team_id": "TEAM-BILL-2",
+    "location": "Dublin",
+    "status": "active",
+    "email": "joy.adeyemi@kestrel.example",
+    "record_source": "live"
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "directory.search_people": {
+  "key": [
+   "query"
+  ],
+  "by_key": {
+   "okonjo": {
+    "query": "okonjo",
+    "ranking": "string_similarity_only",
+    "results": [
+     {
+      "handle": "a.okonjo",
+      "full_name": "Adaeze Okonjo-Pryce",
+      "person_id": 22107,
+      "team": "Billing Platform (legacy)",
+      "status": "former",
+      "similarity": 0.94
+     },
+     {
+      "handle": "m.okonjo",
+      "full_name": "Adaeze M. Okonjo",
+      "person_id": 40218,
+      "team": "Billing Platform",
+      "status": "active",
+      "similarity": 0.91
+     }
+    ]
+   },
+   "m.okonjo": {
+    "query": "m.okonjo",
+    "ranking": "string_similarity_only",
+    "results": [
+     {
+      "handle": "a.okonjo",
+      "full_name": "Adaeze Okonjo-Pryce",
+      "person_id": 22107,
+      "team": "Billing Platform (legacy)",
+      "status": "former",
+      "similarity": 0.88
+     },
+     {
+      "handle": "m.okonjo",
+      "full_name": "Adaeze M. Okonjo",
+      "person_id": 40218,
+      "team": "Billing Platform",
+      "status": "active",
+      "similarity": 0.86
+     }
+    ]
+   }
+  },
+  "default": {
+   "results": [],
+   "ranking": "string_similarity_only"
+  }
+ },
+ "directory.lookup_person": {
+  "key": [
+   "person_id"
+  ],
+  "by_key": {
+   "40218": {
+    "person_id": 40218,
+    "handle": "m.okonjo",
+    "full_name": "Adaeze M. Okonjo",
+    "team": "Payments Core",
+    "team_id": "TEAM-PAY-1",
+    "status": "active",
+    "record_source": "directory_sync",
+    "synced_at_utc": "2032-03-13T01:00:00Z",
+    "note": "Snapshot from the last sync; may lag the live record."
+   }
+  },
+  "default": {
+   "status": "not_found",
+   "record_source": "directory_sync"
+  }
+ },
+ "directory.get_person_by_email": {
+  "key": [
+   "email"
+  ],
+  "by_key": {
+   "adaeze.okonjo@kestrel.example": {
+    "handle": "m.okonjo",
+    "full_name": "Adaeze M. Okonjo",
+    "person_id": 40218,
+    "team": "Billing Platform",
+    "team_id": "TEAM-BILL-2",
+    "status": "active",
+    "record_source": "live"
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "directory.get_team": {
+  "key": [
+   "team_id"
+  ],
+  "by_key": {
+   "TEAM-BILL-2": {
+    "team_id": "TEAM-BILL-2",
+    "name": "Billing Platform",
+    "cost_centre": "CC-4410",
+    "parent_team_id": "TEAM-PLAT",
+    "manager_handle": "s.varga"
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "directory.list_team_members": {
+  "key": [
+   "team_id"
+  ],
+  "by_key": {
+   "TEAM-BILL-2": {
+    "team_id": "TEAM-BILL-2",
+    "members": [
+     {
+      "handle": "m.okonjo",
+      "full_name": "Adaeze M. Okonjo"
+     },
+     {
+      "handle": "t.ferreira",
+      "full_name": "Tomas Ferreira"
+     },
+     {
+      "handle": "j.adeyemi",
+      "full_name": "Joy Adeyemi"
+     },
+     {
+      "handle": "r.castellano",
+      "full_name": "Rafa Castellano"
+     }
+    ]
+   }
+  },
+  "default": {
+   "members": []
+  }
+ },
+ "directory.get_manager_chain": {
+  "key": [
+   "handle"
+  ],
+  "by_key": {},
+  "default": {
+   "chain": [
+    {
+     "handle": "s.varga",
+     "full_name": "Sofia Varga"
+    }
+   ]
+  }
+ },
+ "directory.get_contact_methods": {
+  "key": [
+   "handle"
+  ],
+  "by_key": {},
+  "default": {
+   "methods": [
+    {
+     "type": "chat",
+     "value": "internal"
+    }
+   ]
+  }
+ },
+ "registry.get_tag_digest": {
+  "key": [
+   "repository",
+   "tag"
+  ],
+  "by_key": {
+   "apps/kestrel-gateway|2031.11-stable": {
+    "repository": "apps/kestrel-gateway",
+    "tag": "2031.11-stable",
+    "digest": "sha256:aa11c6f0d2b74e8390b5c1f77a4d6e29b0c8134f5ad9e7621c0fb3d84e5a7710",
+    "published_at": "2031-11-04T09:31:00Z",
+    "note": "Recorded once at publish time. Not rewritten if the tag is later moved."
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "registry.resolve_digest_pinned": {
+  "key": [
+   "repository",
+   "tag"
+  ],
+  "by_key": {
+   "apps/kestrel-gateway|2031.11-stable": {
+    "repository": "apps/kestrel-gateway",
+    "tag": "2031.11-stable",
+    "digest": "sha256:bd7745e1cc3a92f6041b8e20d5c7f3a9b61d0e4482cf7d1935ab60c2e8f41d33",
+    "resolved_at": "2032-03-20T00:00:00Z",
+    "moved_since_publication": true,
+    "previous_digest": "sha256:aa11c6f0d2b74e8390b5c1f77a4d6e29b0c8134f5ad9e7621c0fb3d84e5a7710",
+    "moved_at": "2032-02-17T22:14:00Z"
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "registry.search_images": {
+  "key": [
+   "query"
+  ],
+  "by_key": {},
+  "default": {
+   "repositories": [
+    {
+     "repository": "apps/kestrel-gateway"
+    },
+    {
+     "repository": "apps/kestrel-search"
+    }
+   ]
+  }
+ },
+ "registry.list_tags": {
+  "key": [
+   "repository"
+  ],
+  "by_key": {
+   "apps/kestrel-gateway": {
+    "repository": "apps/kestrel-gateway",
+    "tags": [
+     {
+      "tag": "2031.11-stable",
+      "last_push": "2032-02-17T22:14:00Z"
+     },
+     {
+      "tag": "2032.02-stable",
+      "last_push": "2032-02-17T22:14:00Z"
+     },
+     {
+      "tag": "edge",
+      "last_push": "2032-03-19T04:02:00Z"
+     }
+    ]
+   }
+  },
+  "default": {
+   "tags": []
+  }
+ },
+ "registry.list_repositories": {
+  "key": [
+   "prefix"
+  ],
+  "by_key": {},
+  "default": {
+   "repositories": [
+    "apps/kestrel-gateway",
+    "apps/kestrel-search",
+    "base/debian-12"
+   ]
+  }
+ },
+ "registry.get_image_manifest": {
+  "key": [
+   "repository",
+   "digest"
+  ],
+  "by_key": {
+   "apps/kestrel-gateway|sha256:bd7745e1cc3a92f6041b8e20d5c7f3a9b61d0e4482cf7d1935ab60c2e8f41d33": {
+    "digest": "sha256:bd7745e1cc3a92f6041b8e20d5c7f3a9b61d0e4482cf7d1935ab60c2e8f41d33",
+    "os": "linux",
+    "architecture": "amd64",
+    "base_image": "base/debian-12",
+    "layers": 7,
+    "created": "2032-02-17T21:58:00Z"
+   },
+   "apps/kestrel-gateway|sha256:aa11c6f0d2b74e8390b5c1f77a4d6e29b0c8134f5ad9e7621c0fb3d84e5a7710": {
+    "digest": "sha256:aa11c6f0d2b74e8390b5c1f77a4d6e29b0c8134f5ad9e7621c0fb3d84e5a7710",
+    "os": "linux",
+    "architecture": "amd64",
+    "base_image": "base/debian-12",
+    "layers": 7,
+    "created": "2031-11-04T09:12:00Z"
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "registry.get_image_sbom": {
+  "key": [
+   "repository",
+   "digest"
+  ],
+  "by_key": {},
+  "default": {
+   "packages": 420,
+   "format": "spdx-2.3"
+  }
+ },
+ "registry.get_repository_policy": {
+  "key": [
+   "repository"
+  ],
+  "by_key": {},
+  "default": {
+   "retention_days": 365,
+   "signing_required": true
+  }
+ },
+ "vulndb.get_image_findings_by_digest": {
+  "key": [
+   "digest"
+  ],
+  "by_key": {
+   "sha256:bd7745e1cc3a92f6041b8e20d5c7f3a9b61d0e4482cf7d1935ab60c2e8f41d33": {
+    "digest": "sha256:bd7745e1cc3a92f6041b8e20d5c7f3a9b61d0e4482cf7d1935ab60c2e8f41d33",
+    "scan_completed_at": "2032-03-18T06:11:00Z",
+    "distribution": "debian-12",
+    "findings": [
+     {
+      "advisory_id": "KSA-2032-0117",
+      "severity": "CRITICAL",
+      "cvss": 9.8,
+      "package": "libratchet",
+      "status": "open",
+      "fixed_version": null
+     },
+     {
+      "advisory_id": "KSA-2032-0094",
+      "severity": "CRITICAL",
+      "cvss": 9.1,
+      "package": "zlib-ng",
+      "status": "open",
+      "fixed_version": null
+     },
+     {
+      "advisory_id": "KSA-2031-0442",
+      "severity": "CRITICAL",
+      "cvss": 9.3,
+      "package": "openssl3",
+      "status": "open",
+      "fixed_version": null
+     },
+     {
+      "advisory_id": "KSA-2031-0388",
+      "severity": "CRITICAL",
+      "cvss": 9.4,
+      "package": "libxml2",
+      "status": "fixed",
+      "fixed_version": "2.12.6-1"
+     },
+     {
+      "advisory_id": "KSA-2032-0201",
+      "severity": "HIGH",
+      "cvss": 7.5,
+      "package": "curl",
+      "status": "open",
+      "fixed_version": null
+     },
+     {
+      "advisory_id": "KSA-2032-0233",
+      "severity": "HIGH",
+      "cvss": 7.1,
+      "package": "pcre2",
+      "status": "open",
+      "fixed_version": null
+     },
+     {
+      "advisory_id": "KSA-2031-0501",
+      "severity": "MEDIUM",
+      "cvss": 5.3,
+      "package": "bash",
+      "status": "open",
+      "fixed_version": null
+     }
+    ],
+    "note": "fixed_version is not populated by this endpoint; use vulndb.get_fix_versions."
+   },
+   "sha256:aa11c6f0d2b74e8390b5c1f77a4d6e29b0c8134f5ad9e7621c0fb3d84e5a7710": {
+    "digest": "sha256:aa11c6f0d2b74e8390b5c1f77a4d6e29b0c8134f5ad9e7621c0fb3d84e5a7710",
+    "scan_completed_at": "2031-11-05T02:40:00Z",
+    "distribution": "debian-12",
+    "findings": [
+     {
+      "advisory_id": "KSA-2031-0442",
+      "severity": "CRITICAL",
+      "cvss": 9.3,
+      "package": "openssl3",
+      "status": "open",
+      "fixed_version": null
+     },
+     {
+      "advisory_id": "KSA-2031-0388",
+      "severity": "HIGH",
+      "cvss": 7.4,
+      "package": "libxml2",
+      "status": "open",
+      "fixed_version": null
+     }
+    ],
+    "note": "fixed_version is not populated by this endpoint; use vulndb.get_fix_versions."
+   }
+  },
+  "default": {
+   "findings": [],
+   "status": "digest_not_scanned"
+  }
+ },
+ "vulndb.get_image_findings_by_tag": {
+  "key": [
+   "repository",
+   "tag"
+  ],
+  "by_key": {
+   "apps/kestrel-gateway|2031.11-stable": {
+    "scan_completed_at": "2031-11-05T02:40:00Z",
+    "distribution": "debian-12",
+    "findings": [
+     {
+      "advisory_id": "KSA-2031-0442",
+      "severity": "CRITICAL",
+      "cvss": 9.3,
+      "package": "openssl3",
+      "status": "open",
+      "fixed_version": null
+     },
+     {
+      "advisory_id": "KSA-2031-0388",
+      "severity": "HIGH",
+      "cvss": 7.4,
+      "package": "libxml2",
+      "status": "open",
+      "fixed_version": null
+     }
+    ],
+    "note": "Cache is keyed by tag and is not invalidated when a tag is moved.",
+    "repository": "apps/kestrel-gateway",
+    "tag": "2031.11-stable",
+    "cached_for_digest": "sha256:aa11c6f0d2b74e8390b5c1f77a4d6e29b0c8134f5ad9e7621c0fb3d84e5a7710",
+    "cache_written_at": "2031-11-05T02:41:00Z"
+   }
+  },
+  "default": {
+   "findings": [],
+   "status": "tag_not_scanned"
+  }
+ },
+ "vulndb.search_advisories": {
+  "key": [
+   "query"
+  ],
+  "by_key": {},
+  "default": {
+   "advisories": [
+    {
+     "advisory_id": "KSA-2032-0117",
+     "title": "Heap overflow in libratchet frame decoder",
+     "cvss": 9.8
+    }
+   ]
+  }
+ },
+ "vulndb.get_advisory": {
+  "key": [
+   "advisory_id"
+  ],
+  "by_key": {
+   "KSA-2032-0117": {
+    "advisory_id": "KSA-2032-0117",
+    "title": "Heap overflow in libratchet frame decoder",
+    "cvss": 9.8,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "package": "libratchet",
+    "published": "2032-02-28",
+    "affected_ranges": [
+     "<2.9.4-3"
+    ]
+   },
+   "KSA-2032-0094": {
+    "advisory_id": "KSA-2032-0094",
+    "title": "Integer truncation in zlib-ng inflate",
+    "cvss": 9.1,
+    "package": "zlib-ng",
+    "published": "2032-01-19",
+    "affected_ranges": [
+     "<2.2.1-4"
+    ]
+   },
+   "KSA-2031-0442": {
+    "advisory_id": "KSA-2031-0442",
+    "title": "Session resumption flaw in openssl3",
+    "cvss": 9.3,
+    "package": "openssl3",
+    "published": "2031-10-02",
+    "affected_ranges": [
+     "<3.1.7-2"
+    ]
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "vulndb.get_fix_versions": {
+  "key": [
+   "advisory_id"
+  ],
+  "by_key": {
+   "KSA-2032-0117": {
+    "advisory_id": "KSA-2032-0117",
+    "fixes": [
+     {
+      "distribution": "debian-12",
+      "fixed_version": "2.9.4-3",
+      "released": "2032-03-02"
+     },
+     {
+      "distribution": "debian-13",
+      "fixed_version": "2.9.5-1",
+      "released": "2032-03-02"
+     },
+     {
+      "distribution": "alpine-3.21",
+      "fixed_version": "2.9.4-r0",
+      "released": "2032-03-04"
+     }
+    ]
+   },
+   "KSA-2032-0094": {
+    "advisory_id": "KSA-2032-0094",
+    "fixes": [
+     {
+      "distribution": "debian-12",
+      "fixed_version": "2.2.1-4",
+      "released": "2032-01-25"
+     }
+    ]
+   }
+  },
+  "default": {
+   "fixes": []
+  }
+ },
+ "vulndb.get_kev_status": {
+  "key": [
+   "advisory_id"
+  ],
+  "by_key": {
+   "KSA-2032-0117": {
+    "advisory_id": "KSA-2032-0117",
+    "known_exploited": true,
+    "added": "2032-03-05"
+   }
+  },
+  "default": {
+   "known_exploited": false
+  }
+ },
+ "vulndb.list_severities": {
+  "key": [],
+  "by_key": {},
+  "default": {
+   "bands": [
+    {
+     "band": "CRITICAL",
+     "cvss_min": 9.0
+    },
+    {
+     "band": "HIGH",
+     "cvss_min": 7.0
+    },
+    {
+     "band": "MEDIUM",
+     "cvss_min": 4.0
+    },
+    {
+     "band": "LOW",
+     "cvss_min": 0.1
+    }
+   ]
+  }
+ },
+ "billing.get_invoice": {
+  "key": [
+   "order_id",
+   "invoice_id"
+  ],
+  "by_key": {
+   "ORD-88213|": {
+    "invoice_id": "INV-2032-00417",
+    "order_id": "ORD-88213",
+    "account_id": "ACC-2201",
+    "ship_date": "2032-01-03",
+    "billing_date": "2032-02-09",
+    "currency": "EUR",
+    "total": 18420.0,
+    "ship_date_source": "fulfilment_system",
+    "line_items": [
+     {
+      "sku": "KP-4410",
+      "description": "Edge appliance, 2U",
+      "qty": 2,
+      "unit_price": 7200.0
+     },
+     {
+      "sku": "KP-1188",
+      "description": "Support uplift, annual",
+      "qty": 1,
+      "unit_price": 4020.0
+     }
+    ]
+   },
+   "|INV-2032-00417": {
+    "invoice_id": "INV-2032-00417",
+    "order_id": "ORD-88213",
+    "account_id": "ACC-2201",
+    "ship_date": "2032-01-03",
+    "billing_date": "2032-02-09",
+    "currency": "EUR",
+    "total": 18420.0,
+    "ship_date_source": "fulfilment_system",
+    "line_items": [
+     {
+      "sku": "KP-4410",
+      "description": "Edge appliance, 2U",
+      "qty": 2,
+      "unit_price": 7200.0
+     },
+     {
+      "sku": "KP-1188",
+      "description": "Support uplift, annual",
+      "qty": 1,
+      "unit_price": 4020.0
+     }
+    ]
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "billing.list_invoices": {
+  "key": [
+   "account_id"
+  ],
+  "by_key": {
+   "ACC-2201": {
+    "account_id": "ACC-2201",
+    "note": "Summary rows carry billing_date only.",
+    "invoices": [
+     {
+      "invoice_id": "INV-2032-00417",
+      "order_id": "ORD-88213",
+      "billing_date": "2032-02-09",
+      "total": 18420.0
+     },
+     {
+      "invoice_id": "INV-2032-00388",
+      "order_id": "ORD-88109",
+      "billing_date": "2032-01-11",
+      "total": 6100.0
+     },
+     {
+      "invoice_id": "INV-2031-02290",
+      "order_id": "ORD-87755",
+      "billing_date": "2031-12-14",
+      "total": 9350.0
+     }
+    ]
+   }
+  },
+  "default": {
+   "invoices": []
+  }
+ },
+ "billing.search_orders": {
+  "key": [
+   "query"
+  ],
+  "by_key": {},
+  "default": {
+   "orders": [
+    {
+     "order_id": "ORD-88213",
+     "customer_po": "PO-55120"
+    }
+   ]
+  }
+ },
+ "billing.get_effective_rate_card": {
+  "key": [
+   "account_id",
+   "date"
+  ],
+  "by_key": {},
+  "default": {
+   "rate_card_id": "RC-2032-OVERRIDE",
+   "source": "contract_override"
+  }
+ },
+ "billing.get_rate_card": {
+  "key": [
+   "rate_card_id"
+  ],
+  "by_key": {},
+  "default": {
+   "rate_card_id": "RC-2032-STANDARD",
+   "source": "published_standard"
+  }
+ },
+ "billing.get_account_balance": {
+  "key": [
+   "account_id"
+  ],
+  "by_key": {},
+  "default": {
+   "balance": 0.0,
+   "currency": "EUR"
+  }
+ },
+ "billing.list_credits": {
+  "key": [
+   "account_id"
+  ],
+  "by_key": {},
+  "default": {
+   "credits": []
+  }
+ },
+ "billing.get_usage_summary": {
+  "key": [
+   "account_id",
+   "month"
+  ],
+  "by_key": {},
+  "default": {
+   "units": 0
+  }
+ },
+ "fiscal.convert_calendar_to_fiscal": {
+  "key": [
+   "date"
+  ],
+  "by_key": {
+   "2032-01-03": {
+    "date": "2032-01-03",
+    "calendar_id": "FY-445-DEFAULT",
+    "fiscal_year": "FY2032",
+    "fiscal_quarter": "Q4",
+    "fiscal_period": 12,
+    "period_start": "2031-12-28",
+    "period_end": "2032-01-30",
+    "pattern": "4-4-5",
+    "fiscal_year_start": "2031-02-03"
+   },
+   "2032-02-09": {
+    "date": "2032-02-09",
+    "calendar_id": "FY-445-DEFAULT",
+    "fiscal_year": "FY2033",
+    "fiscal_quarter": "Q1",
+    "fiscal_period": 1,
+    "period_start": "2032-01-31",
+    "period_end": "2032-02-27",
+    "pattern": "4-4-5",
+    "fiscal_year_start": "2032-01-31"
+   }
+  },
+  "default": {
+   "status": "date_outside_published_calendar"
+  }
+ },
+ "fiscal.get_fiscal_quarter": {
+  "key": [
+   "date"
+  ],
+  "by_key": {
+   "2032-01-03": {
+    "fiscal_year": "FY2032",
+    "fiscal_quarter": "Q4"
+   },
+   "2032-02-09": {
+    "fiscal_year": "FY2033",
+    "fiscal_quarter": "Q1"
+   }
+  },
+  "default": {
+   "status": "date_outside_published_calendar"
+  }
+ },
+ "fiscal.get_fiscal_year": {
+  "key": [
+   "date"
+  ],
+  "by_key": {
+   "2032-01-03": {
+    "fiscal_year": "FY2032"
+   },
+   "2032-02-09": {
+    "fiscal_year": "FY2033"
+   }
+  },
+  "default": {
+   "status": "unknown"
+  }
+ },
+ "fiscal.list_fiscal_periods": {
+  "key": [
+   "fiscal_year"
+  ],
+  "by_key": {
+   "FY2032": {
+    "fiscal_year": "FY2032",
+    "periods": [
+     {
+      "fiscal_period": 1,
+      "fiscal_quarter": "Q1"
+     },
+     {
+      "fiscal_period": 2,
+      "fiscal_quarter": "Q1"
+     },
+     {
+      "fiscal_period": 3,
+      "fiscal_quarter": "Q1"
+     },
+     {
+      "fiscal_period": 4,
+      "fiscal_quarter": "Q2"
+     },
+     {
+      "fiscal_period": 5,
+      "fiscal_quarter": "Q2"
+     },
+     {
+      "fiscal_period": 6,
+      "fiscal_quarter": "Q2"
+     },
+     {
+      "fiscal_period": 7,
+      "fiscal_quarter": "Q3"
+     },
+     {
+      "fiscal_period": 8,
+      "fiscal_quarter": "Q3"
+     },
+     {
+      "fiscal_period": 9,
+      "fiscal_quarter": "Q3"
+     },
+     {
+      "fiscal_period": 10,
+      "fiscal_quarter": "Q4"
+     },
+     {
+      "fiscal_period": 11,
+      "fiscal_quarter": "Q4"
+     },
+     {
+      "fiscal_period": 12,
+      "fiscal_quarter": "Q4"
+     }
+    ]
+   }
+  },
+  "default": {
+   "periods": []
+  }
+ },
+ "fiscal.get_period_close_date": {
+  "key": [
+   "fiscal_year",
+   "fiscal_period"
+  ],
+  "by_key": {
+   "FY2032|12": {
+    "fiscal_year": "FY2032",
+    "fiscal_period": 12,
+    "close_date": "2032-02-06",
+    "is_closed": true
+   },
+   "FY2032|11": {
+    "fiscal_year": "FY2032",
+    "fiscal_period": 11,
+    "close_date": "2032-01-09",
+    "is_closed": true
+   },
+   "FY2033|1": {
+    "fiscal_year": "FY2033",
+    "fiscal_period": 1,
+    "close_date": "2032-03-05",
+    "is_closed": false
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "fiscal.get_fiscal_calendar_definition": {
+  "key": [
+   "calendar_id"
+  ],
+  "by_key": {},
+  "default": {
+   "calendar_id": "FY-445-DEFAULT",
+   "pattern": "4-4-5",
+   "year_start_rule": "Monday nearest 1 February",
+   "note": "Fiscal quarters do not align with calendar quarters."
+  }
+ },
+ "calendar.get_calendar_quarter": {
+  "key": [
+   "date"
+  ],
+  "by_key": {
+   "2032-01-03": {
+    "year": 2032,
+    "quarter": "Q1",
+    "quarter_start": "2032-01-01",
+    "quarter_end": "2032-03-31",
+    "note": "Ordinary calendar quarter. Unrelated to any fiscal calendar."
+   },
+   "2032-02-09": {
+    "year": 2032,
+    "quarter": "Q1",
+    "quarter_start": "2032-01-01",
+    "quarter_end": "2032-03-31"
+   }
+  },
+  "default": {
+   "quarter": "Q1"
+  }
+ },
+ "calendar.get_iso_week": {
+  "key": [
+   "date"
+  ],
+  "by_key": {
+   "2032-01-03": {
+    "iso_year": 2032,
+    "iso_week": 1,
+    "iso_weekday": 6
+   }
+  },
+  "default": {
+   "iso_week": 1
+  }
+ },
+ "calendar.get_month_boundaries": {
+  "key": [
+   "date"
+  ],
+  "by_key": {
+   "2032-01-03": {
+    "month_start": "2032-01-01",
+    "month_end": "2032-01-31"
+   }
+  },
+  "default": {}
+ },
+ "calendar.add_business_days": {
+  "key": [
+   "date",
+   "days"
+  ],
+  "by_key": {},
+  "default": {
+   "date": "2032-01-05"
+  }
+ },
+ "calendar.is_business_day": {
+  "key": [
+   "date"
+  ],
+  "by_key": {
+   "2032-01-03": {
+    "is_business_day": false
+   }
+  },
+  "default": {
+   "is_business_day": true
+  }
+ },
+ "calendar.diff_days": {
+  "key": [
+   "from_date",
+   "to_date"
+  ],
+  "by_key": {},
+  "default": {
+   "days": 0
+  }
+ },
+ "calendar.get_holidays": {
+  "key": [
+   "holiday_calendar",
+   "year"
+  ],
+  "by_key": {},
+  "default": {
+   "holidays": []
+  }
+ },
+ "metrics.get_error_budget_after_exclusions": {
+  "key": [
+   "service",
+   "month"
+  ],
+  "by_key": {
+   "kestrel-search|2032-03": {
+    "service": "kestrel-search",
+    "month": "2032-03",
+    "slo_target": "99.90",
+    "budget_minutes_total": 44.6,
+    "consumed_minutes_raw": 103.2,
+    "excluded_minutes": 63.0,
+    "consumed_minutes_after_exclusions": 40.2,
+    "remaining_minutes": 4.4,
+    "exclusions": [
+     {
+      "window_id": "EXC-2032-0042",
+      "reason": "approved_maintenance",
+      "minutes": 38.0,
+      "start_utc": "2032-03-09T01:00:00Z",
+      "approved_by": "change-board"
+     },
+     {
+      "window_id": "EXC-2032-0051",
+      "reason": "incident_accepted_out_of_scope",
+      "minutes": 25.0,
+      "start_utc": "2032-03-22T14:10:00Z",
+      "approved_by": "change-board"
+     }
+    ],
+    "note": "This is the figure the service level is reported against."
+   }
+  },
+  "default": {
+   "status": "no_data"
+  }
+ },
+ "metrics.get_error_budget": {
+  "key": [
+   "service",
+   "month"
+  ],
+  "by_key": {
+   "kestrel-search|2032-03": {
+    "service": "kestrel-search",
+    "month": "2032-03",
+    "slo_target": "99.90",
+    "budget_minutes_total": 44.6,
+    "consumed_minutes": 103.2,
+    "remaining_minutes": -58.6,
+    "note": "Raw measurement. No approved exclusion window has been removed."
+   }
+  },
+  "default": {
+   "status": "no_data"
+  }
+ },
+ "metrics.get_slo": {
+  "key": [
+   "service"
+  ],
+  "by_key": {
+   "kestrel-search": {
+    "service": "kestrel-search",
+    "target_percent": 99.9,
+    "window": "calendar_month"
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "metrics.query_timeseries": {
+  "key": [
+   "query"
+  ],
+  "by_key": {},
+  "default": {
+   "series": [],
+   "note": "Truncated in this environment."
+  }
+ },
+ "metrics.get_alert_state": {
+  "key": [
+   "alert_id"
+  ],
+  "by_key": {},
+  "default": {
+   "state": "ok"
+  }
+ },
+ "metrics.list_dashboards": {
+  "key": [
+   "service"
+  ],
+  "by_key": {},
+  "default": {
+   "dashboards": [
+    {
+     "id": "DSH-1",
+     "title": "Overview"
+    }
+   ]
+  }
+ },
+ "tickets.get_effective_sla": {
+  "key": [
+   "ticket_id"
+  ],
+  "by_key": {
+   "TCK-40118": {
+    "ticket_id": "TCK-40118",
+    "account_id": "ACC-2201",
+    "response_target_minutes": 30,
+    "response_target_source": "contract_override:CON-2201-SLA-A",
+    "resolution_target_minutes": 240,
+    "resolution_target_source": "contract_override:CON-2201-SLA-A",
+    "current_severity": "S2",
+    "severity_source": "reclassified_2032-03-08T10:40:00Z",
+    "clock_stopped_minutes": 95,
+    "clock_stopped_windows": [
+     {
+      "reason": "awaiting_customer",
+      "minutes": 95,
+      "start_utc": "2032-03-08T10:55:00Z",
+      "end_utc": "2032-03-08T12:30:00Z"
+     }
+    ],
+    "note": "Measure elapsed time from opened_at to resolved_at, then subtract clock_stopped_minutes."
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "tickets.get_ticket_sla": {
+  "key": [
+   "ticket_id"
+  ],
+  "by_key": {
+   "TCK-40118": {
+    "ticket_id": "TCK-40118",
+    "queue_id": "Q-SEARCH-STD",
+    "response_target_minutes": 60,
+    "resolution_target_minutes": 480,
+    "source": "queue_default",
+    "note": "Queue default. Contract overrides, reclassification and suspension windows are not applied."
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "tickets.get_queue": {
+  "key": [
+   "queue_id"
+  ],
+  "by_key": {
+   "Q-SEARCH-STD": {
+    "queue_id": "Q-SEARCH-STD",
+    "name": "Search standard",
+    "default_response_target_minutes": 60,
+    "default_resolution_target_minutes": 480
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "tickets.get_ticket": {
+  "key": [
+   "ticket_id"
+  ],
+  "by_key": {
+   "TCK-40118": {
+    "ticket_id": "TCK-40118",
+    "account_id": "ACC-2201",
+    "service": "kestrel-search",
+    "queue_id": "Q-SEARCH-STD",
+    "subject": "Query latency spike on tenant shard 14",
+    "opened_at_utc": "2032-03-08T09:12:00Z",
+    "resolved_at_utc": "2032-03-08T15:02:00Z",
+    "status": "resolved",
+    "severity_at_open": "S3",
+    "severity_current": "S2",
+    "requester_handle": "c.dunmore"
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "tickets.list_ticket_events": {
+  "key": [
+   "ticket_id"
+  ],
+  "by_key": {
+   "TCK-40118": {
+    "ticket_id": "TCK-40118",
+    "events": [
+     {
+      "at_utc": "2032-03-08T09:12:00Z",
+      "event": "opened",
+      "severity": "S3"
+     },
+     {
+      "at_utc": "2032-03-08T10:40:00Z",
+      "event": "reclassified",
+      "severity": "S2"
+     },
+     {
+      "at_utc": "2032-03-08T10:55:00Z",
+      "event": "clock_stopped",
+      "reason": "awaiting_customer"
+     },
+     {
+      "at_utc": "2032-03-08T12:30:00Z",
+      "event": "clock_resumed"
+     },
+     {
+      "at_utc": "2032-03-08T15:02:00Z",
+      "event": "resolved"
+     }
+    ]
+   }
+  },
+  "default": {
+   "events": []
+  }
+ },
+ "tickets.search_tickets": {
+  "key": [
+   "query"
+  ],
+  "by_key": {},
+  "default": {
+   "tickets": [
+    {
+     "ticket_id": "TCK-40118",
+     "subject": "Query latency spike on tenant shard 14"
+    }
+   ]
+  }
+ },
+ "tickets.list_linked_tickets": {
+  "key": [
+   "ticket_id"
+  ],
+  "by_key": {},
+  "default": {
+   "tickets": []
+  }
+ },
+ "inventory.get_stock_level_with_reservations": {
+  "key": [
+   "part_id",
+   "warehouse_id"
+  ],
+  "by_key": {
+   "KP-4410|WH-LIS-1": {
+    "part_id": "KP-4410",
+    "warehouse_id": "WH-LIS-1",
+    "on_hand": 64,
+    "reserved": 41,
+    "quarantined": 6,
+    "available_to_promise": 17
+   }
+  },
+  "default": {
+   "available_to_promise": 0
+  }
+ },
+ "inventory.get_stock_level": {
+  "key": [
+   "part_id",
+   "warehouse_id"
+  ],
+  "by_key": {
+   "KP-4410|WH-LIS-1": {
+    "part_id": "KP-4410",
+    "warehouse_id": "WH-LIS-1",
+    "on_hand": 64,
+    "counted_at": "2032-03-17T22:00:00Z",
+    "note": "Physical count only."
+   }
+  },
+  "default": {
+   "on_hand": 0
+  }
+ },
+ "inventory.search_parts": {
+  "key": [
+   "query"
+  ],
+  "by_key": {},
+  "default": {
+   "parts": [
+    {
+     "part_id": "KP-4410",
+     "description": "Edge appliance, 2U"
+    }
+   ]
+  }
+ },
+ "inventory.get_part": {
+  "key": [
+   "part_id"
+  ],
+  "by_key": {},
+  "default": {
+   "part_id": "KP-4410",
+   "description": "Edge appliance, 2U",
+   "uom": "each"
+  }
+ },
+ "inventory.get_reorder_point": {
+  "key": [
+   "part_id",
+   "warehouse_id"
+  ],
+  "by_key": {},
+  "default": {
+   "reorder_point": 20,
+   "lead_time_days": 35
+  }
+ },
+ "inventory.get_supplier": {
+  "key": [
+   "part_id"
+  ],
+  "by_key": {},
+  "default": {
+   "supplier_id": "SUP-771",
+   "name": "Halberd Manufacturing"
+  }
+ },
+ "inventory.list_warehouses": {
+  "key": [
+   "region"
+  ],
+  "by_key": {},
+  "default": {
+   "warehouses": [
+    {
+     "warehouse_id": "WH-LIS-1",
+     "region": "EU-SW"
+    }
+   ]
+  }
+ },
+ "geo.get_region_for_site": {
+  "key": [
+   "site_id"
+  ],
+  "by_key": {},
+  "default": {
+   "region": "EU-SW"
+  }
+ },
+ "geo.geocode": {
+  "key": [
+   "address"
+  ],
+  "by_key": {},
+  "default": {
+   "lat": "38.7223",
+   "lon": "-9.1393"
+  }
+ },
+ "geo.reverse_geocode": {
+  "key": [
+   "lat",
+   "lon"
+  ],
+  "by_key": {},
+  "default": {
+   "address": "Lisbon, Portugal"
+  }
+ },
+ "geo.get_timezone": {
+  "key": [
+   "lat",
+   "lon"
+  ],
+  "by_key": {},
+  "default": {
+   "timezone": "Europe/Lisbon"
+  }
+ },
+ "geo.distance_between": {
+  "key": [
+   "site_a",
+   "site_b"
+  ],
+  "by_key": {},
+  "default": {
+   "km": 0
+  }
+ },
+ "docs.get_latest_revision": {
+  "key": [
+   "document_id"
+  ],
+  "by_key": {
+   "DOC-SLA-POLICY": {
+    "document_id": "DOC-SLA-POLICY",
+    "revision": "r7",
+    "effective_from": "2032-01-01",
+    "body": "Effective service levels are the contract targets, not the queue defaults."
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "docs.get_document_revision": {
+  "key": [
+   "document_id",
+   "revision"
+  ],
+  "by_key": {
+   "DOC-SLA-POLICY|r4": {
+    "document_id": "DOC-SLA-POLICY",
+    "revision": "r4",
+    "effective_from": "2030-06-01",
+    "body": "Queue defaults are used when no contract override exists.",
+    "superseded": true
+   }
+  },
+  "default": {
+   "status": "not_found"
+  }
+ },
+ "docs.get_document": {
+  "key": [
+   "document_id"
+  ],
+  "by_key": {},
+  "default": {
+   "document_id": "DOC-SLA-POLICY",
+   "revisions": [
+    "r4",
+    "r5",
+    "r6",
+    "r7"
+   ]
+  }
+ },
+ "docs.search_documents": {
+  "key": [
+   "query"
+  ],
+  "by_key": {},
+  "default": {
+   "hits": [
+    {
+     "document_id": "DOC-SLA-POLICY",
+     "revision": "r4"
+    },
+    {
+     "document_id": "DOC-SLA-POLICY",
+     "revision": "r7"
+    }
+   ]
+  }
+ },
+ "docs.list_collections": {
+  "key": [],
+  "by_key": {},
+  "default": {
+   "collections": [
+    {
+     "id": "policy",
+     "title": "Policies"
+    }
+   ]
+  }
+ }
+}
