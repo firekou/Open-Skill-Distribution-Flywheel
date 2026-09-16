@@ -207,6 +207,8 @@ def run_one(
             task, task_root, run_id=rid,
             audit_path=audit_path,
             turns=turns or None,
+            corpus_before=corpus_before,
+            corpus_after=corpus_after,
         )
         required_evidence = produced.to_dict()
         record["required_evidence_fields"] = sorted(required_evidence)
@@ -233,7 +235,8 @@ def run_one(
         record["failure_reason"] = "awaiting Quality Judge score"
 
     packet = build_packet(record, model_output, task, answer_key, mapping, CANDIDATE_NAMES,
-                          required_evidence=required_evidence)
+                          required_evidence=required_evidence,
+                          methodology_version=record["methodology_version"])
     return record, packet.to_dict()
 
 

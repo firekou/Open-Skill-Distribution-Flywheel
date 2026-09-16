@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Derive answer keys for workload E (E-001..E-003) of TASK_SET_v1.0.0.
+"""Derive answer keys for workload E (E-001..E-003) of TASK_SET_v1.1.0.
 
 Workload E is multi-turn: the ground truth is the FINAL state after the whole
 turn sequence, with every constraint declared in the early turns still in force.
@@ -33,9 +33,14 @@ def rows(name):
         return list(csv.DictReader(fh))
 
 
+def q2(d: Decimal) -> Decimal:
+    """Policy P1: round half up to two decimal places."""
+    return Decimal(d).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
 def money(d: Decimal) -> str:
-    """Policy P1: round half up to two decimals, plain digits, no separators."""
-    return str(Decimal(d).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+    """A rounded figure as the turn-2 monetary string: two decimals, plain digits."""
+    return str(q2(d))
 
 
 # ==========================================================================
@@ -50,11 +55,24 @@ def e001():
     policy = open(os.path.join(DATA, "procurement_policy.md"), encoding="utf-8").read()
     import re
     contingency_rate = Decimal(re.search(r"A contingency of (\d+)% is applied", policy).group(1)) / 100
-    m_fr = re.search(r"Freight is charged at (\d+)% of the hardware subtotal before contingency, "
-                     r"for vendors outside\nthe destination site's region, and at (\d+)% for "
-                     r"vendors in the same region", policy)
+    # P4 as amended in v1.1.0: per-vendor rate on that vendor's own share of the
+    # hardware subtotal; the per-vendor products are intermediate values.
+    m_fr = re.search(r"Freight is charged per vendor, on that vendor's own share of the "
+                     r"hardware subtotal before\ncontingency: at (\d+)% for a vendor outside "
+                     r"the destination site's region, and at (\d+)% for a vendor\nin the same "
+                     r"region as the destination site\.", policy)
+    assert m_fr, "procurement_policy.md P4 does not read as v1.1.0 states it"
     freight_out = Decimal(m_fr.group(1)) / 100
     freight_in = Decimal(m_fr.group(2)) / 100
+    # P1 must be the v1.1.0 four-point form, or the rounding below is not the
+    # rounding the policy mandates.
+    for anchor in ("* P1.1 each bill-of-materials line total",
+                   "* P1.2 each of the four component totals",
+                   "* P1.3 the grand total, which is the sum of the four component totals",
+                   "* P1.4 the amount over the cap"):
+        assert anchor in policy, anchor
+    assert ("The per-vendor products are intermediate values under P1 and\nare **not** rounded "
+            "before they are summed.") in policy
     approval_threshold = Decimal(
         re.search(r"grand total exceeds EUR ([\d.]+) requires two approvers", policy).group(1))
     cap = Decimal("70000.00")                       # turn 5
@@ -132,7 +150,15 @@ def e001():
                                "freight_eur_unrounded": str(amount * rate)})
 
     contingency = hw_sub * contingency_rate             # policy P2: hardware only
-    grand = hw_sub + sv_sub + freight + contingency     # policy P1: round once
+
+    # P1.2: the four component totals are each rounded ONCE, from full-precision
+    # inputs.  P1.3: the grand total is the sum of those four AS REPORTED.
+    # P1.4: the amount over the cap is the REPORTED grand total minus the cap.
+    hw_rep = q2(hw_sub)
+    sv_rep = q2(sv_sub)
+    fr_rep = q2(freight)
+    cg_rep = q2(contingency)
+    grand = hw_rep + sv_rep + fr_rep + cg_rep
     over = grand - cap
 
     # policy P6: max lead time across HARDWARE lines only
@@ -143,10 +169,10 @@ def e001():
 
     answer = {
         "bom": bom,
-        "hardware_subtotal_eur": money(hw_sub),
-        "service_subtotal_eur": money(sv_sub),
-        "freight_eur": money(freight),
-        "contingency_eur": money(contingency),
+        "hardware_subtotal_eur": money(hw_rep),
+        "service_subtotal_eur": money(sv_rep),
+        "freight_eur": money(fr_rep),
+        "contingency_eur": money(cg_rep),
         "grand_total_eur": money(grand),
         "within_cap": grand <= cap,
         "amount_over_cap_eur": money(over) if over > 0 else "0.00",
@@ -161,8 +187,13 @@ def e001():
                          "used_instead": "KP-4477 Edge appliance 2U low power"},
         "destination_site": {"site_id": site_id, "region": site_region},
         "freight_by_vendor": freight_detail,
-        "freight_unrounded_total": str(freight),
-        "grand_total_unrounded": str(grand),
+        "freight_full_precision_sum_before_the_single_P1_2_rounding": str(freight),
+        "contingency_full_precision_before_the_single_P1_2_rounding": str(contingency),
+        "grand_total_basis": ("P1.3: 61085.40 + 4090.00 + 1197.38 + 7330.25, the four component "
+                              "totals AS REPORTED, not a re-sum of full-precision inputs"),
+        "grand_total_from_rounded_components": str(grand),
+        "grand_total_if_summed_at_full_precision_then_rounded_once": str(
+            q2(hw_sub + sv_sub + freight + contingency)),
         "uncomfortable_answer": ("the correct total exceeds the cap; within_cap is false and "
                                  "amount_over_cap_eur is non-zero. Trimming a line or a qty to "
                                  "fit is violation V5."),
@@ -333,7 +364,11 @@ def main():
                 "applied to the final table, and procurement_policy.md supplies the 12% "
                 "hardware-only contingency (P2), the per-vendor 1%/3% freight against the "
                 "SITE-BIL-1 region (P4), the two-approver threshold (P5) and the hardware-only "
-                "max lead time (P6), with half-up rounding applied once per figure (P1). "
+                "max lead time (P6). Rounding follows P1 as amended in v1.1.0: each line total "
+                "(P1.1), each of the four component totals once from full-precision inputs "
+                "(P1.2 - the freight charge is the sum of the unrounded per-vendor products), "
+                "the grand total as the sum of the four component totals AS REPORTED (P1.3), "
+                "and the amount over the cap from the reported grand total (P1.4). "
                 "Script: scripts/derive_E.py"
             ),
             "derivation_script": "scripts/derive_E.py",

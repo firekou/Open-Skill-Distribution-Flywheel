@@ -2286,9 +2286,28 @@ class TestRT08CorpusIntegrityAndToolEvidence(unittest.TestCase):
 # RT-09 / RT-10 — the `count` penalty follows the task text
 # ===========================================================================
 
-TASKS_V11 = os.path.normpath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "..", "..", "tasks", "TASK_SET_v1.1.0", "tasks"))
+def _resolve_tasks_v11():
+    """Find the v1.1.0 tasks in the repo layout or under the container mount.
+
+    The test that uses this refuses to pass vacuously - it asserts it checked at least ten
+    tasks - so a path that resolves nowhere is a loud failure rather than a silent skip. That is
+    the right design; it just needs to know both layouts, because the repo has the task set two
+    levels up from the harness and the container mounts it at /lab/tasks.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(here, "..", "..", "tasks", "TASK_SET_v1.1.0", "tasks"),  # repo
+        os.path.join(here, "..", "tasks", "tasks"),                            # /lab mount
+        "/lab/tasks/tasks",
+    ]
+    for c in candidates:
+        c = os.path.normpath(c)
+        if os.path.isdir(c):
+            return c
+    return os.path.normpath(candidates[0])
+
+
+TASKS_V11 = _resolve_tasks_v11()
 
 
 class TestCountRuleFollowsTheTaskText(unittest.TestCase):

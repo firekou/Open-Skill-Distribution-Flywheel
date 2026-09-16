@@ -40,11 +40,14 @@ class EvidenceError(RuntimeError):
 # Which evidence fields each workload's zero-tolerance criteria consume. A workload whose
 # required fields are absent, empty or wrongly typed yields INVALID.
 REQUIRED_BY_WORKLOAD = {
-    "A": ("valid_symbols", "tool_calls", "corpus_hashes"),
-    "B": ("corpus_hashes",),
-    "C": ("corpus_hashes",),
-    "D": ("tool_calls", "corpus_hashes"),
-    "E": ("turns", "corpus_hashes"),
+    # RT-08: all 17 v1.1.0 tasks name corpus_hashes_before AND corpus_hashes_after in their
+    # failure_condition. One hash proves nothing about modification; two do.
+    "A": ("valid_symbols", "tool_calls", "corpus_hashes_before", "corpus_hashes_after",
+          "corpus_access_log"),
+    "B": ("corpus_hashes_before", "corpus_hashes_after"),
+    "C": ("corpus_hashes_before", "corpus_hashes_after"),
+    "D": ("tool_calls", "corpus_hashes_before", "corpus_hashes_after", "corpus_access_log"),
+    "E": ("turns", "corpus_hashes_before", "corpus_hashes_after"),
 }
 
 # Task-specific additions on top of the workload defaults.
@@ -274,17 +277,46 @@ def assert_treatment_neutral(evidence: dict) -> None:
             )
 
 
+def access_log_from_audit(calls: list[dict], corpus_paths: list[str]) -> list[dict]:
+    """Which corpus files the attempt actually touched.
+
+    A-001's only anti-shortcut guard is "the answer is produced without reading the corpus (empty
+    tool-call record)", and v1.0.0 implemented it nowhere — so the blanket answer that reads
+    nothing had no guard at all. The log is built from the runner's audit, never from the model
+    saying it read something.
+    """
+    out = []
+    for c in calls:
+        args = c.get("arguments") or {}
+        target = args.get("path") or args.get("file") or args.get("corpus_path")
+        if target:
+            out.append({"path": str(target), "tool": c.get("tool"), "seq": c.get("seq")})
+        elif c.get("reads_corpus"):
+            out.append({"path": c.get("reads_corpus"), "tool": c.get("tool"), "seq": c.get("seq")})
+    return out
+
+
 def produce(task: dict, task_root: pathlib.Path, *, run_id: str,
             audit_path: pathlib.Path | None = None,
-            turns: list[dict] | None = None) -> Evidence:
+            turns: list[dict] | None = None,
+            corpus_before: dict | None = None,
+            corpus_after: dict | None = None,
+            corpus_access_log: list | None = None) -> Evidence:
     """Build the required evidence for one attempt. Raises rather than returning a partial set."""
     root = pathlib.Path(task_root)
     wl, tid = task["workload"], task["task_id"]
     ev = Evidence(task_id=tid, workload=wl)
     prov = ev.provenance
 
-    ev.fields["corpus_hashes"] = corpus_hashes(root, task["input"].get("corpus_paths", []))
-    prov["corpus_hashes"] = "sha256 of every file under the task's declared corpus_paths"
+    paths = task["input"].get("corpus_paths", [])
+    before = corpus_before if corpus_before is not None else corpus_hashes(root, paths)
+    after = corpus_after if corpus_after is not None else corpus_hashes(root, paths)
+    ev.fields["corpus_hashes_before"] = before
+    ev.fields["corpus_hashes_after"] = after
+    # Kept as an alias: the Quality Judge accepts it as the "before" map, and older records use it.
+    ev.fields["corpus_hashes"] = before
+    prov["corpus_hashes_before"] = "sha256 of every corpus file, taken before the attempt ran"
+    prov["corpus_hashes_after"] = "the same files, re-hashed after the attempt; a difference fails it"
 
     if wl == "A":
         corpus = root / task["input"]["corpus_paths"][0]
@@ -296,6 +328,12 @@ def produce(task: dict, task_root: pathlib.Path, *, run_id: str,
             raise EvidenceError(f"workload {wl} needs a tool audit path; none was supplied")
         calls = filter_audit_to_run(tool_calls_from_audit(audit_path), run_id)
         ev.fields["tool_calls"] = calls
+        log = corpus_access_log if corpus_access_log is not None else access_log_from_audit(
+            calls, paths)
+        ev.fields["corpus_access_log"] = log
+        prov["corpus_access_log"] = (
+            "corpus reads observed in the runner's audit. Never the model's claim to have read "
+            "something - A-001's anti-shortcut guard depends on this being observed.")
         prov["tool_calls"] = (
             f"server-written audit at {audit_path}, filtered to run {run_id}; "
             f"{len(calls)} entr(ies) attributed to this attempt")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Derive answer keys for workload C (C-001..C-003) of TASK_SET_v1.0.0.
+"""Derive answer keys for workload C (C-001..C-003) of TASK_SET_v1.1.0.
 
 All three keys are computed from corpora/research_c/ by parsing the structured
 parts of each source (the release-note flag lists, the bulletin award tables,
@@ -83,6 +83,7 @@ def c001():
     assert len(errata_fix) == 3, errata_fix
 
     flags = []
+    coincidental, contradicting = {}, {}
     for flag in sorted(added):
         versions = added[flag]
         if flag in errata_fix:
@@ -105,31 +106,53 @@ def c001():
         else:
             rem, rem_files = None, []
 
-        # every other file in the corpus that literally states a version for
-        # this flag (low-authority chatter); recorded so a grader can tell a
-        # coincidentally-correct forum citation from a wrong one.
+        # Low-authority chatter about this flag.  v1.1.0: this is a DERIVATION
+        # DIAGNOSTIC only.  It is deliberately kept off the record, because the
+        # record's `sources` and `citation_support` ARE the governing-source set
+        # the traceability metric consumes, and a coincidentally-correct forum
+        # thread is not a governing source (task rule (b)).  Putting it on the
+        # record would either make it citable or make it mandatory to cite.
         others_agreeing, others_disagreeing = [], []
         for f in sorted(INDEX):
             if f in intro_files or f in rem_files or f in RELEASE_NOTES:
                 continue
             for m in re.finditer(r"`%s`[^\n]*?\b([0-9]\.[0-9])\b" % re.escape(flag), TEXT[f]):
                 (others_agreeing if m.group(1) == intro else others_disagreeing).append(f)
+        if others_agreeing:
+            coincidental[flag] = sorted(set(others_agreeing))
+        if others_disagreeing:
+            contradicting[flag] = sorted(set(others_disagreeing))
+
+        governing = sorted(set(intro_files) | set(rem_files))
         flags.append({
             "flag": flag,
             "introduced_in": intro,
             "removed_in": rem,
-            "sources": sorted(set(intro_files) | set(rem_files)),
+            # The COMPLETE set of governing sources for the values of this
+            # record -- not a curated subset.  Under the v1.1.0 metric a
+            # governing source the run omits is a missing citation and a file
+            # outside this set is an unsupported citation, symmetrically.
+            "sources": governing,
             "citation_support": {
+                # `flag` and `introduced_in` share one governing set under the
+                # task's claim-to-source mapping.
+                "flag": intro_files,
                 "introduced_in": intro_files,
+                # A null `removed_in` is not a claim and needs no citation.
                 "removed_in": rem_files,
             },
-            "non_authoritative_files_stating_the_same_introduced_in": sorted(set(others_agreeing)),
-            "non_authoritative_files_stating_a_different_version": sorted(set(others_disagreeing)),
         })
 
     diag = {
         "flags_with_two_added_claims": {k: sorted(v) for k, v in added.items() if len(v) > 1},
         "errata_corrections": errata_fix,
+        "coincidentally_correct_non_governing_files": coincidental,
+        "non_governing_files_stating_a_different_version": contradicting,
+        "governing_source_rule": (
+            "for `flag` and `introduced_in`: every official release note whose feature-flag "
+            "list records the flag as added, MINUS the release note an erratum corrects for "
+            "that flag, PLUS that erratum; for `removed_in`: the official release note whose "
+            "feature-flag list records the flag as removed, and nothing when it is null"),
     }
     return {"flags": flags, "count": len(flags)}, diag
 
@@ -192,33 +215,53 @@ def c002():
         p["srcs"].add(a["bulletin"])
         if a["notice"]:
             p["srcs"].add(a["notice"])
+        p.setdefault("by_field", {"project": set(), "total_awarded_eur": set(),
+                                  "awards_included": set(), "awards_excluded": set()})
+        bf = p["by_field"]
+        bf["project"].add(a["bulletin"])
+        # the file that states this award's STANDING amount or STANDING status
+        standing = a["notice"] or a["bulletin"]
+        bf["total_awarded_eur"].add(standing)
         if a["status"] == "included":
             p["total_awarded_eur"] += a["amount"]
             p["awards_included"].append(aid)
-            p["support"][aid] = {"amount_eur": a["amount"],
-                                 "stated_by": a["notice"] or a["bulletin"],
+            bf["awards_included"].add(a["bulletin"])
+            if a["notice"]:
+                bf["awards_included"].add(a["notice"])
+            p["support"][aid] = {"status": "included", "amount_eur": a["amount"],
+                                 "standing_amount_stated_by": standing,
                                  "listed_in_bulletin": a["bulletin"]}
         else:
             p["awards_excluded"].append(aid)
-            p["support"][aid] = {"retracted_by": a["notice"],
+            bf["awards_excluded"].add(a["bulletin"])
+            bf["awards_excluded"].add(a["notice"])
+            p["support"][aid] = {"status": "excluded", "retracted_by": a["notice"],
                                  "listed_in_bulletin": a["bulletin"]}
 
     out = []
+    per_award = {}
     for name in sorted(projects):
         p = projects[name]
+        governing = sorted(p["srcs"])
+        cs = {k: sorted(v) for k, v in p["by_field"].items()}
+        # The per-field sets must cover exactly the record's governing set.
+        assert sorted(set().union(*cs.values())) == governing, (name, cs, governing)
+        per_award[p["project"]] = p["support"]
         out.append({
             "project": p["project"],
             "total_awarded_eur": p["total_awarded_eur"],
             "awards_included": sorted(p["awards_included"]),
             "awards_excluded": sorted(p["awards_excluded"]),
-            "sources": sorted(p["srcs"]),
-            "citation_support": {
-                "per_award": p["support"],
-                "note": ("no single file states total_awarded_eur; it is the sum of the "
-                         "per-award amounts that stand after the notices are applied"),
-            },
+            # COMPLETE governing-source set for this record: every bulletin that
+            # publishes one of the project's awards, plus every correction and
+            # retraction notice that changes the amount or the status of one of
+            # them (task claim-to-source mapping).  No file states the sum, so
+            # `total_awarded_eur` is supported by the files that state the
+            # standing amount or standing status of its constituent awards.
+            "sources": governing,
+            "citation_support": cs,
         })
-    return {"projects": out, "count": len(out)}, notices
+    return {"projects": out, "count": len(out)}, notices, per_award
 
 
 # ==========================================================================
@@ -255,6 +298,7 @@ def c003():
             stated.setdefault(m.group(1), {}).setdefault(m.group(2), []).append(f)
 
     plugins = []
+    coincidental_by_plugin = {}
     for r in rows:
         pid = r["plugin_id"]
         if pid in errata_fix:
@@ -263,22 +307,30 @@ def c003():
         else:
             ver = r["min_kestrel_version"]
             tier = INDEX[reg_file]["source_tier"]
-        support = sorted(set(stated[pid].get(ver, [])))
+        # The governing source is fixed by the task's claim-to-source mapping,
+        # NOT by which files happen to print the same characters: the registry
+        # export unless an erratum names this plugin, in which case the erratum
+        # and the registry export is no longer a governing source.
+        governing = [errata_fix[pid]["file"]] if pid in errata_fix else [reg_file]
+        stating = sorted(set(stated[pid].get(ver, [])))
+        assert set(governing) <= set(stating), (pid, governing, stating)
+        coincidental = [f for f in stating if f not in governing]
         contradicting_all = sorted({f for v, fs in stated[pid].items() if v != ver for f in fs})
-        contradicting_low = [f for f in contradicting_all
-                             if INDEX[f]["source_tier"] in ("vendor_blog", "community_forum")]
         plugins.append({
             "plugin_id": pid,
             "min_kestrel_version": ver,
             "governing_source_tier": tier,
+            # literal reading, settled by RT-16: EVERY file of ANY tier that
+            # states a different minimum version, the registry export included.
             "contradicted_by": contradicting_all,
-            "sources": [f for f in support
-                        if INDEX[f]["source_tier"] in ("registry_export", "erratum")],
-            "citation_support": {"min_kestrel_version": support},
-            "contradicted_by_alternate_reading_low_authority_only": contradicting_low,
+            "sources": governing,
+            "citation_support": {"plugin_id": governing,
+                                 "min_kestrel_version": governing},
         })
+        if coincidental:
+            coincidental_by_plugin[pid] = coincidental
     plugins.sort(key=lambda p: p["plugin_id"])
-    return {"plugins": plugins, "count": len(plugins)}, errata_fix
+    return {"plugins": plugins, "count": len(plugins)}, errata_fix, coincidental_by_plugin
 
 
 # ==========================================================================

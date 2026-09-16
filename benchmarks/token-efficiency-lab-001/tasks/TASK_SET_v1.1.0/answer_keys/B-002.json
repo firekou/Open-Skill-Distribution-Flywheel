@@ -1,10 +1,98 @@
 {
   "task_id": "B-002",
   "derived_by": "answer-key-builder",
-  "derivation_method": "Parsed the 48-row Appendix A markdown table of KESTREL_RELIABILITY_2031.md, parsed all 8 Appendix B correction notices with a regex capturing (incident, field, old value, new value), asserted each old value against the register before overwriting it, then kept the records whose post-correction severity is S1 or S2. The quarterly narrative is never read. Script: scripts/derive_B.py",
+  "derivation_method": "Parsed the four per-quarter incident registers (sections 2.9, 3.9, 4.9, 5.9) of KESTREL_RELIABILITY_2031.md - 48 rows in total - then applied the document's section 1.4 precedence in rank order: the nine Appendix A Register Amendments over the registers (one of which, RA-2032-03, withdraws INC-2031-047 in full under rule R-2, so it appears in no table derived from the report), then the eight Appendix B Correction Notices over everything, including over an Amendment naming the same incident and the same field (INC-2031-021 and INC-2031-024 are each amended and then corrected). Each layer's stated prior value is asserted against the value actually standing before it is overwritten. Selection of S1/S2 happens last, on the final severity (rule R-3). The quarterly narrative is never read: it ranks below the registers and decides nothing. Script: scripts/derive_B.py",
   "derivation_script": "scripts/derive_B.py",
+  "derivation_diagnostics": {
+    "register_rows_per_quarter": {
+      "Q1": 11,
+      "Q2": 9,
+      "Q3": 13,
+      "Q4": 15
+    },
+    "incidents_in_registers": 48,
+    "register_amendments": 9,
+    "withdrawn_incidents": {
+      "INC-2031-047": "RA-2032-03"
+    },
+    "correction_notices": 8,
+    "incidents_after_withdrawal": 47,
+    "selected_s1_s2": 26
+  },
   "corrections_applied": [
     {
+      "layer": "register_amendment",
+      "amendment": "RA-2032-01",
+      "incident_id": "INC-2031-009",
+      "field": "severity",
+      "from": "S3",
+      "to": "S2"
+    },
+    {
+      "layer": "register_amendment",
+      "amendment": "RA-2032-02",
+      "incident_id": "INC-2031-025",
+      "field": "root_cause_code",
+      "from": "RC-NET",
+      "to": "RC-CAP"
+    },
+    {
+      "layer": "register_amendment",
+      "amendment": "RA-2032-03",
+      "incident_id": "INC-2031-047",
+      "field": "withdrawn",
+      "effect": "incident removed from the reporting year"
+    },
+    {
+      "layer": "register_amendment",
+      "amendment": "RA-2032-04",
+      "incident_id": "INC-2031-024",
+      "field": "severity",
+      "from": "S2",
+      "to": "S4"
+    },
+    {
+      "layer": "register_amendment",
+      "amendment": "RA-2032-05",
+      "incident_id": "INC-2031-017",
+      "field": "severity",
+      "from": "S4",
+      "to": "S1"
+    },
+    {
+      "layer": "register_amendment",
+      "amendment": "RA-2032-06",
+      "incident_id": "INC-2031-020",
+      "field": "duration_minutes",
+      "from": "88",
+      "to": "135"
+    },
+    {
+      "layer": "register_amendment",
+      "amendment": "RA-2032-07",
+      "incident_id": "INC-2031-021",
+      "field": "severity",
+      "from": "S3",
+      "to": "S2"
+    },
+    {
+      "layer": "register_amendment",
+      "amendment": "RA-2032-08",
+      "incident_id": "INC-2031-028",
+      "field": "customer_impacting",
+      "from": "yes",
+      "to": "no"
+    },
+    {
+      "layer": "register_amendment",
+      "amendment": "RA-2032-09",
+      "incident_id": "INC-2031-031",
+      "field": "severity",
+      "from": "S4",
+      "to": "S1"
+    },
+    {
+      "layer": "correction_notice",
       "notice": "CN-003",
       "incident_id": "INC-2031-003",
       "field": "customer_impacting",
@@ -12,27 +100,39 @@
       "to": "no"
     },
     {
+      "layer": "correction_notice",
+      "notice": "CN-008",
+      "incident_id": "INC-2031-008",
+      "field": "customer_impacting",
+      "from": "yes",
+      "to": "no"
+    },
+    {
+      "layer": "correction_notice",
       "notice": "CN-010",
       "incident_id": "INC-2031-010",
-      "field": "final_severity",
+      "field": "severity",
       "from": "S4",
       "to": "S1"
     },
     {
-      "notice": "CN-015",
-      "incident_id": "INC-2031-015",
-      "field": "customer_impacting",
-      "from": "no",
-      "to": "yes"
-    },
-    {
+      "layer": "correction_notice",
       "notice": "CN-021",
       "incident_id": "INC-2031-021",
-      "field": "final_severity",
-      "from": "S3",
+      "field": "severity",
+      "from": "S2",
       "to": "S4"
     },
     {
+      "layer": "correction_notice",
+      "notice": "CN-024",
+      "incident_id": "INC-2031-024",
+      "field": "severity",
+      "from": "S4",
+      "to": "S2"
+    },
+    {
+      "layer": "correction_notice",
       "notice": "CN-028",
       "incident_id": "INC-2031-028",
       "field": "root_cause_code",
@@ -40,25 +140,20 @@
       "to": "RC-SW"
     },
     {
+      "layer": "correction_notice",
       "notice": "CN-034",
       "incident_id": "INC-2031-034",
-      "field": "final_severity",
+      "field": "severity",
       "from": "S2",
       "to": "S3"
     },
     {
+      "layer": "correction_notice",
       "notice": "CN-041",
       "incident_id": "INC-2031-041",
-      "field": "final_severity",
+      "field": "severity",
       "from": "S4",
       "to": "S1"
-    },
-    {
-      "notice": "CN-046",
-      "incident_id": "INC-2031-046",
-      "field": "duration_minutes",
-      "from": "88",
-      "to": "115"
     }
   ],
   "incidents": [
@@ -96,6 +191,15 @@
       "duration_minutes": 118,
       "final_severity": "S2",
       "root_cause_code": "RC-CFG",
+      "customer_impacting": false
+    },
+    {
+      "incident_id": "INC-2031-009",
+      "service": "kestrel-search",
+      "start_utc": "2031-02-22T16:05:00Z",
+      "duration_minutes": 34,
+      "final_severity": "S2",
+      "root_cause_code": "RC-NET",
       "customer_impacting": true
     },
     {
@@ -135,6 +239,15 @@
       "customer_impacting": true
     },
     {
+      "incident_id": "INC-2031-017",
+      "service": "kestrel-search",
+      "start_utc": "2031-04-15T02:05:00Z",
+      "duration_minutes": 301,
+      "final_severity": "S1",
+      "root_cause_code": "RC-CAP",
+      "customer_impacting": true
+    },
+    {
       "incident_id": "INC-2031-019",
       "service": "kestrel-mailer",
       "start_utc": "2031-03-16T06:00:00Z",
@@ -147,7 +260,7 @@
       "incident_id": "INC-2031-020",
       "service": "kestrel-gateway",
       "start_utc": "2031-09-21T17:05:00Z",
-      "duration_minutes": 88,
+      "duration_minutes": 135,
       "final_severity": "S2",
       "root_cause_code": "RC-SW",
       "customer_impacting": false
@@ -176,7 +289,7 @@
       "start_utc": "2031-03-24T21:30:00Z",
       "duration_minutes": 29,
       "final_severity": "S1",
-      "root_cause_code": "RC-NET",
+      "root_cause_code": "RC-CAP",
       "customer_impacting": false
     },
     {
@@ -195,7 +308,7 @@
       "duration_minutes": 134,
       "final_severity": "S2",
       "root_cause_code": "RC-SW",
-      "customer_impacting": true
+      "customer_impacting": false
     },
     {
       "incident_id": "INC-2031-029",
@@ -204,6 +317,15 @@
       "duration_minutes": 143,
       "final_severity": "S1",
       "root_cause_code": "RC-HUM",
+      "customer_impacting": true
+    },
+    {
+      "incident_id": "INC-2031-031",
+      "service": "kestrel-search",
+      "start_utc": "2031-11-10T08:00:00Z",
+      "duration_minutes": 167,
+      "final_severity": "S1",
+      "root_cause_code": "RC-NET",
       "customer_impacting": true
     },
     {
@@ -261,15 +383,6 @@
       "customer_impacting": true
     },
     {
-      "incident_id": "INC-2031-047",
-      "service": "kestrel-search",
-      "start_utc": "2031-03-11T19:47:00Z",
-      "duration_minutes": 44,
-      "final_severity": "S2",
-      "root_cause_code": "RC-HUM",
-      "customer_impacting": true
-    },
-    {
       "incident_id": "INC-2031-048",
       "service": "kestrel-search",
       "start_utc": "2031-07-16T13:07:00Z",
@@ -279,5 +392,5 @@
       "customer_impacting": true
     }
   ],
-  "count": 24
+  "count": 26
 }

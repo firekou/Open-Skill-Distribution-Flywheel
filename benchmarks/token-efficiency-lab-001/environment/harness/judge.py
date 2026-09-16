@@ -2,18 +2,28 @@
 """ATK Token Efficiency Lab 001 — blind Quality Judge scorer.
 
 Deterministic, offline, standard-library only.  Implements
-`tasks/TASK_SET_v1.0.0/SCORING_SPEC.md`, which is the normative document; this
-module is its executable form.  Where the two disagree, the spec is the defect
-report and this module is the bug.
+`tasks/TASK_SET_v1.1.0/SCORING_SPEC.md` for a packet that declares methodology
+v1.1.0, and `tasks/TASK_SET_v1.0.0/SCORING_SPEC.md`, unchanged, for the replay
+of a v1.0.0 record.  Those documents are normative; this module is their
+executable form, and where they disagree with it the spec states the intent
+and this module has the bug.  Where either spec disagrees with a frozen task
+file, the task file wins.
+
+A packet whose methodology version is absent or unrecognised is REFUSED, never
+scored under a guess (methodology v1.1.0 section 13).
+
+Every result is ATTEMPT-LEVEL (section 6.1).  No cell success rate is computed
+here and no cell threshold - D's 95% included - is applied here.
 
 Contract
 --------
     score_packet(packet: dict) -> dict
 
-`packet` is a **blind judge packet** carrying exactly these nine keys:
+`packet` is a **blind judge packet** carrying exactly these ten keys:
 
     packet_id, task_id, workload, blind_treatment_id, model_output,
-    required_evidence, answer_key, quality_metric, failure_condition
+    required_evidence, answer_key, quality_metric, failure_condition,
+    methodology_version
 
 Anything else in the mapping is ignored: `_view()` copies the nine allowed keys
 into a fresh dict and every scorer reads only from that copy, so a packet that
@@ -32,8 +42,16 @@ Guarantees
 * Fail-closed: a zero-tolerance criterion that cannot be *verified* from the
   packet fails the task.  An unverifiable zero-tolerance criterion never passes.
 
-Zero tolerance (methodology v1.0.0 section 6)
----------------------------------------------
+Outcome (methodology v1.1.0 section 6.2)
+---------------------------------------
+Exactly three values, never two: `PASS`, `FAIL_QUALITY`, `INVALID`.  Missing,
+empty, wrongly typed or wrong-run evidence is `INVALID` - not a pass and not a
+quality failure.  "It failed" and "we could not measure it" are different
+findings.  An `INVALID` attempt carries `quality_score = 0.0`; the number that
+had been computed is kept in `detail.unverified_quality_score`.
+
+Zero tolerance (methodology section 6)
+--------------------------------------
 A zero-tolerance breach sets `task_success=false` and
 `zero_tolerance_breached=true` **regardless of `quality_score`**.  The score is
 still reported, deliberately: a fabrication on an otherwise excellent answer

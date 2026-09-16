@@ -78,9 +78,11 @@ class JudgePacket:
     answer_key: dict
     quality_metric: str
     failure_condition: str
+    methodology_version: str = "1.1.0"
 
     def to_dict(self) -> dict:
         return {
+            "methodology_version": self.methodology_version,
             "packet_id": self.packet_id,
             "task_id": self.task_id,
             "workload": self.workload,
@@ -278,6 +280,7 @@ def build_packet(
     mapping: BlindMapping,
     candidate_names: list[str],
     required_evidence: dict | None = None,
+    methodology_version: str | None = None,
 ) -> JudgePacket:
     label = mapping.label(run_record["condition"])
     evidence = required_evidence if required_evidence is not None else task.get("required_evidence")
@@ -294,6 +297,13 @@ def build_packet(
         answer_key=answer_key,
         quality_metric=task["quality_metric"],
         failure_condition=task["failure_condition"],
+        # v1.1.0 section 13: the scorer refuses a packet whose version it cannot resolve rather
+        # than scoring it under a guess. Silent cross-version scoring is how a v1.0.0 relative
+        # floor would survive into a v1.1.0 result.
+        methodology_version=(methodology_version
+                             or run_record.get("methodology_version")
+                             or task.get("methodology_version")
+                             or "1.1.0"),
     )
     assert_blind(packet.to_dict(), candidate_names)
     return packet
