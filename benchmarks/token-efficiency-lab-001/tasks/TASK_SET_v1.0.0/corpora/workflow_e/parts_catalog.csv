@@ -1,0 +1,25 @@
+part_id,description,vendor,unit_price_eur,lead_time_days,uom,rohs
+KP-1010,Rack rail kit 800mm,Halberd Manufacturing,64.50,21,each,yes
+KP-1044,Rack rail kit 1000mm,Calderon Metalworks,71.25,28,each,yes
+KP-1188,Support uplift annual,Meridian Services,4020.00,0,each,n/a
+KP-1202,Blanking panel 1U,Halberd Manufacturing,11.40,14,each,yes
+KP-1260,Blanking panel 2U,Calderon Metalworks,17.85,14,each,yes
+KP-1315,Cable manager horizontal,Tessellate Supply,38.90,10,each,yes
+KP-1402,PDU 16A single phase,Northwall Power,412.00,35,each,yes
+KP-1455,PDU 32A three phase,Northwall Power,988.75,42,each,yes
+KP-1520,SFP28 transceiver 25G SR,Pellworm Optics,146.00,18,each,yes
+KP-1533,SFP28 transceiver 25G LR,Pellworm Optics,289.50,25,each,yes
+KP-1601,QSFP56 transceiver 200G SR,Pellworm Optics,742.00,40,each,yes
+KP-1688,Patch cable LC-LC 3m,Tessellate Supply,9.75,7,each,yes
+KP-1702,Patch cable LC-LC 10m,Tessellate Supply,14.20,7,each,yes
+KP-1810,Top of rack switch 32x100G,Ardent Networks,17450.00,56,each,yes
+KP-1844,Top of rack switch 48x25G,Ardent Networks,11280.00,49,each,yes
+KP-1905,Management switch 24x1G,Ardent Networks,2140.00,30,each,yes
+KP-2011,Edge appliance 1U,Halberd Manufacturing,5400.00,45,each,yes
+KP-4410,Edge appliance 2U,Halberd Manufacturing,7200.00,45,each,yes
+KP-4477,Edge appliance 2U low power,Calderon Metalworks,7815.00,52,each,yes
+KP-5102,NVMe drive 3.84TB,Stannary Storage,588.00,21,each,yes
+KP-5140,NVMe drive 7.68TB,Stannary Storage,1102.50,21,each,yes
+KP-5205,DDR5 module 64GB,Stannary Storage,394.75,26,each,yes
+KP-6001,Install labour day rate,Meridian Services,880.00,0,day,n/a
+KP-6042,Commissioning test pack,Meridian Services,1450.00,0,each,n/a

@@ -119,5 +119,9 @@ Stated because a protocol whose limits are unstated gets over-trusted.
   `Treatment B` are guessable at 50% by chance alone.
 - **The judge is one seat.** Blinding controls for identity bias, not for a judge who is simply
   wrong. The Red Team reviews the scoring spec; it does not re-score.
+- **Name scrubbing is substring matching, and deliberately so.** `rtk` inside an unrelated word
+  would fail a packet that never leaked anything. That is the right failure direction: a false
+  positive costs one re-run, a false negative costs the blind. Verified behaviour, not an
+  oversight.
 - **It does not address the conflict of interest itself,** only one channel of it. A favourable
   result for `rtk` or `headroom` still requires independent reproduction before publication.
