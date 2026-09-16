@@ -1,0 +1,18 @@
+# Without this, a build from a working tree picks up whatever caches happen to be lying around
+# and produces a different digest than a build from a clean `git archive` checkout - which would
+# make "the image reproduces" depend on whether someone ran the tests first. Found by the
+# Reproduction Agent, whose working-tree build differed from its clean-checkout build by four
+# stray __pycache__ files.
+#
+# The `**/` prefixes are load-bearing. Docker ignore patterns match against paths relative to
+# the context ROOT, so a bare `__pycache__/` matches only a top-level one and silently misses
+# `harness/__pycache__/`. Measured: without `**/`, a contaminated tree still produced a
+# different digest (2226698c...) than a clean one (5a302f2f...).
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/*.egg-info/
+**/.DS_Store

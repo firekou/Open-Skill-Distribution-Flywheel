@@ -93,8 +93,15 @@ def write_raw_evidence(run_id: str, payload: dict, evidence_root: pathlib.Path) 
     raw.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     manifest = {
         "run_id": run_id,
+        # Volatile metadata belongs here, NOT inside a hashed file. MANIFEST.json is not itself
+        # hashed, so a timestamp here does not make the evidence hash unreproducible.
         "written_at": datetime.now(timezone.utc).isoformat(),
         "files": {"raw.json": sha256_file(raw)},
+        "note": (
+            "Every hash below is over content only. Two runs of the same task from the same "
+            "frozen inputs must produce the same hashes; if they do not, the evidence differs, "
+            "not the clock."
+        ),
     }
     (run_dir / "MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n")
     return str(run_dir)

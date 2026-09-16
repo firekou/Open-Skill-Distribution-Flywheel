@@ -239,6 +239,19 @@
         "string",
         "null"
       ]
+    },
+    "image_content_sha256": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Computed INSIDE the running container over the harness and fixed payload. Unlike container_digest, which is an operator-supplied string, this cannot be forged by a command-line flag."
+    },
+    "dependency_manifest_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "additionalProperties": false,

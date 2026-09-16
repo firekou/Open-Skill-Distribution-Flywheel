@@ -1,8 +1,8 @@
 {
   "lab": "token-efficiency-lab-001",
   "methodology_version": "1.0.0",
-  "container_digest": "sha256:6edd71a6adff7eab4fca99b9b8fb2e9298c62256f5587ee9109cf02047811261",
-  "ran_at": "2026-09-16T10:00:15.596627+00:00",
+  "container_digest": "sha256:5a302f2f24b817adb7f42343c8206132c8392d99bf534bebb375a327c876885c",
+  "ran_at": "2026-09-16T10:57:03.002500+00:00",
   "python": "3.11.15",
   "checks": [
     {
@@ -15,12 +15,12 @@
       "check": "2_dependency_lock_installs",
       "pass": true,
       "detail": "16 locked distributions all installed at the locked version",
-      "ms": 482
+      "ms": 438
     },
     {
       "check": "3_container_digest_available",
       "pass": true,
-      "detail": "sha256:6edd71a6adff7eab4fca99b9b8fb2e9298c62256f5587ee9109cf02047811261",
+      "detail": "sha256:5a302f2f24b817adb7f42343c8206132c8392d99bf534bebb375a327c876885c",
       "ms": 0
     },
     {
@@ -38,14 +38,14 @@
     {
       "check": "6_task_data_mountable",
       "pass": true,
-      "detail": "1 files, 50 bytes, mount is read-only as required",
-      "ms": 0
+      "detail": "183 files, 1413696 bytes, mount is read-only as required",
+      "ms": 2
     },
     {
       "check": "7_run_record_schema_writable",
       "pass": true,
       "detail": "record written to /lab/evidence/selfcheck_records/selfcheck-0001.json and an invalid record was correctly rejected",
-      "ms": 36
+      "ms": 44
     },
     {
       "check": "8_raw_evidence_preserved",

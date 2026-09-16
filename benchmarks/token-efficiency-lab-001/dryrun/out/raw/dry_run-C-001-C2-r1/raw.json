@@ -75,6 +75,5 @@
   "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=C-001 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=C-001 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=C-001 turn=2. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=C-001 turn=3. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
   "run_class": "dry_run",
   "run_id": "dry_run-C-001-C2-r1",
-  "task_id": "C-001",
-  "written_at": "2026-09-16T10:38:12.392284+00:00"
+  "task_id": "C-001"
 }

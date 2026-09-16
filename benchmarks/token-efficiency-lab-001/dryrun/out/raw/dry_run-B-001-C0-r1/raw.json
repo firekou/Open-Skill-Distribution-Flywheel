@@ -24,6 +24,5 @@
   "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=B-001 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
   "run_class": "dry_run",
   "run_id": "dry_run-B-001-C0-r1",
-  "task_id": "B-001",
-  "written_at": "2026-09-16T10:38:12.368606+00:00"
+  "task_id": "B-001"
 }

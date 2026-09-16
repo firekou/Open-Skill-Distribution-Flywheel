@@ -2,7 +2,7 @@
   "packet_id": "e062b690198ae992",
   "task_id": "A-002",
   "workload": "A",
-  "blind_treatment_id": "Treatment F",
+  "blind_treatment_id": "Treatment J",
   "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=A-002 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=A-002 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=A-002 turn=2. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
   "required_evidence": [],
   "answer_key": {

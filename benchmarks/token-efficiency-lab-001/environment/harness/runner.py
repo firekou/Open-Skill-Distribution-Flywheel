@@ -17,6 +17,7 @@ import sys
 import time
 from datetime import datetime, timezone
 
+from .attest import dependency_manifest_hash, image_content_hash
 from .blind import BlindMapping, build_packet
 from .meter import TokenMeter
 from .pricing import PricingSnapshot
@@ -127,7 +128,12 @@ def run_one(
             "calls": raw_calls,
             "model_output": model_output,
             "cross_provider_warning": warning,
-            "written_at": datetime.now(timezone.utc).isoformat(),
+            # NOTE: no timestamp here, deliberately. `written_at` lives in MANIFEST.json, which
+            # is not itself hashed. Putting it inside raw.json and then hashing raw.json made the
+            # evidence hash differ on every run by construction, so the manifest could detect
+            # tampering within a run but could never answer "is this the same evidence as the
+            # original" - which is the one question a reproduction needs it to answer.
+            # Found by the Reproduction Agent (WOULD-INVALIDATE 6).
         },
         evidence_root,
     )
@@ -159,7 +165,12 @@ def run_one(
         "quality_score": 0.0,
         "quality_judged_before_cost": True,
         "environment_id": environment_id,
+        # Operator-supplied. Recorded because a verifier needs it to pull the image, but it is
+        # an assertion, not a measurement - see harness/attest.py.
         "container_digest": container_digest,
+        # Self-derived inside the running container. A flag cannot forge these.
+        "image_content_sha256": image_content_hash(),
+        "dependency_manifest_sha256": dependency_manifest_hash(),
         "prompt_hash": sha256_text(json.dumps(task["input"], sort_keys=True)),
         "config_hash": sha256_text(f"{condition}|{snapshot.snapshot_id}|{task_set_hash}"),
         "task_version": "1.0.0",

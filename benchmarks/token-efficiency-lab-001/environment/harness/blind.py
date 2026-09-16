@@ -53,6 +53,13 @@ FORBIDDEN_KEYS = frozenset(
 
 LABELS = list(string.ascii_uppercase)
 
+# Every condition the frozen 100-run allocation can produce (methodology v1.0.0 section 5),
+# plus the two guardrail run kinds. Labels are assigned over THIS list, never over whatever
+# happens to be in the batch at hand - see BlindMapping.assign.
+CANONICAL_CONDITIONS = (
+    "C0", "C1", "C2", "C3", "C4", "C5", "C2+C4", "C3+C4", "CALIB", "CACHE",
+)
+
 
 class BlindError(RuntimeError):
     pass
@@ -105,10 +112,30 @@ class BlindMapping:
         return hashlib.sha256(f"{salt}|{condition}".encode()).hexdigest()
 
     def assign(self, conditions: list[str]) -> dict[str, str]:
-        unique = sorted(set(conditions))
-        if len(unique) > len(LABELS):
-            raise BlindError(f"cannot blind {len(unique)} conditions with {len(LABELS)} labels")
-        ordered = sorted(unique, key=lambda c: self._digest(self._salt, c))
+        """Assign labels over the CANONICAL condition set, not over this batch.
+
+        Labelling only the conditions present in a batch makes a label batch-scoped: the
+        Reproduction Agent measured `C0 = Treatment B` in the full 10-run plan and
+        `C0 = Treatment A` in a 2-run subset **with the same salt**. A partial reproduction —
+        which is the whole point of the Reproduction seat, since it repeats the strongest
+        results rather than everything — would then disagree on `blind_treatment_id` while
+        being entirely correct, and the disagreement would look like an invalidation.
+
+        Labelling the canonical set makes a label a property of (salt, condition) alone, exactly
+        as BLIND_EVALUATION_PROTOCOL.md says it is. Unused labels simply never appear.
+        """
+        unknown = sorted(set(conditions) - set(CANONICAL_CONDITIONS))
+        if unknown:
+            raise BlindError(
+                f"condition(s) {unknown} are not in the canonical set. The 100-run allocation is "
+                "frozen (methodology v1.0.0 section 5); a new condition is a methodology change, "
+                "not a runner argument."
+            )
+        if len(CANONICAL_CONDITIONS) > len(LABELS):
+            raise BlindError(
+                f"cannot blind {len(CANONICAL_CONDITIONS)} conditions with {len(LABELS)} labels"
+            )
+        ordered = sorted(CANONICAL_CONDITIONS, key=lambda c: self._digest(self._salt, c))
         self._label_of = {c: f"Treatment {LABELS[i]}" for i, c in enumerate(ordered)}
         return dict(self._label_of)
 
