@@ -8,7 +8,7 @@
 | **Drafted** | 2026-09-16 |
 | **Drafting seat** | `methodology-reviewer` |
 | **Source commit** | `a8ca352dc64e792864f351f7775e2b21681b6390` |
-| **Methodology SHA-256** | `f4327ca9ce7b61c88fd84c54e3eb3f91a564d986b38c567c8c58311e4a9c3436` |
+| **Methodology SHA-256** | `f4e5b65e204dd0a31cc3d04a639d5542c7aa49523d374da5f51bc0330e490774` |
 | **Meter calibration SHA-256** | `726d193b8e24cc4825c151e41bef09dd0027988efce33bfa069bcafc71298113` |
 | **Independent sign-off** | **NONE. Pending.** |
 | **Freeze commit SHA** | **not assigned — nothing has been frozen** |
@@ -57,9 +57,25 @@ cd benchmarks/token-efficiency-lab-001/methodology
 sha256sum METHODOLOGY_v1.0.0.md METHODOLOGY_v1.1.0.md \
           METER_CALIBRATION_v1.0.0.md METER_CALIBRATION_v1.1.0.md
 # v1.0.0  c1810b0481d1442937771c124c7c30668490470f00dcf71098bdf139ee7089bc
-# v1.1.0  f4327ca9ce7b61c88fd84c54e3eb3f91a564d986b38c567c8c58311e4a9c3436
+# v1.1.0  f4e5b65e204dd0a31cc3d04a639d5542c7aa49523d374da5f51bc0330e490774
 ```
 
 Any mismatch on a v1.0.0 line means the frozen document was altered and every run under it is
 void. A mismatch on a v1.1.0 line means the draft moved after this record was written, which
 invalidates any review already performed against it.
+
+## Drafting amendments
+
+This draft was amended three times while being drafted, each from a source read during the round,
+each recorded in `METHODOLOGY_LOCK_v1.1.0.json`:
+
+| Clause | Amendment | Source |
+|---|---|---|
+| **12.0.1** | The token-comparability bar extended to apply **within** a provider, after Anthropic's docs were found to state that Claude 4.7 and later use a tokenizer producing ~30% more tokens for the same text | `docs.claude.com/en/docs/about-claude/pricing` |
+| **12.0.2** | Token inclusion declared per provider. The harness previously encoded the OpenAI/DeepSeek convention as arithmetic and would have raised or mispriced **every cache-heavy Anthropic attempt** — 21% of the vendor's own example call | same |
+| **8** | Recorded that the C4 tier-adjacent pairs were reasoned about against an OpenAI lineup that has since moved; choosing the pairs is open decision **C-a** | `PRICING_SNAPSHOT_PS-2026-09-16.json` |
+
+A draft is amended in place while it is a draft — that is what a draft is for, and hiding the
+amendments would make the review harder rather than cleaner. **Once signed off, any further change
+requires a new version file.** Any review performed against the earlier hash
+`f4327ca9…` must be redone.

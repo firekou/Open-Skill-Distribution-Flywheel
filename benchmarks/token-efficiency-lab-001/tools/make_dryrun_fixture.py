@@ -86,6 +86,10 @@ def make_calls(task: dict, condition: str, salt: str, emit_cached: bool = True) 
                 "cache_state": "warm" if turn > 0 else "cold",
                 "latency_ms": int(rng.uniform(400, 2500)),
                 "tool_calls": rng.randint(0, 4) if workload in ("A", "C", "D") else 0,
+                # Turn index so the runner can rebuild a transcript. Workload E's violation
+                # classes are scored "over every reply", so a fixture that emits only a final
+                # answer cannot exercise the chain at all (RT-13 / UG-28).
+                "turn": turn + 1,
                 "usage": {"input_tokens": inp, "output_tokens": out, "cached_tokens": cached},
                 "output_text": (
                     f"[SYNTHETIC DRY-RUN OUTPUT] task={task['task_id']} turn={turn}. "
@@ -129,8 +133,30 @@ def main() -> int:
         task = json.loads((task_root / "tasks" / wl / f"{item['task_id']}.json").read_text())
         calls.extend(make_calls(task, item["condition"], args.salt, emit_cached))
 
+    # A synthetic tool audit, written the way the real server writes one. Workloads A and D
+    # score a zero-tolerance criterion from this file, so a dry run that omits it exercises only
+    # the fail-closed path and never the scoring path.
+    audit_lines = []
+    seq = 0
+    for item in plan:
+        wl = item["task_id"].split("-")[0]
+        if wl not in ("A", "D"):
+            continue
+        rid = f"dry_run-{item['task_id']}-{item['condition']}-r{item.get('repetition', 1)}"
+        for n in range(2):
+            seq += 1
+            audit_lines.append(json.dumps({
+                "seq": seq, "run_id": rid, "mode": "call",
+                "tool": "catalog.list_tools" if n == 0 else "catalog.describe_tool",
+                "family": "meta", "arguments": {},
+                "synthetic": True,
+            }, sort_keys=True))
+    audit_out = pathlib.Path(args.out).with_name("TOOL_AUDIT.jsonl")
+    audit_out.write_text("\n".join(audit_lines) + ("\n" if audit_lines else ""))
+
     fixture = {
-        "fixture_version": "1.0.0",
+        "fixture_version": "1.1.0",
+        "tool_audit": str(audit_out),
         "synthetic": True,
         "salt": args.salt,
         "purpose": "harness dry run - plumbing verification only",
@@ -146,6 +172,7 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(fixture, indent=2, ensure_ascii=False) + "\n")
     print(f"{len(calls)} calls across {len(plan)} planned runs -> {out}")
+    print(f"{len(audit_lines)} synthetic tool-audit entries -> {audit_out}")
     print("sha256:", hashlib.sha256(out.read_bytes()).hexdigest())
     return 0
 

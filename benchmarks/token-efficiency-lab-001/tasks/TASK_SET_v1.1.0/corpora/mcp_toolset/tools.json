@@ -1,1809 +1,1828 @@
 {
-  "toolset_version": "1.0.0",
-  "tool_count": 84,
-  "tools": [
-    {
-      "name": "catalog.list_tools",
-      "server": "catalog",
-      "family": "meta",
-      "description": "Enumerate every tool exposed by every connected server, with its server, family and one-line summary. Reading the catalogue is a discovery operation, not a data operation.\n\nReturns: An array of {name, server, family, summary} objects.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "server": {
-            "type": "string",
-            "description": "Restrict the listing to a single server name."
-          },
-          "family": {
-            "type": "string",
-            "description": "Restrict the listing to a single tool family."
-          }
-        },
-        "required": [],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "catalog.describe_tool",
-      "server": "catalog",
-      "family": "meta",
-      "description": "Return the full schema and long description of one tool, including the caveats that distinguish it from its siblings in the same family.\n\nReturns: A single tool descriptor object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Fully qualified tool name, for example 'rota.get_effective_oncall'."
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "catalog.search_tools",
-      "server": "catalog",
-      "family": "meta",
-      "description": "Free-text search across tool names, summaries and descriptions. Returns ranked candidates; it does not choose for you.\n\nReturns: A ranked array of tool descriptors.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Free-text query."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum candidates to return (default 10)."
-          }
-        },
-        "required": [
-          "query"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "rota.list_shifts",
-      "server": "rota",
-      "family": "oncall-resolution",
-      "description": "List the shifts published in the rotation template for a service and window. The template is authored weeks in advance and is NOT updated when a shift is swapped, overridden or covered; it shows who was originally scheduled.\n\nReturns: An array of template shift rows.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "description": "Service identifier, for example 'kestrel-billing'."
-          },
-          "from_utc": {
-            "type": "string",
-            "description": "Inclusive window start, RFC 3339 UTC."
-          },
-          "to_utc": {
-            "type": "string",
-            "description": "Exclusive window end, RFC 3339 UTC."
-          }
-        },
-        "required": [
-          "service",
-          "from_utc",
-          "to_utc"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "rota.get_nominal_shift",
-      "server": "rota",
-      "family": "oncall-resolution",
-      "description": "Return the single template shift covering an instant. Reflects the published rotation only; approved overrides, swaps and escalation-policy failovers are not applied.\n\nReturns: One template shift row.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "description": "Service identifier."
-          },
-          "at_utc": {
-            "type": "string",
-            "description": "Instant to look up, RFC 3339 UTC."
-          }
-        },
-        "required": [
-          "service",
-          "at_utc"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "rota.get_effective_oncall",
-      "server": "rota",
-      "family": "oncall-resolution",
-      "description": "Return who was actually on call for a service at an instant, after applying every approved override, swap and coverage record on top of the published rotation. This is the resolved answer, not the template.\n\nReturns: An object with handle, role, escalation_tier, source_of_truth and the override chain that was applied.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "description": "Service identifier."
-          },
-          "at_utc": {
-            "type": "string",
-            "description": "Instant to resolve, RFC 3339 UTC."
-          },
-          "role": {
-            "type": "string",
-            "description": "'primary' (default) or 'secondary'."
-          }
-        },
-        "required": [
-          "service",
-          "at_utc"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "rota.search_rota",
-      "server": "rota",
-      "family": "oncall-resolution",
-      "description": "Free-text search over rotation names and shift comments. Matches text, not time; it cannot tell you who is on call.\n\nReturns: An array of matching rotation rows.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Free-text query."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum rows."
-          }
-        },
-        "required": [
-          "query"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "rota.get_escalation_policy",
-      "server": "rota",
-      "family": "rota-policy",
-      "description": "Return the escalation policy attached to a service: the ordered tiers and the wait before each hop.\n\nReturns: An escalation policy object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "description": "Service identifier."
-          }
-        },
-        "required": [
-          "service"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "rota.get_handover_notes",
-      "server": "rota",
-      "family": "rota-policy",
-      "description": "Return free-text handover notes written at the end of a shift.\n\nReturns: An array of notes.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "description": "Service identifier."
-          },
-          "date": {
-            "type": "string",
-            "description": "Calendar date, YYYY-MM-DD."
-          }
-        },
-        "required": [
-          "service",
-          "date"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "rota.list_rotations",
-      "server": "rota",
-      "family": "rota-policy",
-      "description": "List every rotation configured for a service, including retired ones.\n\nReturns: An array of rotation descriptors.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "description": "Service identifier."
-          }
-        },
-        "required": [
-          "service"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "directory.get_person_by_handle",
-      "server": "directory",
-      "family": "person-resolution",
-      "description": "Resolve a chat handle to exactly one current person record: legal name, team, location and employment status. Handles are unique and never reassigned.\n\nReturns: One person record.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "handle": {
-            "type": "string",
-            "description": "Chat handle without the leading '@'."
-          }
-        },
-        "required": [
-          "handle"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "directory.search_people",
-      "server": "directory",
-      "family": "person-resolution",
-      "description": "Fuzzy search over names, handles and aliases. Returns every match including former staff and duplicate records created by past migrations; ranking is by string similarity only.\n\nReturns: An array of candidate person records.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Free-text name or handle fragment."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum results."
-          }
-        },
-        "required": [
-          "query"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "directory.lookup_person",
-      "server": "directory",
-      "family": "person-resolution",
-      "description": "Look up a person by internal numeric person_id. Returns the record as it stood at the last directory sync, which may lag the live system by up to 24 hours.\n\nReturns: One person record from the last sync.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "person_id": {
-            "type": "integer",
-            "description": "Internal numeric person identifier."
-          }
-        },
-        "required": [
-          "person_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "directory.get_person_by_email",
-      "server": "directory",
-      "family": "person-resolution",
-      "description": "Resolve a corporate email address to a person record. Aliases and forwarding addresses are not resolved.\n\nReturns: One person record.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Corporate email address."
-          }
-        },
-        "required": [
-          "email"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "directory.get_team",
-      "server": "directory",
-      "family": "org",
-      "description": "Return a team record: name, cost centre, parent team and the handle of its manager.\n\nReturns: One team record.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "team_id": {
-            "type": "string",
-            "description": "Team identifier."
-          }
-        },
-        "required": [
-          "team_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "directory.list_team_members",
-      "server": "directory",
-      "family": "org",
-      "description": "List the members of a team.\n\nReturns: An array of person records.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "team_id": {
-            "type": "string",
-            "description": "Team identifier."
-          },
-          "include_former": {
-            "type": "boolean",
-            "description": "Include former members (default false)."
-          }
-        },
-        "required": [
-          "team_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "directory.get_manager_chain",
-      "server": "directory",
-      "family": "org",
-      "description": "Return the management chain above a person, root last.\n\nReturns: An ordered array of person records.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "handle": {
-            "type": "string",
-            "description": "Chat handle."
-          }
-        },
-        "required": [
-          "handle"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "directory.get_contact_methods",
-      "server": "directory",
-      "family": "org",
-      "description": "Return the contact methods registered for a person.\n\nReturns: An array of contact-method objects.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "handle": {
-            "type": "string",
-            "description": "Chat handle."
-          }
-        },
-        "required": [
-          "handle"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "registry.get_tag_digest",
-      "server": "registry",
-      "family": "image-digest-resolution",
-      "description": "Return the image digest that a tag pointed to **at the moment the tag was first published**. This value is recorded once at publish time and is never rewritten, so it is stale for any tag that has since been moved to a newer build.\n\nReturns: An object with repository, tag, digest and published_at.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "repository": {
-            "type": "string",
-            "description": "Repository path, for example 'apps/kestrel-gateway'."
-          },
-          "tag": {
-            "type": "string",
-            "description": "Tag name."
-          }
-        },
-        "required": [
-          "repository",
-          "tag"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "registry.resolve_digest_pinned",
-      "server": "registry",
-      "family": "image-digest-resolution",
-      "description": "Resolve a tag to the digest it points to **right now**, following any tag moves. This is the digest that will be pulled today.\n\nReturns: An object with repository, tag, digest, resolved_at and whether the tag has been moved since publication.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "repository": {
-            "type": "string",
-            "description": "Repository path."
-          },
-          "tag": {
-            "type": "string",
-            "description": "Tag name."
-          }
-        },
-        "required": [
-          "repository",
-          "tag"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "registry.search_images",
-      "server": "registry",
-      "family": "image-digest-resolution",
-      "description": "Free-text search over repository names and image labels. Returns repositories, not digests.\n\nReturns: An array of repository descriptors.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Free-text query."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum results."
-          }
-        },
-        "required": [
-          "query"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "registry.list_tags",
-      "server": "registry",
-      "family": "image-catalog",
-      "description": "List every tag in a repository with its last push time.\n\nReturns: An array of tag rows.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "repository": {
-            "type": "string",
-            "description": "Repository path."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum tags."
-          }
-        },
-        "required": [
-          "repository"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "registry.list_repositories",
-      "server": "registry",
-      "family": "image-catalog",
-      "description": "List repositories visible to the caller.\n\nReturns: An array of repository names.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "prefix": {
-            "type": "string",
-            "description": "Restrict to repositories under a path prefix."
-          }
-        },
-        "required": [],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "registry.get_image_manifest",
-      "server": "registry",
-      "family": "image-catalog",
-      "description": "Return the OCI manifest for a digest.\n\nReturns: A manifest object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "repository": {
-            "type": "string",
-            "description": "Repository path."
-          },
-          "digest": {
-            "type": "string",
-            "description": "Image digest."
-          }
-        },
-        "required": [
-          "repository",
-          "digest"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "registry.get_image_sbom",
-      "server": "registry",
-      "family": "image-catalog",
-      "description": "Return the software bill of materials attached to a digest.\n\nReturns: An SBOM summary object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "repository": {
-            "type": "string",
-            "description": "Repository path."
-          },
-          "digest": {
-            "type": "string",
-            "description": "Image digest."
-          }
-        },
-        "required": [
-          "repository",
-          "digest"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "registry.get_repository_policy",
-      "server": "registry",
-      "family": "image-catalog",
-      "description": "Return the retention and signing policy for a repository.\n\nReturns: A policy object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "repository": {
-            "type": "string",
-            "description": "Repository path."
-          }
-        },
-        "required": [
-          "repository"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "vulndb.get_image_findings_by_digest",
-      "server": "vulndb",
-      "family": "vuln-findings",
-      "description": "Return the vulnerability findings for one exact image digest, from the most recent completed scan of that digest. Findings are bound to the digest, so this answer does not change when a tag is moved.\n\nReturns: An object with digest, scan_completed_at and an array of findings.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "digest": {
-            "type": "string",
-            "description": "Image digest, including the algorithm prefix."
-          },
-          "min_severity": {
-            "type": "string",
-            "description": "Lowest severity to include: LOW, MEDIUM, HIGH or CRITICAL."
-          },
-          "status": {
-            "type": "string",
-            "description": "'open' (default), 'fixed' or 'all'."
-          }
-        },
-        "required": [
-          "digest"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "vulndb.get_image_findings_by_tag",
-      "server": "vulndb",
-      "family": "vuln-findings",
-      "description": "Return the findings cached against a tag. The cache is written the first time a tag is scanned and is not invalidated when the tag is moved, so it may describe a digest that the tag no longer points to.\n\nReturns: An object with repository, tag, cached_for_digest and an array of findings.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "repository": {
-            "type": "string",
-            "description": "Repository path."
-          },
-          "tag": {
-            "type": "string",
-            "description": "Tag name."
-          },
-          "min_severity": {
-            "type": "string",
-            "description": "Lowest severity to include."
-          }
-        },
-        "required": [
-          "repository",
-          "tag"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "vulndb.search_advisories",
-      "server": "vulndb",
-      "family": "vuln-findings",
-      "description": "Free-text search of the advisory database. Returns advisories, not the findings for any particular image.\n\nReturns: An array of advisory summaries.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Free-text query."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum results."
-          }
-        },
-        "required": [
-          "query"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "vulndb.get_advisory",
-      "server": "vulndb",
-      "family": "vuln-reference",
-      "description": "Return one advisory by identifier, including CVSS vector and affected ranges.\n\nReturns: An advisory object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "advisory_id": {
-            "type": "string",
-            "description": "Advisory identifier, for example 'KSA-2031-0442'."
-          }
-        },
-        "required": [
-          "advisory_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "vulndb.get_fix_versions",
-      "server": "vulndb",
-      "family": "vuln-reference",
-      "description": "Return the package versions in which an advisory is fixed, per distribution.\n\nReturns: An array of fix rows.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "advisory_id": {
-            "type": "string",
-            "description": "Advisory identifier."
-          }
-        },
-        "required": [
-          "advisory_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "vulndb.get_kev_status",
-      "server": "vulndb",
-      "family": "vuln-reference",
-      "description": "Return whether an advisory is listed as known-exploited.\n\nReturns: A status object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "advisory_id": {
-            "type": "string",
-            "description": "Advisory identifier."
-          }
-        },
-        "required": [
-          "advisory_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "vulndb.list_severities",
-      "server": "vulndb",
-      "family": "vuln-reference",
-      "description": "Return the severity bands used by this database and their CVSS ranges.\n\nReturns: An array of band objects.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {},
-        "required": [],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "fiscal.convert_calendar_to_fiscal",
-      "server": "fiscal",
-      "family": "fiscal-period-resolution",
-      "description": "Convert a calendar date into the company fiscal calendar, returning fiscal year, fiscal quarter and fiscal period. The company fiscal year does not start on 1 January and periods follow a 4-4-5 week pattern, so fiscal quarters do not line up with calendar quarters.\n\nReturns: An object with fiscal_year, fiscal_quarter, fiscal_period and the period start and end dates.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Calendar date, YYYY-MM-DD."
-          },
-          "calendar_id": {
-            "type": "string",
-            "description": "Fiscal calendar identifier (default 'FY-445-DEFAULT')."
-          }
-        },
-        "required": [
-          "date"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "fiscal.get_fiscal_quarter",
-      "server": "fiscal",
-      "family": "fiscal-period-resolution",
-      "description": "Return the fiscal quarter that contains a date, without the period detail.\n\nReturns: An object with fiscal_year and fiscal_quarter.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Calendar date, YYYY-MM-DD."
-          }
-        },
-        "required": [
-          "date"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "fiscal.get_fiscal_year",
-      "server": "fiscal",
-      "family": "fiscal-period-resolution",
-      "description": "Return only the fiscal year containing a date.\n\nReturns: An object with fiscal_year.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Calendar date, YYYY-MM-DD."
-          }
-        },
-        "required": [
-          "date"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "fiscal.list_fiscal_periods",
-      "server": "fiscal",
-      "family": "fiscal-reference",
-      "description": "List every fiscal period in a fiscal year with its start, end and close dates.\n\nReturns: An array of period rows.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "fiscal_year": {
-            "type": "string",
-            "description": "Fiscal year label, for example 'FY2032'."
-          }
-        },
-        "required": [
-          "fiscal_year"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "fiscal.get_period_close_date",
-      "server": "fiscal",
-      "family": "fiscal-reference",
-      "description": "Return the ledger close date for one fiscal period.\n\nReturns: An object with close_date and whether the period is already closed.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "fiscal_year": {
-            "type": "string",
-            "description": "Fiscal year label."
-          },
-          "fiscal_period": {
-            "type": "integer",
-            "description": "Fiscal period number, 1 to 12."
-          }
-        },
-        "required": [
-          "fiscal_year",
-          "fiscal_period"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "fiscal.get_fiscal_calendar_definition",
-      "server": "fiscal",
-      "family": "fiscal-reference",
-      "description": "Return the definition of a fiscal calendar: the year start rule and the period pattern.\n\nReturns: A calendar definition object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "calendar_id": {
-            "type": "string",
-            "description": "Fiscal calendar identifier."
-          }
-        },
-        "required": [],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "calendar.get_calendar_quarter",
-      "server": "calendar",
-      "family": "calendar-period-resolution",
-      "description": "Return the ordinary calendar quarter containing a date, where Q1 is January to March. This has no relationship to any fiscal calendar.\n\nReturns: An object with year and quarter.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Calendar date, YYYY-MM-DD."
-          }
-        },
-        "required": [
-          "date"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "calendar.get_iso_week",
-      "server": "calendar",
-      "family": "calendar-period-resolution",
-      "description": "Return the ISO-8601 week number and weekday for a date.\n\nReturns: An object with iso_year, iso_week and iso_weekday.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Calendar date, YYYY-MM-DD."
-          }
-        },
-        "required": [
-          "date"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "calendar.get_month_boundaries",
-      "server": "calendar",
-      "family": "calendar-period-resolution",
-      "description": "Return the first and last calendar day of the month containing a date.\n\nReturns: An object with month_start and month_end.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Calendar date, YYYY-MM-DD."
-          }
-        },
-        "required": [
-          "date"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "calendar.add_business_days",
-      "server": "calendar",
-      "family": "calendar-arithmetic",
-      "description": "Add a number of business days to a date using a named holiday calendar.\n\nReturns: An object with the resulting date.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Start date, YYYY-MM-DD."
-          },
-          "days": {
-            "type": "integer",
-            "description": "Business days to add."
-          },
-          "holiday_calendar": {
-            "type": "string",
-            "description": "Holiday calendar identifier."
-          }
-        },
-        "required": [
-          "date",
-          "days"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "calendar.is_business_day",
-      "server": "calendar",
-      "family": "calendar-arithmetic",
-      "description": "Return whether a date is a business day in a named holiday calendar.\n\nReturns: An object with is_business_day.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Date, YYYY-MM-DD."
-          },
-          "holiday_calendar": {
-            "type": "string",
-            "description": "Holiday calendar identifier."
-          }
-        },
-        "required": [
-          "date"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "calendar.diff_days",
-      "server": "calendar",
-      "family": "calendar-arithmetic",
-      "description": "Return the number of days between two dates.\n\nReturns: An object with days.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "from_date": {
-            "type": "string",
-            "description": "Start date."
-          },
-          "to_date": {
-            "type": "string",
-            "description": "End date."
-          }
-        },
-        "required": [
-          "from_date",
-          "to_date"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "calendar.get_holidays",
-      "server": "calendar",
-      "family": "calendar-arithmetic",
-      "description": "List the holidays in a named calendar for a year.\n\nReturns: An array of holiday rows.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "holiday_calendar": {
-            "type": "string",
-            "description": "Holiday calendar identifier."
-          },
-          "year": {
-            "type": "integer",
-            "description": "Calendar year."
-          }
-        },
-        "required": [
-          "holiday_calendar",
-          "year"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "billing.get_invoice",
-      "server": "billing",
-      "family": "order-document-resolution",
-      "description": "Return one invoice in full, including the order reference, the ship date recorded by the fulfilment system, the billing date and every line item. The ship date and the billing date are different fields and frequently differ.\n\nReturns: A complete invoice object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "invoice_id": {
-            "type": "string",
-            "description": "Invoice identifier."
-          },
-          "order_id": {
-            "type": "string",
-            "description": "Order identifier; either invoice_id or order_id must be supplied."
-          }
-        },
-        "required": [],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "billing.list_invoices",
-      "server": "billing",
-      "family": "order-document-resolution",
-      "description": "List invoice summary rows for an account. Summary rows carry the billing date only; they do not carry the ship date and they do not carry line items.\n\nReturns: An array of invoice summary rows.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "account_id": {
-            "type": "string",
-            "description": "Account identifier."
-          },
-          "from_date": {
-            "type": "string",
-            "description": "Inclusive start date."
-          },
-          "to_date": {
-            "type": "string",
-            "description": "Exclusive end date."
-          }
-        },
-        "required": [
-          "account_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "billing.search_orders",
-      "server": "billing",
-      "family": "order-document-resolution",
-      "description": "Free-text search over order references and customer purchase-order numbers. Returns order stubs without dates.\n\nReturns: An array of order stubs.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Free-text query."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum results."
-          }
-        },
-        "required": [
-          "query"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "billing.get_effective_rate_card",
-      "server": "billing",
-      "family": "rate-card",
-      "description": "Return the rate card in force for an account on a date, after applying contract-specific overrides.\n\nReturns: A rate card object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "account_id": {
-            "type": "string",
-            "description": "Account identifier."
-          },
-          "date": {
-            "type": "string",
-            "description": "Date, YYYY-MM-DD."
-          }
-        },
-        "required": [
-          "account_id",
-          "date"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "billing.get_rate_card",
-      "server": "billing",
-      "family": "rate-card",
-      "description": "Return a published standard rate card by identifier. Contract-specific overrides are not applied.\n\nReturns: A rate card object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "rate_card_id": {
-            "type": "string",
-            "description": "Rate card identifier."
-          }
-        },
-        "required": [
-          "rate_card_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "billing.get_account_balance",
-      "server": "billing",
-      "family": "account-reference",
-      "description": "Return the current balance for an account.\n\nReturns: A balance object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "account_id": {
-            "type": "string",
-            "description": "Account identifier."
-          }
-        },
-        "required": [
-          "account_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "billing.list_credits",
-      "server": "billing",
-      "family": "account-reference",
-      "description": "List credits applied to an account.\n\nReturns: An array of credit rows.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "account_id": {
-            "type": "string",
-            "description": "Account identifier."
-          }
-        },
-        "required": [
-          "account_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "billing.get_usage_summary",
-      "server": "billing",
-      "family": "account-reference",
-      "description": "Return metered usage for an account and month.\n\nReturns: A usage summary object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "account_id": {
-            "type": "string",
-            "description": "Account identifier."
-          },
-          "month": {
-            "type": "string",
-            "description": "Month, YYYY-MM."
-          }
-        },
-        "required": [
-          "account_id",
-          "month"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "tickets.get_effective_sla",
-      "server": "tickets",
-      "family": "sla-resolution",
-      "description": "Return the service level actually binding on a ticket, after applying the customer's contract overrides, the severity at which the ticket is currently classified, and any agreed suspension windows. This is the target the ticket is measured against.\n\nReturns: An object with response_target_minutes, resolution_target_minutes, clock_stopped_minutes and the source of each value.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "ticket_id": {
-            "type": "string",
-            "description": "Ticket identifier, for example 'TCK-40118'."
-          }
-        },
-        "required": [
-          "ticket_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "tickets.get_ticket_sla",
-      "server": "tickets",
-      "family": "sla-resolution",
-      "description": "Return the default service level published for the queue a ticket sits in. Contract overrides, reclassification and suspension windows are not applied.\n\nReturns: An object with the queue default targets.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "ticket_id": {
-            "type": "string",
-            "description": "Ticket identifier."
-          }
-        },
-        "required": [
-          "ticket_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "tickets.get_queue",
-      "server": "tickets",
-      "family": "sla-resolution",
-      "description": "Return a queue definition, including its published default service levels.\n\nReturns: A queue object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "queue_id": {
-            "type": "string",
-            "description": "Queue identifier."
-          }
-        },
-        "required": [
-          "queue_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "tickets.get_ticket",
-      "server": "tickets",
-      "family": "ticket-record",
-      "description": "Return one ticket: status, severity, timestamps, requester and account.\n\nReturns: A ticket object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "ticket_id": {
-            "type": "string",
-            "description": "Ticket identifier."
-          }
-        },
-        "required": [
-          "ticket_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "tickets.list_ticket_events",
-      "server": "tickets",
-      "family": "ticket-record",
-      "description": "Return the ordered event log for a ticket.\n\nReturns: An array of event rows.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "ticket_id": {
-            "type": "string",
-            "description": "Ticket identifier."
-          }
-        },
-        "required": [
-          "ticket_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "tickets.search_tickets",
-      "server": "tickets",
-      "family": "ticket-record",
-      "description": "Free-text search over ticket subjects and bodies.\n\nReturns: An array of ticket stubs.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Free-text query."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum results."
-          }
-        },
-        "required": [
-          "query"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "tickets.list_linked_tickets",
-      "server": "tickets",
-      "family": "ticket-record",
-      "description": "Return tickets linked to a ticket.\n\nReturns: An array of ticket stubs.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "ticket_id": {
-            "type": "string",
-            "description": "Ticket identifier."
-          }
-        },
-        "required": [
-          "ticket_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "metrics.get_error_budget_after_exclusions",
-      "server": "metrics",
-      "family": "error-budget",
-      "description": "Return the remaining error budget for a service and month after removing every approved exclusion window, such as agreed maintenance and incidents accepted as out of scope. This is the figure the service level is reported against.\n\nReturns: An object with budget_minutes_total, consumed_minutes, excluded_minutes, remaining_minutes and the exclusions applied.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "description": "Service identifier."
-          },
-          "month": {
-            "type": "string",
-            "description": "Month, YYYY-MM."
-          }
-        },
-        "required": [
-          "service",
-          "month"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "metrics.get_error_budget",
-      "server": "metrics",
-      "family": "error-budget",
-      "description": "Return the raw remaining error budget for a service and month computed from measured unavailability alone. No approved exclusion window is removed.\n\nReturns: An object with budget_minutes_total, consumed_minutes and remaining_minutes.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "description": "Service identifier."
-          },
-          "month": {
-            "type": "string",
-            "description": "Month, YYYY-MM."
-          }
-        },
-        "required": [
-          "service",
-          "month"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "metrics.get_slo",
-      "server": "metrics",
-      "family": "error-budget",
-      "description": "Return the service level objective configured for a service: the target and the measurement window.\n\nReturns: An SLO object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "description": "Service identifier."
-          }
-        },
-        "required": [
-          "service"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "metrics.query_timeseries",
-      "server": "metrics",
-      "family": "telemetry",
-      "description": "Run a range query against the metrics store.\n\nReturns: A time-series result object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Query expression."
-          },
-          "from_utc": {
-            "type": "string",
-            "description": "Inclusive start."
-          },
-          "to_utc": {
-            "type": "string",
-            "description": "Exclusive end."
-          },
-          "step_s": {
-            "type": "integer",
-            "description": "Resolution in seconds."
-          }
-        },
-        "required": [
-          "query",
-          "from_utc",
-          "to_utc"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "metrics.get_alert_state",
-      "server": "metrics",
-      "family": "telemetry",
-      "description": "Return the current state of an alert rule.\n\nReturns: An alert state object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "alert_id": {
-            "type": "string",
-            "description": "Alert rule identifier."
-          }
-        },
-        "required": [
-          "alert_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "metrics.list_dashboards",
-      "server": "metrics",
-      "family": "telemetry",
-      "description": "List dashboards for a service.\n\nReturns: An array of dashboard descriptors.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "service": {
-            "type": "string",
-            "description": "Service identifier."
-          }
-        },
-        "required": [
-          "service"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "inventory.get_stock_level_with_reservations",
-      "server": "inventory",
-      "family": "stock-availability",
-      "description": "Return the quantity of a part that can actually be promised at a warehouse: physical stock minus quantity already reserved against open orders, minus quarantined stock.\n\nReturns: An object with on_hand, reserved, quarantined and available_to_promise.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "part_id": {
-            "type": "string",
-            "description": "Part identifier."
-          },
-          "warehouse_id": {
-            "type": "string",
-            "description": "Warehouse identifier."
-          }
-        },
-        "required": [
-          "part_id",
-          "warehouse_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "inventory.get_stock_level",
-      "server": "inventory",
-      "family": "stock-availability",
-      "description": "Return the physical count of a part at a warehouse as last counted. Reservations against open orders and quarantined stock are not deducted.\n\nReturns: An object with on_hand and counted_at.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "part_id": {
-            "type": "string",
-            "description": "Part identifier."
-          },
-          "warehouse_id": {
-            "type": "string",
-            "description": "Warehouse identifier."
-          }
-        },
-        "required": [
-          "part_id",
-          "warehouse_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "inventory.search_parts",
-      "server": "inventory",
-      "family": "stock-availability",
-      "description": "Free-text search over part numbers and descriptions.\n\nReturns: An array of part stubs.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Free-text query."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum results."
-          }
-        },
-        "required": [
-          "query"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "inventory.get_part",
-      "server": "inventory",
-      "family": "parts-reference",
-      "description": "Return a part record.\n\nReturns: A part object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "part_id": {
-            "type": "string",
-            "description": "Part identifier."
-          }
-        },
-        "required": [
-          "part_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "inventory.get_reorder_point",
-      "server": "inventory",
-      "family": "parts-reference",
-      "description": "Return the reorder point and lead time for a part at a warehouse.\n\nReturns: A reorder policy object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "part_id": {
-            "type": "string",
-            "description": "Part identifier."
-          },
-          "warehouse_id": {
-            "type": "string",
-            "description": "Warehouse identifier."
-          }
-        },
-        "required": [
-          "part_id",
-          "warehouse_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "inventory.get_supplier",
-      "server": "inventory",
-      "family": "parts-reference",
-      "description": "Return the supplier record for a part.\n\nReturns: A supplier object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "part_id": {
-            "type": "string",
-            "description": "Part identifier."
-          }
-        },
-        "required": [
-          "part_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "inventory.list_warehouses",
-      "server": "inventory",
-      "family": "parts-reference",
-      "description": "List warehouses.\n\nReturns: An array of warehouse records.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "region": {
-            "type": "string",
-            "description": "Restrict to a region."
-          }
-        },
-        "required": [],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "geo.get_region_for_site",
-      "server": "geo",
-      "family": "geo-lookup",
-      "description": "Return the operating region a site belongs to.\n\nReturns: A region object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "site_id": {
-            "type": "string",
-            "description": "Site identifier."
-          }
-        },
-        "required": [
-          "site_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "geo.geocode",
-      "server": "geo",
-      "family": "geo-lookup",
-      "description": "Convert a postal address into coordinates.\n\nReturns: A coordinate object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "address": {
-            "type": "string",
-            "description": "Free-text address."
-          }
-        },
-        "required": [
-          "address"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "geo.reverse_geocode",
-      "server": "geo",
-      "family": "geo-lookup",
-      "description": "Convert coordinates into the nearest postal address.\n\nReturns: An address object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "lat": {
-            "type": "string",
-            "description": "Latitude."
-          },
-          "lon": {
-            "type": "string",
-            "description": "Longitude."
-          }
-        },
-        "required": [
-          "lat",
-          "lon"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "geo.get_timezone",
-      "server": "geo",
-      "family": "geo-lookup",
-      "description": "Return the IANA time zone for coordinates.\n\nReturns: A time zone object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "lat": {
-            "type": "string",
-            "description": "Latitude."
-          },
-          "lon": {
-            "type": "string",
-            "description": "Longitude."
-          }
-        },
-        "required": [
-          "lat",
-          "lon"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "geo.distance_between",
-      "server": "geo",
-      "family": "geo-lookup",
-      "description": "Return the great-circle distance between two sites in kilometres.\n\nReturns: A distance object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "site_a": {
-            "type": "string",
-            "description": "First site identifier."
-          },
-          "site_b": {
-            "type": "string",
-            "description": "Second site identifier."
-          }
-        },
-        "required": [
-          "site_a",
-          "site_b"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "docs.get_latest_revision",
-      "server": "docs",
-      "family": "doc-revision",
-      "description": "Return the current published revision of a document, which is the revision in force today.\n\nReturns: A revision object with body and revision label.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "document_id": {
-            "type": "string",
-            "description": "Document identifier."
-          }
-        },
-        "required": [
-          "document_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "docs.get_document_revision",
-      "server": "docs",
-      "family": "doc-revision",
-      "description": "Return one named historical revision of a document. Superseded revisions are retained and are not marked as such in the body.\n\nReturns: A revision object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "document_id": {
-            "type": "string",
-            "description": "Document identifier."
-          },
-          "revision": {
-            "type": "string",
-            "description": "Revision label."
-          }
-        },
-        "required": [
-          "document_id",
-          "revision"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "docs.get_document",
-      "server": "docs",
-      "family": "doc-revision",
-      "description": "Return a document header: title, owner, collection and revision list. The body is not included.\n\nReturns: A document header object.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "document_id": {
-            "type": "string",
-            "description": "Document identifier."
-          }
-        },
-        "required": [
-          "document_id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "docs.search_documents",
-      "server": "docs",
-      "family": "doc-search",
-      "description": "Free-text search across document bodies in every revision, including superseded ones.\n\nReturns: An array of search hits.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Free-text query."
-          },
-          "collection": {
-            "type": "string",
-            "description": "Restrict to a collection."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum results."
-          }
-        },
-        "required": [
-          "query"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "docs.list_collections",
-      "server": "docs",
-      "family": "doc-search",
-      "description": "List document collections.\n\nReturns: An array of collection records.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {},
-        "required": [],
-        "additionalProperties": false
-      }
-    }
-  ]
+ "toolset_version": "1.1.0",
+ "tool_count": 85,
+ "tools": [
+  {
+   "name": "catalog.list_tools",
+   "server": "catalog",
+   "family": "meta",
+   "description": "Enumerate every tool exposed by every connected server, with its server, family and one-line summary. Reading the catalogue is a discovery operation, not a data operation.\n\nReturns: An array of {name, server, family, summary} objects.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "server": {
+      "type": "string",
+      "description": "Restrict the listing to a single server name."
+     },
+     "family": {
+      "type": "string",
+      "description": "Restrict the listing to a single tool family."
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "catalog.describe_tool",
+   "server": "catalog",
+   "family": "meta",
+   "description": "Return the full schema and long description of one tool, including the caveats that distinguish it from its siblings in the same family.\n\nReturns: A single tool descriptor object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string",
+      "description": "Fully qualified tool name, for example 'rota.get_effective_oncall'."
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "catalog.search_tools",
+   "server": "catalog",
+   "family": "meta",
+   "description": "Free-text search across tool names, summaries and descriptions. Returns ranked candidates; it does not choose for you.\n\nReturns: A ranked array of tool descriptors.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Free-text query."
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Maximum candidates to return (default 10)."
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "rota.list_shifts",
+   "server": "rota",
+   "family": "oncall-resolution",
+   "description": "List the shifts published in the rotation template for a service and window. The template is authored weeks in advance and is NOT updated when a shift is swapped, overridden or covered; it shows who was originally scheduled.\n\nReturns: An array of template shift rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "service": {
+      "type": "string",
+      "description": "Service identifier, for example 'kestrel-billing'."
+     },
+     "from_utc": {
+      "type": "string",
+      "description": "Inclusive window start, RFC 3339 UTC."
+     },
+     "to_utc": {
+      "type": "string",
+      "description": "Exclusive window end, RFC 3339 UTC."
+     }
+    },
+    "required": [
+     "service",
+     "from_utc",
+     "to_utc"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "rota.get_nominal_shift",
+   "server": "rota",
+   "family": "oncall-resolution",
+   "description": "Return the single template shift covering an instant. Reflects the published rotation only; approved overrides, swaps and escalation-policy failovers are not applied.\n\nReturns: One template shift row.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "service": {
+      "type": "string",
+      "description": "Service identifier."
+     },
+     "at_utc": {
+      "type": "string",
+      "description": "Instant to look up, RFC 3339 UTC."
+     }
+    },
+    "required": [
+     "service",
+     "at_utc"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "rota.get_effective_oncall",
+   "server": "rota",
+   "family": "oncall-resolution",
+   "description": "Return who was actually on call for a service at an instant, after applying every approved override, swap and coverage record on top of the published rotation. This is the resolved answer, not the template.\n\nReturns: An object with handle, role, escalation_tier, source_of_truth and the override chain that was applied.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "service": {
+      "type": "string",
+      "description": "Service identifier."
+     },
+     "at_utc": {
+      "type": "string",
+      "description": "Instant to resolve, RFC 3339 UTC."
+     },
+     "role": {
+      "type": "string",
+      "description": "'primary' (default) or 'secondary'."
+     }
+    },
+    "required": [
+     "service",
+     "at_utc"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "rota.search_rota",
+   "server": "rota",
+   "family": "rota-policy",
+   "description": "Free-text search over rotation names and shift comments. Matches text, not time; it cannot tell you who is on call.\n\nReturns: An array of matching rotation rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Free-text query."
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Maximum rows."
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "rota.get_escalation_policy",
+   "server": "rota",
+   "family": "rota-policy",
+   "description": "Return the escalation policy attached to a service: the ordered tiers and the wait before each hop.\n\nReturns: An escalation policy object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "service": {
+      "type": "string",
+      "description": "Service identifier."
+     }
+    },
+    "required": [
+     "service"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "rota.get_handover_notes",
+   "server": "rota",
+   "family": "rota-policy",
+   "description": "Return free-text handover notes written at the end of a shift.\n\nReturns: An array of notes.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "service": {
+      "type": "string",
+      "description": "Service identifier."
+     },
+     "date": {
+      "type": "string",
+      "description": "Calendar date, YYYY-MM-DD."
+     }
+    },
+    "required": [
+     "service",
+     "date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "rota.list_rotations",
+   "server": "rota",
+   "family": "rota-policy",
+   "description": "List every rotation configured for a service, including retired ones.\n\nReturns: An array of rotation descriptors.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "service": {
+      "type": "string",
+      "description": "Service identifier."
+     }
+    },
+    "required": [
+     "service"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "directory.get_person_by_handle",
+   "server": "directory",
+   "family": "person-resolution",
+   "description": "Resolve a chat handle to exactly one current person record: legal name, team, location and employment status. Handles are unique and never reassigned.\n\nReturns: One person record.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "handle": {
+      "type": "string",
+      "description": "Chat handle without the leading '@'."
+     }
+    },
+    "required": [
+     "handle"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "directory.search_people",
+   "server": "directory",
+   "family": "person-resolution",
+   "description": "Fuzzy search over names, handles and aliases. Returns every match including former staff and duplicate records created by past migrations; ranking is by string similarity only.\n\nReturns: An array of candidate person records.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Free-text name or handle fragment."
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Maximum results."
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "directory.lookup_person",
+   "server": "directory",
+   "family": "person-resolution",
+   "description": "Look up a person by internal numeric person_id. Returns the record as it stood at the last directory sync, which may lag the live system by up to 24 hours.\n\nReturns: One person record from the last sync.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "person_id": {
+      "type": "integer",
+      "description": "Internal numeric person identifier."
+     }
+    },
+    "required": [
+     "person_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "directory.get_person_by_email",
+   "server": "directory",
+   "family": "person-resolution",
+   "description": "Resolve a corporate email address to a person record. Aliases and forwarding addresses are not resolved.\n\nReturns: One person record.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "email": {
+      "type": "string",
+      "description": "Corporate email address."
+     }
+    },
+    "required": [
+     "email"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "directory.get_team",
+   "server": "directory",
+   "family": "org",
+   "description": "Return a team record: name, cost centre, parent team and the handle of its manager.\n\nReturns: One team record.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "team_id": {
+      "type": "string",
+      "description": "Team identifier."
+     }
+    },
+    "required": [
+     "team_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "directory.list_team_members",
+   "server": "directory",
+   "family": "org",
+   "description": "List the members of a team.\n\nReturns: An array of person records.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "team_id": {
+      "type": "string",
+      "description": "Team identifier."
+     },
+     "include_former": {
+      "type": "boolean",
+      "description": "Include former members (default false)."
+     }
+    },
+    "required": [
+     "team_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "directory.get_manager_chain",
+   "server": "directory",
+   "family": "org",
+   "description": "Return the management chain above a person, root last.\n\nReturns: An ordered array of person records.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "handle": {
+      "type": "string",
+      "description": "Chat handle."
+     }
+    },
+    "required": [
+     "handle"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "directory.get_contact_methods",
+   "server": "directory",
+   "family": "org",
+   "description": "Return the contact methods registered for a person.\n\nReturns: An array of contact-method objects.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "handle": {
+      "type": "string",
+      "description": "Chat handle."
+     }
+    },
+    "required": [
+     "handle"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "registry.get_tag_digest",
+   "server": "registry",
+   "family": "image-digest-resolution",
+   "description": "Return the image digest that a tag pointed to **at the moment the tag was first published**. This value is recorded once at publish time and is never rewritten, so it is stale for any tag that has since been moved to a newer build.\n\nReturns: An object with repository, tag, digest and published_at.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "repository": {
+      "type": "string",
+      "description": "Repository path, for example 'apps/kestrel-gateway'."
+     },
+     "tag": {
+      "type": "string",
+      "description": "Tag name."
+     }
+    },
+    "required": [
+     "repository",
+     "tag"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "registry.resolve_digest_pinned",
+   "server": "registry",
+   "family": "image-digest-resolution",
+   "description": "Resolve a tag to the digest it points to **right now**, following any tag moves. This is the digest that will be pulled today.\n\nReturns: An object with repository, tag, digest, resolved_at and whether the tag has been moved since publication.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "repository": {
+      "type": "string",
+      "description": "Repository path."
+     },
+     "tag": {
+      "type": "string",
+      "description": "Tag name."
+     }
+    },
+    "required": [
+     "repository",
+     "tag"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "registry.search_images",
+   "server": "registry",
+   "family": "image-catalog",
+   "description": "Free-text search over repository names and image labels. Returns repositories, not digests.\n\nReturns: An array of repository descriptors.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Free-text query."
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Maximum results."
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "registry.list_tags",
+   "server": "registry",
+   "family": "image-catalog",
+   "description": "List every tag in a repository with its last push time.\n\nReturns: An array of tag rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "repository": {
+      "type": "string",
+      "description": "Repository path."
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Maximum tags."
+     }
+    },
+    "required": [
+     "repository"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "registry.list_repositories",
+   "server": "registry",
+   "family": "image-catalog",
+   "description": "List repositories visible to the caller.\n\nReturns: An array of repository names.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "prefix": {
+      "type": "string",
+      "description": "Restrict to repositories under a path prefix."
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "registry.get_image_manifest",
+   "server": "registry",
+   "family": "image-catalog",
+   "description": "Return the OCI manifest for a digest.\n\nReturns: A manifest object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "repository": {
+      "type": "string",
+      "description": "Repository path."
+     },
+     "digest": {
+      "type": "string",
+      "description": "Image digest."
+     }
+    },
+    "required": [
+     "repository",
+     "digest"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "registry.get_image_sbom",
+   "server": "registry",
+   "family": "image-catalog",
+   "description": "Return the software bill of materials attached to a digest.\n\nReturns: An SBOM summary object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "repository": {
+      "type": "string",
+      "description": "Repository path."
+     },
+     "digest": {
+      "type": "string",
+      "description": "Image digest."
+     }
+    },
+    "required": [
+     "repository",
+     "digest"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "registry.get_repository_policy",
+   "server": "registry",
+   "family": "image-catalog",
+   "description": "Return the retention and signing policy for a repository.\n\nReturns: A policy object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "repository": {
+      "type": "string",
+      "description": "Repository path."
+     }
+    },
+    "required": [
+     "repository"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "vulndb.get_image_findings_by_digest",
+   "server": "vulndb",
+   "family": "vuln-findings",
+   "description": "Return the vulnerability findings for one exact image digest, from the most recent completed scan of that digest. Findings are bound to the digest, so this answer does not change when a tag is moved.\n\nReturns: An object with digest, scan_completed_at and an array of findings.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "digest": {
+      "type": "string",
+      "description": "Image digest, including the algorithm prefix."
+     },
+     "min_severity": {
+      "type": "string",
+      "description": "Lowest severity to include: LOW, MEDIUM, HIGH or CRITICAL."
+     },
+     "status": {
+      "type": "string",
+      "description": "'open' (default), 'fixed' or 'all'."
+     }
+    },
+    "required": [
+     "digest"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "vulndb.get_image_findings_by_tag",
+   "server": "vulndb",
+   "family": "vuln-findings",
+   "description": "Return the findings cached against a tag. The cache is written the first time a tag is scanned and is not invalidated when the tag is moved, so it may describe a digest that the tag no longer points to.\n\nReturns: An object with repository, tag, cached_for_digest and an array of findings.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "repository": {
+      "type": "string",
+      "description": "Repository path."
+     },
+     "tag": {
+      "type": "string",
+      "description": "Tag name."
+     },
+     "min_severity": {
+      "type": "string",
+      "description": "Lowest severity to include."
+     }
+    },
+    "required": [
+     "repository",
+     "tag"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "vulndb.search_advisories",
+   "server": "vulndb",
+   "family": "vuln-reference",
+   "description": "Free-text search of the advisory database. Returns advisories, not the findings for any particular image.\n\nReturns: An array of advisory summaries.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Free-text query."
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Maximum results."
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "vulndb.get_advisory",
+   "server": "vulndb",
+   "family": "vuln-reference",
+   "description": "Return one advisory by identifier, including CVSS vector and affected ranges.\n\nReturns: An advisory object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "advisory_id": {
+      "type": "string",
+      "description": "Advisory identifier, for example 'KSA-2031-0442'."
+     }
+    },
+    "required": [
+     "advisory_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "vulndb.get_fix_versions",
+   "server": "vulndb",
+   "family": "vuln-reference",
+   "description": "Return the package versions in which an advisory is fixed, per distribution.\n\nReturns: An array of fix rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "advisory_id": {
+      "type": "string",
+      "description": "Advisory identifier."
+     }
+    },
+    "required": [
+     "advisory_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "vulndb.get_kev_status",
+   "server": "vulndb",
+   "family": "vuln-reference",
+   "description": "Return whether an advisory is listed as known-exploited.\n\nReturns: A status object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "advisory_id": {
+      "type": "string",
+      "description": "Advisory identifier."
+     }
+    },
+    "required": [
+     "advisory_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "vulndb.list_severities",
+   "server": "vulndb",
+   "family": "vuln-reference",
+   "description": "Return the severity bands used by this database and their CVSS ranges.\n\nReturns: An array of band objects.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "fiscal.convert_calendar_to_fiscal",
+   "server": "fiscal",
+   "family": "fiscal-period-resolution",
+   "description": "Convert a calendar date into the company fiscal calendar, returning fiscal year, fiscal quarter and fiscal period. The company fiscal year does not start on 1 January and periods follow a 4-4-5 week pattern, so fiscal quarters do not line up with calendar quarters.\n\nReturns: An object with fiscal_year, fiscal_quarter, fiscal_period and the period start and end dates.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "date": {
+      "type": "string",
+      "description": "Calendar date, YYYY-MM-DD."
+     },
+     "calendar_id": {
+      "type": "string",
+      "description": "Fiscal calendar identifier (default 'FY-445-DEFAULT')."
+     }
+    },
+    "required": [
+     "date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "fiscal.get_fiscal_quarter",
+   "server": "fiscal",
+   "family": "fiscal-period-resolution",
+   "description": "Return the fiscal quarter that contains a date, without the period detail.\n\nReturns: An object with fiscal_year and fiscal_quarter.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "date": {
+      "type": "string",
+      "description": "Calendar date, YYYY-MM-DD."
+     }
+    },
+    "required": [
+     "date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "fiscal.get_fiscal_year",
+   "server": "fiscal",
+   "family": "fiscal-period-resolution",
+   "description": "Return only the fiscal year containing a date.\n\nReturns: An object with fiscal_year.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "date": {
+      "type": "string",
+      "description": "Calendar date, YYYY-MM-DD."
+     }
+    },
+    "required": [
+     "date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "fiscal.list_fiscal_periods",
+   "server": "fiscal",
+   "family": "fiscal-reference",
+   "description": "List every fiscal period in a fiscal year with its start, end and close dates.\n\nReturns: An array of period rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "fiscal_year": {
+      "type": "string",
+      "description": "Fiscal year label, for example 'FY2032'."
+     }
+    },
+    "required": [
+     "fiscal_year"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "fiscal.get_period_close_date",
+   "server": "fiscal",
+   "family": "fiscal-reference",
+   "description": "Return the ledger close date for one fiscal period.\n\nReturns: An object with close_date and whether the period is already closed.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "fiscal_year": {
+      "type": "string",
+      "description": "Fiscal year label."
+     },
+     "fiscal_period": {
+      "type": "integer",
+      "description": "Fiscal period number, 1 to 12."
+     }
+    },
+    "required": [
+     "fiscal_year",
+     "fiscal_period"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "fiscal.get_fiscal_calendar_definition",
+   "server": "fiscal",
+   "family": "fiscal-reference",
+   "description": "Return the definition of a fiscal calendar: the year start rule and the period pattern.\n\nReturns: A calendar definition object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "calendar_id": {
+      "type": "string",
+      "description": "Fiscal calendar identifier."
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "calendar.get_calendar_quarter",
+   "server": "calendar",
+   "family": "calendar-period-resolution",
+   "description": "Return the ordinary calendar quarter containing a date, where Q1 is January to March. This has no relationship to any fiscal calendar.\n\nReturns: An object with year and quarter.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "date": {
+      "type": "string",
+      "description": "Calendar date, YYYY-MM-DD."
+     }
+    },
+    "required": [
+     "date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "calendar.get_calendar_period",
+   "server": "calendar",
+   "family": "calendar-period-resolution",
+   "description": "Return the ordinary calendar period containing a date: the month number 1 to 12, with the first and last calendar day of that month and the day the ordinary month-end ledger run closes it. This is the ordinary calendar. It has no relationship to any fiscal calendar and its period numbers are not fiscal period numbers.\n\nReturns: An object with year, period, period_start, period_end and close_date.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "date": {
+      "type": "string",
+      "description": "Calendar date, YYYY-MM-DD."
+     }
+    },
+    "required": [
+     "date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "calendar.get_iso_week",
+   "server": "calendar",
+   "family": "calendar-arithmetic",
+   "description": "Return the ISO-8601 week number and weekday for a date.\n\nReturns: An object with iso_year, iso_week and iso_weekday.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "date": {
+      "type": "string",
+      "description": "Calendar date, YYYY-MM-DD."
+     }
+    },
+    "required": [
+     "date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "calendar.get_month_boundaries",
+   "server": "calendar",
+   "family": "calendar-arithmetic",
+   "description": "Return the first and last calendar day of the month containing a date.\n\nReturns: An object with month_start and month_end.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "date": {
+      "type": "string",
+      "description": "Calendar date, YYYY-MM-DD."
+     }
+    },
+    "required": [
+     "date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "calendar.add_business_days",
+   "server": "calendar",
+   "family": "calendar-arithmetic",
+   "description": "Add a number of business days to a date using a named holiday calendar.\n\nReturns: An object with the resulting date.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "date": {
+      "type": "string",
+      "description": "Start date, YYYY-MM-DD."
+     },
+     "days": {
+      "type": "integer",
+      "description": "Business days to add."
+     },
+     "holiday_calendar": {
+      "type": "string",
+      "description": "Holiday calendar identifier."
+     }
+    },
+    "required": [
+     "date",
+     "days"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "calendar.is_business_day",
+   "server": "calendar",
+   "family": "calendar-arithmetic",
+   "description": "Return whether a date is a business day in a named holiday calendar.\n\nReturns: An object with is_business_day.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "date": {
+      "type": "string",
+      "description": "Date, YYYY-MM-DD."
+     },
+     "holiday_calendar": {
+      "type": "string",
+      "description": "Holiday calendar identifier."
+     }
+    },
+    "required": [
+     "date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "calendar.diff_days",
+   "server": "calendar",
+   "family": "calendar-arithmetic",
+   "description": "Return the number of days between two dates.\n\nReturns: An object with days.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "from_date": {
+      "type": "string",
+      "description": "Start date."
+     },
+     "to_date": {
+      "type": "string",
+      "description": "End date."
+     }
+    },
+    "required": [
+     "from_date",
+     "to_date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "calendar.get_holidays",
+   "server": "calendar",
+   "family": "calendar-arithmetic",
+   "description": "List the holidays in a named calendar for a year.\n\nReturns: An array of holiday rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "holiday_calendar": {
+      "type": "string",
+      "description": "Holiday calendar identifier."
+     },
+     "year": {
+      "type": "integer",
+      "description": "Calendar year."
+     }
+    },
+    "required": [
+     "holiday_calendar",
+     "year"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "billing.get_invoice",
+   "server": "billing",
+   "family": "order-document-resolution",
+   "description": "Return one invoice in full, including the order reference, the ship date recorded by the fulfilment system, the billing date and every line item. The ship date and the billing date are different fields and frequently differ.\n\nReturns: A complete invoice object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "invoice_id": {
+      "type": "string",
+      "description": "Invoice identifier."
+     },
+     "order_id": {
+      "type": "string",
+      "description": "Order identifier; either invoice_id or order_id must be supplied."
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "billing.list_invoices",
+   "server": "billing",
+   "family": "order-document-resolution",
+   "description": "List invoice summary rows for an account. Summary rows carry the billing date only; they do not carry the ship date and they do not carry line items.\n\nReturns: An array of invoice summary rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "account_id": {
+      "type": "string",
+      "description": "Account identifier."
+     },
+     "from_date": {
+      "type": "string",
+      "description": "Inclusive start date."
+     },
+     "to_date": {
+      "type": "string",
+      "description": "Exclusive end date."
+     }
+    },
+    "required": [
+     "account_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "billing.search_orders",
+   "server": "billing",
+   "family": "order-reference",
+   "description": "Free-text search over order references and customer purchase-order numbers. Returns order stubs without dates.\n\nReturns: An array of order stubs.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Free-text query."
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Maximum results."
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "billing.get_effective_rate_card",
+   "server": "billing",
+   "family": "rate-card",
+   "description": "Return the rate card in force for an account on a date, after applying contract-specific overrides.\n\nReturns: A rate card object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "account_id": {
+      "type": "string",
+      "description": "Account identifier."
+     },
+     "date": {
+      "type": "string",
+      "description": "Date, YYYY-MM-DD."
+     }
+    },
+    "required": [
+     "account_id",
+     "date"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "billing.get_rate_card",
+   "server": "billing",
+   "family": "rate-card",
+   "description": "Return a published standard rate card by identifier. Contract-specific overrides are not applied.\n\nReturns: A rate card object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "rate_card_id": {
+      "type": "string",
+      "description": "Rate card identifier."
+     }
+    },
+    "required": [
+     "rate_card_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "billing.get_account_balance",
+   "server": "billing",
+   "family": "account-reference",
+   "description": "Return the current balance for an account.\n\nReturns: A balance object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "account_id": {
+      "type": "string",
+      "description": "Account identifier."
+     }
+    },
+    "required": [
+     "account_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "billing.list_credits",
+   "server": "billing",
+   "family": "account-reference",
+   "description": "List credits applied to an account.\n\nReturns: An array of credit rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "account_id": {
+      "type": "string",
+      "description": "Account identifier."
+     }
+    },
+    "required": [
+     "account_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "billing.get_usage_summary",
+   "server": "billing",
+   "family": "account-reference",
+   "description": "Return metered usage for an account and month.\n\nReturns: A usage summary object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "account_id": {
+      "type": "string",
+      "description": "Account identifier."
+     },
+     "month": {
+      "type": "string",
+      "description": "Month, YYYY-MM."
+     }
+    },
+    "required": [
+     "account_id",
+     "month"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "tickets.get_effective_sla",
+   "server": "tickets",
+   "family": "sla-resolution",
+   "description": "Return the service level actually binding on a ticket, after applying the customer's contract overrides, the severity at which the ticket is currently classified, and any agreed suspension windows. This is the target the ticket is measured against.\n\nReturns: An object with response_target_minutes, resolution_target_minutes, clock_stopped_minutes and the source of each value.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "ticket_id": {
+      "type": "string",
+      "description": "Ticket identifier, for example 'TCK-40118'."
+     }
+    },
+    "required": [
+     "ticket_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "tickets.get_ticket_sla",
+   "server": "tickets",
+   "family": "sla-resolution",
+   "description": "Return the default service level published for the queue a ticket sits in. Contract overrides, reclassification and suspension windows are not applied.\n\nReturns: An object with the queue default targets.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "ticket_id": {
+      "type": "string",
+      "description": "Ticket identifier."
+     }
+    },
+    "required": [
+     "ticket_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "tickets.get_queue",
+   "server": "tickets",
+   "family": "queue-reference",
+   "description": "Return a queue definition, including its published default service levels.\n\nReturns: A queue object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "queue_id": {
+      "type": "string",
+      "description": "Queue identifier."
+     }
+    },
+    "required": [
+     "queue_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "tickets.get_ticket",
+   "server": "tickets",
+   "family": "ticket-record",
+   "description": "Return one ticket: status, severity, timestamps, requester and account.\n\nReturns: A ticket object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "ticket_id": {
+      "type": "string",
+      "description": "Ticket identifier."
+     }
+    },
+    "required": [
+     "ticket_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "tickets.list_ticket_events",
+   "server": "tickets",
+   "family": "ticket-record",
+   "description": "Return the ordered event log for a ticket.\n\nReturns: An array of event rows.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "ticket_id": {
+      "type": "string",
+      "description": "Ticket identifier."
+     }
+    },
+    "required": [
+     "ticket_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "tickets.search_tickets",
+   "server": "tickets",
+   "family": "ticket-record",
+   "description": "Free-text search over ticket subjects and bodies.\n\nReturns: An array of ticket stubs.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Free-text query."
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Maximum results."
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "tickets.list_linked_tickets",
+   "server": "tickets",
+   "family": "ticket-record",
+   "description": "Return tickets linked to a ticket.\n\nReturns: An array of ticket stubs.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "ticket_id": {
+      "type": "string",
+      "description": "Ticket identifier."
+     }
+    },
+    "required": [
+     "ticket_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "metrics.get_error_budget_after_exclusions",
+   "server": "metrics",
+   "family": "error-budget",
+   "description": "Return the remaining error budget for a service and month after removing every approved exclusion window, such as agreed maintenance and incidents accepted as out of scope. This is the figure the service level is reported against.\n\nReturns: An object with budget_minutes_total, consumed_minutes, excluded_minutes, remaining_minutes and the exclusions applied.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "service": {
+      "type": "string",
+      "description": "Service identifier."
+     },
+     "month": {
+      "type": "string",
+      "description": "Month, YYYY-MM."
+     }
+    },
+    "required": [
+     "service",
+     "month"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "metrics.get_error_budget",
+   "server": "metrics",
+   "family": "error-budget",
+   "description": "Return the raw remaining error budget for a service and month computed from measured unavailability alone. No approved exclusion window is removed.\n\nReturns: An object with budget_minutes_total, consumed_minutes and remaining_minutes.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "service": {
+      "type": "string",
+      "description": "Service identifier."
+     },
+     "month": {
+      "type": "string",
+      "description": "Month, YYYY-MM."
+     }
+    },
+    "required": [
+     "service",
+     "month"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "metrics.get_slo",
+   "server": "metrics",
+   "family": "slo-reference",
+   "description": "Return the service level objective configured for a service: the target and the measurement window.\n\nReturns: An SLO object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "service": {
+      "type": "string",
+      "description": "Service identifier."
+     }
+    },
+    "required": [
+     "service"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "metrics.query_timeseries",
+   "server": "metrics",
+   "family": "telemetry",
+   "description": "Run a range query against the metrics store.\n\nReturns: A time-series result object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Query expression."
+     },
+     "from_utc": {
+      "type": "string",
+      "description": "Inclusive start."
+     },
+     "to_utc": {
+      "type": "string",
+      "description": "Exclusive end."
+     },
+     "step_s": {
+      "type": "integer",
+      "description": "Resolution in seconds."
+     }
+    },
+    "required": [
+     "query",
+     "from_utc",
+     "to_utc"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "metrics.get_alert_state",
+   "server": "metrics",
+   "family": "telemetry",
+   "description": "Return the current state of an alert rule.\n\nReturns: An alert state object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "alert_id": {
+      "type": "string",
+      "description": "Alert rule identifier."
+     }
+    },
+    "required": [
+     "alert_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "metrics.list_dashboards",
+   "server": "metrics",
+   "family": "telemetry",
+   "description": "List dashboards for a service.\n\nReturns: An array of dashboard descriptors.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "service": {
+      "type": "string",
+      "description": "Service identifier."
+     }
+    },
+    "required": [
+     "service"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "inventory.get_stock_level_with_reservations",
+   "server": "inventory",
+   "family": "stock-availability",
+   "description": "Return the quantity of a part that can actually be promised at a warehouse: physical stock minus quantity already reserved against open orders, minus quarantined stock.\n\nReturns: An object with on_hand, reserved, quarantined and available_to_promise.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "part_id": {
+      "type": "string",
+      "description": "Part identifier."
+     },
+     "warehouse_id": {
+      "type": "string",
+      "description": "Warehouse identifier."
+     }
+    },
+    "required": [
+     "part_id",
+     "warehouse_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "inventory.get_stock_level",
+   "server": "inventory",
+   "family": "stock-availability",
+   "description": "Return the physical count of a part at a warehouse as last counted. Reservations against open orders and quarantined stock are not deducted.\n\nReturns: An object with on_hand and counted_at.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "part_id": {
+      "type": "string",
+      "description": "Part identifier."
+     },
+     "warehouse_id": {
+      "type": "string",
+      "description": "Warehouse identifier."
+     }
+    },
+    "required": [
+     "part_id",
+     "warehouse_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "inventory.search_parts",
+   "server": "inventory",
+   "family": "stock-availability",
+   "description": "Free-text search over part numbers and descriptions.\n\nReturns: An array of part stubs.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Free-text query."
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Maximum results."
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "inventory.get_part",
+   "server": "inventory",
+   "family": "parts-reference",
+   "description": "Return a part record.\n\nReturns: A part object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "part_id": {
+      "type": "string",
+      "description": "Part identifier."
+     }
+    },
+    "required": [
+     "part_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "inventory.get_reorder_point",
+   "server": "inventory",
+   "family": "parts-reference",
+   "description": "Return the reorder point and lead time for a part at a warehouse.\n\nReturns: A reorder policy object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "part_id": {
+      "type": "string",
+      "description": "Part identifier."
+     },
+     "warehouse_id": {
+      "type": "string",
+      "description": "Warehouse identifier."
+     }
+    },
+    "required": [
+     "part_id",
+     "warehouse_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "inventory.get_supplier",
+   "server": "inventory",
+   "family": "parts-reference",
+   "description": "Return the supplier record for a part.\n\nReturns: A supplier object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "part_id": {
+      "type": "string",
+      "description": "Part identifier."
+     }
+    },
+    "required": [
+     "part_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "inventory.list_warehouses",
+   "server": "inventory",
+   "family": "parts-reference",
+   "description": "List warehouses.\n\nReturns: An array of warehouse records.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "region": {
+      "type": "string",
+      "description": "Restrict to a region."
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "geo.get_region_for_site",
+   "server": "geo",
+   "family": "geo-lookup",
+   "description": "Return the operating region a site belongs to.\n\nReturns: A region object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "site_id": {
+      "type": "string",
+      "description": "Site identifier."
+     }
+    },
+    "required": [
+     "site_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "geo.geocode",
+   "server": "geo",
+   "family": "geo-lookup",
+   "description": "Convert a postal address into coordinates.\n\nReturns: A coordinate object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "address": {
+      "type": "string",
+      "description": "Free-text address."
+     }
+    },
+    "required": [
+     "address"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "geo.reverse_geocode",
+   "server": "geo",
+   "family": "geo-lookup",
+   "description": "Convert coordinates into the nearest postal address.\n\nReturns: An address object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "lat": {
+      "type": "string",
+      "description": "Latitude."
+     },
+     "lon": {
+      "type": "string",
+      "description": "Longitude."
+     }
+    },
+    "required": [
+     "lat",
+     "lon"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "geo.get_timezone",
+   "server": "geo",
+   "family": "geo-lookup",
+   "description": "Return the IANA time zone for coordinates.\n\nReturns: A time zone object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "lat": {
+      "type": "string",
+      "description": "Latitude."
+     },
+     "lon": {
+      "type": "string",
+      "description": "Longitude."
+     }
+    },
+    "required": [
+     "lat",
+     "lon"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "geo.distance_between",
+   "server": "geo",
+   "family": "geo-lookup",
+   "description": "Return the great-circle distance between two sites in kilometres.\n\nReturns: A distance object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "site_a": {
+      "type": "string",
+      "description": "First site identifier."
+     },
+     "site_b": {
+      "type": "string",
+      "description": "Second site identifier."
+     }
+    },
+    "required": [
+     "site_a",
+     "site_b"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "docs.get_latest_revision",
+   "server": "docs",
+   "family": "doc-revision",
+   "description": "Return the current published revision of a document, which is the revision in force today.\n\nReturns: A revision object with body and revision label.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "document_id": {
+      "type": "string",
+      "description": "Document identifier."
+     }
+    },
+    "required": [
+     "document_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "docs.get_document_revision",
+   "server": "docs",
+   "family": "doc-revision",
+   "description": "Return one named historical revision of a document. Superseded revisions are retained and are not marked as such in the body.\n\nReturns: A revision object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "document_id": {
+      "type": "string",
+      "description": "Document identifier."
+     },
+     "revision": {
+      "type": "string",
+      "description": "Revision label."
+     }
+    },
+    "required": [
+     "document_id",
+     "revision"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "docs.get_document",
+   "server": "docs",
+   "family": "doc-revision",
+   "description": "Return a document header: title, owner, collection and revision list. The body is not included.\n\nReturns: A document header object.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "document_id": {
+      "type": "string",
+      "description": "Document identifier."
+     }
+    },
+    "required": [
+     "document_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "docs.search_documents",
+   "server": "docs",
+   "family": "doc-search",
+   "description": "Free-text search across document bodies in every revision, including superseded ones.\n\nReturns: An array of search hits.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {
+     "query": {
+      "type": "string",
+      "description": "Free-text query."
+     },
+     "collection": {
+      "type": "string",
+      "description": "Restrict to a collection."
+     },
+     "limit": {
+      "type": "integer",
+      "description": "Maximum results."
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "docs.list_collections",
+   "server": "docs",
+   "family": "doc-search",
+   "description": "List document collections.\n\nReturns: An array of collection records.",
+   "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+   }
+  }
+ ]
 }

@@ -274,6 +274,13 @@ production routing, which steps one tier.
 | Primary: mid-tier frontier ↔ next cheaper general-purpose tier | The realistic production decision |
 | Secondary (≤ 1 cell): cheapest ↔ pro-tier | Bounds the maximum; reported **as a bound, not the result** |
 
+**The concrete pairs are not yet chosen, and the lineup they were reasoned about has moved.**
+`PS-2026-09-16` confirms that all eight OpenAI models in `PS-2026-09-15` still exist at unchanged
+prices, but **none of them is a flagship model any more** — the current flagship line is
+`gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`. "Tier-adjacent" has to be decided
+against the lineup that will actually be used, which is open decision **C-a**. A pair must also
+satisfy §12.0.1: if it spans a tokenizer boundary, no token delta from it is reportable.
+
 Every C4 attempt records the exact model pair and `pricing_snapshot_id`. No C4 result is
 reportable as a saving without both (Decision Ledger D011).
 
@@ -344,6 +351,39 @@ inclusion rules.
 provider's accounting cannot be compared like-for-like with another's, that is recorded, and
 cross-provider token deltas from it are **not reportable** — only cost and cost per successful
 task, and only with the pairing and the snapshot id stated.
+
+### 12.0.1 The comparability bar also applies WITHIN a provider
+
+Verified from Anthropic's own documentation while building `PS-2026-09-16`:
+
+> *"Claude 4.7 and later models and Claude Mythos Preview use a newer tokenizer… This tokenizer
+> produces approximately 30% more tokens for the same text… Claude Sonnet 4.6 and earlier models
+> use the previous tokenizer."*
+
+So a token-count delta measured across that boundary — Haiku 4.5 against Opus 5 or Sonnet 5, for
+instance — carries **roughly 30% that has nothing to do with any intervention**. v1.0.0's rule
+barred cross-*provider* token deltas; that was too narrow. **A token delta is reportable only
+between models sharing a tokenizer.** Cost and cost per successful task remain reportable across
+the boundary, because the unit there is money.
+
+Each model in the pricing snapshot records its tokenizer generation, and any C4 pair spanning a
+tokenizer boundary must state it wherever a token figure from that pair appears.
+
+### 12.0.2 Token inclusion is a per-provider fact, not arithmetic
+
+Also found while building `PS-2026-09-16`, and it had already produced a bug in the harness:
+providers disagree about whether cached tokens sit **inside** the reported input total or
+**beside** it. OpenAI and DeepSeek report them as **included**; Anthropic reports them as
+**additional** — its pricing page carries an example with `input_tokens: 105` against
+`cache_read_input_tokens: 7123`.
+
+The meter previously treated `cached > input` as an error, encoding one convention as if it were
+arithmetic. On a cache-heavy Anthropic attempt that either raises or, if an adapter folds the
+fields to avoid raising, misprices by the size of the cache — **21% of the example call above**.
+
+The convention is therefore **declared per model in the snapshot with the vendor sentence as
+evidence**, and the meter applies the declaration. **An undeclared model is refused**, because a
+default is a wrong answer for whichever half of the providers it does not match.
 
 ### 12.1 Evidence contract — **NEW**
 

@@ -1714,5 +1714,32 @@
     }
    ]
   }
+ },
+ "calendar.get_calendar_period": {
+  "key": [
+   "date"
+  ],
+  "by_key": {
+   "2032-01-03": {
+    "year": 2032,
+    "period": 1,
+    "period_start": "2032-01-01",
+    "period_end": "2032-01-31",
+    "close_date": "2032-02-03",
+    "note": "Ordinary calendar month. Unrelated to any fiscal calendar."
+   },
+   "2032-02-09": {
+    "year": 2032,
+    "period": 2,
+    "period_start": "2032-02-01",
+    "period_end": "2032-02-29",
+    "close_date": "2032-03-03",
+    "note": "Ordinary calendar month. Unrelated to any fiscal calendar."
+   }
+  },
+  "default": {
+   "period": 1,
+   "note": "Ordinary calendar month. Unrelated to any fiscal calendar."
+  }
  }
 }

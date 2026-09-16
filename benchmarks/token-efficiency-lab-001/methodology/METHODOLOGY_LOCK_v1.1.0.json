@@ -7,7 +7,7 @@
   "drafting_seat": "methodology-reviewer",
   "source_commit": "a8ca352dc64e792864f351f7775e2b21681b6390",
   "documents": {
-    "methodology/METHODOLOGY_v1.1.0.md": "f4327ca9ce7b61c88fd84c54e3eb3f91a564d986b38c567c8c58311e4a9c3436",
+    "methodology/METHODOLOGY_v1.1.0.md": "f4e5b65e204dd0a31cc3d04a639d5542c7aa49523d374da5f51bc0330e490774",
     "methodology/METER_CALIBRATION_v1.1.0.md": "726d193b8e24cc4825c151e41bef09dd0027988efce33bfa069bcafc71298113",
     "methodology/METHODOLOGY_CHANGE_REVIEW_001.md": "706eaba3c9d578baf06abdddc028dd2ff2db5a9c94db21b265dce2251f06d4cd",
     "methodology/METHODOLOGY_CHANGE_REQUEST_001.md": "953541203b175033248823e617f9b13f816f8a6e44f723a1d7b58641ebf3106f",
@@ -98,5 +98,26 @@
     "task_attempts_experimental": 270,
     "mean_attempts_per_run": 3.46,
     "allocation_changed": false
-  }
+  },
+  "amendments_during_drafting": [
+    {
+      "date": "2026-09-16",
+      "clause": "12.0.1",
+      "change": "the token-comparability bar extended to WITHIN a provider, after Anthropic's docs were found to state that Claude 4.7+ uses a tokenizer producing ~30% more tokens",
+      "source": "https://docs.claude.com/en/docs/about-claude/pricing"
+    },
+    {
+      "date": "2026-09-16",
+      "clause": "12.0.2",
+      "change": "token inclusion declared per provider; the meter previously encoded the OpenAI/DeepSeek convention as arithmetic and would have raised or mispriced every cache-heavy Anthropic attempt",
+      "source": "https://docs.claude.com/en/docs/about-claude/pricing"
+    },
+    {
+      "date": "2026-09-16",
+      "clause": "8",
+      "change": "recorded that the C4 tier-adjacent pairs were reasoned about against an OpenAI lineup that has since moved; the pairs are open decision C-a",
+      "source": "PRICING_SNAPSHOT_PS-2026-09-16.json"
+    }
+  ],
+  "drafting_note": "A draft is amended in place while it is a draft; that is what a draft is for. Each amendment is recorded above with its source. Once signed off, any further change requires a new version file."
 }

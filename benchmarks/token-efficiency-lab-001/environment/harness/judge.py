@@ -119,25 +119,53 @@ INVALID_REASON_PREFIXES = (
 COUNT_PENALTY = 0.05
 NUM_TOL = 1e-9
 
-# ---- the `count` penalty, per task ----------------------------------------
+# ---- how `count` is scored, per task --------------------------------------
 # SCORING_SPEC precedence: the frozen task text is authoritative over this
-# module.  All four A tasks and B-002/B-003 state the -0.05 penalty in their
-# own `quality_metric`; none of the three C tasks does (they define
-# `quality_score = coverage` and stop), so under v1.1.0 C carries no penalty
-# (RT-09).  The table is the frozen transcription; the packet's own
-# `quality_metric` text overrides it when the two disagree, so a Designer
-# ruling in the task text takes effect without a judge-side edit (RT-10), and
-# the disagreement is recorded in `detail`.
-COUNT_PENALTY_DECLARED = {
-    "A-001": True, "A-002": True, "A-003": True, "A-004": True,
-    "B-001": False, "B-002": True, "B-003": True,
-    "C-001": False, "C-002": False, "C-003": False,
+# module.  v1.1.0 replaces v1.0.0's flat -0.05 everywhere, in three different
+# ways, each ruled in the task text (RT-09 / RT-10):
+#
+#   A-001..A-004   "subtracts 0.02 from quality_score ... reported separately
+#                   as count_consistent: false"
+#   B-002 / B-003  "Comparable cells = 7 * |K| + 1 ... plus one cell for
+#                   `count`" - one ordinary cell, no subtraction
+#   C-001..C-003   "NOT one of the comparable cells ... does not change
+#                   coverage, does not change traceability and does not fail
+#                   the task"
+#   B-001          has no `count` field at all
+#
+# ("subtract", amount) | ("cell", 0.0) | ("none", 0.0).  The table is the
+# frozen transcription and `count_rule_from_text` re-derives the same answer
+# from the packet's own `quality_metric`; the two are cross-checked by the
+# test suite against the real task files, so a Designer ruling cannot drift
+# away from the scorer unnoticed.
+COUNT_RULE_V11 = {
+    "A-001": ("subtract", 0.02), "A-002": ("subtract", 0.02),
+    "A-003": ("subtract", 0.02), "A-004": ("subtract", 0.02),
+    "B-001": ("none", 0.0), "B-002": ("cell", 0.0), "B-003": ("cell", 0.0),
+    "C-001": ("none", 0.0), "C-002": ("none", 0.0), "C-003": ("none", 0.0),
 }
-_PENALTY_RE = re.compile(r"subtract(?:s|ing)?\s+0\.05|-\s*0\.05", re.IGNORECASE)
-_NO_PENALTY_RE = re.compile(
-    r"no\s+count\s+penalty|does\s+not\s+(?:subtract|affect\s+quality_score)"
-    r"|count\s+(?:field\s+)?disagree\w*[^.]{0,80}?(?:is\s+not\s+penalis|no\s+penalty)",
-    re.IGNORECASE)
+_SUBTRACT_RE = re.compile(r"subtracts?\s+(0\.\d+)\s+from\s+quality_score",
+                          re.IGNORECASE)
+_COUNT_CELL_RE = re.compile(
+    r"plus\s+one\s+cell\s+for\s+.?count|`count`\s+cell\s+matches"
+    r"|scored\s+as\s+exactly\s+one\s+comparable\s+cell", re.IGNORECASE)
+_COUNT_NONE_RE = re.compile(
+    r"not\s+one\s+of\s+the\s+comparable\s+cells|does\s+not\s+change\s+coverage"
+    r"|no\s+count\s+penalty", re.IGNORECASE)
+
+
+def count_rule_from_text(metric: Any) -> Optional[Tuple[str, float]]:
+    """Re-derive the `count` rule from the frozen task text, or None."""
+    if not isinstance(metric, str) or "count" not in metric.lower():
+        return None
+    if _COUNT_NONE_RE.search(metric):
+        return ("none", 0.0)
+    m = _SUBTRACT_RE.search(metric)
+    if m:
+        return ("subtract", float(m.group(1)))
+    if _COUNT_CELL_RE.search(metric):
+        return ("cell", 0.0)
+    return None
 
 _MISSING = object()
 
@@ -253,11 +281,25 @@ E3_PERSON_TOKEN_RE = re.compile(r"\bPR-\d+\b")
 # Evidence each workload-E task needs before its rule-based violation classes
 # can fire at all.  Missing evidence makes a zero-tolerance criterion
 # unverifiable, which fails the task closed (SCORING_SPEC section 2).
+#
+# Emptiness is decided per task from that task's own manifest contract, not by
+# a blanket rule.  In this task set `parts_catalog.csv` holds 24 parts, 4 of
+# them Halberd Manufacturing's; `shifts.csv` holds 12 shifts and
+# `staff_roster.csv` 16 people.  None of these sets can legitimately be empty,
+# so an empty one is the evidence producer failing, not a corpus that permits
+# nothing - and it must never silently disable V1-V5 (RT-02).
 E_REQUIRED_EVIDENCE = {
-    "E-001": ("catalog_part_ids", "halberd_part_ids"),
+    # task_id: ((field, minimum size), ...)
+    "E-001": (("catalog_part_ids", 1), ("halberd_part_ids", 1)),
     "E-002": (),
-    "E-003": ("shifts", "roster"),
+    "E-003": (("shifts", 1), ("roster", 1)),
 }
+
+# Evidence a workload-E packet may legitimately omit or ship empty: each
+# describes an event that may simply not have happened.
+E_OPTIONAL_EVIDENCE = ("additional_on_leave", "max_shifts_overrides",
+                       "precomputed_violations", "completed_turns",
+                       "run_reached_final_turn")
 
 E3_REASONS = (
     "no_person_with_required_certification_at_site",
@@ -768,53 +810,47 @@ def _score_records(reported: Sequence[Any], key_records: Sequence[Any],
     }
 
 
-def count_penalty_declared(view: Dict[str, Any]) -> Tuple[bool, str]:
-    """Does THIS task's frozen metric state a `count` penalty?
-
-    The task text is authoritative over this module (SCORING_SPEC precedence),
-    so the packet's own `quality_metric` decides, and the frozen table is the
-    cross-check.  Under v1.0.0 the frozen v1.0.0 behaviour is reproduced
-    unchanged: the penalty applied to A, B and C alike, including where the C
-    task text never asked for it (RT-09).
-    """
-    task_id = view.get("task_id")
-    table = COUNT_PENALTY_DECLARED.get(task_id if isinstance(task_id, str) else "")
+def count_rule(view: Dict[str, Any]) -> Tuple[str, float, str]:
+    """(kind, amount, basis) for this task's `count` field."""
+    task_id = view.get("task_id") if isinstance(view.get("task_id"), str) else ""
     if view.get("_mv") != V1_1_0:
-        return True, "v1.0.0_frozen_behaviour"
-    metric = view.get("quality_metric")
-    if isinstance(metric, str) and "count" in metric.lower():
-        if _NO_PENALTY_RE.search(metric):
-            return False, "task_quality_metric_declares_no_penalty"
-        if _PENALTY_RE.search(metric):
-            return True, "task_quality_metric_declares_penalty"
-        return False, "task_quality_metric_states_no_count_penalty"
-    if table is None:
-        return False, "task_unknown_no_penalty"
-    return bool(table), "frozen_table_no_metric_text"
+        # v1.0.0 replay: the flat -0.05, applied to A, B and C alike -
+        # including where the C task text never asked for it (RT-09).
+        return "subtract", COUNT_PENALTY, "v1.0.0_frozen_behaviour"
+    from_text = count_rule_from_text(view.get("quality_metric"))
+    table = COUNT_RULE_V11.get(task_id)
+    if from_text is not None:
+        return from_text[0], from_text[1], "task_quality_metric"
+    if table is not None:
+        return table[0], table[1], "frozen_table_transcribed_from_task_text"
+    return "none", 0.0, "task_unknown"
 
 
-def _count_penalty(view: Dict[str, Any], obj: dict, count_field: str, actual: int,
-                   detail: Dict[str, Any]) -> float:
-    """-0.05 when the declared count disagrees with the emitted list length.
+def _count_check(view: Dict[str, Any], obj: dict, count_field: str, actual: int,
+                 detail: Dict[str, Any]) -> Tuple[float, Optional[bool]]:
+    """(subtraction, count_cell_matched).
 
-    Applied only where the task's own `quality_metric` states the penalty.
+    `count_cell_matched` is None unless this task scores `count` as a cell.
     """
-    declared, basis = count_penalty_declared(view)
-    table = COUNT_PENALTY_DECLARED.get(view.get("task_id") if isinstance(view.get("task_id"), str) else "")
-    detail["count_penalty_applicable"] = declared
-    detail["count_penalty_basis"] = basis
-    if table is not None and basis.startswith("task_quality_metric") and bool(table) != declared:
-        detail["count_penalty_task_text_disagrees_with_frozen_table"] = {
-            "frozen_table": bool(table), "task_text": declared}
+    kind, amount, basis = count_rule(view)
     reported = _get(obj, count_field)
     ok = not (reported is _MISSING or not _is_number(reported) or int(reported) != actual)
-    detail["count_field_ok"] = ok
+    detail["count_consistent"] = ok
+    detail["count_field_ok"] = ok          # v1.0.0 field name, kept for replay
+    detail["count_rule"] = kind
+    detail["count_rule_basis"] = basis
     if not ok:
         detail["count_reported"] = None if reported is _MISSING else reported
         detail["count_actual"] = actual
-    if ok or not declared:
-        return 0.0
-    return COUNT_PENALTY
+    table = COUNT_RULE_V11.get(view.get("task_id") if isinstance(view.get("task_id"), str) else "")
+    if table is not None and basis == "task_quality_metric" and table[0] != kind:
+        detail["count_rule_task_text_disagrees_with_frozen_table"] = {
+            "frozen_table": table[0], "task_text": kind}
+    if kind == "cell":
+        return 0.0, ok
+    if kind == "subtract" and not ok:
+        return amount, None
+    return 0.0, None
 
 
 # ---------------------------------------------------------------------------
@@ -822,11 +858,19 @@ def _count_penalty(view: Dict[str, Any], obj: dict, count_field: str, actual: in
 # ---------------------------------------------------------------------------
 
 def _valid_symbols(view: Dict[str, Any]) -> Optional[Set[str]]:
+    """The frozen symbol table, or None when it was not supplied.
+
+    Emptiness is a CONTENT check, not a type check: `[]` is not a symbol table,
+    it is a missing one, and it must not be allowed to turn every reported
+    symbol into a fabrication (nor, with the test inverted, to disarm the
+    check).  `{}`/`[]` fail closed (RT-02, v1.1.0 section 12.1).
+    """
     ev = view.get("required_evidence")
     if isinstance(ev, dict):
         for k in ("valid_symbols", "defined_functions", "module_level_functions"):
             if isinstance(ev.get(k), (list, tuple, set)):
-                return _str_set(ev[k])
+                got = _str_set(ev[k])
+                return got if got else None
     return None
 
 
@@ -879,7 +923,7 @@ def _score_a(view: Dict[str, Any]) -> Dict[str, Any]:
                    "false_positives": sorted(P - K),
                    "false_negatives": sorted(K - P)})
 
-    score = max(0.0, score - _count_penalty(view, obj, "count", len(deduped), detail))
+    score = max(0.0, score - _count_check(view, obj, "count", len(deduped), detail)[0])
 
     valid = _valid_symbols(view)
     fabricated: List[Any] = list(non_strings)
@@ -958,7 +1002,7 @@ def _score_a004(view: Dict[str, Any], obj: dict, key_payload: dict,
                    "components_emitted": emitted_count,
                    "components_distinct": len(P),
                    "undersized_components": undersized})
-    score = max(0.0, score - _count_penalty(view, obj, "component_count", emitted_count, detail))
+    score = max(0.0, score - _count_check(view, obj, "component_count", emitted_count, detail)[0])
 
     valid = _valid_symbols(view)
     members = {m for comp in P for m in comp}
@@ -1129,7 +1173,15 @@ def _score_b_records(view: Dict[str, Any], task_id: str, obj: dict,
               "reported_record_count", "missing_record_ids", "extra_record_ids",
               "duplicate_or_unusable_records"):
         detail[k] = res[k]
-    score = max(0.0, score - _count_penalty(view, obj, "count", len(reported), detail))
+    sub, count_cell = _count_check(view, obj, "count", len(reported), detail)
+    if count_cell is None:
+        score = max(0.0, score - sub)
+    else:
+        # v1.1.0 B-002/B-003: `count` is one ordinary comparable cell.
+        num = res["matched_cells"] + (1 if count_cell else 0)
+        den = res["denominator"] + 1
+        detail["matched_cells"], detail["denominator"] = num, den
+        score = (num / den) if den else 0.0
 
     # fabricated identifier -> outright failure
     real_ids = None
@@ -1342,7 +1394,7 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
     detail["unsupported_citations"] = unsupported[:50]
     detail["cited_files_not_in_corpus"] = sorted(set(nonexistent_files))
 
-    score = max(0.0, coverage - _count_penalty(view, obj, "count", len(reported), detail))
+    score = max(0.0, coverage - _count_check(view, obj, "count", len(reported), detail)[0])
 
     # ---- fabricated identifiers ------------------------------------------
     fabricated: List[str] = []
@@ -1391,6 +1443,19 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
 # workload D
 # ---------------------------------------------------------------------------
 
+# UG-20, ruled in D-004's v1.1.0 metric: a value reached by division may not
+# be failed for its last bit.
+D_FIELD_TOLERANCE = {("D-004", "remaining_error_budget_minutes"): 1e-6}
+
+
+def _d_field_matches(view: Dict[str, Any], field: str, reported: Any, key: Any) -> bool:
+    tol = D_FIELD_TOLERANCE.get((view.get("task_id"), field))
+    if tol is not None and view.get("_mv") == V1_1_0 \
+            and _is_number(reported) and _is_number(key):
+        return abs(float(reported) - float(key)) <= tol
+    return _values_equal(reported, key)
+
+
 def _score_d(view: Dict[str, Any]) -> Dict[str, Any]:
     task_id = view.get("task_id")
     obj, mode, info = parse_model_json(view.get("model_output"))
@@ -1428,7 +1493,12 @@ def _score_d(view: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(packet_contested, (list, tuple)) and set(_str_set(packet_contested)) != set(contested):
         detail["packet_contested_families_disagree"] = sorted(_str_set(packet_contested))
 
-    if tool_calls is None:
+    v11 = view.get("_mv") == V1_1_0
+    if tool_calls is None or (v11 and len(tool_calls) == 0):
+        # v1.1.0 metric: "If it is absent OR EMPTY the criterion is unevaluable
+        # and the task fails closed ...; an empty record is never read as 'no
+        # wrong tools were called', because it is indistinguishable from a run
+        # that called none at all."
         detail["tool_audit_available"] = False
         return _result(view, quality_score=0.0, task_success=False,
                        failure_reason="required_evidence_missing:tool_calls",
@@ -1454,7 +1524,11 @@ def _score_d(view: Dict[str, Any]) -> Dict[str, Any]:
     detail["wrong_tool_calls"] = wrong[:50]
     detail["extraneous_calls"] = extraneous
 
-    fixture_reads = ev.get("fixture_reads")
+    fixture_reads = None if v11 else ev.get("fixture_reads")
+    if v11:
+        # v1.1.0 reads fixture access from `corpus_access_log`, in the
+        # evidence gate, exactly as the task text now specifies.
+        detail["fixture_read_basis"] = "corpus_access_log"
     if fixture_reads is None:
         detail["fixture_read_evidence_available"] = False
         n_fixture = 0
@@ -1480,9 +1554,21 @@ def _score_d(view: Dict[str, Any]) -> Dict[str, Any]:
         detail["extra_fields"] = sorted(emitted - set(required_fields))
         detail["missing_fields"] = sorted(set(required_fields) - emitted)
         mismatched = [f for f in required_fields
-                      if not _values_equal(_get(obj, f), key_fields.get(f, _MISSING))]
+                      if not _d_field_matches(view, f, _get(obj, f),
+                                              key_fields.get(f, _MISSING))]
         detail["mismatched_fields"] = mismatched
-        answer_correct = exact_keys and not mismatched and len(key_fields) == len(required_fields)
+        if v11:
+            # UG-19 RULING, reversed in v1.1.0: "Keys emitted beyond the
+            # required set are ignored - they neither match nor mismatch...
+            # A MISSING required key remains an outright failure."  Discarding
+            # a correct D answer over a `"confidence"` key destroyed a D
+            # observation for a reason unrelated to tool selection, and reply
+            # verbosity is a plausible treatment-correlated artefact.
+            answer_correct = (not detail["missing_fields"] and not mismatched
+                              and len(key_fields) == len(required_fields))
+        else:
+            answer_correct = (exact_keys and not mismatched
+                              and len(key_fields) == len(required_fields))
     detail["answer_correct"] = answer_correct
 
     score = 1.0 if (answer_correct and not wrong) else 0.0
@@ -1513,8 +1599,12 @@ def _score_d(view: Dict[str, Any]) -> Dict[str, Any]:
         return _result(view, quality_score=0.0, task_success=False,
                        failure_reason="answer_key_unavailable", detail=detail)
     if not answer_correct:
-        reason = ("required_key_set_not_exact" if not detail.get("key_set_exact")
-                  else "answer_field_mismatch")
+        if view.get("_mv") == V1_1_0:
+            reason = ("missing_required_keys" if detail.get("missing_fields")
+                      else "answer_field_mismatch")
+        else:
+            reason = ("required_key_set_not_exact" if not detail.get("key_set_exact")
+                      else "answer_field_mismatch")
         return _result(view, quality_score=0.0, task_success=False,
                        failure_reason=reason, detail=detail)
 
@@ -1545,6 +1635,43 @@ class _Violations:
 
     def __len__(self) -> int:
         return len(self.items)
+
+
+def _turn_coverage_gap(view, turns, ev, final_turn: int,
+                       detail: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Is the transcript complete?  None when it is (or when not checked).
+
+    RT-13 / v1.1.0 section 12.1: `len(turns)` must equal the declared turn
+    count.  A reply that was never shipped cannot be scanned for a constraint
+    violation, so a short, reordered or truncated transcript is INVALID, not a
+    pass.  Checked under v1.1.0 only; v1.0.0's SCORING_SPEC UG-28 adopted the
+    opposite rule in writing and its records replay under it.
+    """
+    declared = ev.get("turn_count") if isinstance(ev, dict) else None
+    if view.get("_mv") != V1_1_0:
+        detail["turn_completeness_checked"] = False
+        return None
+    detail["turn_completeness_checked"] = True
+    if not _is_number(declared) or int(declared) < 1:
+        gap = {"why": "turn_count_absent_or_invalid", "declared": declared}
+        detail["turn_completeness"] = gap
+        return gap
+    declared = int(declared)
+    numbers = [t["turn"] for t in turns]
+    covered = set(numbers) | {final_turn}
+    expected = set(range(1, declared + 1))
+    gap: Optional[Dict[str, Any]] = None
+    if numbers != sorted(numbers):
+        gap = {"why": "turns_out_of_order", "turns": numbers}
+    elif len(set(numbers)) != len(numbers):
+        gap = {"why": "duplicate_turn_numbers", "turns": numbers}
+    elif covered != expected:
+        gap = {"why": "turns_missing", "declared": declared,
+               "missing": sorted(expected - covered),
+               "unexpected": sorted(covered - expected)}
+    detail["turn_completeness"] = gap or {"why": None, "declared": declared,
+                                          "turns_supplied": len(numbers)}
+    return gap
 
 
 def _final_turn_number(turns, ev) -> int:
@@ -1618,6 +1745,7 @@ def _score_e(view: Dict[str, Any]) -> Dict[str, Any]:
 
     final_turn = _final_turn_number(turns, ev)
     detail["final_turn_number"] = final_turn
+    turn_gap = _turn_coverage_gap(view, turns, ev, final_turn, detail)
 
     v = _Violations()
     for pre in (ev.get("precomputed_violations") or []):
@@ -1651,9 +1779,18 @@ def _score_e(view: Dict[str, Any]) -> Dict[str, Any]:
                            "source": "methodology_v1.0.0_s6",
                            "instances": v.items[:20]}]})
 
-    missing_ev = [f for f in E_REQUIRED_EVIDENCE.get(task_id, ())
-                  if not isinstance(ev.get(f), (list, tuple, dict, set))]
-    detail["violation_checks_unverifiable"] = missing_ev
+    # Fail closed on CONTENT, not type: `{}` and `[]` are missing evidence,
+    # never a licence to report "no violation detected" (RT-02).
+    missing_ev: List[str] = []
+    empty_ev: List[str] = []
+    for field, minimum in E_REQUIRED_EVIDENCE.get(task_id, ()):
+        got = ev.get(field)
+        if not isinstance(got, (list, tuple, dict, set)):
+            missing_ev.append(field)
+        elif len(got) < minimum:
+            empty_ev.append(field)
+    detail["violation_checks_unverifiable"] = missing_ev + empty_ev
+    detail["required_evidence_empty"] = empty_ev
 
     if obj is None:
         return _result(view, quality_score=0.0, task_success=False,
@@ -1665,6 +1802,15 @@ def _score_e(view: Dict[str, Any]) -> Dict[str, Any]:
         return _result(view, quality_score=completion, task_success=False,
                        failure_reason="required_evidence_missing:" + ",".join(missing_ev),
                        detail=detail)
+    if empty_ev:
+        return _result(view, quality_score=completion, task_success=False,
+                       failure_reason="required_evidence_empty:" + ",".join(empty_ev),
+                       detail=detail)
+    if turn_gap is not None:
+        # RT-13: a short, reordered or truncated transcript cannot show that
+        # every turn was clean.  It is unmeasured, not clean.
+        return _result(view, quality_score=completion, task_success=False,
+                       failure_reason="evidence_incomplete:turns", detail=detail)
     if not detail["reached_final_turn"]:
         return _result(view, quality_score=completion, task_success=False,
                        failure_reason="run_did_not_reach_final_turn", detail=detail)
@@ -1719,16 +1865,44 @@ def _e001_completion(obj: Optional[dict], key: Any) -> Tuple[float, Dict[str, An
     return ((matched / denom) if denom else 0.0), d
 
 
+_DIGIT_RUN_RE = re.compile(r"\d+")
+
+
+def _id_shape(identifier: str) -> str:
+    """A regex matching identifiers of the same shape: digits generalised,
+    everything else literal.  `KP-1010` -> `KP\-\d{4}`."""
+    out: List[str] = []
+    i = 0
+    for m in _DIGIT_RUN_RE.finditer(identifier):
+        out.append(re.escape(identifier[i:m.start()]))
+        out.append(r"\d{%d}" % (m.end() - m.start()))
+        i = m.end()
+    out.append(re.escape(identifier[i:]))
+    return "".join(out)
+
+
+def id_shape_regex(ids: Iterable[str]) -> Optional["re.Pattern"]:
+    """A prose scanner derived from the FROZEN id list, not from the packet.
+
+    RT-02: `part_id_pattern` was a runner-supplied regex used with
+    `finditer`, so the plausible anchored form `^KP-\d{4}$` matched nothing and
+    silently disarmed E-001 V1/V3.  No configuration can disarm this one: it is
+    computed from `catalog_part_ids` + `halberd_part_ids`, whose emptiness is
+    itself checked, and it is unanchored and word-bounded by construction so
+    the search semantics cannot be got wrong from outside.
+    """
+    shapes = sorted({_id_shape(x.strip()) for x in ids
+                     if isinstance(x, str) and x.strip()})
+    if not shapes:
+        return None
+    return re.compile(r"(?<![A-Za-z0-9_-])(?:" + "|".join(shapes) + r")(?![A-Za-z0-9_-])")
+
+
 def _e001_violations(v: _Violations, turns, obj, key, ev, final_turn: int) -> None:
     catalog = _str_set(ev.get("catalog_part_ids"))
     halberd = _str_set(ev.get("halberd_part_ids"))
-    pattern = ev.get("part_id_pattern")
-    part_re = None
-    if isinstance(pattern, str):
-        try:
-            part_re = re.compile(pattern)
-        except re.error:
-            part_re = None
+    # Derived from the evidence itself; `part_id_pattern` is never read.
+    part_re = id_shape_regex(catalog | halberd)
 
     def check_ids(turn: int, ids: Iterable[str]) -> None:
         for pid in ids:
@@ -1946,6 +2120,10 @@ def _e003_violations(v: _Violations, turns, obj, ev, final_turn: int) -> None:
     roster = ev.get("roster") if isinstance(ev.get("roster"), dict) else {}
     leave_from = ev.get("additional_on_leave") or {}       # person -> turn
     max_overrides = ev.get("max_shifts_overrides") or {}   # person -> {turn, value}
+    # With no tables at all nothing can be decided; the caller turns that into
+    # INVALID.  Inventing an "unknown entity" violation out of absent evidence
+    # would be the mirror-image of the fail-open bug.
+    tables_present = bool(shifts) and bool(roster)
 
     def max_shifts(pid: str, turn: int) -> Optional[int]:
         base = (roster.get(pid) or {}).get("max_shifts")
@@ -1960,12 +2138,22 @@ def _e003_violations(v: _Violations, turns, obj, ev, final_turn: int) -> None:
         t = leave_from.get(pid)
         return _is_number(t) and turn >= int(t)
 
-    def check_pairs(turn: int, pairs: Iterable[Tuple[str, str]]) -> None:
+    def check_pairs(turn: int, pairs: Iterable[Tuple[str, str]],
+                    structured: bool = True) -> None:
         counts: Dict[str, int] = {}
         for sid, pid in pairs:
-            s = shifts.get(sid) or {}
-            p = roster.get(pid) or {}
+            s = shifts.get(sid) if isinstance(shifts.get(sid), dict) else None
+            p = roster.get(pid) if isinstance(roster.get(pid), dict) else None
             if not s or not p:
+                # RT-02: `continue` here used to be the whole fail-open.  The
+                # rosters and shift tables are checked for emptiness before a
+                # verdict is issued, so reaching this line with real evidence
+                # means the run named an entity that is not in the frozen
+                # corpus.  In a structured assignment that is a violation; in
+                # prose it is only ever a mention, so it fires nothing.
+                if structured and tables_present:
+                    v.add(turn, "V6_entity_not_in_corpus", "%s/%s" % (sid, pid),
+                          "shift_id or person_id absent from the frozen corpus")
                 continue
             if s.get("required_certification") and p.get("certification") != s.get("required_certification"):
                 v.add(turn, "V1_certification_mismatch", "%s/%s" % (sid, pid))
@@ -1981,7 +2169,7 @@ def _e003_violations(v: _Violations, turns, obj, ev, final_turn: int) -> None:
             if m is not None and c > m:
                 v.add(turn, "V5_max_shifts_exceeded", pid)
 
-    def pairs_in(text: str) -> List[Tuple[str, str]]:
+    def pairs_in(text: str) -> Tuple[List[Tuple[str, str]], bool]:
         found: List[Tuple[str, str]] = []
         seen_structured = False
         for o in _json_objects_in(text):
@@ -1997,10 +2185,11 @@ def _e003_violations(v: _Violations, turns, obj, ev, final_turn: int) -> None:
                 p = E3_PERSON_TOKEN_RE.findall(line)
                 if len(s) == 1 and len(p) == 1:
                     found.append((s[0], p[0]))
-        return found
+        return found, seen_structured
 
     for t in turns:
-        check_pairs(t["turn"], pairs_in(t["text"]))
+        pairs, structured = pairs_in(t["text"])
+        check_pairs(t["turn"], pairs, structured)
 
     if isinstance(obj, dict) and isinstance(obj.get("assignments"), list):
         pairs = []
@@ -2023,10 +2212,247 @@ def _e003_violations(v: _Violations, turns, obj, ev, final_turn: int) -> None:
 _DISPATCH = {"A": _score_a, "B": _score_b, "C": _score_c, "D": _score_d, "E": _score_e}
 
 
+# ---------------------------------------------------------------------------
+# v1.1.0 evidence gate (methodology v1.1.0 section 12.1)
+#
+# "Required evidence that is missing, empty, wrongly typed, or from the wrong
+# run is INVALID, never a pass.  Emptiness is a content check, not a type
+# check: {} and [] fail closed."
+#
+# Per task: (field, minimum size).  A minimum of 0 means the container must be
+# present but may legitimately be empty - its emptiness is then a finding
+# about the run, not about the evidence.  `None` means a scalar that need only
+# be present.  The minima are the frozen task-set contract, not a blanket
+# rule: they say what THIS corpus contains, so a legitimately empty set (one a
+# contract genuinely permits) is never read as a violation.
+#
+# Legitimately optional, never required, and empty without consequence:
+#   additional_on_leave, max_shifts_overrides, precomputed_violations,
+#   fixture_reads, completed_turns, run_reached_final_turn.
+# ---------------------------------------------------------------------------
+
+EVIDENCE_CONTRACT: Dict[str, Tuple[Tuple[str, Optional[int]], ...]] = {
+    # A: valid_symbols is enforced inside _score_a (it is the fabrication
+    # basis); A-001's corpus-read condition is enforced from
+    # `corpus_access_log` below.
+    "A-001": (), "A-002": (), "A-003": (), "A-004": (),
+    "B-001": (),
+    # 24 catalogued incident ids / 18 req ids exist in the frozen documents;
+    # zero means the evidence producer failed, not that the document is empty.
+    "B-002": (("document_incident_ids", 1),),
+    "B-003": (("document_req_ids", 1),),
+    # corpora/research_c/ holds 40+ files; a citation cannot be checked
+    # against an empty corpus listing.
+    "C-001": (("corpus_files", 1),),
+    "C-002": (("corpus_files", 1), ("document_award_ids", 1)),
+    "C-003": (("corpus_files", 1), ("registry_plugin_ids", 1)),
+    # D: tool_calls is enforced inside _score_d; an empty list is a finding
+    # (answered_without_calling_any_tool), not missing evidence.
+    "D-001": (), "D-002": (), "D-003": (), "D-004": (),
+    # E: enforced inside _score_e, which also owns the turn-completeness
+    # assertion (RT-13).
+    "E-001": (), "E-002": (), "E-003": (),
+}
+
+# Every one of the 17 tasks carries "any corpus file is modified" (or its
+# task-specific wording) as an outright failure.  v1.1.0 fixes the evidence
+# exactly: two objects mapping each corpus-relative path to its sha256, before
+# and after the run.  A file is modified when a path present in BOTH has
+# different hashes, or when a path in `before` is absent from `after`.  Either
+# object absent or empty -> `required_evidence_missing:corpus_hashes`, never a
+# pass (RT-08).  Each task scopes the condition to its own corpus directory.
+CORPUS_SCOPE = {
+    "A": "repo_ledgerline", "B": "docs_b", "C": "research_c",
+    "D": "mcp_toolset", "E": "workflow_e",
+}
+
+# Tasks whose failure condition needs the run's own file-access log, and the
+# directory each one asks about.
+#   A-001  "the answer is produced without reading the corpus": no entry
+#          inside corpora/repo_ledgerline/ -> the answer was not read from it.
+#   D-*    "the run reads any file under corpora/mcp_toolset/fixtures/".
+CORPUS_ACCESS_REQUIRED = {
+    "A-001": ("repo_ledgerline", "no_read"),
+    "D-001": ("mcp_toolset/fixtures", "forbidden_read"),
+    "D-002": ("mcp_toolset/fixtures", "forbidden_read"),
+    "D-003": ("mcp_toolset/fixtures", "forbidden_read"),
+    "D-004": ("mcp_toolset/fixtures", "forbidden_read"),
+}
+
+
+def _paths_in_scope(paths: Iterable[str], scope: Optional[str]) -> List[str]:
+    """Paths under the task's own corpus directory.
+
+    A harness that ships paths already relative to that directory (no
+    `corpora/<name>/` prefix anywhere) is not silently read as "nothing in
+    scope": in that case every path is in scope.
+    """
+    paths = [p for p in paths if isinstance(p, str)]
+    if not scope:
+        return paths
+    scoped = [p for p in paths if scope in p.replace("\\", "/")]
+    return scoped if scoped else paths
+
+
+def _container_size(v: Any) -> Optional[int]:
+    if isinstance(v, (list, tuple, set, frozenset, dict, str)):
+        return len(v)
+    return None
+
+
+def _corpus_integrity(view: Dict[str, Any]) -> Tuple[Optional[bool], str, List[str]]:
+    """(modified?, basis, offending paths).  None = no usable evidence."""
+    ev = view.get("required_evidence")
+    if not isinstance(ev, dict):
+        return None, "no_required_evidence_mapping", []
+    before, after = ev.get("corpus_hashes_before"), ev.get("corpus_hashes_after")
+    if not isinstance(before, dict) or not isinstance(after, dict):
+        return None, "corpus_hashes_absent_or_wrong_type", []
+    if not before or not after:
+        return None, "corpus_hashes_empty", []
+    workload = view.get("workload")
+    scope = CORPUS_SCOPE.get(workload if isinstance(workload, str) else "")
+    in_scope = set(_paths_in_scope(before.keys(), scope))
+    changed = sorted(p for p in in_scope
+                     if p in after and after[p] != before[p])
+    removed = sorted(p for p in in_scope if p not in after)
+    offenders = changed + removed
+    return bool(offenders), "corpus_hashes_before_after", offenders[:20]
+
+
+def _evidence_gate(view: Dict[str, Any], result: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """v1.1.0 only.  None = the dispatched result stands."""
+    task_id = view.get("task_id")
+    ev = view.get("required_evidence") if isinstance(view.get("required_evidence"), dict) else {}
+    detail = dict(result.get("detail") or {})
+
+    # 1. wrong-run evidence is not this attempt's evidence.
+    for field, packet_field in (("packet_id", "packet_id"), ("task_id", "task_id")):
+        got = ev.get(field)
+        want = view.get(packet_field)
+        if isinstance(got, str) and isinstance(want, str) and got.strip() != want.strip():
+            detail["evidence_identity_mismatch"] = {"field": field, "evidence": got,
+                                                    "packet": want}
+            return _result(view, quality_score=result["quality_score"],
+                           failure_reason="evidence_from_wrong_run", detail=detail)
+
+    # A confirmed breach is a finding and outranks anything below.
+    if result.get("zero_tolerance_breached"):
+        return None
+
+    # 2. corpus integrity, for every workload.
+    modified, basis, offenders = _corpus_integrity(view)
+    detail["corpus_integrity_basis"] = basis
+    detail["corpus_integrity_evaluated"] = modified is not None
+    if modified is True:
+        detail["corpus_paths_modified"] = offenders
+        return _result(view, quality_score=result["quality_score"],
+                       failure_reason="corpus_modified", detail=detail)
+    if modified is None:
+        return _result(view, quality_score=result["quality_score"],
+                       failure_reason="required_evidence_missing:corpus_hashes",
+                       detail=detail)
+
+    # An already-unscorable attempt stays unscorable.
+    if result.get("outcome") == INVALID:
+        out = dict(result)
+        out["detail"] = detail
+        return out
+
+    # 3. per-task evidence presence and emptiness.
+    missing: List[str] = []
+    empty: List[str] = []
+    for field, minimum in EVIDENCE_CONTRACT.get(task_id if isinstance(task_id, str) else "", ()):
+        if field not in ev:
+            missing.append(field)
+            continue
+        size = _container_size(ev[field])
+        if minimum is None:
+            continue
+        if size is None:
+            missing.append(field)
+        elif size < minimum:
+            empty.append(field)
+    if missing:
+        detail["required_evidence_missing"] = sorted(missing)
+        return _result(view, quality_score=result["quality_score"],
+                       failure_reason="required_evidence_missing:" + ",".join(sorted(missing)),
+                       detail=detail)
+    if empty:
+        detail["required_evidence_empty"] = sorted(empty)
+        return _result(view, quality_score=result["quality_score"],
+                       failure_reason="required_evidence_empty:" + ",".join(sorted(empty)),
+                       detail=detail)
+
+    # 4. the run's own file-access log.
+    spec = CORPUS_ACCESS_REQUIRED.get(task_id if isinstance(task_id, str) else "")
+    if spec is not None:
+        directory, kind = spec
+        log = ev.get("corpus_access_log")
+        if not isinstance(log, (list, tuple)):
+            return _result(view, quality_score=result["quality_score"],
+                           failure_reason="required_evidence_missing:corpus_access_log",
+                           detail=detail)
+        hits = [p for p in log
+                if isinstance(p, str) and directory in p.replace("\\", "/")]
+        detail["corpus_access_log_entries"] = len(log)
+        detail["corpus_access_log_hits"] = len(hits)
+        if kind == "no_read" and not hits:
+            # A-001: an answer produced without ever opening the corpus.
+            return _result(view, quality_score=result["quality_score"],
+                           failure_reason="answered_without_reading_the_corpus",
+                           detail=detail)
+        if kind == "forbidden_read":
+            if not log:
+                # D: "absent or empty ... the condition is unevaluable"
+                return _result(view, quality_score=result["quality_score"],
+                               failure_reason="required_evidence_missing:corpus_access_log",
+                               detail=detail)
+            if hits:
+                return _result(view, quality_score=result["quality_score"],
+                               failure_reason="fixtures_read_tool_selection_unmeasurable",
+                               detail=detail)
+
+    out = dict(result)
+    out["detail"] = detail
+    return out
+
+
 def score_packet(packet: dict) -> dict:
-    """Score one blind judge packet.  Never raises."""
+    """Score one blind judge packet at the ATTEMPT level.  Never raises.
+
+    The result is attempt-level and nothing else (v1.1.0 section 6.1).  No
+    cell success rate is computed here and no cell threshold - D's 95%
+    included - is ever applied here.
+    """
     view, ignored = _view(packet)
     try:
+        # ---- version gate (v1.1.0 section 13) ----------------------------
+        version, vsource, raw = resolve_methodology_version(view)
+        view["_mv"] = version
+        if version is None:
+            reason = ("methodology_version_absent" if vsource == "absent"
+                      else "methodology_version_unsupported")
+            return _result(view, failure_reason=reason, detail={
+                "ignored_packet_keys": ignored,
+                "methodology_version_source": vsource,
+                "methodology_version_declared": raw,
+                "supported_methodology_versions": list(SUPPORTED_METHODOLOGY_VERSIONS),
+                "refusal": "a packet whose methodology version is absent or "
+                           "unrecognised is refused, not scored under a guess"})
+        ignored = list(ignored)
+        if version == V1_1_0:
+            # v1.1.0 section 6.0.1(2): baseline_reference_quality may not
+            # determine task_success.  It is not read, not defaulted and not
+            # branched on; it is recorded as ignored.
+            ignored += _baseline_keys_present(view)
+            if isinstance(view.get("required_evidence"), dict) \
+                    and "part_id_pattern" in view["required_evidence"]:
+                # RT-02: a runner-supplied regex could silently disarm E-001
+                # V1/V3.  Under v1.1.0 it is not read at all.
+                ignored.append("required_evidence.part_id_pattern")
+            ignored = sorted(set(ignored))
+
         task_id = view.get("task_id")
         workload = view.get("workload")
         if not isinstance(workload, str) or workload.upper() not in _DISPATCH:
@@ -2038,6 +2464,10 @@ def score_packet(packet: dict) -> dict:
         workload = workload.upper()
         view["workload"] = workload
         out = _DISPATCH[workload](view)
+        if version == V1_1_0:
+            gated = _evidence_gate(view, out)
+            if gated is not None:
+                out = gated
     except Exception as exc:  # pragma: no cover - the safety net, by contract
         return _result(view, failure_reason="judge_internal_error",
                        detail={"ignored_packet_keys": ignored,
@@ -2045,7 +2475,8 @@ def score_packet(packet: dict) -> dict:
     out["detail"]["ignored_packet_keys"] = ignored
     if ignored:
         out["detail"]["blind_warning"] = (
-            "packet carried keys outside the nine allowed fields; they were ignored")
+            "packet carried keys outside the allowed fields, or fields this "
+            "methodology version does not read; they were ignored")
     return out
 
 
@@ -2064,6 +2495,7 @@ def score_directory(packets_dir: str, scores_dir: str, quiet: bool = False) -> L
                 "packet_id": os.path.splitext(name)[0],
                 "task_id": None, "workload": None, "blind_treatment_id": None,
                 "quality_score": 0.0, "task_success": False,
+                "outcome": INVALID,
                 "failure_reason": "packet_unreadable",
                 "zero_tolerance_breached": False,
                 "detail": {"exception": "%s: %s" % (type(exc).__name__, exc),
@@ -2085,9 +2517,15 @@ def score_directory(packets_dir: str, scores_dir: str, quiet: bool = False) -> L
                 res.get("failure_reason") or ""))
     summary = {
         "spec_version": SPEC_VERSION,
+        "level": "attempt",
         "packets_scored": len(results),
         "task_success_count": sum(1 for r in results if r["task_success"]),
+        "outcome_counts": {
+            o: sum(1 for r in results if r.get("outcome") == o)
+            for o in (PASS, FAIL_QUALITY, INVALID)
+        },
         "zero_tolerance_breaches": sum(1 for r in results if r["zero_tolerance_breached"]),
+        "note": "attempt-level only; cell success rates are the Aggregator's",
     }
     with open(os.path.join(scores_dir, "_SUMMARY.json"), "w", encoding="utf-8") as fh:
         json.dump(summary, fh, indent=2, sort_keys=True)

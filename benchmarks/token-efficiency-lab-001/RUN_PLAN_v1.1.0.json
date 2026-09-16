@@ -1,0 +1,2176 @@
+{
+  "run_plan_version": "1.1.0",
+  "methodology_version": "1.1.0",
+  "status": "DRAFT - depends on METHODOLOGY_CHANGE_REQUEST_002 being ratified",
+  "task_set_version": "1.1.0",
+  "unit_definition": {
+    "run": "one (workload, condition, repetition) unit. An AGGREGATION unit.",
+    "task_attempt": "one execution of one task under one condition. The unit of EXECUTION and of quality scoring.",
+    "session": "every task attempt is its own independent agent session. Workload E must never run its three scenarios inside one session - that would contaminate the context-accumulation measurement E exists to make."
+  },
+  "counts": {
+    "experimental_runs": 78,
+    "experimental_task_attempts": 270,
+    "guardrail_runs": {
+      "reproduction": 10,
+      "cache_control": 6,
+      "meter_calibration": 6
+    },
+    "total_runs": 100,
+    "mean_attempts_per_run": 3.46,
+    "allocation_changed_from_v1_0_0": false
+  },
+  "cost_consequence": {
+    "prior_estimate_usd": "51-94, assuming one attempt per run",
+    "revised_estimate_usd": "177-325",
+    "multiplier": 3.46,
+    "note": "Raised as CR-002. The allocation is untouched; what was never stated is the unit."
+  },
+  "comparability": {
+    "rule": "Every condition compares the same task ids, task-set version, corpora and configuration. The only permitted difference is the registered intervention.",
+    "prohibited": [
+      "selecting a subset of tasks per condition",
+      "renaming runs",
+      "dropping a task to resolve an inconsistency",
+      "counting three outputs of one task as three independent task samples"
+    ]
+  },
+  "ordering": {
+    "rule": "Within a repetition index, all C0 attempts for a task complete before any treatment attempt for that task.",
+    "combined_conditions": "C2+C4 and C3+C4 execute only after both single conditions have reported."
+  },
+  "cells": [
+    {
+      "workload": "A",
+      "condition": "C0",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "B",
+      "condition": "C0",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "C",
+      "condition": "C0",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "D",
+      "condition": "C0",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "E",
+      "condition": "C0",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "A",
+      "condition": "C1",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "D",
+      "condition": "C1",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "A",
+      "condition": "C2",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "B",
+      "condition": "C2",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "C",
+      "condition": "C2",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "D",
+      "condition": "C2",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "B",
+      "condition": "C3",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "E",
+      "condition": "C3",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "A",
+      "condition": "C4",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "B",
+      "condition": "C4",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "C",
+      "condition": "C4",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "D",
+      "condition": "C4",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "E",
+      "condition": "C4",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "A",
+      "condition": "C5",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "B",
+      "condition": "C5",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "D",
+      "condition": "C5",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "A",
+      "condition": "C2+C4",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "B",
+      "condition": "C2+C4",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "D",
+      "condition": "C2+C4",
+      "planned_runs": 3,
+      "planned_attempts": 12
+    },
+    {
+      "workload": "B",
+      "condition": "C3+C4",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    },
+    {
+      "workload": "E",
+      "condition": "C3+C4",
+      "planned_runs": 3,
+      "planned_attempts": 9
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "A-C0-r1",
+      "workload": "A",
+      "condition": "C0",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C0-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C0-r2",
+      "workload": "A",
+      "condition": "C0",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C0-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C0-r3",
+      "workload": "A",
+      "condition": "C0",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C0-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C0-r1",
+      "workload": "B",
+      "condition": "C0",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C0-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C0-r2",
+      "workload": "B",
+      "condition": "C0",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C0-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C0-r3",
+      "workload": "B",
+      "condition": "C0",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C0-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "C-C0-r1",
+      "workload": "C",
+      "condition": "C0",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "C-001",
+          "attempt_id": "C-001-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-002",
+          "attempt_id": "C-002-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-003",
+          "attempt_id": "C-003-C0-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "C-C0-r2",
+      "workload": "C",
+      "condition": "C0",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "C-001",
+          "attempt_id": "C-001-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-002",
+          "attempt_id": "C-002-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-003",
+          "attempt_id": "C-003-C0-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "C-C0-r3",
+      "workload": "C",
+      "condition": "C0",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "C-001",
+          "attempt_id": "C-001-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-002",
+          "attempt_id": "C-002-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-003",
+          "attempt_id": "C-003-C0-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C0-r1",
+      "workload": "D",
+      "condition": "C0",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C0-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C0-r2",
+      "workload": "D",
+      "condition": "C0",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C0-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C0-r3",
+      "workload": "D",
+      "condition": "C0",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C0-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C0-r1",
+      "workload": "E",
+      "condition": "C0",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C0-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C0-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C0-r2",
+      "workload": "E",
+      "condition": "C0",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C0-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C0-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C0-r3",
+      "workload": "E",
+      "condition": "C0",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C0-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C0-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C1-r1",
+      "workload": "A",
+      "condition": "C1",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C1-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C1-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C1-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C1-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C1-r2",
+      "workload": "A",
+      "condition": "C1",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C1-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C1-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C1-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C1-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C1-r3",
+      "workload": "A",
+      "condition": "C1",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C1-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C1-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C1-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C1-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C1-r1",
+      "workload": "D",
+      "condition": "C1",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C1-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C1-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C1-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C1-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C1-r2",
+      "workload": "D",
+      "condition": "C1",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C1-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C1-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C1-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C1-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C1-r3",
+      "workload": "D",
+      "condition": "C1",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C1-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C1-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C1-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C1-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C2-r1",
+      "workload": "A",
+      "condition": "C2",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C2-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C2-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C2-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C2-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C2-r2",
+      "workload": "A",
+      "condition": "C2",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C2-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C2-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C2-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C2-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C2-r3",
+      "workload": "A",
+      "condition": "C2",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C2-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C2-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C2-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C2-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C2-r1",
+      "workload": "B",
+      "condition": "C2",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C2-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C2-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C2-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C2-r2",
+      "workload": "B",
+      "condition": "C2",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C2-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C2-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C2-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C2-r3",
+      "workload": "B",
+      "condition": "C2",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C2-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C2-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C2-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "C-C2-r1",
+      "workload": "C",
+      "condition": "C2",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "C-001",
+          "attempt_id": "C-001-C2-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-002",
+          "attempt_id": "C-002-C2-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-003",
+          "attempt_id": "C-003-C2-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "C-C2-r2",
+      "workload": "C",
+      "condition": "C2",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "C-001",
+          "attempt_id": "C-001-C2-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-002",
+          "attempt_id": "C-002-C2-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-003",
+          "attempt_id": "C-003-C2-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "C-C2-r3",
+      "workload": "C",
+      "condition": "C2",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "C-001",
+          "attempt_id": "C-001-C2-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-002",
+          "attempt_id": "C-002-C2-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-003",
+          "attempt_id": "C-003-C2-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C2-r1",
+      "workload": "D",
+      "condition": "C2",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C2-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C2-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C2-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C2-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C2-r2",
+      "workload": "D",
+      "condition": "C2",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C2-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C2-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C2-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C2-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C2-r3",
+      "workload": "D",
+      "condition": "C2",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C2-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C2-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C2-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C2-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C3-r1",
+      "workload": "B",
+      "condition": "C3",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C3-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C3-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C3-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C3-r2",
+      "workload": "B",
+      "condition": "C3",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C3-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C3-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C3-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C3-r3",
+      "workload": "B",
+      "condition": "C3",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C3-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C3-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C3-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C3-r1",
+      "workload": "E",
+      "condition": "C3",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C3-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C3-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C3-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C3-r2",
+      "workload": "E",
+      "condition": "C3",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C3-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C3-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C3-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C3-r3",
+      "workload": "E",
+      "condition": "C3",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C3-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C3-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C3-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C4-r1",
+      "workload": "A",
+      "condition": "C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C4-r2",
+      "workload": "A",
+      "condition": "C4",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C4-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C4-r3",
+      "workload": "A",
+      "condition": "C4",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C4-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C4-r1",
+      "workload": "B",
+      "condition": "C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C4-r2",
+      "workload": "B",
+      "condition": "C4",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C4-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C4-r3",
+      "workload": "B",
+      "condition": "C4",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C4-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "C-C4-r1",
+      "workload": "C",
+      "condition": "C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "C-001",
+          "attempt_id": "C-001-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-002",
+          "attempt_id": "C-002-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-003",
+          "attempt_id": "C-003-C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "C-C4-r2",
+      "workload": "C",
+      "condition": "C4",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "C-001",
+          "attempt_id": "C-001-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-002",
+          "attempt_id": "C-002-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-003",
+          "attempt_id": "C-003-C4-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "C-C4-r3",
+      "workload": "C",
+      "condition": "C4",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "C-001",
+          "attempt_id": "C-001-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-002",
+          "attempt_id": "C-002-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "C-003",
+          "attempt_id": "C-003-C4-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C4-r1",
+      "workload": "D",
+      "condition": "C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C4-r2",
+      "workload": "D",
+      "condition": "C4",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C4-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C4-r3",
+      "workload": "D",
+      "condition": "C4",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C4-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C4-r1",
+      "workload": "E",
+      "condition": "C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C4-r2",
+      "workload": "E",
+      "condition": "C4",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C4-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C4-r3",
+      "workload": "E",
+      "condition": "C4",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C4-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C5-r1",
+      "workload": "A",
+      "condition": "C5",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C5-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C5-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C5-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C5-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C5-r2",
+      "workload": "A",
+      "condition": "C5",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C5-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C5-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C5-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C5-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C5-r3",
+      "workload": "A",
+      "condition": "C5",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C5-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C5-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C5-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C5-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C5-r1",
+      "workload": "B",
+      "condition": "C5",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C5-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C5-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C5-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C5-r2",
+      "workload": "B",
+      "condition": "C5",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C5-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C5-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C5-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C5-r3",
+      "workload": "B",
+      "condition": "C5",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C5-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C5-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C5-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C5-r1",
+      "workload": "D",
+      "condition": "C5",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C5-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C5-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C5-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C5-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C5-r2",
+      "workload": "D",
+      "condition": "C5",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C5-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C5-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C5-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C5-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C5-r3",
+      "workload": "D",
+      "condition": "C5",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C5-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C5-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C5-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C5-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C2+C4-r1",
+      "workload": "A",
+      "condition": "C2+C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C2+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C2+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C2+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C2+C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C2+C4-r2",
+      "workload": "A",
+      "condition": "C2+C4",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C2+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C2+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C2+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C2+C4-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C2+C4-r3",
+      "workload": "A",
+      "condition": "C2+C4",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C2+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C2+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C2+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "A-004",
+          "attempt_id": "A-004-C2+C4-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C2+C4-r1",
+      "workload": "B",
+      "condition": "C2+C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C2+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C2+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C2+C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C2+C4-r2",
+      "workload": "B",
+      "condition": "C2+C4",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C2+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C2+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C2+C4-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C2+C4-r3",
+      "workload": "B",
+      "condition": "C2+C4",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C2+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C2+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C2+C4-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C2+C4-r1",
+      "workload": "D",
+      "condition": "C2+C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C2+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C2+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C2+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C2+C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C2+C4-r2",
+      "workload": "D",
+      "condition": "C2+C4",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C2+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C2+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C2+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C2+C4-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C2+C4-r3",
+      "workload": "D",
+      "condition": "C2+C4",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C2+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C2+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-003",
+          "attempt_id": "D-003-C2+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "D-004",
+          "attempt_id": "D-004-C2+C4-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C3+C4-r1",
+      "workload": "B",
+      "condition": "C3+C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C3+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C3+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C3+C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C3+C4-r2",
+      "workload": "B",
+      "condition": "C3+C4",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C3+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C3+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C3+C4-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C3+C4-r3",
+      "workload": "B",
+      "condition": "C3+C4",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C3+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C3+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "B-003",
+          "attempt_id": "B-003-C3+C4-r3",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C3+C4-r1",
+      "workload": "E",
+      "condition": "C3+C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C3+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C3+C4-r1",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C3+C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C3+C4-r2",
+      "workload": "E",
+      "condition": "C3+C4",
+      "repetition": 2,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C3+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C3+C4-r2",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C3+C4-r2",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C3+C4-r3",
+      "workload": "E",
+      "condition": "C3+C4",
+      "repetition": 3,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C3+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C3+C4-r3",
+          "session": "independent"
+        },
+        {
+          "task_id": "E-003",
+          "attempt_id": "E-003-C3+C4-r3",
+          "session": "independent"
+        }
+      ]
+    }
+  ]
+}

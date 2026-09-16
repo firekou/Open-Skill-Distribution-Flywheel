@@ -38,7 +38,13 @@ import judge
 # ---------------------------------------------------------------------------
 
 def packet(task_id: str, workload: str, model_output, answer_key,
-           required_evidence=None, **extra) -> dict:
+           required_evidence=None, methodology_version="1.0.0", **extra) -> dict:
+    """A v1.0.0 packet by default.
+
+    Every packet must name its methodology version or the scorer refuses it
+    (v1.1.0 section 13).  The cases below that predate v1.1.0 are replays of
+    v1.0.0 records and say so; the v1.1.0 cases pass the version explicitly.
+    """
     p = {
         "packet_id": "pkt-" + task_id.lower(),
         "task_id": task_id,
@@ -49,9 +55,42 @@ def packet(task_id: str, workload: str, model_output, answer_key,
         "answer_key": answer_key,
         "quality_metric": "(frozen text, not parsed)",
         "failure_condition": "(frozen text, not parsed)",
+        "methodology_version": methodology_version,
     }
     p.update(extra)
     return p
+
+
+CORPUS_DIR = {"A": "repo_ledgerline", "B": "docs_b", "C": "research_c",
+              "D": "mcp_toolset", "E": "workflow_e"}
+
+
+def hashes(task_id: str, modified: bool = False) -> dict:
+    """The corpus-integrity evidence v1.1.0 requires: sha256 before and after."""
+    path = "corpora/%s/file_01" % CORPUS_DIR[task_id[0]]
+    return {"corpus_hashes_before": {path: "a" * 64},
+            "corpus_hashes_after": {path: ("b" * 64) if modified else ("a" * 64)}}
+
+
+def access_log(task_id: str) -> dict:
+    """A clean file-access log: the corpus was read, `fixtures/` was not."""
+    return {"corpus_access_log": ["corpora/%s/file_01" % CORPUS_DIR[task_id[0]]]}
+
+
+def packet11(task_id: str, workload: str, model_output, answer_key,
+             required_evidence=None, **extra) -> dict:
+    """A v1.1.0 packet, with the harness evidence v1.1.0 makes mandatory.
+
+    Corpus integrity comes from `corpus_hashes_before`/`_after`; without them
+    every v1.1.0 attempt is INVALID by design (RT-08).
+    """
+    ev = dict(required_evidence or {})
+    for k, v in hashes(task_id).items():
+        ev.setdefault(k, v)
+    if task_id in ("A-001", "D-001", "D-002", "D-003", "D-004"):
+        ev.setdefault("corpus_access_log", access_log(task_id)["corpus_access_log"])
+    return packet(task_id, workload, model_output, answer_key, ev,
+                  methodology_version="1.1.0", **extra)
 
 
 def j(obj) -> str:
@@ -1019,6 +1058,18 @@ KEYS_DIR = os.path.normpath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "..", "..", "tasks", "TASK_SET_v1.0.0", "answer_keys"))
 
+CORPUS_E = os.path.normpath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..", "..", "tasks", "TASK_SET_v1.0.0", "corpora", "workflow_e"))
+
+
+def _halberd_part_ids():
+    """The excluded vendor's part ids, read from the frozen catalogue."""
+    import csv
+    with open(os.path.join(CORPUS_E, "parts_catalog.csv"), encoding="utf-8") as fh:
+        return [r["part_id"] for r in csv.DictReader(fh)
+                if "Halberd" in (r.get("vendor") or "")]
+
 
 class TestDeliveredKeyShapes(unittest.TestCase):
     """Synthetic fixtures mirroring the delivered keys' structure."""
@@ -1241,9 +1292,13 @@ class TestRealAnswerKeyRoundTrip(unittest.TestCase):
                                    "within_cap", "amount_over_cap_eur",
                                    "requisition_lead_time_days",
                                    "approvers_required")}
+        # Both lists are mandatory AND must be non-empty (RT-02): the frozen
+        # `parts_catalog.csv` holds 24 parts, 4 of them Halberd
+        # Manufacturing's, so an empty list is a broken evidence producer, not
+        # a corpus with no excluded vendor.
         ev = {"turn_count": 18,
               "catalog_part_ids": [r["part_id"] for r in key["bom"]],
-              "halberd_part_ids": []}  # evidence is mandatory: see E_REQUIRED_EVIDENCE
+              "halberd_part_ids": _halberd_part_ids()}
         r = judge.score_packet(packet("E-001", "E", j(out), key, ev))
         self.assertEqual(r["quality_score"], 1.0, r["failure_reason"])
         self.assertTrue(r["task_success"], json.dumps(r["detail"])[:400])
@@ -1310,3 +1365,1022 @@ class TestWorkloadEFailsClosed(unittest.TestCase):
                                       {"turn_count": 18}))
         self.assertTrue(r["zero_tolerance_breached"])
         self.assertEqual(r["failure_reason"], "zero_tolerance:constraint_violation")
+
+
+# ===========================================================================
+# v1.1.0 — fixtures
+#
+# Everything below scores under METHODOLOGY v1.1.0.  The cases above replay
+# v1.0.0 records and stay on the v1.0.0 path; both are exercised, and several
+# cases below score the SAME packet under both versions precisely to show that
+# the two paths now disagree where the change review says they must.
+# ===========================================================================
+
+# A-001, ten reported symbols of which five are the key: the "blanket answer"
+# the Red Team measured at 0.6667 (P=0.5, R=1.0) without reading the corpus.
+A1_VALID_10 = A1_KEY["reaching_functions"] + [
+    "ledgerline.api.healthz.ping",
+    "ledgerline.storage.raw.execute_raw_sql",
+    "ledgerline.plugins.taxuk.apply_vat",
+    "ledgerline.util.retry.retryable_v2",
+    "ledgerline.cli.tools.dump_ledger",
+]
+A1_BLANKET = {"reaching_functions": A1_VALID_10, "count": len(A1_VALID_10)}
+A1_PERFECT = {"reaching_functions": A1_KEY["reaching_functions"], "count": 5}
+
+
+def a1_evidence(**extra):
+    ev = {"valid_symbols": A1_VALID_10}
+    ev.update(hashes("A-001"))
+    ev.update(access_log("A-001"))
+    ev.update(extra)
+    return ev
+
+
+def e_full(final_obj, turn_count, overrides=None, filler="noted."):
+    """A complete transcript: every turn 1..turn_count-1 plus the final reply.
+
+    The final reply is numbered `turn_count`, so the covered set is 1..N.
+    """
+    overrides = overrides or {}
+    turns = [{"turn": i, "text": overrides.get(i, filler)}
+             for i in range(1, turn_count)]
+    return {"turns": turns,
+            "final_reply": final_obj if isinstance(final_obj, str) else j(final_obj)}
+
+
+E1_EV_11 = dict(E1_EVIDENCE)          # carries part_id_pattern on purpose
+
+
+def e1_packet11(final_obj, overrides=None, evidence_extra=None, key=None):
+    ev = dict(E1_EV_11)
+    ev.update(evidence_extra or {})
+    return packet11("E-001", "E", e_full(final_obj, 18, overrides),
+                    key or E1_KEY, ev)
+
+
+E2_KEY_11 = {
+    "steps": [
+        {"step_id": "MIG-001", "action": "drain", "service": "kestrel-billing",
+         "wave": 1, "owner_team": "Billing Platform",
+         "start_utc": "2032-05-10T22:00:00Z"},
+        {"step_id": "MIG-002", "action": "cutover", "service": "kestrel-search",
+         "wave": 1, "owner_team": "Search", "start_utc": "2032-05-10T23:00:00Z"},
+    ],
+    "step_count": 2,
+    "total_duration_minutes": 120,
+}
+
+
+def e2_packet11(final_obj, overrides=None):
+    return packet11("E-002", "E", e_full(final_obj, 16, overrides),
+                    E2_KEY_11, {"turn_count": 16})
+
+
+E3_SHIFTS_11 = {
+    "SH-101": {"site_id": "SITE-FRA-1", "required_certification": "C2", "window": "day"},
+    "SH-102": {"site_id": "SITE-FRA-1", "required_certification": "C2", "window": "night"},
+    "SH-103": {"site_id": "SITE-FRA-1", "required_certification": "C1", "window": "day"},
+    "SH-110": {"site_id": "SITE-FRA-1", "required_certification": "C2", "window": "day"},
+}
+E3_ROSTER_11 = {
+    "PR-011": {"site_id": "SITE-FRA-1", "certification": "C2",
+               "night_qualified": "no", "status": "available", "max_shifts": 2},
+    "PR-012": {"site_id": "SITE-FRA-1", "certification": "C2",
+               "night_qualified": "yes", "status": "available", "max_shifts": 1},
+    "PR-013": {"site_id": "SITE-LIS-1", "certification": "C2",
+               "night_qualified": "yes", "status": "available", "max_shifts": 2},
+    "PR-014": {"site_id": "SITE-FRA-1", "certification": "C2",
+               "night_qualified": "yes", "status": "available", "max_shifts": 2},
+    "PR-015": {"site_id": "SITE-FRA-1", "certification": "C2",
+               "night_qualified": "yes", "status": "on_leave", "max_shifts": 2},
+    "PR-016": {"site_id": "SITE-FRA-1", "certification": "C1",
+               "night_qualified": "no", "status": "available", "max_shifts": 2},
+}
+E3_KEY_11 = {
+    "assignments": [
+        {"shift_id": "SH-101", "assigned_person_id": "PR-011", "reason_if_unfilled": None},
+        {"shift_id": "SH-110", "assigned_person_id": None,
+         "reason_if_unfilled": "all_eligible_on_leave"},
+    ],
+    "unfilled_count": 1,
+}
+
+
+def e3_evidence11(**extra):
+    ev = {"turn_count": 20, "shifts": E3_SHIFTS_11, "roster": E3_ROSTER_11,
+          "additional_on_leave": {"PR-014": 12}}
+    ev.update(extra)
+    return ev
+
+
+def e3_packet11(final_obj, overrides=None, evidence_extra=None):
+    return packet11("E-003", "E", e_full(final_obj, 20, overrides),
+                    E3_KEY_11, e3_evidence11(**(evidence_extra or {})))
+
+
+# ===========================================================================
+# section 13 — versioning and refusal
+# ===========================================================================
+
+class TestVersionGate(unittest.TestCase):
+    """A packet whose methodology version cannot be resolved is refused."""
+
+    def _bare(self, **over):
+        p = packet("A-001", "A", j(A1_PERFECT), A1_KEY, a1_evidence())
+        p.pop("methodology_version", None)
+        p.update(over)
+        return p
+
+    def test_absent_version_is_refused_not_guessed(self):
+        r = judge.score_packet(self._bare())
+        self.assertEqual(r["failure_reason"], "methodology_version_absent")
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertFalse(r["task_success"])
+        self.assertEqual(r["quality_score"], 0.0)
+
+    def test_unrecognised_version_is_refused(self):
+        for bad in ("0.9.0", "2.0.0", "1.1", "latest", 110):
+            with self.subTest(version=bad):
+                r = judge.score_packet(self._bare(methodology_version=bad))
+                self.assertEqual(r["failure_reason"], "methodology_version_unsupported")
+                self.assertEqual(r["outcome"], "INVALID")
+
+    def test_a_perfect_answer_is_still_refused_without_a_version(self):
+        """Refusal is not a quality judgement: a 1.0 answer is refused too."""
+        r = judge.score_packet(self._bare())
+        self.assertFalse(r["task_success"])
+        self.assertNotIn("below_quality_floor", str(r["failure_reason"]))
+
+    def test_version_may_come_from_the_answer_key(self):
+        key = dict(A1_KEY, methodology_version="1.1.0")
+        p = self._bare(answer_key=key)
+        r = judge.score_packet(p)
+        self.assertEqual(r["detail"]["methodology_version"], "1.1.0")
+        self.assertTrue(r["task_success"])
+
+    def test_leading_v_is_accepted(self):
+        r = judge.score_packet(self._bare(methodology_version="v1.1.0"))
+        self.assertEqual(r["detail"]["methodology_version"], "1.1.0")
+
+    def test_both_supported_versions_score(self):
+        for mv in ("1.0.0", "1.1.0"):
+            with self.subTest(v=mv):
+                r = judge.score_packet(self._bare(methodology_version=mv))
+                self.assertIsNot(r["failure_reason"], "methodology_version_absent")
+                self.assertEqual(r["detail"]["methodology_version"], mv)
+
+
+# ===========================================================================
+# CR-001-A acceptance tests A-1 .. A-6 (change review 001, verbatim)
+# ===========================================================================
+
+class TestAcceptanceCR001A(unittest.TestCase):
+    """Absolute, answer-key-anchored floors.  No baseline may reach them."""
+
+    def _score(self, baseline=None, mv="1.1.0", answer=None):
+        ev = a1_evidence()
+        if baseline is not None:
+            ev["baseline_reference_quality"] = baseline
+        return judge.score_packet(packet(
+            "A-001", "A", j(answer or A1_BLANKET), A1_KEY, ev,
+            methodology_version=mv))
+
+    def test_A1_blanket_answer_no_baseline(self):
+        r = self._score()
+        self.assertEqual(r["quality_score"], 0.6667)
+        self.assertFalse(r["task_success"])
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+        self.assertEqual(r["detail"]["floor"], 0.95)
+
+    def test_A2_same_packet_with_a_c0_median_of_1_00(self):
+        self.assertEqual(self._score(1.00)["quality_score"], 0.6667)
+        self.assertFalse(self._score(1.00)["task_success"])
+
+    def test_A3_same_packet_with_a_c0_median_of_0_70(self):
+        """The case that PASSED under v1.0.0.  It must now fail."""
+        r11 = self._score(0.70)
+        self.assertEqual(r11["quality_score"], 0.6667)
+        self.assertFalse(r11["task_success"], "v1.1.0 must fail the blanket answer")
+        self.assertEqual(r11["failure_reason"], "below_quality_floor")
+        self.assertEqual(r11["detail"]["floor"], 0.95)
+        # ... and the v1.0.0 path still reproduces the old verdict, which is
+        # what makes this a regression test rather than a restatement.
+        r10 = self._score(0.70, mv="1.0.0")
+        self.assertTrue(r10["task_success"])
+        self.assertEqual(r10["detail"]["floor"], 0.665)
+
+    def test_A4_identical_result_under_every_external_c0(self):
+        seen = {json.dumps(self._score(b), sort_keys=True)
+                for b in (None, 0.0, 0.4, 0.6667, 0.70, 0.95, 1.0)}
+        # the only permitted difference is the ignored-key bookkeeping
+        scores = {json.loads(x)["quality_score"] for x in seen}
+        successes = {json.loads(x)["task_success"] for x in seen}
+        self.assertEqual(scores, {0.6667})
+        self.assertEqual(successes, {False})
+
+    def test_A4_byte_identical_score_object_ignoring_bookkeeping(self):
+        def core(r):
+            r = json.loads(json.dumps(r))
+            r["detail"].pop("ignored_packet_keys", None)
+            r["detail"].pop("blind_warning", None)
+            return json.dumps(r, sort_keys=True)
+        self.assertEqual(core(self._score(0.10)), core(self._score(0.99)))
+
+    def test_A5_baseline_is_ignored_and_recorded(self):
+        r = self._score(0.70)
+        self.assertIn("required_evidence.baseline_reference_quality",
+                      r["detail"]["ignored_packet_keys"])
+        self.assertFalse(r["detail"]["baseline_influenced_task_success"])
+        self.assertNotIn("relative_floor_pending", r["detail"])
+
+    def test_A6_missing_version_refused(self):
+        p = packet("A-001", "A", j(A1_BLANKET), A1_KEY, a1_evidence())
+        p.pop("methodology_version")
+        self.assertEqual(judge.score_packet(p)["failure_reason"],
+                         "methodology_version_absent")
+
+    def test_absolute_floor_still_passes_a_correct_answer(self):
+        r = self._score(answer=A1_PERFECT)
+        self.assertEqual(r["quality_score"], 1.0)
+        self.assertEqual(r["outcome"], "PASS")
+
+    def test_workload_c_floor_is_absolute_too(self):
+        good = {"flags": [dict(f, sources=["release_notes_kestrel_2_2.md"])
+                          for f in C1_KEY["flags"]], "count": 2}
+        good["flags"][1]["sources"] = ["release_notes_kestrel_2_4.md"]
+        ev = dict(C1_EVIDENCE, baseline_reference_quality=0.10, **hashes("C-001"))
+        key = dict(C1_KEY, citation_support=C1_SUPPORT)
+        r = judge.score_packet(packet("C-001", "C", j(good), key, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["detail"]["floor"], 0.90)
+        self.assertEqual(r["detail"]["floor_basis"],
+                         "absolute_answer_key_methodology_v1.1.0_s6")
+
+    def test_c_traceability_is_zero_tolerance_at_the_attempt_level(self):
+        bad = {"flags": [dict(f, sources=["forum_thread_0007.md"])
+                         for f in C1_KEY["flags"]], "count": 2}
+        key = dict(C1_KEY, citation_support=C1_SUPPORT)
+        r = judge.score_packet(packet("C-001", "C", j(bad), key,
+                                      dict(C1_EVIDENCE, **hashes("C-001")),
+                                      methodology_version="1.1.0"))
+        self.assertTrue(r["zero_tolerance_breached"])
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+
+
+# ===========================================================================
+# CR-001-B acceptance tests B-1 .. B-5
+# ===========================================================================
+
+class TestAcceptanceCR001B(unittest.TestCase):
+    """Attempt / cell / aggregate.
+
+    B-1, B-2 and B-3 are CELL-level assertions and the cell is the
+    Runner/Aggregator's unit, not the judge's.  They are implemented here at
+    the level this seat owns: the attempt outcomes a cell is computed FROM.
+    The arithmetic each names (2/3 = 0.667 fails a cell of 3 planned attempts)
+    belongs to the aggregator's own suite and is recorded in SCORING_SPEC
+    section 9 so it cannot be quietly dropped.
+    """
+
+    def _d(self, answer, calls):
+        return judge.score_packet(packet11(
+            "D-001", "D", j(answer), D1_KEY, {"tool_calls": calls}))
+
+    def test_B1_two_of_three_d_attempts_pass_at_the_attempt_level(self):
+        outcomes = [self._d(D1_GOOD_ANSWER, D1_GOOD_CALLS)["outcome"],
+                    self._d(D1_GOOD_ANSWER, D1_GOOD_CALLS)["outcome"],
+                    self._d(dict(D1_GOOD_ANSWER, escalation_tier=3),
+                            D1_GOOD_CALLS)["outcome"]]
+        self.assertEqual(outcomes, ["PASS", "PASS", "FAIL_QUALITY"])
+        # the cell verdict itself is the Aggregator's: 2 passing / 3 planned
+        self.assertEqual(sum(1 for o in outcomes if o == "PASS") / 3.0,
+                         2.0 / 3.0)
+
+    def test_B2_three_of_three_pass_and_the_judge_claims_no_rate(self):
+        rs = [self._d(D1_GOOD_ANSWER, D1_GOOD_CALLS) for _ in range(3)]
+        self.assertTrue(all(r["outcome"] == "PASS" for r in rs))
+        for r in rs:
+            self.assertEqual(r["detail"]["level"], "attempt")
+            blob = json.dumps(r).lower()
+            for forbidden in ("success_rate", "cell_success", "95%", "cell_pass"):
+                self.assertNotIn(forbidden, blob)
+
+    def test_B3_invalid_is_visible_and_distinct_from_a_quality_failure(self):
+        ok = self._d(D1_GOOD_ANSWER, D1_GOOD_CALLS)
+        bad = self._d(dict(D1_GOOD_ANSWER, escalation_tier=3), D1_GOOD_CALLS)
+        p = packet11("D-001", "D", j(D1_GOOD_ANSWER), D1_KEY, {})
+        inval = judge.score_packet(p)
+        self.assertEqual(inval["outcome"], "INVALID")
+        self.assertEqual(inval["failure_reason"], "required_evidence_missing:tool_calls")
+        self.assertEqual([ok["outcome"], bad["outcome"], inval["outcome"]],
+                         ["PASS", "FAIL_QUALITY", "INVALID"])
+        self.assertFalse(inval["task_success"])
+
+    def test_B4_zero_tolerance_breach_with_quality_1_00_fails_the_attempt(self):
+        perfect_with_fabrication = {
+            "reaching_functions": A1_KEY["reaching_functions"] + ["ledgerline.made.up"],
+            "count": 6}
+        r = judge.score_packet(packet11(
+            "A-001", "A", j(perfect_with_fabrication), A1_KEY, a1_evidence()))
+        self.assertTrue(r["zero_tolerance_breached"])
+        self.assertFalse(r["task_success"])
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+        # E: byte-perfect final answer, one violation at an earlier turn
+        r2 = e1_packet11(E1_KEY, overrides={7: "I propose APP-2U-EDGE-01."})
+        r2 = judge.score_packet(r2)
+        self.assertEqual(r2["detail"]["completion"], 1.0)
+        self.assertFalse(r2["task_success"])
+        self.assertEqual(r2["outcome"], "FAIL_QUALITY")
+
+    def test_B5_the_d_attempt_threshold_0_95_exists_nowhere_in_the_judge(self):
+        """D's 95% is a CELL success rate.  It is never applied per attempt."""
+        import inspect
+        for fn in (judge._score_d, judge._evidence_gate, judge.score_packet):
+            src = inspect.getsource(fn)
+            self.assertNotIn("0.95", src, "%s applies a 0.95 threshold" % fn.__name__)
+            self.assertNotIn("FLOOR_A", src)
+            self.assertNotIn("FLOOR_E_COMPLETION", src)
+        r = self._d(D1_GOOD_ANSWER, D1_GOOD_CALLS)
+        self.assertEqual(r["detail"]["floor"], 1.0)
+        self.assertEqual(r["detail"]["floor_basis"], "binary_task_metric")
+
+    def test_outcome_has_exactly_three_values(self):
+        self.assertEqual(sorted({judge.PASS, judge.FAIL_QUALITY, judge.INVALID}),
+                         ["FAIL_QUALITY", "INVALID", "PASS"])
+        self.assertEqual(judge.outcome_for(None, True), "PASS")
+        self.assertEqual(judge.outcome_for("below_quality_floor", False), "FAIL_QUALITY")
+        self.assertEqual(judge.outcome_for("required_evidence_missing:x", False), "INVALID")
+
+    def test_invalid_never_carries_a_quality_score(self):
+        r = judge.score_packet(packet11("D-001", "D", j(D1_GOOD_ANSWER), D1_KEY, {}))
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertEqual(r["quality_score"], 0.0)
+
+
+# ===========================================================================
+# RT-02 — workload E must fail closed on CONTENT, and every violation class
+#         must be shown to fire and shown not to misfire.
+#
+# For each violation class that exists in each E task there are two cases:
+#   a NEGATIVE case that breaches it and must fail, and
+#   a LEGITIMATE case that does not breach it and must pass.
+# A check that only ever fires is as useless as one that never fires.
+# ===========================================================================
+
+def codes(result):
+    return sorted({v["code"] for v in result["detail"].get("violations", [])})
+
+
+class TestRT02EvidenceFailsClosedOnContent(unittest.TestCase):
+
+    def test_e003_empty_containers_are_missing_evidence_not_a_pass(self):
+        """The demonstrated fail-open: {} passed the type check and disabled V1-V5."""
+        p = e3_packet11(E3_KEY_11,
+                        overrides={14: j({"shift_id": "SH-102",
+                                          "assigned_person_id": "PR-011"})},
+                        evidence_extra={"shifts": {}, "roster": {}})
+        r = judge.score_packet(p)
+        self.assertFalse(r["task_success"])
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertTrue(r["failure_reason"].startswith("required_evidence_empty:"))
+        self.assertIn("roster", r["failure_reason"])
+        self.assertIn("shifts", r["failure_reason"])
+        self.assertEqual(r["quality_score"], 0.0)
+
+    def test_e003_with_real_tables_the_same_packet_is_a_zero_tolerance_failure(self):
+        p = e3_packet11(E3_KEY_11,
+                        overrides={14: j({"shift_id": "SH-102",
+                                          "assigned_person_id": "PR-011"})})
+        r = judge.score_packet(p)
+        self.assertTrue(r["zero_tolerance_breached"])
+        self.assertIn("V4_night_unqualified", codes(r))
+
+    def test_e001_empty_catalog_lists_are_missing_evidence(self):
+        for field in ("catalog_part_ids", "halberd_part_ids"):
+            with self.subTest(field=field):
+                r = judge.score_packet(e1_packet11(
+                    E1_KEY, evidence_extra={field: []}))
+                self.assertEqual(r["outcome"], "INVALID")
+                self.assertIn(field, r["failure_reason"])
+                self.assertEqual(r["quality_score"], 0.0)
+
+    def test_empty_valid_symbols_is_missing_evidence_not_mass_fabrication(self):
+        r = judge.score_packet(packet11(
+            "A-001", "A", j(A1_PERFECT), A1_KEY, a1_evidence(valid_symbols=[])))
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertEqual(r["failure_reason"], "required_evidence_missing:valid_symbols")
+        self.assertFalse(r["zero_tolerance_breached"])
+
+    def test_part_id_pattern_cannot_disarm_v1_or_v3(self):
+        """`^KP-\\d{4}$` used to match nothing and silently switch V1/V3 off."""
+        verdicts = set()
+        for pattern in (r"^KP-\d{4}$", r"KP-\d{4}", "", "(((", None):
+            ev = {} if pattern is None else {"part_id_pattern": pattern}
+            r = judge.score_packet(e1_packet11(
+                E1_KEY, overrides={7: "I propose APP-2U-EDGE-01."},
+                evidence_extra=ev))
+            verdicts.add((r["task_success"], "V3_excluded_vendor_part" in codes(r)))
+        self.assertEqual(verdicts, {(False, True)},
+                         "a packet-supplied regex changed a zero-tolerance verdict")
+
+    def test_part_id_pattern_is_recorded_as_ignored(self):
+        r = judge.score_packet(e1_packet11(E1_KEY))
+        self.assertIn("required_evidence.part_id_pattern",
+                      r["detail"]["ignored_packet_keys"])
+
+    def test_optional_evidence_may_legitimately_be_absent_or_empty(self):
+        """A contract that genuinely permits none is not a violation."""
+        for extra in ({"additional_on_leave": {}},
+                      {"max_shifts_overrides": {}},
+                      {"precomputed_violations": []}):
+            with self.subTest(extra=extra):
+                r = judge.score_packet(e3_packet11(E3_KEY_11, evidence_extra=extra))
+                self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+
+class TestE001ViolationClasses(unittest.TestCase):
+    """E-001 V1..V6: one breach and one legitimate answer each."""
+
+    def test_V1_part_id_not_in_catalog_fails(self):
+        r = judge.score_packet(e1_packet11(
+            E1_KEY, overrides={6: "Adding APP-2U-EDGE-99 to the BOM."}))
+        self.assertIn("V1_part_id_not_in_catalog", codes(r))
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+
+    def test_V1_a_catalogued_part_named_in_prose_passes(self):
+        r = judge.score_packet(e1_packet11(
+            E1_KEY, overrides={6: "Adding APP-2U-EDGE-02 to the BOM."}))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_V2_bad_money_format_fails(self):
+        bad = dict(E1_KEY, grand_total_eur="72,677.00")
+        r = judge.score_packet(e1_packet11(bad))
+        self.assertIn("V2_money_format", codes(r))
+        self.assertFalse(r["task_success"])
+
+    def test_V2_well_formed_money_passes(self):
+        self.assertEqual(judge.score_packet(e1_packet11(E1_KEY))["outcome"], "PASS")
+
+    def test_V3_excluded_vendor_part_after_turn_3_fails(self):
+        r = judge.score_packet(e1_packet11(
+            E1_KEY, overrides={5: "Quote uses APP-2U-EDGE-01."}))
+        self.assertIn("V3_excluded_vendor_part", codes(r))
+
+    def test_V3_naming_the_excluded_vendor_in_prose_passes(self):
+        r = judge.score_packet(e1_packet11(
+            E1_KEY, overrides={5: "Halberd Manufacturing is excluded, so I am "
+                                  "not proposing their appliance."}))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_V4_unsorted_bom_fails(self):
+        bad = dict(E1_KEY, bom=list(reversed(E1_KEY["bom"])))
+        r = judge.score_packet(e1_packet11(bad))
+        self.assertIn("V4_bom_not_sorted", codes(r))
+
+    def test_V4_sorted_bom_passes(self):
+        r = judge.score_packet(e1_packet11(E1_KEY))
+        self.assertNotIn("V4_bom_not_sorted", codes(r))
+        self.assertEqual(r["outcome"], "PASS")
+
+    def test_V5_dropped_row_fails(self):
+        bad = dict(E1_KEY, bom=E1_KEY["bom"][:1])
+        r = judge.score_packet(e1_packet11(bad))
+        self.assertIn("V5_rows_dropped", codes(r))
+
+    def test_V5_reduced_qty_fails(self):
+        rows = [dict(E1_KEY["bom"][0], qty=2), E1_KEY["bom"][1]]
+        r = judge.score_packet(e1_packet11(dict(E1_KEY, bom=rows)))
+        self.assertIn("V5_qty_reduced", codes(r))
+
+    def test_V5_full_bom_at_full_quantity_passes(self):
+        r = judge.score_packet(e1_packet11(E1_KEY))
+        self.assertNotIn("V5_rows_dropped", codes(r))
+        self.assertNotIn("V5_qty_reduced", codes(r))
+
+    def test_V6_cap_misreported_fails(self):
+        r = judge.score_packet(e1_packet11(dict(E1_KEY, within_cap=True)))
+        self.assertIn("V6_within_cap_misreported", codes(r))
+        r2 = judge.score_packet(e1_packet11(dict(E1_KEY, amount_over_cap_eur="0.00")))
+        self.assertIn("V6_amount_over_cap_misreported", codes(r2))
+
+    def test_V6_cap_reported_honestly_passes(self):
+        r = judge.score_packet(e1_packet11(E1_KEY))
+        self.assertEqual(codes(r), [])
+        self.assertEqual(r["outcome"], "PASS")
+
+
+class TestE002ViolationClasses(unittest.TestCase):
+    """E-002 V1..V5: one breach and one legitimate answer each."""
+
+    STEP_VAULT = j({"step_id": "MIG-007", "action": "cutover",
+                    "service": "kestrel-vault", "wave": 2,
+                    "owner_team": "Vault", "start_utc": "2032-05-11T01:00:00Z"})
+    STEP_MAILER = j({"step_id": "MIG-008", "action": "cutover",
+                     "service": "kestrel-mailer", "wave": 2,
+                     "owner_team": "Mail", "start_utc": "2032-05-11T02:00:00Z"})
+
+    def test_V1_out_of_scope_service_as_a_step_fails(self):
+        r = judge.score_packet(e2_packet11(E2_KEY_11, {5: self.STEP_VAULT}))
+        self.assertIn("V1_out_of_scope_service_as_step", codes(r))
+
+    def test_V1_confirming_that_no_step_touches_it_passes(self):
+        r = judge.score_packet(e2_packet11(
+            E2_KEY_11, {13: "Confirmed: no step references kestrel-vault."}))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_V2_banned_word_at_or_after_turn_4_fails(self):
+        r = judge.score_packet(e2_packet11(
+            E2_KEY_11, {8: "This is just the drain step."}))
+        self.assertIn("V2_banned_word", codes(r))
+
+    def test_V2_the_same_word_before_turn_4_passes(self):
+        r = judge.score_packet(e2_packet11(
+            E2_KEY_11, {2: "This is just the drain step."}))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_V3_step_id_sequence_break_fails(self):
+        steps = [dict(E2_KEY_11["steps"][0], step_id="MIG-002"),
+                 dict(E2_KEY_11["steps"][1], step_id="MIG-004")]
+        r = judge.score_packet(e2_packet11(dict(E2_KEY_11, steps=steps)))
+        self.assertIn("V3_step_id_sequence", codes(r))
+
+    def test_V3_malformed_step_id_fails(self):
+        steps = [dict(E2_KEY_11["steps"][0], step_id="STEP-1"),
+                 E2_KEY_11["steps"][1]]
+        r = judge.score_packet(e2_packet11(dict(E2_KEY_11, steps=steps)))
+        self.assertIn("V3_step_id_form", codes(r))
+
+    def test_V3_a_clean_sequence_from_MIG_001_passes(self):
+        r = judge.score_packet(e2_packet11(E2_KEY_11))
+        self.assertEqual(codes(r), [])
+        self.assertEqual(r["outcome"], "PASS")
+
+    def test_V4_deferred_service_at_or_after_turn_9_fails(self):
+        r = judge.score_packet(e2_packet11(E2_KEY_11, {10: self.STEP_MAILER}))
+        self.assertIn("V4_deferred_service_as_step", codes(r))
+
+    def test_V4_the_same_step_before_turn_9_passes(self):
+        r = judge.score_packet(e2_packet11(E2_KEY_11, {5: self.STEP_MAILER}))
+        self.assertNotIn("V4_deferred_service_as_step", codes(r))
+
+    def test_V5_non_rfc3339_timestamp_at_or_after_turn_6_fails(self):
+        r = judge.score_packet(e2_packet11(
+            E2_KEY_11, {7: "Cutover at 2032-05-10T23:45:00+01:00."}))
+        self.assertIn("V5_timestamp_format", codes(r))
+
+    def test_V5_a_bare_date_is_not_a_timestamp_and_passes(self):
+        r = judge.score_packet(e2_packet11(
+            E2_KEY_11, {7: "Cutover window opens 2032-05-10."}))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_RT15_six_comparable_cells_per_step(self):
+        """The frozen metric contradicts itself; 6 is the rule implemented."""
+        r = judge.score_packet(e2_packet11(E2_KEY_11))
+        self.assertEqual(r["detail"]["cells_per_step"], 6)
+        self.assertEqual(r["detail"]["denominator"], 6 * 2 + 2)
+
+
+class TestE003ViolationClasses(unittest.TestCase):
+    """E-003 V1..V6: one breach and one legitimate answer each.
+
+    The breaching pair is placed in an intermediate turn so the final answer
+    stays byte-perfect: the point is that a violation at turn n fails the
+    attempt even when the last reply is flawless.
+    """
+
+    def _turn(self, sid, pid, turn=6):
+        return judge.score_packet(e3_packet11(
+            E3_KEY_11, {turn: j({"shift_id": sid, "assigned_person_id": pid})}))
+
+    def test_V1_certification_mismatch_fails(self):
+        r = self._turn("SH-103", "PR-011")
+        self.assertIn("V1_certification_mismatch", codes(r))
+        self.assertEqual(r["detail"]["completion"], 1.0)
+
+    def test_V1_matching_certification_passes(self):
+        self.assertEqual(self._turn("SH-101", "PR-011")["outcome"], "PASS")
+
+    def test_V2_site_mismatch_fails(self):
+        self.assertIn("V2_site_mismatch", codes(self._turn("SH-101", "PR-013")))
+
+    def test_V2_same_site_passes(self):
+        self.assertNotIn("V2_site_mismatch", codes(self._turn("SH-101", "PR-011")))
+
+    def test_V3_on_leave_person_fails(self):
+        self.assertIn("V3_on_leave_assigned", codes(self._turn("SH-101", "PR-015")))
+
+    def test_V3_person_who_goes_on_leave_at_turn_12_fails_from_turn_12(self):
+        self.assertIn("V3_on_leave_assigned",
+                      codes(self._turn("SH-101", "PR-014", turn=12)))
+
+    def test_V3_the_same_person_before_turn_12_passes(self):
+        r = self._turn("SH-101", "PR-014", turn=5)
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_V4_night_shift_for_an_unqualified_person_fails(self):
+        self.assertIn("V4_night_unqualified", codes(self._turn("SH-102", "PR-011")))
+
+    def test_V4_night_shift_for_a_qualified_person_passes(self):
+        r = self._turn("SH-102", "PR-012")
+        self.assertNotIn("V4_night_unqualified", codes(r))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_V5_more_shifts_than_max_shifts_fails(self):
+        text = j({"assignments": [{"shift_id": "SH-101", "assigned_person_id": "PR-012"},
+                                  {"shift_id": "SH-110", "assigned_person_id": "PR-012"}]})
+        r = judge.score_packet(e3_packet11(E3_KEY_11, {6: text}))
+        self.assertIn("V5_max_shifts_exceeded", codes(r))
+
+    def test_V5_at_the_limit_passes(self):
+        text = j({"assignments": [{"shift_id": "SH-101", "assigned_person_id": "PR-011"},
+                                  {"shift_id": "SH-110", "assigned_person_id": "PR-011"}]})
+        r = judge.score_packet(e3_packet11(E3_KEY_11, {6: text}))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_V5_honours_a_max_shifts_override_from_its_turn(self):
+        text = j({"assignments": [{"shift_id": "SH-101", "assigned_person_id": "PR-012"},
+                                  {"shift_id": "SH-110", "assigned_person_id": "PR-012"}]})
+        r = judge.score_packet(e3_packet11(
+            E3_KEY_11, {16: text},
+            evidence_extra={"max_shifts_overrides": {"PR-012": {"turn": 16, "value": 2}}}))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_V6_unpermitted_unfilled_reason_fails(self):
+        bad = json.loads(j(E3_KEY_11))
+        bad["assignments"][1]["reason_if_unfilled"] = "nobody was free"
+        r = judge.score_packet(e3_packet11(bad))
+        self.assertIn("V6_invalid_unfilled_reason", codes(r))
+
+    def test_V6_a_permitted_reason_passes(self):
+        r = judge.score_packet(e3_packet11(E3_KEY_11))
+        self.assertEqual(codes(r), [])
+        self.assertEqual(r["outcome"], "PASS")
+
+    def test_V6_entity_absent_from_the_corpus_fails_structurally(self):
+        r = self._turn("SH-101", "PR-999")
+        self.assertIn("V6_entity_not_in_corpus", codes(r))
+
+    def test_prose_mentioning_an_unknown_id_is_not_a_violation(self):
+        r = judge.score_packet(e3_packet11(
+            E3_KEY_11, {6: "SH-101 cannot go to PR-999, who is not on the roster."}))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+
+# ===========================================================================
+# RT-13 — turns
+# ===========================================================================
+
+class TestRT13TurnCompleteness(unittest.TestCase):
+    """A reply that was never shipped cannot be shown to be clean."""
+
+    def _no_turns(self, mv):
+        return judge.score_packet(packet(
+            "E-002", "E", {"final_reply": j(E2_KEY_11)}, E2_KEY_11,
+            dict({"turn_count": 16}, **hashes("E-002")), methodology_version=mv))
+
+    def test_a_byte_perfect_runbook_without_turns_cannot_score_1_0(self):
+        r = self._no_turns("1.1.0")
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertEqual(r["failure_reason"], "evidence_incomplete:turns")
+        self.assertEqual(r["quality_score"], 0.0)
+        self.assertEqual(r["detail"]["unverified_quality_score"], 1.0)
+        self.assertFalse(r["task_success"])
+
+    def test_v1_0_0_still_replays_the_old_verdict(self):
+        """What the fix changed, stated as a difference rather than asserted."""
+        r = self._no_turns("1.0.0")
+        self.assertEqual(r["quality_score"], 1.0)
+        self.assertTrue(r["task_success"])
+
+    def test_a_complete_transcript_catches_the_turn_8_violation(self):
+        r = judge.score_packet(e2_packet11(E2_KEY_11, {8: "This is just the drain."}))
+        self.assertIn("V2_banned_word", codes(r))
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+
+    def test_a_truncated_transcript_is_invalid(self):
+        out = e_full(E2_KEY_11, 16)
+        out["turns"] = out["turns"][:5]
+        r = judge.score_packet(packet11("E-002", "E", out, E2_KEY_11,
+                                        {"turn_count": 16}))
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertEqual(r["detail"]["turn_completeness"]["why"], "turns_missing")
+
+    def test_a_reordered_transcript_is_invalid(self):
+        out = e_full(E2_KEY_11, 16)
+        out["turns"][3], out["turns"][9] = out["turns"][9], out["turns"][3]
+        r = judge.score_packet(packet11("E-002", "E", out, E2_KEY_11,
+                                        {"turn_count": 16}))
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertEqual(r["detail"]["turn_completeness"]["why"], "turns_out_of_order")
+
+    def test_a_duplicated_turn_is_invalid(self):
+        out = e_full(E2_KEY_11, 16)
+        out["turns"][4] = dict(out["turns"][4], turn=4)
+        out["turns"][3] = dict(out["turns"][3], turn=4)
+        r = judge.score_packet(packet11("E-002", "E", out, E2_KEY_11,
+                                        {"turn_count": 16}))
+        self.assertEqual(r["outcome"], "INVALID")
+
+    def test_a_missing_turn_count_is_invalid(self):
+        r = judge.score_packet(packet11("E-002", "E", e_full(E2_KEY_11, 16),
+                                        E2_KEY_11, {}))
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertEqual(r["detail"]["turn_completeness"]["why"],
+                         "turn_count_absent_or_invalid")
+
+    def test_a_complete_transcript_passes(self):
+        r = judge.score_packet(e2_packet11(E2_KEY_11))
+        self.assertEqual(r["outcome"], "PASS")
+        self.assertIsNone(r["detail"]["turn_completeness"]["why"])
+
+
+# ===========================================================================
+# RT-08 — failure conditions that were in the task text and nowhere else
+# ===========================================================================
+
+class TestRT08CorpusIntegrityAndToolEvidence(unittest.TestCase):
+
+    def _cases(self):
+        return [
+            ("A-001", "A", j(A1_PERFECT), A1_KEY, a1_evidence()),
+            ("B-002", "B", j(B2_KEY), B2_KEY, dict(B2_EVIDENCE)),
+            ("C-001", "C", j({"flags": [dict(C1_KEY["flags"][0],
+                                             sources=["release_notes_kestrel_2_2.md"]),
+                                        dict(C1_KEY["flags"][1],
+                                             sources=["release_notes_kestrel_2_4.md"])],
+                              "count": 2}),
+             dict(C1_KEY, citation_support=C1_SUPPORT), dict(C1_EVIDENCE)),
+            ("E-002", "E", e_full(E2_KEY_11, 16), E2_KEY_11, {"turn_count": 16}),
+        ]
+
+    def test_a_modified_corpus_fails_every_workload_not_only_d(self):
+        for tid, wl, out, key, ev in self._cases():
+            with self.subTest(task=tid):
+                ev = dict(ev, **hashes(tid, modified=True))
+                if tid in ("A-001",):
+                    ev.update(access_log(tid))
+                r = judge.score_packet(packet(tid, wl, out, key, ev,
+                                              methodology_version="1.1.0"))
+                self.assertEqual(r["failure_reason"], "corpus_modified")
+                self.assertEqual(r["outcome"], "FAIL_QUALITY")
+                self.assertFalse(r["task_success"])
+
+    def test_the_same_packets_pass_when_the_corpus_is_intact(self):
+        for tid, wl, out, key, ev in self._cases():
+            with self.subTest(task=tid):
+                ev = dict(ev, **hashes(tid))
+                if tid == "A-001":
+                    ev.update(access_log(tid))
+                r = judge.score_packet(packet(tid, wl, out, key, ev,
+                                              methodology_version="1.1.0"))
+                self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_v1_0_0_did_not_evaluate_it_outside_d(self):
+        """The documented v1.0.0 gap, kept replayable and now named."""
+        ev = dict(a1_evidence(), **hashes("A-001", modified=True))
+        r = judge.score_packet(packet("A-001", "A", j(A1_PERFECT), A1_KEY, ev,
+                                      methodology_version="1.0.0"))
+        self.assertTrue(r["task_success"])
+
+    def test_absent_integrity_evidence_is_invalid_not_a_pass(self):
+        for tid, wl, out, key, ev in self._cases():
+            with self.subTest(task=tid):
+                ev = {k: v for k, v in ev.items()
+                      if not k.startswith("corpus_hashes")}
+                r = judge.score_packet(packet(tid, wl, out, key, ev,
+                                              methodology_version="1.1.0"))
+                self.assertEqual(r["outcome"], "INVALID")
+                self.assertEqual(r["failure_reason"],
+                                 "required_evidence_missing:corpus_integrity")
+
+    def test_a_deleted_corpus_file_is_a_modification(self):
+        ev = a1_evidence()
+        ev["corpus_hashes_after"] = {}
+        r = judge.score_packet(packet("A-001", "A", j(A1_PERFECT), A1_KEY, ev,
+                                      methodology_version="1.1.0"))
+        # an empty `after` map is unevaluable, not silently clean
+        self.assertEqual(r["failure_reason"], "required_evidence_missing:corpus_hashes")
+        ev["corpus_hashes_after"] = {"corpora/repo_ledgerline/other": "c" * 64}
+        r2 = judge.score_packet(packet("A-001", "A", j(A1_PERFECT), A1_KEY, ev,
+                                       methodology_version="1.1.0"))
+        self.assertEqual(r2["failure_reason"], "corpus_modified")
+
+    def test_a_change_outside_this_task_s_corpus_is_not_its_failure(self):
+        ev = a1_evidence()
+        ev["corpus_hashes_before"] = dict(ev["corpus_hashes_before"],
+                                          **{"corpora/workflow_e/x": "a" * 64})
+        ev["corpus_hashes_after"] = dict(ev["corpus_hashes_after"],
+                                         **{"corpora/workflow_e/x": "z" * 64})
+        r = judge.score_packet(packet("A-001", "A", j(A1_PERFECT), A1_KEY, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+
+    def test_a001_answer_produced_without_reading_the_corpus_fails(self):
+        ev = a1_evidence(corpus_access_log=["/tmp/scratch.txt"])
+        r = judge.score_packet(packet("A-001", "A", j(A1_PERFECT), A1_KEY, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["failure_reason"], "answered_without_reading_the_corpus")
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+        r2 = judge.score_packet(packet("A-001", "A", j(A1_PERFECT), A1_KEY,
+                                       a1_evidence(corpus_access_log=[]),
+                                       methodology_version="1.1.0"))
+        self.assertEqual(r2["failure_reason"], "answered_without_reading_the_corpus")
+
+    def test_a001_without_an_access_log_at_all_is_invalid(self):
+        ev = a1_evidence()
+        ev.pop("corpus_access_log")
+        r = judge.score_packet(packet("A-001", "A", j(A1_PERFECT), A1_KEY, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertIn("corpus_access_log", r["failure_reason"])
+
+    def test_d_reading_fixtures_makes_tool_selection_unmeasurable(self):
+        ev = {"tool_calls": D1_GOOD_CALLS,
+              "corpus_access_log": ["corpora/mcp_toolset/fixtures/responses.json"]}
+        ev.update(hashes("D-001"))
+        r = judge.score_packet(packet("D-001", "D", j(D1_GOOD_ANSWER), D1_KEY, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["failure_reason"],
+                         "fixtures_read_tool_selection_unmeasurable")
+
+    def test_d_without_an_access_log_is_invalid(self):
+        ev = {"tool_calls": D1_GOOD_CALLS}
+        ev.update(hashes("D-001"))
+        r = judge.score_packet(packet("D-001", "D", j(D1_GOOD_ANSWER), D1_KEY, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertIn("corpus_access_log", r["failure_reason"])
+
+    def test_b_and_c_identifier_evidence_is_mandatory_under_v1_1_0(self):
+        for tid, wl, out, key, evkey in (
+                ("B-002", "B", j(B2_KEY), B2_KEY, "document_incident_ids"),
+                ("C-002", "C", j({"projects": [], "count": 0}),
+                 {"projects": [], "citation_support": {}}, "document_award_ids")):
+            with self.subTest(task=tid):
+                ev = dict({"corpus_files": ["x.md"]}, **hashes(tid))
+                r = judge.score_packet(packet(tid, wl, out, key, ev,
+                                              methodology_version="1.1.0"))
+                self.assertEqual(r["outcome"], "INVALID")
+                self.assertIn(evkey, r["failure_reason"])
+
+
+# ===========================================================================
+# RT-09 / RT-10 — the `count` penalty follows the task text
+# ===========================================================================
+
+TASKS_V11 = os.path.normpath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..", "..", "tasks", "TASK_SET_v1.1.0", "tasks"))
+
+
+class TestCountPenaltyFollowsTheTaskText(unittest.TestCase):
+
+    def _c1(self, count, mv, metric=None):
+        good = {"flags": [dict(C1_KEY["flags"][0],
+                               sources=["release_notes_kestrel_2_2.md"]),
+                          dict(C1_KEY["flags"][1],
+                               sources=["release_notes_kestrel_2_4.md"])],
+                "count": count}
+        p = packet("C-001", "C", j(good), dict(C1_KEY, citation_support=C1_SUPPORT),
+                   dict(C1_EVIDENCE, **hashes("C-001")), methodology_version=mv)
+        if metric is not None:
+            p["quality_metric"] = metric
+        return judge.score_packet(p)
+
+    def test_RT09_workload_c_carries_no_count_penalty_under_v1_1_0(self):
+        r = self._c1(3, "1.1.0")
+        self.assertEqual(r["quality_score"], 1.0)
+        self.assertEqual(r["detail"]["coverage"], 1.0)
+        self.assertFalse(r["detail"]["count_field_ok"])
+        self.assertFalse(r["detail"]["count_penalty_applicable"])
+        self.assertEqual(r["outcome"], "PASS")
+
+    def test_RT09_v1_0_0_still_reproduces_the_0_95(self):
+        r = self._c1(3, "1.0.0")
+        self.assertEqual(r["quality_score"], 0.95)
+
+    def test_RT10_workload_b_obeys_whatever_its_task_text_says(self):
+        perfect = json.loads(j(B2_KEY))
+        perfect["count"] = 25
+        ev = dict(B2_EVIDENCE, **hashes("B-002"))
+
+        def score(metric):
+            p = packet("B-002", "B", j(perfect), B2_KEY, ev,
+                       methodology_version="1.1.0")
+            p["quality_metric"] = metric
+            return judge.score_packet(p)
+
+        with_penalty = score("`count` disagreeing with the length of `incidents` "
+                             "subtracts 0.05 (floor 0).")
+        self.assertEqual(with_penalty["quality_score"], 0.95)
+        self.assertFalse(with_penalty["task_success"])
+        without = score("Records are matched on `incident_id`; a `count` that "
+                        "disagrees with the length of `incidents` is recorded "
+                        "but carries no count penalty.")
+        self.assertEqual(without["quality_score"], 1.0)
+        self.assertTrue(without["task_success"])
+
+    def test_the_frozen_table_and_the_task_text_are_cross_checked(self):
+        """A judge-side table that drifts from the task text is reported."""
+        for tid, declared in sorted(judge.COUNT_PENALTY_DECLARED.items()):
+            path = os.path.join(TASKS_V11, tid[0], tid + ".json")
+            if not os.path.exists(path):
+                continue
+            with self.subTest(task=tid):
+                with open(path, encoding="utf-8") as fh:
+                    task = json.load(fh)
+                view = {"task_id": tid, "quality_metric": task["quality_metric"],
+                        "_mv": "1.1.0"}
+                got, basis = judge.count_penalty_declared(view)
+                self.assertEqual(
+                    got, declared,
+                    "%s: frozen table says %s, task text says %s (%s). The task "
+                    "text wins; update COUNT_PENALTY_DECLARED." % (
+                        tid, declared, got, basis))
+
+
+# ===========================================================================
+# evidence identity, outcome taxonomy, and the attempt-level contract
+# ===========================================================================
+
+class TestEvidenceIdentity(unittest.TestCase):
+
+    def test_evidence_from_another_run_is_invalid(self):
+        ev = a1_evidence(packet_id="pkt-somebody-else")
+        r = judge.score_packet(packet("A-001", "A", j(A1_PERFECT), A1_KEY, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["failure_reason"], "evidence_from_wrong_run")
+        self.assertEqual(r["outcome"], "INVALID")
+
+    def test_evidence_for_another_task_is_invalid(self):
+        ev = a1_evidence(task_id="A-003")
+        r = judge.score_packet(packet("A-001", "A", j(A1_PERFECT), A1_KEY, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["failure_reason"], "evidence_from_wrong_run")
+
+    def test_matching_identity_is_fine(self):
+        ev = a1_evidence(packet_id="pkt-a-001", task_id="A-001")
+        r = judge.score_packet(packet("A-001", "A", j(A1_PERFECT), A1_KEY, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["outcome"], "PASS")
+
+
+class TestOutcomeTaxonomy(unittest.TestCase):
+
+    def test_every_result_carries_one_of_exactly_three_outcomes(self):
+        seen = set()
+        cases = [
+            packet11("A-001", "A", j(A1_PERFECT), A1_KEY, a1_evidence()),
+            packet11("A-001", "A", j(A1_BLANKET), A1_KEY, a1_evidence()),
+            packet11("A-001", "A", "", A1_KEY, a1_evidence()),
+            packet11("A-001", "A", j(A1_PERFECT), A1_KEY, {}),
+            packet11("A-001", "A", j(A1_PERFECT), "not a key", a1_evidence()),
+            packet11("Z-999", "Z", "{}", {}, {}),
+            {"packet_id": "x"},
+        ]
+        for p in cases:
+            r = judge.score_packet(p)
+            seen.add(r["outcome"])
+            self.assertIn(r["outcome"], ("PASS", "FAIL_QUALITY", "INVALID"))
+            self.assertEqual(r["task_success"], r["outcome"] == "PASS")
+        self.assertEqual(seen, {"PASS", "FAIL_QUALITY", "INVALID"})
+
+    def test_the_result_is_attempt_level_and_says_so(self):
+        r = judge.score_packet(packet11("A-001", "A", j(A1_PERFECT), A1_KEY,
+                                        a1_evidence()))
+        self.assertEqual(r["detail"]["level"], "attempt")
+
+    def test_invalid_is_never_a_pass_for_any_workload(self):
+        for tid, wl, out, key in (("A-001", "A", j(A1_PERFECT), A1_KEY),
+                                  ("B-002", "B", j(B2_KEY), B2_KEY),
+                                  ("D-001", "D", j(D1_GOOD_ANSWER), D1_KEY),
+                                  ("E-002", "E", e_full(E2_KEY_11, 16), E2_KEY_11)):
+            with self.subTest(task=tid):
+                r = judge.score_packet(packet(tid, wl, out, key, {},
+                                              methodology_version="1.1.0"))
+                self.assertEqual(r["outcome"], "INVALID")
+                self.assertFalse(r["task_success"])
+                self.assertEqual(r["quality_score"], 0.0)
+
+    def test_summary_counts_outcomes_and_claims_no_cell_rate(self):
+        tmp = tempfile.mkdtemp()
+        try:
+            pdir = os.path.join(tmp, "p")
+            os.makedirs(pdir)
+            for i, p in enumerate((
+                    packet11("A-001", "A", j(A1_PERFECT), A1_KEY, a1_evidence()),
+                    packet11("A-001", "A", j(A1_BLANKET), A1_KEY, a1_evidence()),
+                    packet11("A-001", "A", j(A1_PERFECT), A1_KEY, {}))):
+                p["packet_id"] = "pkt-%d" % i
+                with open(os.path.join(pdir, "p%d.json" % i), "w") as fh:
+                    json.dump(p, fh)
+            buf = io.StringIO()
+            judge.score_directory(pdir, os.path.join(tmp, "s"), quiet=True)
+            with open(os.path.join(tmp, "s", "_SUMMARY.json")) as fh:
+                summary = json.load(fh)
+            self.assertEqual(summary["outcome_counts"],
+                             {"PASS": 1, "FAIL_QUALITY": 1, "INVALID": 1})
+            self.assertEqual(summary["level"], "attempt")
+        finally:
+            shutil.rmtree(tmp)
