@@ -29,8 +29,8 @@
 | 14 | 100-run mapping without contradiction | **PENDING** | `RUN_PLAN_v1.1.0.json` enumerates all 78 runs and 270 attempts; allocation untouched — but the **3.46× cost consequence is unratified** (`CR-002`) | **Editor-in-Chief** |
 | 15 | Pricing readiness | **BLOCKED** | `PS-2026-09-16` prices 30 entries with cache rates; **3 rows BLOCKED**; and the model/plan selection that decides completeness does not exist (open item **C-a**) | Editor-in-Chief + harness |
 | 16 | Provider-native meter calibration | **BLOCKED** | no benchmark credential exists. An accumulator check is not calibration | **Editor-in-Chief** |
-| 17 | Independent Red Team replay | *see §Red Team* | `RED_TEAM_REVIEW.md` | Task Red Team |
-| 18 | Independent reproduction of the new environment | *see §Reproduction* | `LAB_001_REPAIR_REPRODUCTION_RESULT.md` | Reproduction Agent |
+| 17 | Independent Red Team replay | **DONE — verdict NOT FIT TO FREEZE, then remediated** | `RED_TEAM_REVIEW.md`: 3 BLOCKING, 4 MAJOR, 5 MINOR. All three blockers closed and the acceptance criterion met; **the replay has not been re-run against the remediation** | Task Red Team |
+| 18 | Independent reproduction of the new environment | **DONE — image and run both reproduce exactly** | `LAB_001_REPAIR_REPRODUCTION_RESULT.md`: 15 findings, 9 remediated here. It reproduced the run perfectly and independently found that the run reproduced **the wrong rulebook** | Reproduction Agent |
 
 ---
 
@@ -87,3 +87,84 @@ Stated because a readiness report that only lists gates is easy to pass.
 - **Nothing here has been executed against a model.** Every claim is about text, arithmetic and
   code paths. The stack is better tested than it was; it remains untested against the only thing
   it exists to measure.
+
+
+---
+
+## Red Team and Reproduction — what they changed
+
+Both seats ran after the gate table above was drafted, and both independently found the same
+defect, which invalidated gate 12's evidence.
+
+### The verdict that matters
+
+The Red Team's words: **"NOT fit to freeze. The repair is good; the delivery is broken."**
+
+It verified a great deal — RT-03 closed with both halves confirmed against the delivered key
+(*"the best work in the round"*), the E evidence contract failing closed, the tool families now
+real decoys, `manifest.py` catching all five tamper classes, four findings closed by rulings
+written into the task text, 17 of 17 keys reproducing. And then: **none of the version-gated half
+of that work reached a real run**, because `runner.py` stamped the wrong methodology version.
+
+The Reproduction Agent, measuring separately, reached the same place from the other side: the run
+reproduces *exactly* — every record field identical across two runs, zero packet differences, zero
+score differences — and it reproduces **the wrong rulebook**.
+
+### What has been done about it
+
+All three BLOCKING findings and nine of the reproduction's fifteen are closed, and the Red Team's
+own acceptance criterion is met:
+
+| | Result |
+|---|---|
+| Golden run at the declared version | **17/17 PASS**, `Counter({'1.1.0': 17})` |
+| E-002 with a violation at turn 8, final answer byte-perfect | **fails**, `zero_tolerance:constraint_violation` |
+| Image | `sha256:81f8bfc61822…` reproduces twice from a pruned store, LG3 8/8 |
+| Tests | 240 judge + 54 harness, including **eight seam tests** covering runner → packet → judge |
+| `MANIFEST.json` | committed, zero unclaimed files, a doctored manifest now caught |
+
+### The gate this does not clear
+
+**Gate 17 is not re-satisfied by remediation.** The Red Team found the defects; it has not
+re-tested the fixes. A repair verified only by the seat that wrote it is the exact shape of the
+problem this round was called in to fix — and this coordinating seat wrote most of these fixes.
+
+**The same applies to gate 4.** The methodology was drafted by the seat that adjudicated the
+change request.
+
+So: separation of duties held for the task set, the keys, the scorer and the semantic
+verification. It did **not** hold for the methodology text, and it does not hold for this
+remediation. Both are PENDING for a real reason.
+
+---
+
+# Verdict
+
+## **NOT FIT TO FREEZE — a complete candidate, pending two independent reviews and one ruling**
+
+Everything a reviewer needs exists and is internally consistent. What is missing cannot be
+supplied by the seats that built it:
+
+| # | What is needed | From whom |
+|---|---|---|
+| 1 | **Red Team re-test of the remediation** — the acceptance criterion is met, but by the seat that wrote the fixes | Task Red Team |
+| 2 | **Independent methodology review** of `METHODOLOGY_v1.1.0` | Editor-in-Chief or a reviewing seat |
+| 3 | **CR-002 ratified** — the run-plan unit and its 3.46× cost consequence | Editor-in-Chief |
+
+Pricing (gate 15) and provider-native calibration (gate 16) remain **BLOCKED** on a model
+selection nobody has made and a credential nobody has issued. Per Prompt 3.5 §9 that does not
+block a freeze candidate; it blocks representing the stack as execution-ready, and it blocks the
+Pilot outright.
+
+**LG4 remains NO GO**, and would remain NO GO even if the freeze were granted tomorrow.
+
+## The honest summary of this round
+
+The stack is substantially better than it was and **still has not measured anything**. Its three
+most consequential findings — a task that was unpassable in every condition, a task that rewarded
+discarding 86% of its input, and a scoring pipeline that applied the wrong rulebook to every run —
+were all invisible to review and visible only to execution. Two of the three were in work this
+coordinating seat did itself and was confident about.
+
+That is the result worth carrying forward, and it is a result about the instrument, not about the
+market or about token optimisation. Nothing here has spoken to a model.

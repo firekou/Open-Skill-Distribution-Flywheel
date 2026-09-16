@@ -95,12 +95,27 @@ recoverable rather than silent.
 
 Recorded because a repair round that only lists wins is not a report.
 
-1. **RT-10 raises the pass rate.** No floor was lowered and no task weakened, but a
-   perfect-but-wrong-count B-002 answer moves from fail to pass. The effect is quantified inside
-   the task text. This is the single change most in need of a second opinion.
-2. **Workload C is now strictly harder.** Incomplete `sources` used to be free. That is the price
-   of removing an asymmetry that penalised only broad retrieval; the lever for easing C is the
-   coverage floor, not the rule.
+1. **Four changes raise the pass rate, not one.** An earlier draft of this report called RT-10
+   "the single change most in need of a second opinion". A systematic perturbation diff at both
+   versions, run by the Red Team, found **four**, all declared in the task text and none
+   undeclared:
+
+   | Change | Effect, measured |
+   |---|---|
+   | RT-10, B-002 `count` | 0.9500 fail → 0.9945 pass |
+   | A's `count` penalty 0.05 → 0.02 | a genuine A-001 miss 0.9420 fail → 0.9720 pass |
+   | C's `count` penalty removed (RT-09) | an omitted C-001 record 0.8875 fail → 0.9375 pass |
+   | UG-19, an extra key in a D reply | 0.0 → 1.0 |
+
+   **No floor moved** — 0.95 / 0.97 / 0.90 + 1.00 / 0.95 are identical to v1.0.0. But a report
+   that quantifies one loosening and calls it the only one is worse than one that quantifies
+   none, and this one did that until it was checked.
+
+2. **"Workload C is now strictly harder" was false, and is withdrawn.** It holds for
+   *traceability*: incomplete `sources` used to be free and now costs. It is **false for
+   coverage** — an omitted C-001 record moves 0.8875 fail → 0.9375 pass under the same change.
+   The honest statement is that C's citation rule got stricter and C's coverage arithmetic got
+   more forgiving, and the net direction was never measured.
 3. **Two judge-adopted rules were overruled by the Designer**, explicitly: UG-19 (an extra key in
    a D reply is no longer fatal — D measures tool selection, so an extra key is a confound) and
    UG-27 (the turn-16 `max_shifts` override is stated in the task rather than read from evidence
@@ -111,3 +126,73 @@ Recorded because a repair round that only lists wins is not a report.
 5. **B-002 grew from 147 KB to 161 KB.** No v1.0.0 run may ever be pooled with a v1.1.0 run.
 6. **`MANIFEST.sha256` was deleted** from v1.1.0 rather than left stale, and replaced by the wider
    `manifest.py`. Restorable in one command if the Reviewer prefers both.
+
+
+---
+
+# Addendum — the Red Team replay, and what it invalidated
+
+The closure matrix above was written **before** the independent Red Team replay and the
+independent reproduction. Both found the same thing, independently, and it invalidated this
+report's own headline evidence. The matrix is left standing and corrected here rather than
+quietly rewritten.
+
+## What was wrong with "17 of 17 pass the whole chain"
+
+It was true, and it was not evidence of what it was cited for.
+
+`runner.py` stamped the literal `"1.0.0"` as the methodology version on every record and every
+packet. `judge.py` version-gates the entire v1.1.0 repair across roughly fourteen branches. So the
+golden run **passed under the v1.0.0 rulebook**: absolute floors, C citation symmetry, both
+`count` rulings, the corpus-integrity gate, turn completeness and the whole evidence gate never
+executed.
+
+**The 17/17 was caused by the defect.** A green integration test whose greenness came from the
+more permissive rules being selected. Forced to the declared version, the same run gave **11/17**.
+
+The Red Team demonstrated the consequence end to end: a fixture with a V2 zero-tolerance violation
+injected at E-002 turn 8, final answer byte-perfect, run through the documented commands →
+**PASS**, with `turns_seen: 1`, while the packet's own `required_evidence.turns[7]` contained the
+violating text. The Evidence Producer captured it correctly. The scorer never looked.
+
+## Blocking findings, and their disposition
+
+| id | Finding | Status |
+|---|---|---|
+| **NEW-01** | The version mis-stamp above | **CLOSED** — one declared source, `harness.METHODOLOGY_VERSION`; no literal anywhere |
+| **NEW-02** | Five evidence fields required by the judge and produced by nobody, making B-002, B-003 and all three C tasks structurally unscorable | **CLOSED** — produced from the frozen corpora. One was not merely absent but **wrong**: a bare `\bREQ-` pattern matched the tail of every `SDX-REQ-nnnn`, so the inventory held 96 entries and not one real id, and every reported id looked fabricated |
+| **NEW-03** | Nothing in the lab could produce a workload-A corpus read, invisible because `golden_run.py` **fabricated** the audit entries | **CLOSED** — `harness/corpus_reader.py`, a real audited reader that reads the file and records the access in the same call, and refuses a path outside the declared corpus |
+| **NEW-04** | `corpus_access_log` was `list[dict]` from the producer and `list[str]` in the judge — A-001's read guard failed every legitimate run, and D's fixtures-read prohibition **failed open** | **CLOSED** — one declared shape, asserted on both sides and in a seam test |
+| **NEW-06** | `assert_blind` skipped `required_evidence`, the one run-produced field, so four identifying keys passed both blind gates | **CLOSED** — one list of 33 keys used by both gates; every key verified caught inside `required_evidence` |
+| **NEW-07** | No test called `build_packet`; all 240 judge tests hand-build their packets, which is why four defects lived in that seam | **CLOSED** — eight seam tests running the real chain |
+
+## The acceptance criterion, in the Red Team's own words
+
+> `golden_run.py` must give 17/17 PASS with every packet resolving `methodology_version 1.1.0`,
+> and the run that today passes with a violation at E-002 turn 8 must fail.
+
+| | Result |
+|---|---|
+| Golden run | **17/17 PASS**, packet versions `Counter({'1.1.0': 17})` |
+| E-002 with `"just"` at turn 8, final answer byte-perfect | **`success=false`, `zero_tolerance:constraint_violation`** |
+
+## From the reproduction — nine more, all closed
+
+`D-9` every PASS record still said "awaiting Quality Judge score" · `D-3` 51 `.pyc` files entered
+`corpus_hashes`, which `corpus_modified` keys on · `D-5` `manifest.py verify` exited 0 on a
+doctored manifest · `D-6` a file inside the task set escaped coverage entirely · `D-2`
+raw-evidence hashes depended on the output directory · `D-7` `scorer_hash` named everywhere and
+recorded nowhere · `D-8` two unrelated quantities both called `config_hash` · `D-1` `git archive`
+builds cannot match clone builds (mode 0664 vs 0644) · `D-10`/`D-13` and five wrong rows in the
+runbook.
+
+## What this addendum is really recording
+
+Three of this round's four most consequential findings — the unpassable C-002 key, the version
+mis-stamp, the fabricated workload-A audit — **were invisible to review and visible only to
+execution**. Two of them were in work this coordinating seat did itself and was confident about.
+
+The pattern from the previous round held again and generalised: *two halves built by different
+seats, each correct in isolation.* What was new this round is that **the integration proof itself
+was one of the halves.** A test that runs the whole chain is not a seam test if nothing asserts
+which rules the chain applied.
