@@ -1,0 +1,371 @@
+{
+  "package_kind": "learning",
+  "package_id": "atk.lifecycle.expiry-and-revocation",
+  "schema_version": "0.1.0",
+  "version": "0.1.0",
+  "status": "draft",
+  "title": "過期與撤回：引用任何知識包之前必須做的四次查核",
+  "desk": "context-memory",
+  "created_at": "2026-09-16",
+  "published_at": null,
+  "valid_until": "2027-03-16",
+  "authorship": {
+    "authored_by": [
+      "AM28"
+    ],
+    "reviewed_by": [
+      "AM36",
+      "AM03"
+    ],
+    "human_responsible": null,
+    "ai_authored": true
+  },
+  "sources": [
+    {
+      "source_id": "SRC-E030",
+      "source_uri": "ledgers/EVIDENCE_LEDGER.md E030 @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "container_digest was an operator-supplied string that nothing verified. All 10 first-pass dry-run records named an image that provably could not produce them.",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-E032",
+      "source_uri": "ledgers/EVIDENCE_LEDGER.md E032 @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "The same salt gave C0 = Treatment B in the 10-run plan and C0 = Treatment A in a 2-run subset ... a correct partial reproduction would have looked like an invalidation.",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-SUPERSEDED",
+      "source_uri": "reports/LAB_001_PILOT_READINESS_REVIEW.md §1 @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "are recorded in ENVIRONMENT_LOCK.json under superseded_digests with what each one was, rather than deleted.",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-IMMUTABLE",
+      "source_uri": "benchmarks/token-efficiency-lab-001/methodology/METHODOLOGY_CHANGE_REQUEST_001.md @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "This document requests a review and proposes METHODOLOGY_v1.1.0.md as a new file, per the immutability clause. Every run already executed stays attributed to v1.0.0.",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-STATUS-CONTRADICTION",
+      "source_uri": "EXECUTION_STATUS.md @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "§4 writes 'Phase D completed 2026-09-15'; §6's table writes 'D Ledgers ❌ not started'; §7 writes 'All four phases in CLAUDE_EXECUTION_START.md are complete.'",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-MCP-HANDLE",
+      "source_uri": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools",
+      "source_type": "official_specification",
+      "source_version": "2026-07-28",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "A call against an expired or unknown handle should return a tool execution error that says so, so the model can recover by creating a new one.",
+      "rights_note": "引用規格原文片段，標明出處與版本。"
+    },
+    {
+      "source_id": "SRC-MCP-CACHE",
+      "source_uri": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools",
+      "source_type": "official_specification",
+      "source_version": "2026-07-28",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "\"nextCursor\": \"next-page-cursor\", \"ttlMs\": 300000, \"cacheScope\": \"public\"",
+      "rights_note": "同上。"
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "C-001",
+      "statement": "十筆紀錄上的環境識別碼是操作者自行填入、沒有任何機制驗證的字串；該識別碼指向的映像檔被證明不可能產出那十筆紀錄。",
+      "evidence_state": "TESTED",
+      "source_refs": [
+        "SRC-E030"
+      ],
+      "limitations": [
+        "這是我方自有 harness 的缺陷，不外推到任何其他系統。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM28",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-002",
+      "statement": "同一把 salt 在十次計畫與兩次子集下給出相反的盲評標籤，使一次正確的局部重現看起來像推翻。",
+      "evidence_state": "TESTED",
+      "source_refs": [
+        "SRC-E032"
+      ],
+      "limitations": [
+        "協定本來就規定標籤是 (salt, condition) 的屬性；問題出在實作不符協定，不是協定本身。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM28",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-003",
+      "statement": "被取代的環境識別碼被保留在 superseded_digests 欄位並註明各自是什麼，而不是刪除。",
+      "evidence_state": "OBSERVED",
+      "source_refs": [
+        "SRC-SUPERSEDED"
+      ],
+      "limitations": [
+        "保留舊值證明的是可追溯，不證明保留的內容正確。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM28",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-004",
+      "statement": "凍結的方法文件不被編輯；修訂以新檔案提出，已執行的每一次執行仍歸屬原版本。",
+      "evidence_state": "OBSERVED",
+      "source_refs": [
+        "SRC-IMMUTABLE"
+      ],
+      "limitations": [
+        "這是我方自訂的不可變條款，不是外部標準。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM28",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-005",
+      "statement": "同一份狀態文件在三個不同段落對同一個階段分別寫成「已完成」、「未開始」與「四個階段全部完成」。",
+      "evidence_state": "OBSERVED",
+      "source_refs": [
+        "SRC-STATUS-CONTRADICTION"
+      ],
+      "limitations": [
+        "本輪只指出矛盾，未判定哪一段正確；判定權不在本席。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM28",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-006",
+      "statement": "MCP 2026-07-28 對狀態句柄要求：對已過期或未知句柄的呼叫應回傳明說過期的工具執行錯誤，使模型能重新建立；同版本另為工具清單加入 ttlMs 與 cacheScope。",
+      "evidence_state": "OBSERVED",
+      "source_refs": [
+        "SRC-MCP-HANDLE",
+        "SRC-MCP-CACHE"
+      ],
+      "limitations": [
+        "該節自述為非規範性指引（non-normative guidance）。",
+        "ttlMs 管的是工具清單的快取，不是知識內容的有效期。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM28",
+      "checked_by": "AM36"
+    }
+  ],
+  "applicability": {
+    "use_when": [
+      "Agent 準備在工作流程中引用一個知識包",
+      "Agent 收到撤回或版本事件"
+    ],
+    "not_for": [
+      "自動抓取最新版本取代已釘死的版本",
+      "在狀態不明時繼續使用治理類規則"
+    ],
+    "prerequisites": [
+      "已釘死版本",
+      "有可查詢的狀態端點"
+    ],
+    "compatible_versions": [
+      "MCP 2026-07-28"
+    ],
+    "jurisdiction_if_relevant": null
+  },
+  "method": {
+    "steps": [
+      "查 valid_until：已過期則停止引用。",
+      "查 status 端點：retracted 或 superseded 則停止並取得替代版本。",
+      "比對 content_hash 與釘死版本：不符即停止，不得就地採用。",
+      "狀態端點取不到時，依 risk_class 決定：governance 一律停止。",
+      "留存本次引用的 package_id、version 與判定結果。"
+    ],
+    "decision_rules": [
+      {
+        "rule_id": "R-001",
+        "when": "valid_until 早於今天",
+        "then": "停止引用，回退到上一個已核准版本，不得自動抓最新",
+        "claim_refs": [
+          "C-004"
+        ]
+      },
+      {
+        "rule_id": "R-002",
+        "when": "狀態端點回傳 retracted",
+        "then": "立即停止並依 revoked_by／superseded_by 取得替代版本；舊版本不得就地改寫消滅錯誤",
+        "claim_refs": [
+          "C-003",
+          "C-004"
+        ]
+      },
+      {
+        "rule_id": "R-003",
+        "when": "狀態端點無法取得且 risk_class 為 governance",
+        "then": "fail closed，停止引用",
+        "claim_refs": [
+          "C-001"
+        ]
+      },
+      {
+        "rule_id": "R-004",
+        "when": "實際內容的 hash 與紀錄上的識別碼不符",
+        "then": "停止並回報；自填而無驗證的識別碼不算證據",
+        "claim_refs": [
+          "C-001"
+        ]
+      },
+      {
+        "rule_id": "R-005",
+        "when": "同一份來源的不同段落對同一狀態給出不同答案",
+        "then": "回 NEEDS_INFORMATION，不挑一段當結論",
+        "claim_refs": [
+          "C-005"
+        ]
+      },
+      {
+        "rule_id": "R-006",
+        "when": "工具清單帶 ttlMs 已逾時，或句柄回傳過期錯誤",
+        "then": "重新取得清單或重建句柄，不沿用舊快取",
+        "claim_refs": [
+          "C-006"
+        ]
+      }
+    ],
+    "required_approvals": [
+      "客戶管理者核准採用並釘死版本"
+    ],
+    "escalation_conditions": [
+      "狀態端點無法取得",
+      "hash 不符",
+      "同一來源自相矛盾",
+      "撤回後找不到替代版本"
+    ],
+    "rollback": "停止引用本包，回退至上一個已核准版本，保留本次判定紀錄；撤回不保證能刪除客戶已另存的副本。"
+  },
+  "test_cases": [
+    {
+      "test_id": "T-001",
+      "given": "包已過 valid_until",
+      "expected_behavior": "停止引用並回退",
+      "scoring_version": "lifecycle-0.1.0",
+      "baseline_reference": null,
+      "executed": false,
+      "result": "NOT_RUN"
+    },
+    {
+      "test_id": "T-002",
+      "given": "包狀態為 retracted 且有 revoked_by",
+      "expected_behavior": "停止並取得替代版本",
+      "scoring_version": "lifecycle-0.1.0",
+      "baseline_reference": null,
+      "executed": false,
+      "result": "NOT_RUN"
+    },
+    {
+      "test_id": "T-003",
+      "given": "狀態端點回 503 且 risk_class=governance",
+      "expected_behavior": "fail closed 停止引用",
+      "scoring_version": "lifecycle-0.1.0",
+      "baseline_reference": null,
+      "executed": false,
+      "result": "NOT_RUN"
+    },
+    {
+      "test_id": "T-004",
+      "given": "content_hash 與釘死版本不符",
+      "expected_behavior": "停止並回報，不就地採用",
+      "scoring_version": "lifecycle-0.1.0",
+      "baseline_reference": null,
+      "executed": false,
+      "result": "NOT_RUN"
+    },
+    {
+      "test_id": "T-005",
+      "given": "同一來源兩段對狀態說法相反",
+      "expected_behavior": "回 NEEDS_INFORMATION",
+      "scoring_version": "lifecycle-0.1.0",
+      "baseline_reference": null,
+      "executed": false,
+      "result": "NOT_RUN"
+    }
+  ],
+  "limitations": [
+    "五條證據中有四條來自我方自有系統，樣本是一個 repo。",
+    "本篇沒有任何關於客戶端實際如何處理過期的觀察。",
+    "五個測試案例已寫、一個都沒跑。"
+  ],
+  "unknowns": [
+    "撤回通知的實際送達率——無訂閱戶，未量測。",
+    "客戶端在狀態端點無法取得時的實際行為——未觀察。",
+    "我方文件中還有多少處類似 C-005 的狀態矛盾——本輪只找到一處，未全面掃描。"
+  ],
+  "rights": {
+    "license": "本 repo LICENSE；引用之公開規格片段標明出處",
+    "redistribution_allowed": true,
+    "commercial_use_allowed": true,
+    "attribution_required": true,
+    "model_training_allowed": null,
+    "notes": null
+  },
+  "approvals": [
+    {
+      "role": "author",
+      "seat_id": "AM28",
+      "decision": "APPROVED",
+      "decided_at": "2026-09-16",
+      "scope_hash": "sha256:d9605f3b71bcb93cf6c7ca46971d9880a2aedca56e7deb2457e23f0a4c41b0df",
+      "conditions": null
+    },
+    {
+      "role": "verify",
+      "seat_id": "AM36",
+      "decision": "NOT_REQUESTED",
+      "decided_at": "2026-09-16",
+      "scope_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "conditions": "本輪為離線樣本，未送 Verify 核定。"
+    }
+  ],
+  "lifecycle": {
+    "review_owner": "AM28",
+    "supersedes": null,
+    "superseded_by": null,
+    "revokes": null,
+    "revoked_by": null,
+    "change_summary": "首版精簡樣本。"
+  },
+  "delivery": {
+    "fail_mode_when_status_unreachable": "fail_closed",
+    "risk_class": "governance",
+    "max_characters": 12000,
+    "requires_atk_api_key": false
+  },
+  "human_counterpart": "atk.content.expiry-and-revocation",
+  "content_hash": "sha256:d9605f3b71bcb93cf6c7ca46971d9880a2aedca56e7deb2457e23f0a4c41b0df",
+  "disclosure": "由 AI 席位撰寫，未指派人類責任窗口；離線樣本，不是已發布內容。"
+}

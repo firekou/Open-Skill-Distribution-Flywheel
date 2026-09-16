@@ -1,0 +1,265 @@
+{
+  "package_kind": "content",
+  "package_id": "atk.content.approval-boundaries",
+  "schema_version": "0.1.0",
+  "version": "0.1.0",
+  "status": "draft",
+  "title": "Agent 可以替公司決定什麼：兩個協定都沒有回答的那一半",
+  "desk": "agent",
+  "format": "EXPLAINED",
+  "reader_decision": "決定核准邊界要寫在哪一層：協定層、客戶端層，還是公司政策層；以及在撤回訊號取不到時預設放行或預設停止。",
+  "created_at": "2026-09-16",
+  "published_at": null,
+  "valid_until": "2027-03-16",
+  "authorship": {
+    "authored_by": [
+      "AM25"
+    ],
+    "reviewed_by": [
+      "AM36",
+      "AM03"
+    ],
+    "human_responsible": null,
+    "ai_authored": true
+  },
+  "sources": [
+    {
+      "source_id": "SRC-MCP-2025-TOOLS",
+      "source_uri": "https://modelcontextprotocol.io/specification/2025-06-18/server/tools",
+      "source_type": "official_specification",
+      "source_version": "2025-06-18",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "For trust & safety and security, there **SHOULD** always be a human in the loop with the ability to deny tool invocations.",
+      "rights_note": "引用規格原文片段，標明出處與版本；未重製全文。"
+    },
+    {
+      "source_id": "SRC-MCP-2026-TOOLS",
+      "source_uri": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools",
+      "source_type": "official_specification",
+      "source_version": "2026-07-28",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "Servers **MAY** respond to `tools/call` with an `InputRequiredResult` to indicate that additional input is needed before the tool call can be completed.",
+      "rights_note": "同上。"
+    },
+    {
+      "source_id": "SRC-MCP-2026-INTERACTION",
+      "source_uri": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools",
+      "source_type": "official_specification",
+      "source_version": "2026-07-28",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "However, implementations are free to expose tools through any interface pattern that suits their needs—the protocol itself does not mandate any specific user interaction model.",
+      "rights_note": "同上。"
+    },
+    {
+      "source_id": "SRC-A2A-TASKSTATE",
+      "source_uri": "https://a2a-protocol.org/latest/specification/",
+      "source_type": "official_specification",
+      "source_version": "latest（頁面標示 1.0.0；本輪未取得帶版號的固定 URL）",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "summarised_rendering",
+      "quote": "TASK_STATE_AUTH_REQUIRED | Indicates that authentication is required to proceed. This is an interrupted state.",
+      "rights_note": "取得管道回傳的是模型轉述而非原始頁面，故本來源只能支撐 REPORTED。"
+    },
+    {
+      "source_id": "SRC-FW-SEATREG",
+      "source_uri": "agents/SEAT_REGISTRY.json @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "No role may approve its own downstream gate.",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-FW-VALIDATE-RUN",
+      "source_uri": "tools/validate_seats.py @ a8ca352 — 本輪實際執行輸出",
+      "source_type": "internal_measurement",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "separation of duties OK — 71 seats, 10 departments, 14 invariants enforced",
+      "rights_note": "我方自行執行，命令與輸出留存於 reports/FIRST_EXECUTION_VERIFICATION_LOG.md。"
+    },
+    {
+      "source_id": "SRC-FW-VERIFY-STD",
+      "source_uri": "ATK_VERIFY_STANDARD.md @ a8ca352",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "A researcher may not verify their own unsupported conclusion without an independent gate.",
+      "rights_note": "本 repo 自有檔案。"
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "C-001",
+      "statement": "MCP 工具規格在 2025-06-18 與 2026-07-28 兩個版本都以 SHOULD 要求「人在迴圈中、且有能力拒絕工具呼叫」，兩版該段文字一字不差。",
+      "evidence_state": "OBSERVED",
+      "source_refs": [],
+      "limitations": [
+        "SHOULD 不是 MUST，規格本身未強制。",
+        "本判斷來自兩個頁面的原文比對，未涵蓋 MCP 其他章節可能另有規定。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM25",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-002",
+      "statement": "同一份 MCP 規格明文表示協定本身不規定任何特定的使用者互動模型，實作可自由選擇介面樣式。",
+      "evidence_state": "OBSERVED",
+      "source_refs": [
+        "SRC-MCP-2026-INTERACTION"
+      ],
+      "limitations": [
+        "此句描述的是互動介面，不是授權決策；不得延伸解讀為規格允許略過授權。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM25",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-003",
+      "statement": "MCP 2026-07-28 新增 InputRequiredResult，伺服器可在工具呼叫完成前要求補充輸入，客戶端以新的 JSON-RPC id 帶 inputResponses 重送。",
+      "evidence_state": "OBSERVED",
+      "source_refs": [
+        "SRC-MCP-2026-TOOLS"
+      ],
+      "limitations": [
+        "這是一個取得輸入的機制。規格未說明該輸入是否構成一次核准，也未定義核准者的身分。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM25",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-004",
+      "statement": "A2A 的任務狀態列舉中，TASK_STATE_AUTH_REQUIRED 被描述為中斷狀態，TASK_STATE_REJECTED 被描述為終端狀態，兩者是不同的值。",
+      "evidence_state": "REPORTED",
+      "source_refs": [
+        "SRC-A2A-TASKSTATE"
+      ],
+      "limitations": [
+        "取得管道回傳的是模型轉述，非原始頁面文字，故只能記為 REPORTED。",
+        "同一份規格的兩次擷取對授權條款所在章節給出不同編號（一次稱 3.3.2／3.1.11，一次稱第 7 節），章節編號本輪無法確認，故不引用章節號。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM25",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-005",
+      "statement": "Flywheel 的席位登錄把「任何角色不得核准自己的下游閘門」寫成可執行的不變量，執行 tools/validate_seats.py 回報 71 席、10 部門、14 條不變量全數通過。",
+      "evidence_state": "TESTED",
+      "source_refs": [
+        "SRC-FW-SEATREG",
+        "SRC-FW-VALIDATE-RUN"
+      ],
+      "limitations": [
+        "測試證明的是契約定義之間彼此不矛盾，不證明有任何一席執行過真實任務。",
+        "EXECUTION_STATUS.md 自述「No seat has executed a real task」。"
+      ],
+      "counterevidence": [
+        "契約通過驗證與契約被遵守是兩件事；本輪沒有任何執行紀錄可供檢驗後者。"
+      ],
+      "authored_by": "AM25",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-006",
+      "statement": "ATK Verify Standard 第 7 條規定研究者不得在沒有獨立閘門的情況下驗證自己未獲支持的結論。",
+      "evidence_state": "OBSERVED",
+      "source_refs": [
+        "SRC-FW-VERIFY-STD"
+      ],
+      "limitations": [
+        "這是我方自訂標準，不是外部權威；對外引用時須標明來源為 ATK 自有文件。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM25",
+      "checked_by": "AM36"
+    }
+  ],
+  "applicability": {
+    "use_when": [
+      "企業要決定哪些 Agent 動作需要人工核准、核准規則寫在哪一層",
+      "評估 MCP 或 A2A 的既有機制是否已經涵蓋公司的核准需求",
+      "撰寫 Agent 授權政策，需要知道協定保證了什麼、沒保證什麼"
+    ],
+    "not_for": [
+      "作為法律意見或法規遵循結論",
+      "推論某個特定客戶端實作真的有核准介面——規格用的是 SHOULD",
+      "作為採購決策的唯一依據"
+    ],
+    "prerequisites": [
+      "讀者需知道自家 Agent 走的是哪一版協定"
+    ],
+    "compatible_versions": [
+      "MCP 2025-06-18",
+      "MCP 2026-07-28",
+      "A2A 頁面標示 1.0.0（本輪未取得帶版號固定 URL）"
+    ],
+    "jurisdiction_if_relevant": null
+  },
+  "limitations": [
+    "本篇只讀了 MCP 的 tools 頁與 A2A 的任務狀態段落，未通讀兩份規格全文。",
+    "沒有任何一個客戶端實作被本輪實測；規格寫了什麼與產品做了什麼是兩回事。",
+    "文中的推導性結論不是 claim，未經任何機器檢核，見文末「編輯判斷」段。"
+  ],
+  "unknowns": [
+    "主流 MCP 客戶端實際上有多少比例提供拒絕工具呼叫的介面——未量測。",
+    "InputRequiredResult 在實務上是否被拿來當核准機制使用——未觀察到任何實例。",
+    "A2A 規格對授權條款的正式章節編號——兩次擷取不一致，未確認。",
+    "本篇是否真的改變了任何讀者的決定——尚無讀者。"
+  ],
+  "rights": {
+    "license": "來源為公開規格與本 repo 自有檔案；本包採 repo LICENSE",
+    "redistribution_allowed": true,
+    "commercial_use_allowed": true,
+    "attribution_required": true,
+    "model_training_allowed": null,
+    "notes": "規格原文片段以引用方式使用，保留出處與版本。"
+  },
+  "approvals": [
+    {
+      "role": "author",
+      "seat_id": "AM25",
+      "decision": "APPROVED",
+      "decided_at": "2026-09-16",
+      "scope_hash": "sha256:74927637c36f405b59c72cd3e2804869e1672ea7bc0144601ba059cd090a2e7d",
+      "conditions": null
+    },
+    {
+      "role": "verify",
+      "seat_id": "AM36",
+      "decision": "NOT_REQUESTED",
+      "decided_at": "2026-09-16",
+      "scope_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "conditions": "本輪為離線樣本，未送 Verify 核定；證據狀態由作者自填，尚未經獨立核定。"
+    },
+    {
+      "role": "human_approver",
+      "seat_id": "AM01",
+      "decision": "NOT_REQUESTED",
+      "decided_at": "2026-09-16",
+      "scope_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "conditions": "未指派人類出版責任窗口，故不得發布。"
+    }
+  ],
+  "lifecycle": {
+    "review_owner": "AM25",
+    "supersedes": null,
+    "superseded_by": null,
+    "revokes": null,
+    "revoked_by": null,
+    "change_summary": "首版樣本。"
+  },
+  "machine_counterpart": "atk.governance.approval-boundaries",
+  "human_article_path": "magazine/samples/S001-approval-boundaries/article.md",
+  "content_hash": "sha256:74927637c36f405b59c72cd3e2804869e1672ea7bc0144601ba059cd090a2e7d",
+  "disclosure": "由 AI 席位撰寫，未指派人類責任窗口；本包為離線樣本，不是已發布內容。"
+}
