@@ -1,0 +1,360 @@
+{
+  "fixture_version": "1.0.0",
+  "synthetic": true,
+  "purpose": "Verify the ATK Token Meter's ACCUMULATOR. Every usage block here is synthetic.",
+  "hard_caveat": "These are not provider-reported numbers. Nothing in this fixture says anything about any real provider's tokenizer or billing. It tests ATK's arithmetic over usage blocks, which is a real and checkable property, and it tests nothing else. The meter-versus-provider comparison required by METER_CALIBRATION_v1.0.0.md is a separate question that needs a benchmark credential and has NOT been answered.",
+  "expectations_provenance": "Every 'expected' value was computed by explicit arithmetic in the fixture generator, not by running the meter. 'cost_working' shows the per-call arithmetic so a reviewer can check it by hand.",
+  "cases": [
+    {
+      "case_id": "CAL-001",
+      "description": "Baseline: one accepted call, no cache, no retry. If this fails, nothing else matters.",
+      "adversarial_against": "nothing - this is the control",
+      "calls": [
+        {
+          "provider": "lab",
+          "model": "replay-synthetic",
+          "model_version": "replay-synthetic-2026-09",
+          "accepted": true,
+          "role": "primary",
+          "cache_state": "cold",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 12000,
+            "output_tokens": 800,
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "expected": {
+        "input_tokens": 12000,
+        "output_tokens": 800,
+        "cached_tokens": 0,
+        "retry_input_tokens": 0,
+        "retry_output_tokens": 0,
+        "escalation_input_tokens": 0,
+        "escalation_output_tokens": 0,
+        "model_calls": 1,
+        "retries": 0,
+        "escalations": 0,
+        "total_tokens": 12800,
+        "cost": 0.016
+      },
+      "cost_working": [
+        "replay-synthetic: 12000*1.0/1e6 + 800*5.0/1e6 = 0.0160000000"
+      ]
+    },
+    {
+      "case_id": "CAL-002",
+      "description": "Three attempts, the first two rejected. Quantity 6: retry tokens are counted, never discarded.",
+      "adversarial_against": "a meter that records only the accepted call would report 9,800 input instead of 28,200 - a 65% undercount, and it would look plausible",
+      "calls": [
+        {
+          "provider": "openai",
+          "model": "gpt-5-mini",
+          "model_version": "gpt-5-mini-2026-09",
+          "accepted": false,
+          "role": "primary",
+          "cache_state": "cold",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 9000,
+            "output_tokens": 150,
+            "cached_tokens": 0
+          }
+        },
+        {
+          "provider": "openai",
+          "model": "gpt-5-mini",
+          "model_version": "gpt-5-mini-2026-09",
+          "accepted": false,
+          "role": "primary",
+          "cache_state": "cold",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 9400,
+            "output_tokens": 180,
+            "cached_tokens": 0
+          }
+        },
+        {
+          "provider": "openai",
+          "model": "gpt-5-mini",
+          "model_version": "gpt-5-mini-2026-09",
+          "accepted": true,
+          "role": "primary",
+          "cache_state": "cold",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 9800,
+            "output_tokens": 620,
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "expected": {
+        "input_tokens": 28200,
+        "output_tokens": 950,
+        "cached_tokens": 0,
+        "retry_input_tokens": 18400,
+        "retry_output_tokens": 330,
+        "escalation_input_tokens": 0,
+        "escalation_output_tokens": 0,
+        "model_calls": 3,
+        "retries": 2,
+        "escalations": 0,
+        "total_tokens": 29150,
+        "cost": 0.00895
+      },
+      "cost_working": [
+        "gpt-5-mini: 9000*0.25/1e6 + 150*2.0/1e6 = 0.0025500000",
+        "gpt-5-mini: 9400*0.25/1e6 + 180*2.0/1e6 = 0.0027100000",
+        "gpt-5-mini: 9800*0.25/1e6 + 620*2.0/1e6 = 0.0036900000"
+      ]
+    },
+    {
+      "case_id": "CAL-003",
+      "description": "90% of input served from cache. Quantity 3: cached tokens are reported separately and priced at the cached rate, never folded into input.",
+      "adversarial_against": "a meter that prices all 40,000 input tokens at the uncached rate reports $0.028182 instead of $0.005214 - a 5.41x overstatement on this call",
+      "calls": [
+        {
+          "provider": "deepseek",
+          "model": "deepseek-v4-pro",
+          "model_version": "deepseek-v4-pro-2026-09",
+          "accepted": true,
+          "role": "primary",
+          "cache_state": "warm",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 40000,
+            "output_tokens": 900,
+            "cached_tokens": 36000
+          }
+        }
+      ],
+      "expected": {
+        "input_tokens": 40000,
+        "output_tokens": 900,
+        "cached_tokens": 36000,
+        "retry_input_tokens": 0,
+        "retry_output_tokens": 0,
+        "escalation_input_tokens": 0,
+        "escalation_output_tokens": 0,
+        "model_calls": 1,
+        "retries": 0,
+        "escalations": 0,
+        "total_tokens": 40900,
+        "cost": 0.005214
+      },
+      "cost_working": [
+        "deepseek-v4-pro: 4000*0.66/1e6 + 900*1.98/1e6 + 36000*0.022/1e6 = 0.0052140000"
+      ]
+    },
+    {
+      "case_id": "CAL-004",
+      "description": "Cheap model attempted, rejected, escalated to the expensive one. Quantity 7: escalation tokens are attributed to the model escalated TO, and each call is priced at its own rate.",
+      "adversarial_against": "a meter applying one run-level rate would price all 22,600 input tokens at whichever model it picked, and would hide that the escalation is where the money went",
+      "calls": [
+        {
+          "provider": "openai",
+          "model": "gpt-5-mini",
+          "model_version": "gpt-5-mini-2026-09",
+          "accepted": false,
+          "role": "primary",
+          "cache_state": "cold",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 11000,
+            "output_tokens": 240,
+            "cached_tokens": 0
+          }
+        },
+        {
+          "provider": "openai",
+          "model": "gpt-5",
+          "model_version": "gpt-5-2026-09",
+          "accepted": true,
+          "role": "escalation",
+          "cache_state": "cold",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 11600,
+            "output_tokens": 1400,
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "expected": {
+        "input_tokens": 22600,
+        "output_tokens": 1640,
+        "cached_tokens": 0,
+        "retry_input_tokens": 11000,
+        "retry_output_tokens": 240,
+        "escalation_input_tokens": 11600,
+        "escalation_output_tokens": 1400,
+        "model_calls": 2,
+        "retries": 1,
+        "escalations": 1,
+        "total_tokens": 24240,
+        "cost": 0.03173
+      },
+      "cost_working": [
+        "gpt-5-mini: 11000*0.25/1e6 + 240*2.0/1e6 = 0.0032300000",
+        "gpt-5: 11600*1.25/1e6 + 1400*10.0/1e6 = 0.0285000000"
+      ]
+    },
+    {
+      "case_id": "CAL-005",
+      "description": "Everything at once: two cached retries on a cheap model, then an uncached escalation. The realistic shape of a failing-then-recovering run.",
+      "adversarial_against": "any meter that handles retry, cache and escalation correctly in isolation but loses one of them when they interact",
+      "calls": [
+        {
+          "provider": "deepseek",
+          "model": "deepseek-flash",
+          "model_version": "deepseek-flash-2026-09",
+          "accepted": false,
+          "role": "primary",
+          "cache_state": "warm",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 20000,
+            "output_tokens": 300,
+            "cached_tokens": 15000
+          }
+        },
+        {
+          "provider": "deepseek",
+          "model": "deepseek-flash",
+          "model_version": "deepseek-flash-2026-09",
+          "accepted": false,
+          "role": "primary",
+          "cache_state": "warm",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 21000,
+            "output_tokens": 450,
+            "cached_tokens": 15000
+          }
+        },
+        {
+          "provider": "deepseek",
+          "model": "deepseek-v4-pro",
+          "model_version": "deepseek-v4-pro-2026-09",
+          "accepted": true,
+          "role": "escalation",
+          "cache_state": "warm",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 22000,
+            "output_tokens": 2100,
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "expected": {
+        "input_tokens": 63000,
+        "output_tokens": 2850,
+        "cached_tokens": 30000,
+        "retry_input_tokens": 41000,
+        "retry_output_tokens": 750,
+        "escalation_input_tokens": 22000,
+        "escalation_output_tokens": 2100,
+        "model_calls": 3,
+        "retries": 2,
+        "escalations": 1,
+        "total_tokens": 65850,
+        "cost": 0.020868
+      },
+      "cost_working": [
+        "deepseek-flash: 5000*0.15/1e6 + 300*0.6/1e6 + 15000*0.003/1e6 = 0.0009750000",
+        "deepseek-flash: 6000*0.15/1e6 + 450*0.6/1e6 + 15000*0.003/1e6 = 0.0012150000",
+        "deepseek-v4-pro: 22000*0.66/1e6 + 2100*1.98/1e6 = 0.0186780000"
+      ]
+    },
+    {
+      "case_id": "CAL-006",
+      "description": "One run spanning two providers. Totals must still be correct, AND the comparability guard must fire: cross-provider token deltas are not reportable.",
+      "adversarial_against": "reporting '8,000 vs 8,000 input tokens, identical efficiency' across two different tokenizers - the numbers match and the comparison is meaningless",
+      "calls": [
+        {
+          "provider": "openai",
+          "model": "gpt-5-mini",
+          "model_version": "gpt-5-mini-2026-09",
+          "accepted": true,
+          "role": "primary",
+          "cache_state": "cold",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 8000,
+            "output_tokens": 400,
+            "cached_tokens": 0
+          }
+        },
+        {
+          "provider": "deepseek",
+          "model": "deepseek-flash",
+          "model_version": "deepseek-flash-2026-09",
+          "accepted": true,
+          "role": "primary",
+          "cache_state": "cold",
+          "latency_ms": 100,
+          "usage": {
+            "input_tokens": 8000,
+            "output_tokens": 400,
+            "cached_tokens": 0
+          }
+        }
+      ],
+      "expected": {
+        "input_tokens": 16000,
+        "output_tokens": 800,
+        "cached_tokens": 0,
+        "retry_input_tokens": 0,
+        "retry_output_tokens": 0,
+        "escalation_input_tokens": 0,
+        "escalation_output_tokens": 0,
+        "model_calls": 2,
+        "retries": 0,
+        "escalations": 0,
+        "total_tokens": 16800,
+        "cost": 0.00424
+      },
+      "cost_working": [
+        "gpt-5-mini: 8000*0.25/1e6 + 400*2.0/1e6 = 0.0028000000",
+        "deepseek-flash: 8000*0.15/1e6 + 400*0.6/1e6 = 0.0014400000"
+      ],
+      "expects_cross_provider_warning": true
+    }
+  ],
+  "estimator_samples": [
+    {
+      "sample_id": "EST-001",
+      "kind": "english prose",
+      "text": "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. ",
+      "recorded_tokens": 396
+    },
+    {
+      "sample_id": "EST-002",
+      "kind": "python source",
+      "text": "def f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\ndef f(x):\n    return {k: v for k, v in x.items() if v is not None}\n",
+      "recorded_tokens": 720
+    },
+    {
+      "sample_id": "EST-003",
+      "kind": "minified json",
+      "text": "{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}{\"a\":1,\"b\":2,\"c\":[3,4,5],\"d\":{\"e\":\"f\"}}",
+      "recorded_tokens": 1000
+    },
+    {
+      "sample_id": "EST-004",
+      "kind": "CJK text",
+      "text": "這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。這是一段中文測試文字，用來檢查估算器的行為。",
+      "recorded_tokens": 880
+    },
+    {
+      "sample_id": "EST-005",
+      "kind": "base64 blob",
+      "text": "aGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5naGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgc3RyaW5n",
+      "recorded_tokens": 760
+    }
+  ]
+}

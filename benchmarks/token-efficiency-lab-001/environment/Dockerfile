@@ -63,6 +63,8 @@ RUN pip install --require-hashes --no-deps --no-index --no-compile \
 
 COPY run_record_schema.json /lab/
 COPY harness/ /lab/harness/
+COPY calibration/ /lab/calibration/
+COPY pricing/ /lab/pricing/
 
 # Evidence lands here. Mounted read-write at run time; task corpora are mounted read-only.
 RUN mkdir -p /lab/evidence /lab/tasks
