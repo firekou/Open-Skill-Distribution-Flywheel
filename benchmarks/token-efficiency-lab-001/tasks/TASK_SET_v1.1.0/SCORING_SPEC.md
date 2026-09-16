@@ -409,8 +409,26 @@ traceability = supported_citations / (total_citations + missing_citations)
 
 * `total_citations` — the number of **distinct** file names in each reported record's `sources`.
 * a cited file is **supported** iff it is in that record's governing set, which is built entirely
-  from the key: the record-level set, plus the per-field set of every scored field the record
-  **reported** (v1.0.0 used only the fields reported *correctly*).
+  from the key. The governing set is **per field, over the values the record actually reported**:
+  the union of `citation_support[field]` for every scored field the reported record contains. A
+  field the run did not report grants nothing and owes nothing. The **id field is excluded** — it
+  is how the record is matched, not a value claimed from a source.
+* the **record-level set is a fallback, not an addition**. It applies only to a key that gives no
+  per-field breakdown at all (v1.0.0's C-002 `{"per_award": {…}}` shape), and it is the key
+  record's own `sources` plus the file names in any non-per-field part of the blob. Adding it *on
+  top of* a per-field breakdown is what made the breakdown a no-op: a citation then counted as
+  supported if it governed *any* field of the record, including one the run never reported, and a
+  run that reported a subset of fields owed citations for fields it had made no claim about.
+  `detail.citation_support_basis` records which rule each record was scored under.
+* **`citation_support` is parsed structurally, not by collecting every string it contains.** A
+  governing source is a **file name**; a value that is not shaped like one is rejected and listed
+  in `detail.citation_support_rejected_strings`, never promoted into a requirement. This is not
+  hygiene. The v1.0.0 C-002 key carried a prose `note` inside `citation_support`; absorbed as a
+  string it became a mandatory, uncitable governing source, and that key's **own perfect answer**
+  scored traceability **0.72** with **7 missing citations** and a zero-tolerance breach — every
+  C-002 attempt, in every condition, would have failed outright. `TestDeliveredCKeysRoundTrip`
+  scores each shipped workload-C key against its own payload so a key that makes its task
+  unpassable is caught by the suite rather than by the run.
 * `missing_citations` — every governing source of a reported value that is **absent** from the
   record's `sources`. An empty `sources` list contributes one missing citation per governing
   source, and never fewer than one.
@@ -426,11 +444,13 @@ This is the symmetry RT-04 demanded: under v1.0.0 breadth could fail an attempt 
 was free, which penalised broad retrieval only. Now citing a non-governing file lowers
 traceability through the numerator and failing to cite a governing one raises the denominator.
 
-> **Dependency — Answer Key Builder.** The key's `citation_support` must now be *exactly* the
-> governing set. A file listed there that does not govern any reported value forces a correct run
-> to cite it; a governing file omitted from it makes a correct citation unsupported. The metric
-> says this explicitly ("with no curated subset and no separate list of coincidentally-correct
-> files"); it is repeated here because the scorer cannot detect the difference.
+> **Dependency — Answer Key Builder.** The key's `citation_support` must be a **per-field map**
+> whose per-field lists are *exactly* the governing sources of that field. A file listed under a
+> field it does not govern forces a correct run to cite it; a governing file omitted makes a
+> correct citation unsupported. The metric says this explicitly ("with no curated subset and no
+> separate list of coincidentally-correct files"); it is repeated here because the scorer cannot
+> tell a wrong governing set from a right one. What the scorer *can* now tell is that a value is
+> not a file name at all, and it rejects those rather than requiring them.
 
 `task_success` = `traceability == 1.0` **and** `coverage ≥ 0.90` **and** no fabricated identifier.
 
@@ -540,11 +560,11 @@ A scorer that averaged these away would pass every other test in `test_judge.py`
 
 ```bash
 cd environment/harness
-python3 -m unittest test_judge              # 228 tests
+python3 -m unittest test_judge              # 240 tests
 python3 judge.py --packets judge_packets/ --scores judge_scores/
 ```
 
-**228 tests.** (v1.0.0's §8 said "81" when the suite ran 100 — RT-18. The number above is the
+**240 tests.** (v1.0.0's §8 said "81" when the suite ran 100 — RT-18. The number above is the
 number the suite reports; if they ever differ again, the suite is right.) 100 of them are v1.0.0
 replay cases, unchanged and still passing, which is what makes the v1.1.0 cases regression tests
 rather than restatements: several score the **same packet** under both versions and assert that
@@ -598,7 +618,7 @@ it does.
 | **UG-08** | B-001 | **CLOSED in task text** | JSON type classes must match; `"30"` ≠ `30`, `1` ≠ `true`. |
 | **UG-09** | B-002/3, C-*, E-001/3 | **CLOSED in task text** | First in emitted order is scored; each later duplicate is an extra record. |
 | **UG-10** | A-*, B-002/3, C-* | **CLOSED — RT-10 ruling** | Three rules, §3.5. The designed-in cliff is gone: a perfect B extraction with a wrong `count` no longer fails outright. `TestCountRuleFollowsTheTaskText` (5 cases, both versions). |
-| **UG-11** | C-* | **CLOSED — RT-04 ruling** | Governing-source set, symmetric denominator (§5). `TestWorkloadCCitationRule` (7 cases). Carries a new obligation on the Answer Key Builder, stated in §5. |
+| **UG-11** | C-* | **CLOSED — RT-04 ruling** | Governing-source set, symmetric denominator, **per field over the values the record reported**, with the record-level set as a fallback rather than an addition, and structural parsing of `citation_support` (§5). `TestWorkloadCCitationRule` (7 cases), `TestCitationSupportIsPerField` (6), `TestCitationSupportParsingIsStructural` (5), `TestDeliveredCKeysRoundTrip`. Carries a new obligation on the Answer Key Builder, stated in §5. |
 | **UG-12** | C-* | **CLOSED in task text** | "Every citation attached to a reported record whose id is not in the answer key is unsupported." |
 | **UG-13** | C-* | **CLOSED in task text** | `sources` de-duplicated per record; a repeat cannot inflate the denominator. |
 | **UG-14** | C-001 | **CLOSED in task text** | An absent key is not an explicit `null`; it mismatches. |
@@ -634,6 +654,8 @@ it does.
 | **RT-15** (MINOR) | **CLOSED in task text** | Six cells; implementation matches. |
 | **RT-18** (MINOR) | **CLOSED** | §8 states 228, the number the suite reports. |
 | **RT-04** (BLOCKING, Designer's) | **Implemented as ruled** | §5 workload C. Carries a new Answer Key Builder obligation, stated there. |
+| **The per-field breakdown was a no-op** (found by the Answer Key Builder) | **CLOSED** | `_citation_support` unioned every string in the map into the record-level set before the per-field loop, so `allowed` was always the record's whole union. Now per-field over reported values, with the record-level set as a fallback. `test_a_citation_governing_an_unreported_field_is_not_supported` (0.5 + breach, where the old code gave 1.0 and no breach) and `test_a_run_owes_nothing_for_a_field_it_did_not_report` (1.0 + no breach, where the old code gave 0.5 and a breach). Both invert against the pre-fix code; `test_v1_0_0_still_replays_its_record_level_union` pins what changed. |
+| **Prose could become a mandatory governing source** (same root cause) | **CLOSED** | Structural parsing (§5). `test_a_prose_note_cannot_become_a_governing_source`, `test_a_prose_note_is_not_mandatory_under_the_record_level_fallback`, `test_a_prose_string_inside_a_per_field_list_is_rejected_too`, `test_the_filename_test_is_structural_not_a_guess`, plus `TestDeliveredCKeysRoundTrip` over the shipped keys. |
 | RT-01, RT-03, RT-05…07, RT-11, RT-12, RT-14, RT-16, RT-17, RT-19…21 | **Other seats** | RT-01 closed by `evidence.py` + `blind.assert_evidence_sufficient`; RT-05 closed by CR-001-A; the rest are Task Set Designer, Answer Key Builder, Harness or Corpus items and are not scorer behaviour. |
 
 ### 9.2 Cross-cutting notes

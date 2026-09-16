@@ -159,6 +159,7 @@ def c7_run_record_writable() -> str:
         "cache_state": "cold",
         "task_success": True,
         "quality_score": 1.0,
+        "outcome": "PASS",
         "quality_judged_before_cost": True,
         "environment_id": os.environ.get("LAB_ENVIRONMENT_ID", "selfcheck"),
         "raw_evidence_path": "/lab/evidence/selfcheck-0001",
@@ -167,15 +168,28 @@ def c7_run_record_writable() -> str:
     validate(record)
     out = pathlib.Path("/lab/evidence/selfcheck_records")
     path = write_record(record, out)
-    # The schema must also REJECT a bad record, or validation proves nothing.
-    bad = dict(record, cache_state="unknown", run_id="selfcheck-0002")
-    try:
-        validate(bad)
-    except Exception:
-        pass
-    else:
-        raise RuntimeError("validator accepted cache_state='unknown'; it must void the run")
-    return f"record written to {path} and an invalid record was correctly rejected"
+    # The schema must also REJECT bad records, or validation proves nothing. Each of these was a
+    # real hole at some point, so each is probed rather than assumed.
+    rejections = {
+        "cache_state='unknown'": dict(record, cache_state="unknown", run_id="sc-2"),
+        "no outcome": {k: v for k, v in record.items() if k != "outcome"} | {"run_id": "sc-3"},
+        "corpus modified but outcome PASS": dict(
+            record, run_id="sc-4", corpus_modified=["corpora/x.py"], outcome="PASS"),
+        "unpriceable usage with a cost": dict(
+            record, run_id="sc-5", unpriceable_quantities=["cache_read"], cost=0.5),
+        "total != input + output": dict(record, run_id="sc-6", total_tokens=999),
+    }
+    accepted = []
+    for label, bad in rejections.items():
+        try:
+            validate(bad)
+        except Exception:
+            continue
+        accepted.append(label)
+    if accepted:
+        raise RuntimeError("the validator accepted records it must reject: " + ", ".join(accepted))
+    return (f"record written to {path}; {len(rejections)} invalid record shapes were all "
+            "correctly rejected")
 
 
 def c8_raw_evidence_preserved() -> str:

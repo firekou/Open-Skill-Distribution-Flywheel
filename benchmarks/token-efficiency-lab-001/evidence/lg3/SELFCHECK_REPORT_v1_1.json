@@ -1,0 +1,60 @@
+{
+  "lab": "token-efficiency-lab-001",
+  "methodology_version": "1.0.0",
+  "container_digest": "sha256:04d7fac698f8b1cedec9f26c8b2bbd9745f99839d9a2dcd4153b9efea5defa68",
+  "ran_at": "2026-09-16T17:34:04.300660+00:00",
+  "python": "3.11.15",
+  "checks": [
+    {
+      "check": "1_dockerfile_builds",
+      "pass": true,
+      "detail": "harness imported and executing inside the image; cwd=/lab; LAB=token-efficiency-lab-001; METHODOLOGY_VERSION=1.0.0",
+      "ms": 0
+    },
+    {
+      "check": "2_dependency_lock_installs",
+      "pass": true,
+      "detail": "16 locked distributions all installed at the locked version",
+      "ms": 430
+    },
+    {
+      "check": "3_container_digest_available",
+      "pass": true,
+      "detail": "sha256:04d7fac698f8b1cedec9f26c8b2bbd9745f99839d9a2dcd4153b9efea5defa68",
+      "ms": 0
+    },
+    {
+      "check": "4_runtime_version_pinned",
+      "pass": true,
+      "detail": "python 3.11.15 (x86_64), cpython",
+      "ms": 0
+    },
+    {
+      "check": "5_network_egress_policy_applied",
+      "pass": true,
+      "detail": "default-deny confirmed: all 4 probe destinations unreachable",
+      "ms": 4
+    },
+    {
+      "check": "6_task_data_mountable",
+      "pass": true,
+      "detail": "239 files, 1977749 bytes, mount is read-only as required",
+      "ms": 3
+    },
+    {
+      "check": "7_run_record_schema_writable",
+      "pass": true,
+      "detail": "record written to /lab/evidence/selfcheck_records/selfcheck-0001.json; 5 invalid record shapes were all correctly rejected",
+      "ms": 97
+    },
+    {
+      "check": "8_raw_evidence_preserved",
+      "pass": true,
+      "detail": "evidence at /lab/evidence/selfcheck-0001, manifest verified, tampering detected",
+      "ms": 1
+    }
+  ],
+  "passed": 8,
+  "failed": 0,
+  "lg3_verdict": "PASS"
+}

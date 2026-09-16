@@ -51,8 +51,14 @@ GROUPS: dict[str, dict] = {
         "why": "the scoring procedure. Changing it changes every score without touching a key",
     },
     "docs": {
-        "roots": ["README.md", "DESIGN_NOTES.md", "CHANGELOG_v1.0.0_to_v1.1.0.md"],
+        "roots": ["README.md", "DESIGN_NOTES.md", "CHANGELOG_v1.0.0_to_v1.1.0.md",
+                  "SHORTCUT_PROBE_RESULTS.md", "STALE_v1.0.0_KEYS.md"],
         "why": "not score-bearing, but pinned so drift is visible",
+    },
+    "probes": {
+        "roots": ["shortcut_probe"],
+        "why": ("the RT-03 shortcut probe. Not score-bearing, but it contains an extractor, so a "
+                "change to it changes what the difficulty claim rests on"),
     },
 }
 

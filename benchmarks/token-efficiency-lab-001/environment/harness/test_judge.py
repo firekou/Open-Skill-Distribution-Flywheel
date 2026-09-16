@@ -2846,6 +2846,28 @@ class TestCitationSupportParsingIsStructural(unittest.TestCase):
         self.assertIn(self.NOTE[:120],
                       r["detail"]["citation_support_rejected_strings"])
 
+    def test_a_prose_note_is_not_mandatory_under_the_record_level_fallback(self):
+        """The exact delivered-v1.0.0-C-002 shape: no per-field breakdown, so
+        the record-level fallback applies and the note would otherwise become
+        a governing source the run is required to cite and cannot."""
+        key = {"projects": [{
+            "project": "Project Halyard", "total_awarded_eur": 621500,
+            "awards_included": ["GA-0001"], "awards_excluded": [],
+            "sources": ["bulletin_bul_2031_01.md", "correction_CORR-002.md"],
+            "citation_support": {
+                "per_award": {"GA-0001": {
+                    "stated_by": "correction_CORR-002.md",
+                    "listed_in_bulletin": "bulletin_bul_2031_01.md"}},
+                "note": self.NOTE}}],
+            "count": 1}
+        r = self._score(key)
+        self.assertEqual(r["detail"]["citation_support_basis"], ["record_level_fallback"])
+        self.assertEqual(r["detail"]["missing_citations"], 0)
+        self.assertEqual(r["detail"]["traceability"], 1.0)
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+        self.assertIn(self.NOTE[:120],
+                      r["detail"]["citation_support_rejected_strings"])
+
     def test_a_prose_string_inside_a_per_field_list_is_rejected_too(self):
         r = self._score(self._key({
             "total_awarded_eur": ["bulletin_bul_2031_01.md",
