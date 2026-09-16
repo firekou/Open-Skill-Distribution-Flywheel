@@ -167,18 +167,35 @@ def tool_calls_from_audit(audit_path: pathlib.Path) -> list[dict]:
     return calls
 
 
-def assert_audit_belongs_to_run(calls: list[dict], run_id: str) -> None:
-    """Cross-run contamination check.
+def filter_audit_to_run(calls: list[dict], run_id: str) -> list[dict]:
+    """Cross-run contamination control.
 
-    An audit log left over from a previous attempt would silently score this one. Every entry must
-    carry this run's id.
+    The offline tool server writes one shared audit log, so a log will normally contain entries
+    from several attempts. The protection is not "the file must contain only this run" — it is
+    that **an entry from another attempt can never score this one**. So entries are filtered by
+    run id, and two things are refused outright:
+
+    * an entry carrying **no** run id at all, because an unattributable call cannot be excluded
+      and cannot be counted either, and silently dropping it would undercount wrong-tool use;
+    * a run with **zero** entries of its own, because "no calls were logged" and "this workload
+      made no calls" are different states and only one of them is scoreable.
     """
-    foreign = sorted({c.get("run_id") for c in calls if c.get("run_id") != run_id})
-    if foreign:
+    unattributed = [c for c in calls if not c.get("run_id")]
+    if unattributed:
         raise EvidenceError(
-            f"tool audit contains entries from other runs: {foreign}. Evidence from one attempt "
-            "may never score another."
+            f"{len(unattributed)} tool-audit entr(ies) carry no run_id. An unattributable call "
+            "can neither be excluded nor counted, and dropping it would undercount wrong-tool "
+            "use - which is a zero-tolerance criterion."
         )
+    mine = [c for c in calls if c["run_id"] == run_id]
+    if not mine:
+        others = sorted({c["run_id"] for c in calls})[:4]
+        raise EvidenceError(
+            f"the tool audit contains no entry for run {run_id} (it has entries for {others}). "
+            "'No calls were logged' and 'this attempt made no calls' are different states; only "
+            "one of them is scoreable, and this is the other one."
+        )
+    return mine
 
 
 def assert_turns_complete(turns: list[dict], expected: int) -> None:
@@ -277,10 +294,11 @@ def produce(task: dict, task_root: pathlib.Path, *, run_id: str,
     if wl in ("A", "D"):
         if audit_path is None:
             raise EvidenceError(f"workload {wl} needs a tool audit path; none was supplied")
-        calls = tool_calls_from_audit(audit_path)
-        assert_audit_belongs_to_run(calls, run_id)
+        calls = filter_audit_to_run(tool_calls_from_audit(audit_path), run_id)
         ev.fields["tool_calls"] = calls
-        prov["tool_calls"] = f"server-written audit at {audit_path}, filtered to run {run_id}"
+        prov["tool_calls"] = (
+            f"server-written audit at {audit_path}, filtered to run {run_id}; "
+            f"{len(calls)} entr(ies) attributed to this attempt")
 
     if wl == "E":
         expected = task["input"].get("turn_count") or task.get("turn_count")

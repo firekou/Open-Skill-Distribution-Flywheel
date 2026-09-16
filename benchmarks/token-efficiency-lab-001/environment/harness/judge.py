@@ -301,6 +301,12 @@ E_OPTIONAL_EVIDENCE = ("additional_on_leave", "max_shifts_overrides",
                        "precomputed_violations", "completed_turns",
                        "run_reached_final_turn")
 
+# Transcribed from the frozen task files' `input.turn_count`.  Held here, not
+# read from the packet, for the same reason the contested-family lists are:
+# the basis of a zero-tolerance check may not be narrowed by whatever built
+# the packet.  A packet that disagrees has the disagreement recorded.
+E_TURN_COUNT = {"E-001": 18, "E-002": 16, "E-003": 20}
+
 E3_REASONS = (
     "no_person_with_required_certification_at_site",
     "all_eligible_on_leave",
@@ -1337,10 +1343,21 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
     support = _citation_support(view, key_payload, res["key_index"], id_field)
     detail["citation_support_available"] = bool(support)
 
+    if view.get("_mv") == V1_1_0 and not support:
+        # The key carries no governing-source set at all.  Traceability is the
+        # workload-C zero-tolerance criterion; an answer key that cannot
+        # support it makes the attempt unscorable, not failed.
+        detail["citation_support_available"] = False
+        return _result(view, quality_score=0.0, task_success=False,
+                       failure_reason="required_evidence_missing:citation_support",
+                       detail=detail)
+
     total_citations = 0
     supported = 0
+    missing_citations = 0
     unsupported: List[Dict[str, Any]] = []
     nonexistent_files: List[str] = []
+    v11 = view.get("_mv") == V1_1_0
 
     for rec in reported:
         if not isinstance(rec, dict):
@@ -1350,13 +1367,41 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
         rid_raw = rec.get(id_field)
         rid = rid_raw.strip() if isinstance(rid_raw, str) else None
         srcs = rec.get("sources")
-        files, _ = _dedup_keep_order([s for s in srcs if isinstance(s, str)]) if isinstance(srcs, list) else ([], 0)
+        files, _ = _dedup_keep_order([s2 for s2 in srcs if isinstance(s2, str)]) \
+            if isinstance(srcs, list) else ([], 0)
         files = [f.strip() for f in files]
+        krec = res["key_index"].get(rid) if rid is not None else None
+        rec_support = support.get(rid, {}) if rid is not None else {}
+
+        # The record's GOVERNING SOURCES, taken entirely from the key.
+        allowed: Set[str] = set()
+        if krec is not None and rec_support:
+            allowed |= set(rec_support.get("*") or set())
+            for fld in cells:
+                if fld == id_field:
+                    continue
+                if v11:
+                    # "the governing sources of that record's REPORTED values"
+                    reported_value = _get(rec, fld)
+                    if reported_value is _MISSING:
+                        continue
+                else:
+                    # v1.0.0: only fields the run reported CORRECTLY.
+                    if not _values_equal(_get(rec, fld), _get(krec, fld),
+                                         sorted_list=(fld in sorted_cells)):
+                        continue
+                allowed |= rec_support.get(fld) or set()
+
         if not files:
             total_citations += 1
             unsupported.append({"record": rid, "file": None, "why": "empty_sources"})
+            if v11:
+                # "a reported record with an empty `sources` list contributes
+                # one missing citation for each governing source of the values
+                # it reports, and never fewer than one"
+                missing_citations += max(1, len(allowed)) - 1
             continue
-        krec = res["key_index"].get(rid) if rid is not None else None
+
         for f in files:
             total_citations += 1
             if corpus_files and f not in corpus_files:
@@ -1366,30 +1411,31 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
             if krec is None:
                 unsupported.append({"record": rid, "file": f, "why": "record_not_in_key"})
                 continue
-            rec_support = support.get(rid, {})
             if not rec_support:
-                # No support data for this record: traceability is
-                # unverifiable, so it is unsupported (SCORING_SPEC UG-11).
                 unsupported.append({"record": rid, "file": f, "why": "support_map_missing"})
                 continue
-            allowed: Set[str] = set(rec_support.get("*") or set())
-            for fld in cells:
-                if fld == id_field:
-                    continue
-                if not _values_equal(_get(rec, fld), _get(krec, fld),
-                                     sorted_list=(fld in sorted_cells)):
-                    continue
-                allowed |= rec_support.get(fld) or set()
-            ok = f in allowed
-            if ok:
+            if f in allowed:
                 supported += 1
             else:
                 unsupported.append({"record": rid, "file": f,
-                                    "why": "file_does_not_state_a_correctly_reported_value"})
+                                    "why": "file_does_not_state_a_reported_value"})
 
-    traceability = (supported / total_citations) if total_citations else 0.0
+        if v11:
+            # RT-04: incompleteness must cost something, or the metric is
+            # one-directional.  A governing source the run did not cite is a
+            # MISSING citation and enters the denominator.
+            absent = sorted(allowed - set(files))
+            missing_citations += len(absent)
+            for f in absent:
+                unsupported.append({"record": rid, "file": f,
+                                    "why": "governing_source_not_cited"})
+
+    detail["missing_citations"] = missing_citations
+    trace_denom = total_citations + missing_citations
+    traceability = (supported / trace_denom) if trace_denom else 0.0
     detail["traceability"] = _round4(traceability)
     detail["total_citations"] = total_citations
+    detail["traceability_denominator"] = trace_denom
     detail["supported_citations"] = supported
     detail["unsupported_citations"] = unsupported[:50]
     detail["cited_files_not_in_corpus"] = sorted(set(nonexistent_files))
@@ -1617,6 +1663,20 @@ def _score_d(view: Dict[str, Any]) -> Dict[str, Any]:
 # workload E
 # ---------------------------------------------------------------------------
 
+# UG-22 / UG-24.  Two constraint clauses are written against prose - "named
+# as a step to be performed", "naming the vendor in prose ... is not a
+# violation" - and neither can be decided mechanically without failing correct
+# answers (E-002 turn 13 asks the agent to name the out-of-scope service).
+# Structural detection stays as it was, but every prose mention that did NOT
+# fire is now RECORDED, per turn, in `detail.unadjudicated_mentions`.  The gap
+# is no longer silent: an attempt carrying a non-empty list is flagged for Red
+# Team adjudication before its cell is reported, and any violation the Red
+# Team confirms enters through `required_evidence.precomputed_violations`,
+# which is unioned in and never replaces the scorer's own findings.
+E1_EXCLUDED_VENDOR_TOKENS = ("halberd",)
+E2_SCOPED_SERVICES = (("kestrel-vault", 3, "V1"), ("kestrel-mailer", 9, "V4"))
+
+
 class _Violations:
     """Per-turn de-duplicated constraint-violation register."""
 
@@ -1647,11 +1707,19 @@ def _turn_coverage_gap(view, turns, ev, final_turn: int,
     pass.  Checked under v1.1.0 only; v1.0.0's SCORING_SPEC UG-28 adopted the
     opposite rule in writing and its records replay under it.
     """
-    declared = ev.get("turn_count") if isinstance(ev, dict) else None
+    packet_declared = ev.get("turn_count") if isinstance(ev, dict) else None
+    frozen = E_TURN_COUNT.get(view.get("task_id") if isinstance(view.get("task_id"), str) else "")
+    declared = frozen if frozen is not None else packet_declared
     if view.get("_mv") != V1_1_0:
         detail["turn_completeness_checked"] = False
         return None
     detail["turn_completeness_checked"] = True
+    detail["turn_count_basis"] = ("frozen_task_table" if frozen is not None
+                                  else "required_evidence")
+    if frozen is not None and _is_number(packet_declared) \
+            and int(packet_declared) != frozen:
+        detail["packet_turn_count_disagrees"] = {"packet": packet_declared,
+                                                 "frozen": frozen}
     if not _is_number(declared) or int(declared) < 1:
         gap = {"why": "turn_count_absent_or_invalid", "declared": declared}
         detail["turn_completeness"] = gap
@@ -1688,6 +1756,14 @@ def _final_turn_number(turns, ev) -> int:
     return int(seen)
 
 
+def _frozen_final_turn(view, turns, ev) -> int:
+    frozen = E_TURN_COUNT.get(view.get("task_id") if isinstance(view.get("task_id"), str) else "")
+    if view.get("_mv") == V1_1_0 and frozen is not None:
+        seen = max((t.get("turn", 0) for t in turns), default=0)
+        return max(frozen, int(seen))
+    return _final_turn_number(turns, ev)
+
+
 def _json_objects_in(text: str) -> List[dict]:
     """Every balanced top-level object in a reply, parsed where possible."""
     out: List[dict] = []
@@ -1722,11 +1798,21 @@ def _walk_dicts(node: Any) -> Iterable[dict]:
 
 def _score_e(view: Dict[str, Any]) -> Dict[str, Any]:
     task_id = view.get("task_id")
+    ev = view.get("required_evidence") if isinstance(view.get("required_evidence"), dict) else {}
     turns, final_raw = split_turns(view.get("model_output"))
     obj, mode, info = parse_model_json(final_raw)
-    detail: Dict[str, Any] = {"parse_mode": mode, "turns_seen": len(turns), **info}
+    detail: Dict[str, Any] = {"parse_mode": mode, **info}
 
-    ev = view.get("required_evidence") if isinstance(view.get("required_evidence"), dict) else {}
+    # v1.1.0 section 12.1: turns are "captured by the runner", never asserted
+    # by the agent under test.  When the harness supplies them they are the
+    # transcript; `model_output` still carries the final answer that
+    # completion is scored against.
+    if view.get("_mv") == V1_1_0 and isinstance(ev.get("turns"), list) and ev["turns"]:
+        turns, _ = split_turns({"turns": ev["turns"]})
+        detail["turns_source"] = "required_evidence"
+    else:
+        detail["turns_source"] = "model_output"
+    detail["turns_seen"] = len(turns)
     key_payload = _answer_payload(view.get("answer_key"))
 
     # The Runner may ship only the replies it scanned, so a short `turns` list
@@ -1743,11 +1829,12 @@ def _score_e(view: Dict[str, Any]) -> Dict[str, Any]:
     else:
         detail["reached_final_turn"] = True
 
-    final_turn = _final_turn_number(turns, ev)
+    final_turn = _frozen_final_turn(view, turns, ev)
     detail["final_turn_number"] = final_turn
     turn_gap = _turn_coverage_gap(view, turns, ev, final_turn, detail)
 
     v = _Violations()
+    flags: List[Dict[str, Any]] = []
     for pre in (ev.get("precomputed_violations") or []):
         if isinstance(pre, dict):
             v.add(int(pre.get("turn", 0) or 0), str(pre.get("code", "precomputed")),
@@ -1755,17 +1842,20 @@ def _score_e(view: Dict[str, Any]) -> Dict[str, Any]:
 
     if task_id == "E-001":
         completion, cdet = _e001_completion(obj, key_payload)
-        _e001_violations(v, turns, obj, key_payload, ev, final_turn)
+        _e001_violations(v, turns, obj, key_payload, ev, final_turn, flags)
     elif task_id == "E-002":
         completion, cdet = _e002_completion(obj, key_payload)
-        _e002_violations(v, turns, obj, final_turn)
+        _e002_violations(v, turns, obj, final_turn, flags)
     elif task_id == "E-003":
         completion, cdet = _e003_completion(obj, key_payload)
-        _e003_violations(v, turns, obj, ev, final_turn)
+        _e003_violations(v, turns, obj, ev, final_turn,
+                         v11=(view.get("_mv") == V1_1_0))
     else:
         return _result(view, failure_reason="unknown_task_id", detail=detail)
 
     detail.update(cdet)
+    detail["unadjudicated_mentions"] = flags[:50]
+    detail["unadjudicated_mention_count"] = len(flags)
     detail["completion"] = _round4(completion)
     detail["constraint_violations"] = len(v)
     detail["violations"] = v.items[:50]
@@ -1898,7 +1988,8 @@ def id_shape_regex(ids: Iterable[str]) -> Optional["re.Pattern"]:
     return re.compile(r"(?<![A-Za-z0-9_-])(?:" + "|".join(shapes) + r")(?![A-Za-z0-9_-])")
 
 
-def _e001_violations(v: _Violations, turns, obj, key, ev, final_turn: int) -> None:
+def _e001_violations(v: _Violations, turns, obj, key, ev, final_turn: int,
+                     flags: Optional[List[Dict[str, Any]]] = None) -> None:
     catalog = _str_set(ev.get("catalog_part_ids"))
     halberd = _str_set(ev.get("halberd_part_ids"))
     # Derived from the evidence itself; `part_id_pattern` is never read.
@@ -1915,6 +2006,13 @@ def _e001_violations(v: _Violations, turns, obj, key, ev, final_turn: int) -> No
     for t in turns:
         n = t["turn"]
         text = t["text"]
+        if flags is not None and n >= 3:
+            low = text.lower()
+            for tok in E1_EXCLUDED_VENDOR_TOKENS:
+                if tok in low:
+                    flags.append({"turn": n, "code": "V3", "mention": tok,
+                                  "why": "excluded vendor named in prose; V3 keys on "
+                                         "part ids, so this fired nothing"})
         ids: Set[str] = set()
         for o in _json_objects_in(text):
             for dd in _walk_dicts(o):
@@ -2045,9 +2143,18 @@ def _step_services_in(text: str) -> Set[str]:
     return out
 
 
-def _e002_violations(v: _Violations, turns, obj, final_turn: int) -> None:
+def _e002_violations(v: _Violations, turns, obj, final_turn: int,
+                     flags: Optional[List[Dict[str, Any]]] = None) -> None:
     for t in turns:
         n, text = t["turn"], t["text"]
+        if flags is not None:
+            structural = _step_services_in(text)
+            low = text.lower()
+            for svc, from_turn, code in E2_SCOPED_SERVICES:
+                if n >= from_turn and svc in low and svc not in structural:
+                    flags.append({"turn": n, "code": code, "mention": svc,
+                                  "why": "service named in prose without a step "
+                                         "structure; detection is structural only"})
         if n >= 3 and "kestrel-vault" in _step_services_in(text):
             v.add(n, "V1_out_of_scope_service_as_step", "kestrel-vault")
         if n >= 9 and "kestrel-mailer" in _step_services_in(text):
@@ -2115,11 +2222,25 @@ def _e003_completion(obj: Optional[dict], key: Any) -> Tuple[float, Dict[str, An
     return ((matched / denom) if denom else 0.0), d
 
 
-def _e003_violations(v: _Violations, turns, obj, ev, final_turn: int) -> None:
+# UG-27, ruled in E-003's v1.1.0 metric: the two mid-conversation changes are
+# fixed BY THE CONVERSATION, not supplied as evidence.  "No other override
+# exists in this scenario and the judge is not to look for one; nothing is
+# read from required_evidence for V5."  An evidence field that can go missing
+# takes its check with it; a frozen constant cannot.
+E3_FROZEN_LEAVE_FROM = {"PR-014": 12}                  # V3, turn 12
+E3_FROZEN_MAX_SHIFTS = {"PR-016": {"turn": 16, "value": 3}}   # V5, turn 16
+
+
+def _e003_violations(v: _Violations, turns, obj, ev, final_turn: int,
+                     v11: bool = False) -> None:
     shifts = ev.get("shifts") if isinstance(ev.get("shifts"), dict) else {}
     roster = ev.get("roster") if isinstance(ev.get("roster"), dict) else {}
-    leave_from = ev.get("additional_on_leave") or {}       # person -> turn
-    max_overrides = ev.get("max_shifts_overrides") or {}   # person -> {turn, value}
+    if v11:
+        leave_from = dict(E3_FROZEN_LEAVE_FROM)
+        max_overrides = dict(E3_FROZEN_MAX_SHIFTS)
+    else:
+        leave_from = ev.get("additional_on_leave") or {}       # person -> turn
+        max_overrides = ev.get("max_shifts_overrides") or {}   # person -> {turn, value}
     # With no tables at all nothing can be decided; the caller turns that into
     # INVALID.  Inventing an "unknown entity" violation out of absent evidence
     # would be the mirror-image of the fail-open bug.
@@ -2305,7 +2426,13 @@ def _corpus_integrity(view: Dict[str, Any]) -> Tuple[Optional[bool], str, List[s
     ev = view.get("required_evidence")
     if not isinstance(ev, dict):
         return None, "no_required_evidence_mapping", []
-    before, after = ev.get("corpus_hashes_before"), ev.get("corpus_hashes_after")
+    before = ev.get("corpus_hashes_before")
+    if not isinstance(before, dict):
+        # `evidence.py` names the start-of-run map `corpus_hashes`; the task
+        # text names it `corpus_hashes_before`.  Both are accepted; neither is
+        # inferred from the other's absence.
+        before = ev.get("corpus_hashes")
+    after = ev.get("corpus_hashes_after")
     if not isinstance(before, dict) or not isinstance(after, dict):
         return None, "corpus_hashes_absent_or_wrong_type", []
     if not before or not after:
@@ -2388,8 +2515,12 @@ def _evidence_gate(view: Dict[str, Any], result: Dict[str, Any]) -> Optional[Dic
     spec = CORPUS_ACCESS_REQUIRED.get(task_id if isinstance(task_id, str) else "")
     if spec is not None:
         directory, kind = spec
-        log = ev.get("corpus_access_log")
-        if not isinstance(log, (list, tuple)):
+        log = None
+        for k in ("corpus_access_log", "file_access_log", "files_opened"):
+            if isinstance(ev.get(k), (list, tuple)):
+                log = ev[k]
+                break
+        if log is None:
             return _result(view, quality_score=result["quality_score"],
                            failure_reason="required_evidence_missing:corpus_access_log",
                            detail=detail)
@@ -2446,11 +2577,18 @@ def score_packet(packet: dict) -> dict:
             # determine task_success.  It is not read, not defaulted and not
             # branched on; it is recorded as ignored.
             ignored += _baseline_keys_present(view)
-            if isinstance(view.get("required_evidence"), dict) \
-                    and "part_id_pattern" in view["required_evidence"]:
-                # RT-02: a runner-supplied regex could silently disarm E-001
-                # V1/V3.  Under v1.1.0 it is not read at all.
-                ignored.append("required_evidence.part_id_pattern")
+            ev_map = view.get("required_evidence")
+            if isinstance(ev_map, dict):
+                # Evidence fields v1.1.0 does not read, because each of them
+                # could silently go missing and take a zero-tolerance check
+                # with it.  RT-02: `part_id_pattern` was a runner-supplied
+                # regex that could disarm E-001 V1/V3.  UG-27: E-003's two
+                # mid-conversation changes are frozen in the task text.
+                for k in ("part_id_pattern", "additional_on_leave",
+                          "max_shifts_overrides", "fixture_reads",
+                          "corpus_modified"):
+                    if k in ev_map:
+                        ignored.append("required_evidence." + k)
             ignored = sorted(set(ignored))
 
         task_id = view.get("task_id")

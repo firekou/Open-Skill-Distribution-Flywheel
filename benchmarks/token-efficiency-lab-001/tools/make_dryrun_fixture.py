@@ -61,6 +61,15 @@ def make_calls(task: dict, condition: str, salt: str, emit_cached: bool = True) 
     # invented. They are not predictions about how any real workload behaves.
     base_input = {"A": 24000, "B": 48000, "C": 18000, "D": 14000, "E": 11000}[workload]
     turns = {"A": 3, "B": 1, "C": 4, "D": 2, "E": 6}[workload]
+    if workload == "E":
+        # Workload E's violation classes are scored over EVERY reply, and the packet builder
+        # asserts len(turns) == turn_count. A fixture that emits its own turn count exercises
+        # only the fail-closed path; to test the scoring path it has to emit the declared number.
+        declared = task["input"].get("turn_count") or task.get("turn_count")
+        if not declared:
+            raise SystemExit(f"{task['task_id']} declares no turn_count; the fixture cannot "
+                             "know how many turns a complete transcript has")
+        turns = int(declared)
 
     provider, model = CHEAP
     calls = []

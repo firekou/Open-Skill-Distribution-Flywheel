@@ -61,20 +61,33 @@ def packet(task_id: str, workload: str, model_output, answer_key,
     return p
 
 
+def c1_good(count=2):
+    """A C-001 answer that cites EVERY governing source of the values it
+    reports.  Under v1.1.0 (RT-04) an uncited governing source is a missing
+    citation and traceability falls below 1.0, so incompleteness costs."""
+    return {"flags": [
+        dict(C1_KEY["flags"][0],
+             sources=["release_notes_kestrel_2_2.md", "release_notes_kestrel_2_6.md"]),
+        dict(C1_KEY["flags"][1],
+             sources=["release_notes_kestrel_2_4.md", "errata_kestrel_2024_03.md"]),
+    ], "count": count}
+
+
 CORPUS_DIR = {"A": "repo_ledgerline", "B": "docs_b", "C": "research_c",
               "D": "mcp_toolset", "E": "workflow_e"}
 
 
 def hashes(task_id: str, modified: bool = False) -> dict:
     """The corpus-integrity evidence v1.1.0 requires: sha256 before and after."""
-    path = "corpora/%s/file_01" % CORPUS_DIR[task_id[0]]
+    path = "corpora/%s/file_01" % CORPUS_DIR.get(task_id[0], "unknown")
     return {"corpus_hashes_before": {path: "a" * 64},
             "corpus_hashes_after": {path: ("b" * 64) if modified else ("a" * 64)}}
 
 
 def access_log(task_id: str) -> dict:
     """A clean file-access log: the corpus was read, `fixtures/` was not."""
-    return {"corpus_access_log": ["corpora/%s/file_01" % CORPUS_DIR[task_id[0]]]}
+    return {"corpus_access_log":
+            ["corpora/%s/file_01" % CORPUS_DIR.get(task_id[0], "unknown")]}
 
 
 def packet11(task_id: str, workload: str, model_output, answer_key,
@@ -1441,6 +1454,8 @@ E3_SHIFTS_11 = {
     "SH-101": {"site_id": "SITE-FRA-1", "required_certification": "C2", "window": "day"},
     "SH-102": {"site_id": "SITE-FRA-1", "required_certification": "C2", "window": "night"},
     "SH-103": {"site_id": "SITE-FRA-1", "required_certification": "C1", "window": "day"},
+    "SH-104": {"site_id": "SITE-FRA-1", "required_certification": "C1", "window": "day"},
+    "SH-105": {"site_id": "SITE-FRA-1", "required_certification": "C1", "window": "day"},
     "SH-110": {"site_id": "SITE-FRA-1", "required_certification": "C2", "window": "day"},
 }
 E3_ROSTER_11 = {
@@ -1606,9 +1621,7 @@ class TestAcceptanceCR001A(unittest.TestCase):
         self.assertEqual(r["outcome"], "PASS")
 
     def test_workload_c_floor_is_absolute_too(self):
-        good = {"flags": [dict(f, sources=["release_notes_kestrel_2_2.md"])
-                          for f in C1_KEY["flags"]], "count": 2}
-        good["flags"][1]["sources"] = ["release_notes_kestrel_2_4.md"]
+        good = c1_good()
         ev = dict(C1_EVIDENCE, baseline_reference_quality=0.10, **hashes("C-001"))
         key = dict(C1_KEY, citation_support=C1_SUPPORT)
         r = judge.score_packet(packet("C-001", "C", j(good), key, ev,
@@ -1998,13 +2011,35 @@ class TestE003ViolationClasses(unittest.TestCase):
         r = judge.score_packet(e3_packet11(E3_KEY_11, {6: text}))
         self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
 
-    def test_V5_honours_a_max_shifts_override_from_its_turn(self):
-        text = j({"assignments": [{"shift_id": "SH-101", "assigned_person_id": "PR-012"},
-                                  {"shift_id": "SH-110", "assigned_person_id": "PR-012"}]})
+    def test_V5_the_turn_16_change_is_frozen_in_the_task_not_in_evidence(self):
+        """UG-27: PR-016's max_shifts becomes 3 from turn 16, by the task text."""
+        three = j({"assignments": [
+            {"shift_id": "SH-103", "assigned_person_id": "PR-016"},
+            {"shift_id": "SH-104", "assigned_person_id": "PR-016"},
+            {"shift_id": "SH-105", "assigned_person_id": "PR-016"}]})
+        before = judge.score_packet(e3_packet11(E3_KEY_11, {6: three}))
+        self.assertIn("V5_max_shifts_exceeded", codes(before))
+        after = judge.score_packet(e3_packet11(E3_KEY_11, {16: three}))
+        self.assertEqual(after["outcome"], "PASS", after["failure_reason"])
+
+    def test_V5_cannot_be_switched_off_by_omitting_evidence(self):
+        """The old `max_shifts_overrides` field is not read and cannot disarm V5."""
+        three = j({"assignments": [
+            {"shift_id": "SH-103", "assigned_person_id": "PR-016"},
+            {"shift_id": "SH-104", "assigned_person_id": "PR-016"},
+            {"shift_id": "SH-105", "assigned_person_id": "PR-016"}]})
         r = judge.score_packet(e3_packet11(
-            E3_KEY_11, {16: text},
-            evidence_extra={"max_shifts_overrides": {"PR-012": {"turn": 16, "value": 2}}}))
-        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+            E3_KEY_11, {6: three},
+            evidence_extra={"max_shifts_overrides": {"PR-016": {"turn": 1, "value": 9}}}))
+        self.assertIn("V5_max_shifts_exceeded", codes(r))
+        self.assertIn("required_evidence.max_shifts_overrides",
+                      r["detail"]["ignored_packet_keys"])
+
+    def test_V3_pr014_leave_turn_is_frozen_in_the_task_not_in_evidence(self):
+        r = judge.score_packet(e3_packet11(
+            E3_KEY_11, {12: j({"shift_id": "SH-101", "assigned_person_id": "PR-014"})},
+            evidence_extra={"additional_on_leave": {}}))
+        self.assertIn("V3_on_leave_assigned", codes(r))
 
     def test_V6_unpermitted_unfilled_reason_fails(self):
         bad = json.loads(j(E3_KEY_11))
@@ -2082,12 +2117,35 @@ class TestRT13TurnCompleteness(unittest.TestCase):
                                         {"turn_count": 16}))
         self.assertEqual(r["outcome"], "INVALID")
 
-    def test_a_missing_turn_count_is_invalid(self):
+    def test_the_turn_count_is_frozen_and_cannot_be_omitted_away(self):
+        """Omitting `turn_count` used to make the check unstated; it is frozen."""
         r = judge.score_packet(packet11("E-002", "E", e_full(E2_KEY_11, 16),
                                         E2_KEY_11, {}))
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+        self.assertEqual(r["detail"]["turn_count_basis"], "frozen_task_table")
+
+    def test_a_packet_cannot_shrink_the_turn_requirement(self):
+        short = e_full(E2_KEY_11, 16)
+        short["turns"] = short["turns"][:3]
+        r = judge.score_packet(packet11("E-002", "E", short, E2_KEY_11,
+                                        {"turn_count": 4}))
         self.assertEqual(r["outcome"], "INVALID")
-        self.assertEqual(r["detail"]["turn_completeness"]["why"],
-                         "turn_count_absent_or_invalid")
+        self.assertEqual(r["detail"]["packet_turn_count_disagrees"],
+                         {"packet": 4, "frozen": 16})
+
+    def test_turns_are_taken_from_the_harness_capture_when_supplied(self):
+        """v1.1.0 section 12.1: turns are captured by the runner, not asserted
+        by the agent.  A model_output that omits its own dirty turn cannot
+        hide it."""
+        harness_turns = [{"turn": i, "text": ("This is just the drain." if i == 8
+                                              else "noted.")}
+                         for i in range(1, 16)]
+        out = {"turns": [], "final_reply": j(E2_KEY_11)}
+        r = judge.score_packet(packet11("E-002", "E", out, E2_KEY_11,
+                                        {"turns": harness_turns}))
+        self.assertEqual(r["detail"]["turns_source"], "required_evidence")
+        self.assertIn("V2_banned_word", codes(r))
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
 
     def test_a_complete_transcript_passes(self):
         r = judge.score_packet(e2_packet11(E2_KEY_11))
@@ -2105,11 +2163,7 @@ class TestRT08CorpusIntegrityAndToolEvidence(unittest.TestCase):
         return [
             ("A-001", "A", j(A1_PERFECT), A1_KEY, a1_evidence()),
             ("B-002", "B", j(B2_KEY), B2_KEY, dict(B2_EVIDENCE)),
-            ("C-001", "C", j({"flags": [dict(C1_KEY["flags"][0],
-                                             sources=["release_notes_kestrel_2_2.md"]),
-                                        dict(C1_KEY["flags"][1],
-                                             sources=["release_notes_kestrel_2_4.md"])],
-                              "count": 2}),
+            ("C-001", "C", j(c1_good()),
              dict(C1_KEY, citation_support=C1_SUPPORT), dict(C1_EVIDENCE)),
             ("E-002", "E", e_full(E2_KEY_11, 16), E2_KEY_11, {"turn_count": 16}),
         ]
@@ -2152,7 +2206,7 @@ class TestRT08CorpusIntegrityAndToolEvidence(unittest.TestCase):
                                               methodology_version="1.1.0"))
                 self.assertEqual(r["outcome"], "INVALID")
                 self.assertEqual(r["failure_reason"],
-                                 "required_evidence_missing:corpus_integrity")
+                                 "required_evidence_missing:corpus_hashes")
 
     def test_a_deleted_corpus_file_is_a_modification(self):
         ev = a1_evidence()
@@ -2212,17 +2266,20 @@ class TestRT08CorpusIntegrityAndToolEvidence(unittest.TestCase):
         self.assertEqual(r["outcome"], "INVALID")
         self.assertIn("corpus_access_log", r["failure_reason"])
 
-    def test_b_and_c_identifier_evidence_is_mandatory_under_v1_1_0(self):
-        for tid, wl, out, key, evkey in (
-                ("B-002", "B", j(B2_KEY), B2_KEY, "document_incident_ids"),
-                ("C-002", "C", j({"projects": [], "count": 0}),
-                 {"projects": [], "citation_support": {}}, "document_award_ids")):
-            with self.subTest(task=tid):
-                ev = dict({"corpus_files": ["x.md"]}, **hashes(tid))
-                r = judge.score_packet(packet(tid, wl, out, key, ev,
-                                              methodology_version="1.1.0"))
-                self.assertEqual(r["outcome"], "INVALID")
-                self.assertIn(evkey, r["failure_reason"])
+    def test_b_identifier_evidence_is_mandatory_under_v1_1_0(self):
+        ev = hashes("B-002")
+        r = judge.score_packet(packet("B-002", "B", j(B2_KEY), B2_KEY, ev,
+                                      methodology_version="1.1.0"))
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertIn("document_incident_ids", r["failure_reason"])
+
+    def test_c_corpus_file_listing_is_mandatory_under_v1_1_0(self):
+        good = c1_good()
+        r = judge.score_packet(packet(
+            "C-001", "C", j(good), dict(C1_KEY, citation_support=C1_SUPPORT),
+            hashes("C-001"), methodology_version="1.1.0"))
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertIn("corpus_files", r["failure_reason"])
 
 
 # ===========================================================================
@@ -2234,70 +2291,88 @@ TASKS_V11 = os.path.normpath(os.path.join(
     "..", "..", "tasks", "TASK_SET_v1.1.0", "tasks"))
 
 
-class TestCountPenaltyFollowsTheTaskText(unittest.TestCase):
+class TestCountRuleFollowsTheTaskText(unittest.TestCase):
+    """v1.1.0 replaces the flat -0.05 in three different, task-ruled ways."""
 
-    def _c1(self, count, mv, metric=None):
-        good = {"flags": [dict(C1_KEY["flags"][0],
-                               sources=["release_notes_kestrel_2_2.md"]),
-                          dict(C1_KEY["flags"][1],
-                               sources=["release_notes_kestrel_2_4.md"])],
-                "count": count}
-        p = packet("C-001", "C", j(good), dict(C1_KEY, citation_support=C1_SUPPORT),
-                   dict(C1_EVIDENCE, **hashes("C-001")), methodology_version=mv)
-        if metric is not None:
-            p["quality_metric"] = metric
-        return judge.score_packet(p)
+    def _c1(self, count, mv):
+        good = c1_good(count)
+        return judge.score_packet(packet(
+            "C-001", "C", j(good), dict(C1_KEY, citation_support=C1_SUPPORT),
+            dict(C1_EVIDENCE, **hashes("C-001")), methodology_version=mv))
 
-    def test_RT09_workload_c_carries_no_count_penalty_under_v1_1_0(self):
+    def test_RT09_workload_c_count_changes_nothing_under_v1_1_0(self):
         r = self._c1(3, "1.1.0")
         self.assertEqual(r["quality_score"], 1.0)
         self.assertEqual(r["detail"]["coverage"], 1.0)
-        self.assertFalse(r["detail"]["count_field_ok"])
-        self.assertFalse(r["detail"]["count_penalty_applicable"])
+        self.assertEqual(r["detail"]["traceability"], 1.0)
+        self.assertFalse(r["detail"]["count_consistent"])
+        self.assertEqual(r["detail"]["count_rule"], "none")
         self.assertEqual(r["outcome"], "PASS")
 
     def test_RT09_v1_0_0_still_reproduces_the_0_95(self):
-        r = self._c1(3, "1.0.0")
+        self.assertEqual(self._c1(3, "1.0.0")["quality_score"], 0.95)
+
+    def _b2(self, count, mv):
+        answer = json.loads(j(B2_KEY))
+        answer["count"] = count
+        return judge.score_packet(packet(
+            "B-002", "B", j(answer), B2_KEY, dict(B2_EVIDENCE, **hashes("B-002")),
+            methodology_version=mv))
+
+    def test_RT10_workload_b_scores_count_as_one_cell_under_v1_1_0(self):
+        """An otherwise perfect extraction with a wrong `count` now passes."""
+        r = self._b2(25, "1.1.0")
+        self.assertEqual(r["detail"]["denominator"], 7 * 2 + 1)
+        self.assertEqual(r["detail"]["matched_cells"], 14)
+        self.assertEqual(r["quality_score"], 0.9333)   # 14/15, a 2-record key
+        self.assertEqual(r["detail"]["count_rule"], "cell")
+        self.assertTrue(self._b2(2, "1.1.0")["task_success"])
+
+    def test_RT10_v1_0_0_still_subtracts_a_flat_0_05(self):
+        r = self._b2(25, "1.0.0")
         self.assertEqual(r["quality_score"], 0.95)
+        self.assertFalse(r["task_success"])
 
-    def test_RT10_workload_b_obeys_whatever_its_task_text_says(self):
-        perfect = json.loads(j(B2_KEY))
-        perfect["count"] = 25
-        ev = dict(B2_EVIDENCE, **hashes("B-002"))
+    def test_RT10_workload_a_subtracts_0_02_not_0_05(self):
+        answer = {"reaching_functions": A1_KEY["reaching_functions"], "count": 99}
+        r = judge.score_packet(packet11("A-001", "A", j(answer), A1_KEY,
+                                        a1_evidence()))
+        self.assertEqual(r["quality_score"], 0.98)
+        self.assertEqual(r["detail"]["count_rule"], "subtract")
+        self.assertFalse(r["detail"]["count_consistent"])
+        self.assertEqual(r["outcome"], "PASS")   # 0.98 >= the 0.95 floor
+        r10 = judge.score_packet(packet("A-001", "A", j(answer), A1_KEY,
+                                        a1_evidence(), methodology_version="1.0.0"))
+        self.assertEqual(r10["quality_score"], 0.95)
 
-        def score(metric):
-            p = packet("B-002", "B", j(perfect), B2_KEY, ev,
-                       methodology_version="1.1.0")
-            p["quality_metric"] = metric
-            return judge.score_packet(p)
-
-        with_penalty = score("`count` disagreeing with the length of `incidents` "
-                             "subtracts 0.05 (floor 0).")
-        self.assertEqual(with_penalty["quality_score"], 0.95)
-        self.assertFalse(with_penalty["task_success"])
-        without = score("Records are matched on `incident_id`; a `count` that "
-                        "disagrees with the length of `incidents` is recorded "
-                        "but carries no count penalty.")
-        self.assertEqual(without["quality_score"], 1.0)
-        self.assertTrue(without["task_success"])
-
-    def test_the_frozen_table_and_the_task_text_are_cross_checked(self):
-        """A judge-side table that drifts from the task text is reported."""
-        for tid, declared in sorted(judge.COUNT_PENALTY_DECLARED.items()):
+    def test_the_frozen_table_and_the_task_text_agree_for_every_task(self):
+        """A judge-side table that drifts from a task ruling is a defect."""
+        checked = 0
+        for tid, table_rule in sorted(judge.COUNT_RULE_V11.items()):
             path = os.path.join(TASKS_V11, tid[0], tid + ".json")
             if not os.path.exists(path):
                 continue
             with self.subTest(task=tid):
                 with open(path, encoding="utf-8") as fh:
                     task = json.load(fh)
-                view = {"task_id": tid, "quality_metric": task["quality_metric"],
-                        "_mv": "1.1.0"}
-                got, basis = judge.count_penalty_declared(view)
-                self.assertEqual(
-                    got, declared,
-                    "%s: frozen table says %s, task text says %s (%s). The task "
-                    "text wins; update COUNT_PENALTY_DECLARED." % (
-                        tid, declared, got, basis))
+                from_text = judge.count_rule_from_text(task["quality_metric"])
+                if from_text is None:
+                    self.assertEqual(table_rule[0], "none",
+                                     "%s: task text states no `count` rule but the "
+                                     "table applies %s" % (tid, table_rule[0]))
+                else:
+                    self.assertEqual(
+                        from_text, table_rule,
+                        "%s: task text says %s, judge table says %s. The task text "
+                        "wins; update COUNT_RULE_V11." % (tid, from_text, table_rule))
+                checked += 1
+        self.assertGreaterEqual(checked, 10)
+
+    def test_the_task_text_overrides_the_table_at_scoring_time(self):
+        """A Designer ruling takes effect without a judge-side edit."""
+        view = {"task_id": "B-002", "_mv": "1.1.0",
+                "quality_metric": "a wrong `count` subtracts 0.07 from quality_score"}
+        self.assertEqual(judge.count_rule(view)[:2], ("subtract", 0.07))
 
 
 # ===========================================================================
@@ -2336,7 +2411,7 @@ class TestOutcomeTaxonomy(unittest.TestCase):
             packet11("A-001", "A", "", A1_KEY, a1_evidence()),
             packet11("A-001", "A", j(A1_PERFECT), A1_KEY, {}),
             packet11("A-001", "A", j(A1_PERFECT), "not a key", a1_evidence()),
-            packet11("Z-999", "Z", "{}", {}, {}),
+            packet("Z-999", "Z", "{}", {}, {}, methodology_version="1.1.0"),
             {"packet_id": "x"},
         ]
         for p in cases:
@@ -2384,3 +2459,184 @@ class TestOutcomeTaxonomy(unittest.TestCase):
             self.assertEqual(summary["level"], "attempt")
         finally:
             shutil.rmtree(tmp)
+
+
+# ===========================================================================
+# Conformance with the v1.1.0 task rulings the Task Set Designer wrote
+# ===========================================================================
+
+class TestWorkloadCCitationRule(unittest.TestCase):
+    """RT-04, ruled in the C task text: the citation rule is now symmetric.
+
+    traceability = supported / (total_citations + missing_citations), where a
+    governing source the run did not cite is a MISSING citation.  Under
+    v1.0.0 incompleteness was free and only breadth could fail.
+    """
+
+    def _score(self, answer, mv="1.1.0", support=None):
+        return judge.score_packet(packet(
+            "C-001", "C", j(answer),
+            dict(C1_KEY, citation_support=C1_SUPPORT if support is None else support),
+            dict(C1_EVIDENCE, **hashes("C-001")), methodology_version=mv))
+
+    def test_citing_every_governing_source_is_traceable(self):
+        r = self._score(c1_good())
+        self.assertEqual(r["detail"]["traceability"], 1.0)
+        self.assertEqual(r["detail"]["missing_citations"], 0)
+        self.assertEqual(r["outcome"], "PASS")
+
+    def test_incompleteness_now_costs(self):
+        thin = c1_good()
+        thin["flags"][0]["sources"] = ["release_notes_kestrel_2_2.md"]
+        r = self._score(thin)
+        self.assertEqual(r["detail"]["missing_citations"], 1)
+        self.assertLess(r["detail"]["traceability"], 1.0)
+        self.assertTrue(r["zero_tolerance_breached"])
+
+    def test_v1_0_0_let_the_same_answer_through(self):
+        thin = c1_good()
+        thin["flags"][0]["sources"] = ["release_notes_kestrel_2_2.md"]
+        thin["flags"][1]["sources"] = ["release_notes_kestrel_2_4.md"]
+        r = self._score(thin, mv="1.0.0")
+        self.assertEqual(r["detail"]["traceability"], 1.0)
+
+    def test_a_file_outside_the_governing_set_is_unsupported(self):
+        broad = c1_good()
+        broad["flags"][0]["sources"] = broad["flags"][0]["sources"] + [
+            "forum_thread_0007.md"]
+        r = self._score(broad)
+        self.assertLess(r["detail"]["traceability"], 1.0)
+        self.assertTrue(r["zero_tolerance_breached"])
+
+    def test_an_empty_sources_list_costs_one_per_governing_source(self):
+        empty = c1_good()
+        empty["flags"][0]["sources"] = []
+        r = self._score(empty)
+        self.assertEqual(r["detail"]["traceability_denominator"], 2 + 2)
+        self.assertEqual(r["detail"]["supported_citations"], 2)
+
+    def test_a_cited_file_outside_the_corpus_is_an_outright_failure(self):
+        bad = c1_good()
+        bad["flags"][0]["sources"] = bad["flags"][0]["sources"] + ["invented.md"]
+        r = self._score(bad)
+        self.assertEqual(r["detail"]["cited_files_not_in_corpus"], ["invented.md"])
+        self.assertTrue(r["zero_tolerance_breached"])
+
+    def test_a_key_with_no_governing_sources_is_unscorable_not_failed(self):
+        r = self._score(c1_good(), support={})
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertEqual(r["failure_reason"],
+                         "required_evidence_missing:citation_support")
+
+
+class TestWorkloadDRulings(unittest.TestCase):
+
+    def _d(self, answer, calls, task="D-001", key=None, tol_field=None):
+        ev = {"tool_calls": calls}
+        return judge.score_packet(packet11(task, "D", j(answer), key or D1_KEY, ev))
+
+    def test_UG19_an_extra_key_no_longer_destroys_a_correct_d_answer(self):
+        verbose = dict(D1_GOOD_ANSWER, confidence="high")
+        r = self._d(verbose, D1_GOOD_CALLS)
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+        self.assertEqual(r["detail"]["extra_fields"], ["confidence"])
+        r10 = judge.score_packet(packet("D-001", "D", j(verbose), D1_KEY,
+                                        {"tool_calls": D1_GOOD_CALLS},
+                                        methodology_version="1.0.0"))
+        self.assertEqual(r10["failure_reason"], "required_key_set_not_exact")
+
+    def test_UG19_a_missing_key_is_still_an_outright_failure(self):
+        short = {k: v for k, v in D1_GOOD_ANSWER.items() if k != "team"}
+        r = self._d(short, D1_GOOD_CALLS)
+        self.assertEqual(r["failure_reason"], "missing_required_keys")
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+
+    def test_UG20_d004_tolerates_a_last_bit_difference(self):
+        key = {"remaining_error_budget_minutes": 1.0 / 3.0,
+               "effective_resolution_target_minutes": 60,
+               "measured_resolution_minutes": 45, "sla_breached": False,
+               "required_tools": ["metrics.get_error_budget"]}
+        answer = dict(key)
+        answer.pop("required_tools")
+        answer["remaining_error_budget_minutes"] = 0.3333334
+        calls = [{"tool": "metrics.get_error_budget", "family": "error-budget"}]
+        r = self._d(answer, calls, task="D-004", key=key)
+        self.assertEqual(r["outcome"], "PASS", r["failure_reason"])
+        answer["remaining_error_budget_minutes"] = 0.34
+        r2 = self._d(answer, calls, task="D-004", key=key)
+        self.assertEqual(r2["failure_reason"], "answer_field_mismatch")
+
+    def test_an_empty_tool_audit_is_unscorable_not_a_clean_run(self):
+        r = self._d(D1_GOOD_ANSWER, [])
+        self.assertEqual(r["outcome"], "INVALID")
+        self.assertEqual(r["failure_reason"], "required_evidence_missing:tool_calls")
+        r10 = judge.score_packet(packet("D-001", "D", j(D1_GOOD_ANSWER), D1_KEY,
+                                        {"tool_calls": []},
+                                        methodology_version="1.0.0"))
+        self.assertEqual(r10["failure_reason"], "answered_without_calling_any_tool")
+
+    def test_a_wrong_tool_still_fails_with_a_correct_answer(self):
+        calls = D1_GOOD_CALLS + [{"tool": "rota.get_nominal_shift",
+                                  "family": "oncall-resolution"}]
+        r = self._d(D1_GOOD_ANSWER, calls)
+        self.assertTrue(r["zero_tolerance_breached"])
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+
+
+class TestWorkloadBRulings(unittest.TestCase):
+
+    def test_b001_at_most_one_mismatched_field_passes(self):
+        answer = dict(B1_KEY)
+        answer["field_01"] = "wrong"
+        r = judge.score_packet(packet11("B-001", "B", j(answer), B1_KEY))
+        self.assertEqual(r["quality_score"], 0.9722)
+        self.assertEqual(r["outcome"], "PASS")
+        answer["field_02"] = "wrong"
+        r2 = judge.score_packet(packet11("B-001", "B", j(answer), B1_KEY))
+        self.assertEqual(r2["outcome"], "FAIL_QUALITY")
+
+    def test_a_fabricated_record_id_is_zero_tolerance(self):
+        answer = json.loads(j(B2_KEY))
+        answer["incidents"].append(dict(B2_KEY["incidents"][0],
+                                        incident_id="INC-2031-999"))
+        answer["count"] = 3
+        r = judge.score_packet(packet11("B-002", "B", j(answer), B2_KEY,
+                                        dict(B2_EVIDENCE)))
+        self.assertTrue(r["zero_tolerance_breached"])
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+
+
+class TestUnadjudicatedProseMentions(unittest.TestCase):
+    """UG-22 / UG-24: the prose half of two constraints cannot be decided
+    mechanically without failing correct answers.  It is no longer silent."""
+
+    def test_a_legitimate_prose_mention_passes_but_is_flagged(self):
+        r = judge.score_packet(e2_packet11(
+            E2_KEY_11, {13: "Confirmed: no step references kestrel-vault."}))
+        self.assertEqual(r["outcome"], "PASS")
+        self.assertEqual(r["detail"]["unadjudicated_mention_count"], 1)
+        self.assertEqual(r["detail"]["unadjudicated_mentions"][0]["code"], "V1")
+
+    def test_the_excluded_vendor_named_in_prose_is_flagged(self):
+        r = judge.score_packet(e1_packet11(
+            E1_KEY, overrides={5: "Halberd Manufacturing is excluded."}))
+        self.assertEqual(r["outcome"], "PASS")
+        self.assertEqual(r["detail"]["unadjudicated_mentions"][0]["code"], "V3")
+
+    def test_a_clean_transcript_flags_nothing(self):
+        r = judge.score_packet(e2_packet11(E2_KEY_11))
+        self.assertEqual(r["detail"]["unadjudicated_mentions"], [])
+
+    def test_a_red_team_adjudication_enters_through_precomputed_violations(self):
+        r = judge.score_packet(packet11(
+            "E-002", "E", e_full(E2_KEY_11, 16, {11: "I will migrate kestrel-vault next."}),
+            E2_KEY_11,
+            {"precomputed_violations": [{"turn": 11, "code": "V1_prose_adjudicated",
+                                         "subject": "kestrel-vault"}]}))
+        self.assertTrue(r["zero_tolerance_breached"])
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+
+    def test_precomputed_violations_never_replace_the_scorer_s_own(self):
+        r = judge.score_packet(e2_packet11(
+            E2_KEY_11, {8: "This is just the drain."}))
+        self.assertIn("V2_banned_word", codes(r))

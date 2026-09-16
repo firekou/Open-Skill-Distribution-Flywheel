@@ -169,6 +169,21 @@ docker run --rm --network none -v "$PWD/dryrun:/lab/dryrun" atk-lab001:local \
 
 Denominator is **planned** attempts. A planned attempt with no record still counts against it.
 
+## 8b. Tool audit — the agent under test must carry its run id
+
+Workloads A and D score a zero-tolerance criterion from the server-written audit log, so the
+server must be able to attribute each call to an attempt:
+
+```bash
+export LAB001_TOOL_AUDIT=/lab/out/TOOL_AUDIT.jsonl
+export LAB001_RUN_ID=<the attempt's run_id>
+```
+
+Without `LAB001_RUN_ID` the Evidence Producer **refuses** the entry rather than guessing: an
+unattributable call can neither be excluded nor counted, and dropping it would undercount
+wrong-tool use. One shared log across attempts is fine — entries are filtered by run id, and
+`seq` is continuous across processes.
+
 ## 9. Tests
 
 ```bash

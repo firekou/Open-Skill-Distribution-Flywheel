@@ -1,8 +1,13 @@
-# Task Set v1.0.0 — design notes
+# Task Set v1.1.0 — design notes
 
 Seat: **Task Set Designer**, Token Efficiency Lab 001.
 Scope: build the formal task set for workloads A–E. Answer keys are explicitly out of scope
 and are built by an independent seat.
+
+**v1.1.0.** This file was written for v1.0.0 and has been revised, not rewritten. Passages that
+v1.0.0 got wrong are corrected in place and marked; the repairs made in v1.1.0 are described
+where they belong, and §8 is new. `CHANGELOG_v1.0.0_to_v1.1.0.md` is the authoritative record of
+what changed.
 
 > **This file is not a task input.** It says where the traps in each corpus are. The
 > answer-key seat should build keys from `tasks/` and `corpora/` alone and should not read
@@ -36,6 +41,16 @@ Two further precautions follow from the same concern:
 * **No ground truth is recorded anywhere in this directory.** `expected_behavior` describes
   observable conduct — which sources a correct run consults, which distinction it draws — and
   never a value.
+
+**One exception, declared in v1.1.0.** `shortcut_probe/probe_b002.py` is committed, and it
+contains an extractor capable of producing a B-002 answer. RT-03 was BLOCKING and a repair to a
+blocking finding is worthless if it cannot be re-measured, so the instrument had to ship with the
+result. Three things limit the damage: the corpus **generator** is still not committed, so the
+ground truth is still only recoverable by reading the artefact; `SHORTCUT_PROBE_RESULTS.md`
+reports aggregate scores and never the record set; and the script's header states that the Answer
+Key Builder derives B-002 independently and that the script, not the key, is wrong if the two
+disagree. A reviewer who thinks the trade was wrong should say so — it is a judgement, and it is
+listed as one in the changelog.
 
 ---
 
@@ -105,17 +120,32 @@ component, and exact matching keeps two judges from negotiating partial credit.
 **Expected failure modes.** Over-reporting from docstring and dispatch-string matches;
 under-reporting from missed function-local imports; and, most interestingly for the H2
 hypothesis, a filtered or compressed tool-result path that drops decorator lines or import
-lines and silently loses edges. The A-001 scope splits close to evenly between reaching
-and non-reaching functions, so answering "all" or "none" scores about 0.5 F1 rather than
-looking plausible.
+lines and silently loses edges.
+
+**Corrected in v1.1.0 (RT-14).** v1.0.0 claimed here and in A-001's `notes` that the blanket
+answer scores "about 0.5 F1". It does not. A-001's scope holds exactly 126 functions and exactly
+63 of them reach the sink, so "all of them" scores precision 0.5, recall 1.0, **F1 = 0.6667**, and
+"none of them" scores 0. The stated safety margin was 17 points too generous. That margin now
+matters less than it did, because A's floor is absolute at 0.95 in v1.1.0 rather than relative to
+a C0 median that could have drifted down to meet 0.6667 — the RT-05 cliff.
+
+**Also in v1.1.0 (RT-17).** The `ledgerline` corpus did not import: `retryable`, `TransientError`,
+`ConfigError`, `instrumented` and `deprecated` were imported across the tree and defined nowhere,
+and 36 of 75 modules failed to import. `retryable_v2` *was* defined, which made the asymmetry
+actively misleading — a run reasoning "this import must be wrong, so the decorator must be
+`retryable_v2`" loses A-003 entirely. All five names are now defined and every module imports. The
+four A answer sets are byte-identical before and after; only the module-level function count moves
+from 394 to 397, all three additions being under `ledgerline/util/`, which leaves A-001's 126-function
+scope and its 63/63 split untouched. Rule R2's claim that the corpus contains no nested functions
+was already false in v1.0.0 and has been corrected rather than preserved.
 
 ---
 
 ## 3. Workload B — long-document extraction
 
 **Corpus.** Three documents, deliberately different in shape: a consolidated services agreement
-(179 KB, ~27k words), an annual reliability report (143 KB, ~22k words) and a protocol
-specification (219 KB, ~33k words). Filler prose is synthetic and, in the agreement, carries no
+(179 KB, ~27k words), an annual reliability report (**161 KB in v1.1.0**, rebuilt — see below) and
+a protocol specification (219 KB, ~33k words). Filler prose is synthetic and, in the agreement, carries no
 digits at all, so no filler sentence can be mistaken for a payload value.
 
 **Deliberate difficulty — all three are *precedence* problems, not *search* problems.**
@@ -125,11 +155,34 @@ digits at all, so no filler sentence can be mistaken for a payload value.
   are in force on the as-of date: at least one post-dates it. A run that applies every amendment,
   or that trusts the summary table, produces a complete and wrong object. Schedule B outranks
   the body, but only for service levels, so blanket precedence in either direction is wrong.
-* **B-002** places the correction notices roughly 120 KB after the register they correct, so
-  both ends of the document have to survive. Some corrections change an incident's severity, and
-  set membership is decided *after* corrections, so incidents both enter and leave the answer
-  set as a result. A run that filters first and corrects second gets a
-  different set, not merely different values.
+* **B-002 — rebuilt in v1.1.0 (RT-03).** v1.0.0's claim that the correction notices sat "roughly
+  120 KB after the register" was false: the register began at byte 127,608 and the notices at
+  131,705 of 146,666, four kilobytes apart, both inside the last 13%. Everything the task needed
+  was therefore in the tail, and the 86% in front of it was narrative the task forbids using. A
+  condition that discarded that 86% scored **identically to reading the whole document, at 15% of
+  the tokens** — measured, not argued: see `SHORTCUT_PROBE_RESULTS.md` §2. H2 and H4 would both
+  have read that artefact as a confirmed saving with no quality cost. It was the single finding
+  most likely to produce a *wrong published result* rather than a failed measurement.
+
+  The document was rebuilt so that the evidence is distributed by construction. The rules that
+  decide contested values are at 2% and are no longer restated in the prompt. The base records are
+  in four per-quarter registers at 22%, 40%, 60% and 80%. Two superseding layers — Register
+  Amendments and Correction Notices — are at 95% and 98%, and they interact: two pairs name the
+  same incident **and** the same field, so the precedence order decides which wins; one pair names
+  the same incident and different fields, so both apply; and one amendment withdraws an incident
+  that would otherwise be in the answer, which only §1.4 explains. Between the registers sit 48
+  per-incident narratives that each state a severity and an approximate duration the precedence
+  demotes, plus monthly availability tables — on-topic content that no position-based filter can
+  tell from payload.
+
+  The result, measured: reading only the last 15% goes from 1.0000 to **0.0000**; an ends-only
+  compaction from 1.0000 to **0.0000**; a fixed truncation to half the document to **0.2421**,
+  emitting 8 records where the reference has 26 and one that does not belong at all — a complete,
+  confident and wrong answer rather than a visible refusal. **Content-selective retrieval still
+  scores 1.0000 on 5.2% of the bytes.** That last number is the point: the repair had to avoid
+  manufacturing difficulty by forcing full-document reading, which would have biased the
+  measurement in the opposite direction. B-002 now rewards *selection* and punishes *truncation*,
+  which is the distinction H2 and H4 are actually about.
 * **B-003** hides the discrimination in an answer whose naive version has the same
   number of records: as many requirements are promoted to MUST by the errata as are demoted
   away from it, so the count matches while the membership does not. The `MUST` / `MUST NOT`
@@ -139,6 +192,16 @@ digits at all, so no filler sentence can be mistaken for a payload value.
 **Scoring.** Field-level exact match with stated normalisation. Field counts were chosen so
 that the frozen 97% floor permits at most one or two slips rather than demanding perfection
 from a 24-cell answer: B-001 has 36 fields, and B-002 and B-003 have well over a hundred cells each.
+
+**`count` in v1.1.0 (RT-10).** v1.0.0 subtracted a flat 0.05 for a `count` that disagreed with the
+array it counted, and applied it before the 0.97 floor test, so a **perfect** B-002 answer with a
+wrong `count` scored 0.95 and failed outright. That is a designed-in cliff and it was not intended.
+The ruling is that a bookkeeping slip is not equivalent to a 3%-wrong extraction: `count` is now
+scored as exactly one comparable cell, the same weight as any other single emitted value. The floor
+stays at 0.97 and the effect is stated inside the task text so a reviewer can weigh it — a wrong
+`count` costs precisely one cell of tolerance below the floor, instead of nine. This is a change in
+the direction that raises the pass rate, which is the direction to be most suspicious of; it is
+recorded as such in the changelog.
 
 **Expected failure modes.** Applying an out-of-time amendment; trusting a summary table over
 the operative clause; correcting after filtering; and context-window truncation that drops the
@@ -167,14 +230,45 @@ authority order.
   that name the release note they correct; projects have corrected or retracted awards; plugins
   have their registry row overridden by an erratum. A run that reads only the highest-tier
   source for each subject gets several project totals wrong.
-* **Nulls are real answers.** Many flags are never removed; the correct value is `null`, and a run that guesses a removal version is wrong rather than incomplete.
+* **Nulls are real answers.** Many flags are never removed; the correct value is `null`, and a run that guesses a removal version is wrong rather than incomplete. A null is not a claim that needs a citation, which v1.1.0 states explicitly rather than leaving to the judge (UG-14 and the claim-to-source mapping).
+* **`contradicted_by` is a fact about the corpus, not about authority (RT-16).** v1.1.0 settles the
+  fork: every file of every tier that states a different minimum version belongs in it, including
+  the registry export itself for a plugin whose registry row an erratum has corrected. The
+  alternative reading — low-authority files only — was worth 6.25 points of the primary measurement
+  on a coin flip, and it would have made the field a duplicate of `governing_source_tier`.
 
-**Scoring.** Two numbers. `traceability` is the zero-tolerance criterion: every reported value
-must cite a file that literally states it, and an empty citation list counts as an unsupported
-citation. `coverage` is cell-level exact match and is the reported `quality_score`. A run that
-cites the file it actually read but which states a *different* value fails traceability — this
-is the specific pathology (citation laundering) that the frozen 100%-traceable floor exists to
-catch.
+**Scoring, rebuilt in v1.1.0 (RT-04).** v1.0.0's citation rule said "cite a file only if that
+file actually states the value you are reporting". Two forum threads state the **correct**
+`introduced_in` for two of the sixteen flags. Citing one of them was therefore *literally
+compliant* and scored as a zero-tolerance traceability breach — and the answer key recorded those
+files itself, so the key contradicted the metric it was keyed against. Worse, the rule was
+one-directional: an incomplete `sources` list cost nothing, so a run that read 16 of 50 files
+strictly dominated one that read 50. That is a retrieval-width penalty wearing a quality
+criterion's clothes, and it pointed the same way as the B-002 defect.
+
+The rule now separates three things that v1.0.0 ran together, and says so in the task:
+
+* **authority** — a file's tier, and which file *governs* a value once the override rules have run;
+* **correctness** — whether a file happens to print the right characters, which the rule now says
+  in words has no bearing on whether it may be cited;
+* **support** — whether a cited file governs at least one value of the record it is attached to and
+  literally states it.
+
+Each C task then gives a **claim-to-source mapping** (which file governs `introduced_in`,
+`removed_in`, a project total, a plugin minimum) and restates the conflict precedence for
+citations. The ruling on the forum threads is: a low-authority file that states the correct value
+is **not** a valid citation, and that is now stated in advance rather than sprung.
+
+**Symmetry.** `sources` must name every governing source and no other file. A governing source
+left out is a *missing citation* and costs what an unsupported one costs. Breadth and narrowness
+are now the same kind of error at the same price. This makes workload C **harder** than v1.0.0,
+because incompleteness used to be free; that is the honest consequence of removing an asymmetry
+that favoured narrow retrieval, and the lever for making C easier, if the Lab wants that, is the
+coverage floor rather than the citation rule.
+
+`coverage` remains cell-level exact match and remains the reported `quality_score`. Citation
+laundering — citing the file you actually read, which states a different value — still fails, as
+it must.
 
 **Expected failure modes.** Citing the index instead of a source; citing a superseded release
 note for an erratum-corrected value; summing bulletins without sweeping for notices; and, under
@@ -185,13 +279,27 @@ boilerplate.
 
 ## 5. Workload D — MCP-heavy multi-tool task
 
-**Corpus.** `corpora/mcp_toolset/` — 84 tools across 12 fictional servers in 25 declared
-families (55 KB of schema, a meaningful fixed context load, which is the H1 probe), a
-deterministic stdlib-only server, and a fixture store.
+**Corpus.** `corpora/mcp_toolset/` — **85 tools in v1.1.0** across 12 fictional servers in **28
+declared families** (a meaningful fixed context load, which is the H1 probe), a deterministic
+stdlib-only server, and a fixture store.
 
 **The central design problem** was making wrong-tool selection *genuinely possible* without
 making it a trick. The answer:
 
+* **Contested families now contain only competing tools (RT-11, v1.1.0).** v1.0.0's
+  zero-tolerance criterion keyed on *family membership*, but several tools inside contested
+  families returned nothing that competed with the task's question: `rota.search_rota` ("cannot
+  tell you who is on call"), `registry.search_images` ("returns repositories, not digests"),
+  `vulndb.search_advisories`, `billing.search_orders` ("order stubs without dates"),
+  `calendar.get_iso_week`, `calendar.get_month_boundaries`, `metrics.get_slo` (a target, not a
+  remaining budget) and `tickets.get_queue`. One diligence call to any of them failed the task
+  outright. Since exploration propensity is precisely what the C1 deferred-schema condition
+  changes, that converted an intervention-correlated behaviour into a quality failure — the worst
+  kind of confound. All eight have moved to uncontested families, and
+  `calendar.get_calendar_period` was added so that `calendar-period-resolution` is a real
+  two-member decoy family rather than a family of one. Every remaining member of every contested
+  family was called live and returns a well-formed, plausible, competing payload. The four D
+  answers and all four `required_tools` sets are unchanged.
 * **Near-identical siblings that both work.** Every contested family contains a tool that
   returns the resolved, binding, current value and one or more siblings that return a template,
   a cache, a published default, or a raw figure. Every sibling returns well-formed, internally
@@ -221,6 +329,20 @@ domain. The tool-call record is written by the server, not by the agent.
 The fixture directory is declared out of bounds in every D prompt and reading it is an outright
 failure: a run that reads the backing data can answer without selecting a tool at all, which
 would make the measurement meaningless.
+
+**What a workload-D wrong-tool failure is evidence about, and what it is not (RT-20).** Every
+decoy announces itself twice: once in its `description` ("Reflects the published rotation only")
+and again in its response payload ("Template value. Approved overrides are NOT applied."). This
+was kept in v1.1.0 deliberately, because removing the payload note changes no score — the
+zero-tolerance criterion has already fired by the time the payload is read — while the note is
+what lets an auditor, and the Answer Key Builder, verify which sibling is which without trusting
+`tools.json`. The consequence has to be reported, and it is this: **a workload-D wrong-tool
+failure measures whether the one distinguishing sentence in the tool's description reached the
+model's context. It measures nothing else.** It is not evidence about judgement under ambiguity,
+because there is no ambiguity once the description is read; and it is not evidence about whether
+a run can recover from a mistake, because the criterion fires before recovery is possible. That
+is exactly the H1 question — does deferring schema cost you the distinctions? — so the design is
+fit for H1 and must not be quoted as evidence for anything wider.
 
 **Expected failure modes.** Name-driven selection (`get_ticket_sla` looks like the SLA of a
 ticket); stopping at the first tool that returns a plausible value; and, under C1, deferring so
@@ -260,6 +382,17 @@ for a single strict JSON deliverable at the end. 18, 16 and 20 turns.
 * **One update is a deliberate no-op.** E-003 turn 16 raises a limit that was not binding. A run
   re-deriving from scratch may over-react to it.
 
+**Two coin flips removed in v1.1.0.** E-001's freight rounding (RT-06) was not determined by the
+task: carrying full precision and rounding once gave `1197.38`, rounding each vendor's share first
+gave `1197.39`, monetary values compare as exact strings, and three of nine scalar cells flipped —
+a correct, policy-compliant answer scored 0.9444 against a 0.95 floor. `procurement_policy.md` P1
+now names the four points at which rounding happens and declares every per-vendor, per-line and
+per-category apportionment an intermediate value; P4 says the freight charge is one component
+total summed from full-precision products. The two readings can no longer coexist. Separately, and
+not from the Red Team's list, turn 7 now carries a standing instruction authorising substitution
+when the obvious catalogue entry belongs to an excluded vendor: without it, a run that refuses to
+substitute and asks the user — good behaviour under turn 3 — scored about zero on the BOM.
+
 **Scoring.** Two numbers. `completion` is cell-level exact match on the final deliverable.
 `constraint_violations` is counted over *every* reply in the run, not just the last, and each
 check is mechanical — a regex, a set membership, a sort order, a numeric comparison against the
@@ -286,12 +419,19 @@ Recorded here so the Methodology Reviewer and the Red Team can attack it directl
    declared discipline and not a trap. It may still read as harsh, and a run that calls one
    sibling then self-corrects scores identically to one that never noticed. That is what the
    frozen criterion says; it is not what everyone would mean by it.
-3. **Several `task_success` thresholds are relative to a baseline C0 median that does not exist
-   yet** (A×4, C×3, per the frozen §6 wording "≥95% of baseline's correct set"). If baseline
-   quality turns out low, the bar moves down with it and a weak treatment can pass. I did not
-   substitute an absolute floor, because the methodology is frozen and inventing one would be a
-   methodology change by the wrong seat — but it should be raised at LG5 before any result is
-   read.
+3. ~~**Several `task_success` thresholds are relative to a baseline C0 median that does not exist
+   yet**~~ — **resolved in the task text in v1.1.0, and the concern was justified.** The Red Team
+   demonstrated the cliff: at a C0 median of 0.70 for A-001, the zero-work blanket answer (0.6667)
+   returned `task_success: true`. A-003 had the same shape below a C0 median of 0.638. The
+   direction was strictly wrong — the worse the baseline, the easier it became for an intervention
+   that reads nothing to claim that quality held. v1.1.0 writes the absolute floors approved for
+   this version into the seven affected metrics: A `quality_score >= 0.95`, C `coverage >= 0.90`
+   with `traceability == 1.00`. That also removes the two-pass scoring order and the
+   C0-before-A/C run dependency that the relative form forced and that the run matrix never
+   described. **What is not resolved is not this seat's to resolve:** `METHODOLOGY_v1.0.0.md` §6
+   still says "≥95% of baseline's correct set", and a frozen methodology can only change through a
+   `METHODOLOGY_CHANGE_REQUEST` and a new version file. Until that lands, the methodology and the
+   task text disagree, and the task text is what the judge reads.
 
 Two smaller ones, for completeness: workload E's harness contract (deliver turns one at a time,
 never restate) is an instruction to the runner rather than something the task file can enforce,
@@ -299,3 +439,62 @@ so a sloppy harness could silently invalidate the whole workload; and the C-003
 `contradicted_by` field assumes a blog or forum statement about a plugin minimum is always
 recognisable as a minimum-version claim, which is true of this corpus by construction but rests
 on the key seat reading those sentences the same way I wrote them.
+
+---
+
+## 8. What v1.1.0 did not fix, and what it made harder
+
+New in v1.1.0. Written so that nobody reads a clean changelog as a clean bill of health.
+
+**Still open, and blocking.** `required_evidence` has no producer (RT-01). v1.1.0 made this
+*larger*, not smaller: every task now names corpus-hash evidence on top of what v1.0.0 already
+needed, and every one of those conditions fails closed on absence **or emptiness**. Naming the
+evidence is the part a task file can do; producing it is the harness owner's, and nothing can be
+scored until it exists. The alternative — leaving thirteen outright-failure conditions that
+nothing evaluates, so that a corpus-rewriting optimisation scores clean — is the one option that
+was not available.
+
+**Still open, elsewhere.** Workload E's zero-tolerance criterion still fails open on
+present-but-empty evidence inside `judge.py` (RT-02), and `part_id_pattern` is still a
+Runner-supplied regex that a plausible anchored form silently disarms. v1.1.0 narrowed the blast
+radius — E-003's V5 no longer reads anything from `required_evidence`, so one of the three
+affected checks can no longer be switched off without anyone noticing — but the other two are the
+judge seat's. Nothing asserts that workload E's turns are actually delivered (RT-13), and the
+`protocol` block saying so is an instruction to a runner, not something a task file can enforce.
+
+**Three tasks got harder, on purpose.**
+
+* **Workload C.** The new citation rule requires `sources` to be complete as well as correct.
+  Under v1.0.0 an incomplete citation list was free, which is why a narrow run dominated a broad
+  one. Removing that asymmetry necessarily costs the narrow run. If C's pass rate comes in low,
+  the first hypothesis should be this rule, and the lever is the coverage floor, not the rule.
+* **Workload A and C floors.** Absolute floors of 0.95 and 0.90 are strictly higher than the
+  relative ones wherever a C0 median lands below 1.0, which is everywhere anyone expects it to
+  land. A task that passed under v1.0.0's arithmetic may fail under v1.1.0's.
+* **B-002.** The document is genuinely harder to answer from a truncated view. That is the repair.
+  It is not harder to answer from a *selected* view, which is the part that keeps it fair.
+
+**One task got easier, and it should be watched.** The `count` ruling (RT-10) raises the B-002 and
+B-003 pass rates for answers that were otherwise perfect. The effect is quantified inside each
+task's own metric text rather than only here, so a reviewer weighing the result does not have to
+go looking for it.
+
+**A measurement discontinuity.** B-002's document grew from 147 KB to 161 KB and its evidence
+moved. Within v1.1.0 every condition reads the same document, so no comparison inside this task
+set is affected. But **no v1.0.0 run may be pooled with a v1.1.0 run**, for B-002 or for anything
+that aggregates across tasks, and the dry-run figures collected against v1.0.0 are not baselines
+for v1.1.0.
+
+**One thing checked and deliberately left alone.** The Builder's warning that a wrong value in
+workload C "fails the task twice" — lowering coverage and breaching traceability together — was
+overstated in v1.0.0 and is not reintroduced here: a citation is supported when the cited file
+governs *at least one* value of its record, so a record with one wrong field keeps its
+traceability provided another field is right and cited. Nobody should fix a problem that is not
+there.
+
+**The isolation posture held.** `environment/PINS.txt`, `environment/CANDIDATE_RUNTIME_PROFILES.md`,
+`reports/LAB_001_LG2_SECURITY_REVIEW.md` and `registry/` were not read during the v1.1.0 repair,
+exactly as in v1.0.0. The disclosure in §0 — two candidate names, seen in the frozen methodology's
+conflict-of-interest section — is unchanged and remains the whole of the exposure. Every repair
+above was driven by a named finding in `RED_TEAM_REVIEW.md` or `SCORING_SPEC.md` §9, which is the
+audit trail that makes "not shaped for a candidate" checkable rather than merely asserted.

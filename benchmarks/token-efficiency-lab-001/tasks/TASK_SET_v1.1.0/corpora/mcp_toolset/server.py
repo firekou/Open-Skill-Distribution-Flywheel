@@ -16,7 +16,8 @@ Audit
 If the environment variable LAB001_TOOL_AUDIT is set to a file path, every
 tool invocation is appended to it as one JSON object per line:
 
-    {"seq": 1, "tool": "rota.get_effective_oncall", "family": "oncall-resolution",
+    {"seq": 1, "run_id": "<from LAB001_RUN_ID>",
+     "tool": "rota.get_effective_oncall", "family": "oncall-resolution",
      "arguments": {...}, "mode": "call"}
 
 `catalog.*` tools are recorded with "family": "meta". The audit log is the
@@ -37,15 +38,37 @@ ARG_DEFAULTS = {
     "vulndb.get_image_findings_by_digest": {"status": "open"},
 }
 SEVERITY_ORDER = {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}
-_SEQ = [0]
+_SEQ = [None]
+
+
+def _next_seq(path):
+    """Globally ordered within one audit file, across processes.
+
+    RT-21: `seq` restarted at 1 in every `server.py call` process, so a Runner that invokes one
+    process per call produced a log of entries all numbered 1. Seeding from the lines already in
+    the file makes the sequence continuous however many processes wrote it. Wrong-tool counting is
+    order-free, so this changes no score - it makes the log usable for anything that does care
+    about order.
+    """
+    if _SEQ[0] is None:
+        try:
+            with open(path) as fh:
+                _SEQ[0] = sum(1 for line in fh if line.strip())
+        except OSError:
+            _SEQ[0] = 0
+    _SEQ[0] += 1
+    return _SEQ[0]
 
 
 def _audit(tool, args, mode):
     path = os.environ.get("LAB001_TOOL_AUDIT")
     if not path:
         return
-    _SEQ[0] += 1
-    rec = {"seq": _SEQ[0], "tool": tool,
+    # LAB001_RUN_ID attributes each call to one attempt. Without it the Evidence Producer cannot
+    # tell this attempt's calls from a previous attempt's in a shared log, and it refuses an
+    # unattributable entry rather than guessing - dropping one would undercount wrong-tool use,
+    # which is a zero-tolerance criterion.
+    rec = {"seq": _next_seq(path), "run_id": os.environ.get("LAB001_RUN_ID"), "tool": tool,
            "family": TOOLS.get(tool, {}).get("family", "unknown"),
            "arguments": args, "mode": mode}
     with open(path, "a") as fh:
