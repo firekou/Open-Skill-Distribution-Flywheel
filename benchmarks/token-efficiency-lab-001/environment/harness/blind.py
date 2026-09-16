@@ -15,6 +15,8 @@ import hashlib
 import json
 import pathlib
 import string
+
+from . import METHODOLOGY_VERSION
 from dataclasses import dataclass
 
 # Anything in this list identifies the treatment, its cost, or how much ATK wants it to win.
@@ -48,6 +50,17 @@ FORBIDDEN_KEYS = frozenset(
         "retries",
         "escalations",
         "latency_ms",
+        # Added for NEW-06. These reached the judge through `required_evidence`, which the walk
+        # used to skip. There is now ONE list and both gates read it.
+        "treatment_name",
+        "candidate_commit_sha",
+        "model_version",
+        "cache_state",
+        "run_id",
+        "container_digest",
+        "egress_destinations",
+        "image_content_sha256",
+        "pricing_snapshot_id",
     }
 )
 
@@ -78,7 +91,7 @@ class JudgePacket:
     answer_key: dict
     quality_metric: str
     failure_condition: str
-    methodology_version: str = "1.1.0"
+    methodology_version: str = METHODOLOGY_VERSION
 
     def to_dict(self) -> dict:
         return {
@@ -196,8 +209,16 @@ def _walk(node, path=""):
 #
 # The candidate-NAME scan still covers the whole packet, including these subtrees. A name is the
 # real leak vector; a key called `repo` in a frozen fixture is not.
+# NOTE: `required_evidence` is NOT here, and that is the fix for NEW-06.
+#
+# It was listed as "frozen task-set content", but it is the one packet field that is
+# **run-produced** — so it is precisely where run metadata would leak. With it excluded from the
+# walk, `required_evidence.treatment_name`, `.candidate_commit_sha`, `.model_version` and
+# `.cache_state` all passed both blind gates. A blind guarantee whose own assertion skips the
+# field most likely to break it is the RT-02 shape: a check that can be off without anyone
+# noticing.
 FROZEN_CONTENT_FIELDS = frozenset(
-    {"answer_key", "quality_metric", "failure_condition", "required_evidence"}
+    {"answer_key", "quality_metric", "failure_condition"}
 )
 
 
@@ -303,7 +324,7 @@ def build_packet(
         methodology_version=(methodology_version
                              or run_record.get("methodology_version")
                              or task.get("methodology_version")
-                             or "1.1.0"),
+                             or METHODOLOGY_VERSION),
     )
     assert_blind(packet.to_dict(), candidate_names)
     return packet

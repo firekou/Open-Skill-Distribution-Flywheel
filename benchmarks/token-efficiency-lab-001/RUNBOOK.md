@@ -40,6 +40,11 @@ and exports an OCI tarball. It prints `image_id=` — **that digest is the repro
 The `.tar` bytes are not: two exports of the same image differ in archive metadata while every
 blob inside is identical.
 
+> **Build from a clone, not from `git archive`.** Measured by an independent seat (D-1):
+> `git archive` emits mode `0664` where a clone emits `0644`, `COPY` records the mode, and the
+> two therefore produce **different digests from byte-identical content**. An earlier version of
+> this file asserted the opposite.
+
 ### Verify the build reproduces
 
 ```bash
@@ -142,12 +147,52 @@ come from a seeded PRNG.
 **`lab001-dryrun-salt-…` is a test salt, not a blinding secret.** A scored run gets a real salt
 from the Runner's secret store — see the salt-custody section of `BLIND_EVALUATION_PROTOCOL.md`.
 
+## 6b. The golden end-to-end run — the one a reproducer is asked to repeat
+
+Not previously documented anywhere, which is why the last reproduction had to rebuild it from a
+docstring. It builds a legitimate answer for all 17 tasks from the frozen keys and pushes it
+through the real pipeline.
+
+```bash
+python3 tools/golden_run.py --task-root tasks/TASK_SET_v1.1.0 --out /tmp/golden
+# writes PLAN.json, FIXTURE.json, TOOL_AUDIT.jsonl and CELL_PLAN.json
+
+docker run --rm --network none \
+  -v "$PWD/tasks/TASK_SET_v1.1.0:/lab/tasks:ro" -v /tmp/golden:/lab/out \
+  -v "$PWD/evidence/PRICING_SNAPSHOT_PS-2026-09-16.json:/lab/snapshot.json:ro" \
+  atk-lab001:local python3 -m harness.runner \
+    --task-root /lab/tasks --fixture /lab/out/FIXTURE.json --snapshot /lab/snapshot.json \
+    --out /lab/out/run --run-class dry_run --plan /lab/out/PLAN.json \
+    --tool-audit /lab/out/TOOL_AUDIT.jsonl --container-digest "$DIGEST" \
+    --blind-salt lab001-golden-salt-2026-09-16
+```
+
+**Expect 17/17 completed and, after scoring, 17/17 PASS — and check the version.** `17/17` alone
+is not the acceptance criterion: it was `17/17` once before *because* the runner stamped the wrong
+methodology version and the judge applied the older, more permissive rulebook. Assert both:
+
+```bash
+python3 - <<'EOF'
+import json, glob
+from collections import Counter
+print(Counter(json.load(open(f))["methodology_version"] for f in glob.glob("/tmp/golden/run/judge_packets/*.json")))
+EOF
+# expect Counter({'1.1.0': 17})
+```
+
+`TOOL_AUDIT.jsonl` for workload A is written by `harness/corpus_reader.py`, a real audited reader
+that reads the file and records the access in the same call. It used to be fabricated by this
+tool, which is how "nothing in the lab can produce a workload-A corpus read" stayed invisible.
+
 ## 7. Score blind, then finalize
 
 ```bash
-docker run --rm --network none -v "$PWD/dryrun:/lab/dryrun" atk-lab001:local \
-  python3 /lab/harness/judge.py \
-    --packets /lab/dryrun/out/judge_packets --scores /lab/dryrun/out/judge_scores
+# D-13: mount ONLY the packet and score directories. Mounting the whole run directory puts
+# runner_only/BLIND_MAPPING.json on the judge's path, three lines above the warning not to.
+docker run --rm --network none \
+  -v "$PWD/dryrun/out/judge_packets:/lab/packets:ro" \
+  -v "$PWD/dryrun/out/judge_scores:/lab/scores" atk-lab001:local \
+  python3 /lab/harness/judge.py --packets /lab/packets --scores /lab/scores
 
 docker run --rm --network none -v "$PWD/dryrun:/lab/dryrun" atk-lab001:local \
   python3 -m harness.finalize \
@@ -187,22 +232,51 @@ wrong-tool use. One shared log across attempts is fine — entries are filtered 
 ## 9. Tests
 
 ```bash
-docker run --rm --network none -v "$PWD/environment/harness:/lab/harness:ro" atk-lab001:local \
-  sh -c 'cd /lab && python3 -m unittest harness.test_judge'
+# Both suites. The task-set mount is required - without it the judge suite cannot read the real
+# task files and the count-rule cross-check silently checks nothing (it refuses to pass
+# vacuously, so it fails rather than lying).
+docker run --rm --network none \
+  -v "$PWD/environment/harness:/lab/harness:ro" \
+  -v "$PWD/tasks/TASK_SET_v1.1.0:/lab/tasks:ro" atk-lab001:local \
+  sh -c 'cd /lab/harness && python3 -m unittest test_judge && python3 -m unittest test_harness'
 ```
+
+Expect **240** judge tests and **54** harness tests. The harness suite includes the
+runner → packet → judge **seam** tests: 240 judge tests all hand-build their packets, so none of
+them covered the seam, and four defects lived there.
 
 ## 10. What must match on a reproduction, and what must not
 
-| Must match | Expected to differ |
-|---|---|
-| Image manifest digest, `image_content_sha256` | `written_at` in every manifest |
-| `model_output`, token counts, cost | Absolute paths that depend on the mount point |
-| `quality_score`, `task_success`, `outcome`, `failure_reason` | `latency_ms` (wall clock) |
-| `task_set_hash`, `answer_key_hash`, `scorer_hash`, `config_hash`, `prompt_hash` | The OCI tarball bytes |
-| Raw-evidence hashes and the blind mapping | |
+Corrected after an independent reproduction found five rows wrong.
 
-Raw-evidence hashes match across runs because volatile metadata lives in `MANIFEST.json`, which
-is not itself hashed. Blind labels match across **any subset** of a plan because they are assigned
-over the canonical condition set, not over the batch.
+| Must match | Where it lives |
+|---|---|
+| Image manifest digest, `image_content_sha256` | build output, `harness.attest` |
+| `model_output`, token counts, cost | run record |
+| `quality_score`, `task_success`, `outcome`, `failure_reason` | run record, after `finalize` |
+| `task_set_hash`, `answer_key_hash`, `scorer_hash`, `prompt_hash`, `run_config_hash` | run record |
+| Raw-evidence hashes in each `MANIFEST.json` | evidence directory |
+| The blind mapping, and `blind_treatment_id` **across any subset of a plan** | `runner_only/` |
+| `corpus_hashes_before` / `_after` | run record's evidence |
+
+| Expected to differ | Why |
+|---|---|
+| `written_at` in every `MANIFEST.json` | wall clock, and deliberately outside the hashed file |
+| `ran_at` in `RUN_SUMMARY.json` | wall clock |
+| `latency_ms` | wall clock — **usually** 0 on a replay fixture, but it is not guaranteed |
+| The exported OCI tarball bytes | archive wrapper metadata; every blob inside is identical |
+| Absolute paths that depend on the mount point | `raw_evidence_path` |
+
+Three corrections worth stating rather than silently fixing:
+
+- **`scorer_hash`** was named in this table and existed in no record. It is now in the schema and
+  written by the runner (D-7).
+- **`config_hash`** named two unrelated quantities — the run's configuration and the manifest's
+  module coverage. The run record's is now `run_config_hash` (D-8).
+- **Raw-evidence hashes did not actually reproduce** across output directories on the dry-run
+  path, because the fixture baked its absolute output path into the file the runner hashed. Fixed
+  and verified at 17/17 across two directories (D-2). Build artefacts (`__pycache__`, `.pyc`) are
+  also excluded from `corpus_hashes` now — running the corpus once used to put 51 of them into
+  every workload-A packet, and `corpus_modified` keys on the same map (D-3).
 
 A difference outside the right-hand column is a finding, not rounding.

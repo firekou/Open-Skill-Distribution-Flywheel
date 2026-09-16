@@ -407,3 +407,127 @@ class TestManifestCatchesWhatTheOldOneMissed(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# --------------------------------------------------------------------------- the seam (NEW-07)
+
+LAB_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
+TASK_SET = LAB_ROOT / "tasks" / "TASK_SET_v1.1.0"
+SNAPSHOT = LAB_ROOT / "evidence" / "PRICING_SNAPSHOT_PS-2026-09-16.json"
+
+
+@unittest.skipUnless(TASK_SET.is_dir() and SNAPSHOT.is_file(), "task set not available")
+class TestRunnerToJudgeSeam(unittest.TestCase):
+    """NEW-07 — the seam nobody tested, which is why four defects lived in it.
+
+    240 judge tests all hand-build their packets, so none of them exercised
+    `harness.runner` → `blind.build_packet` → `judge.score_packet`. The single integration proof
+    was `tools/golden_run.py`, and it returned 17/17 PASS **because** the runner stamped the wrong
+    methodology version and the judge therefore applied the more permissive v1.0.0 rulebook — a
+    green integration test whose greenness was caused by the defect it should have caught.
+
+    This class runs the real chain and asserts the two things that would have caught it:
+    the **resolved version** on every packet, and PASS under **those** rules.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(LAB_ROOT / "tools"))
+        cls.tmp = pathlib.Path(tempfile.mkdtemp())
+        import subprocess
+        r = subprocess.run(
+            [sys.executable, str(LAB_ROOT / "tools" / "golden_run.py"),
+             "--task-root", str(TASK_SET), "--out", str(cls.tmp)],
+            capture_output=True, text=True)
+        if r.returncode:
+            raise unittest.SkipTest(f"golden_run failed: {r.stderr[-400:]}")
+
+        from harness.blind import BlindMapping
+        from harness.pricing import PricingSnapshot
+        from harness.runner import run_one
+        cls.records, cls.packets = [], []
+        mapping = BlindMapping("lab001-seam-salt-2026-09-16")
+        mapping.assign(["C0"])
+        snap = PricingSnapshot(SNAPSHOT)
+        plan = json.loads((cls.tmp / "PLAN.json").read_text())
+        for item in plan:
+            rec, pkt = run_one(
+                task_id=item["task_id"], condition=item["condition"], repetition=1,
+                task_root=TASK_SET, fixture=cls.tmp / "FIXTURE.json", snapshot=snap,
+                evidence_root=cls.tmp / "raw", mapping=mapping, run_class="dry_run",
+                environment_id="seam-test", container_digest="sha256:seam",
+                task_set_hash="x", answer_key_hash="y",
+                audit_path=cls.tmp / "TOOL_AUDIT.jsonl")
+            cls.records.append(rec)
+            cls.packets.append(pkt)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_all_seventeen_tasks_reach_a_packet(self):
+        self.assertEqual(len(self.packets), 17)
+
+    def test_every_packet_declares_the_version_the_harness_implements(self):
+        from harness import METHODOLOGY_VERSION
+        versions = {p.get("methodology_version") for p in self.packets}
+        self.assertEqual(versions, {METHODOLOGY_VERSION})
+        self.assertEqual(METHODOLOGY_VERSION, "1.1.0")
+
+    def test_no_packet_carries_a_version_literal_from_somewhere_else(self):
+        """The defect was a literal in runner.py. Records and packets must agree."""
+        from harness import METHODOLOGY_VERSION
+        for rec, pkt in zip(self.records, self.packets):
+            self.assertEqual(rec["methodology_version"], METHODOLOGY_VERSION, rec["run_id"])
+            self.assertEqual(pkt["methodology_version"], METHODOLOGY_VERSION, rec["run_id"])
+
+    def test_every_correct_answer_passes_under_those_rules(self):
+        """17/17 PASS is only meaningful together with the version assertion above."""
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+        import judge
+        failures = []
+        for pkt in self.packets:
+            r = judge.score_packet(pkt)
+            if r["outcome"] != "PASS":
+                failures.append((pkt["task_id"], r["outcome"], r.get("failure_reason")))
+        self.assertEqual(failures, [], f"{len(failures)} of 17 correct answers did not pass")
+
+    def test_a_violation_in_a_middle_turn_fails_a_byte_perfect_final_answer(self):
+        """The case that used to pass: E-002's answer is untouched, turn 8 breaches V2."""
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+        import judge
+        e2 = next(p for p in self.packets if p["task_id"] == "E-002")
+        clean = judge.score_packet(e2)
+        self.assertEqual(clean["outcome"], "PASS")
+
+        dirty = json.loads(json.dumps(e2))
+        turns = dirty["required_evidence"]["turns"]
+        self.assertGreaterEqual(len(turns), 8, "the transcript must reach turn 8 to test this")
+        turns[7]["text"] = "kestrel-search is just in wave 3."
+        scored = judge.score_packet(dirty)
+        self.assertEqual(scored["outcome"], "FAIL_QUALITY")
+        self.assertTrue(scored["zero_tolerance_breached"])
+
+    def test_the_packet_carries_evidence_the_scorer_requires(self):
+        """NEW-02: five fields were named in the contract and produced by nobody."""
+        needed = {"B-002": "document_incident_ids", "B-003": "document_req_ids",
+                  "C-001": "corpus_files", "C-002": "document_award_ids",
+                  "C-003": "registry_plugin_ids"}
+        for pkt in self.packets:
+            f = needed.get(pkt["task_id"])
+            if f:
+                got = pkt["required_evidence"].get(f)
+                self.assertTrue(got, f"{pkt['task_id']}: {f} missing or empty")
+
+    def test_no_packet_leaks_anything_identifying(self):
+        from harness.blind import assert_blind
+        for pkt in self.packets:
+            assert_blind(pkt, ["rtk", "headroom", "paritok", "lean-ctx", "entroly", "tokentab"])
+
+    def test_the_corpus_access_log_shape_the_judge_reads(self):
+        """NEW-04: the producer emitted list[dict] and the judge matched list[str]."""
+        for pkt in self.packets:
+            log = pkt["required_evidence"].get("corpus_access_log")
+            if log:
+                self.assertTrue(all(isinstance(x, str) for x in log),
+                                f"{pkt['task_id']}: corpus_access_log must be list[str]")

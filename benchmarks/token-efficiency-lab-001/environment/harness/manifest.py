@@ -55,6 +55,11 @@ GROUPS: dict[str, dict] = {
                   "SHORTCUT_PROBE_RESULTS.md", "STALE_v1.0.0_KEYS.md"],
         "why": "not score-bearing, but pinned so drift is visible",
     },
+    "other_docs": {
+        "roots": ["INDEPENDENT_VERIFICATION.md", "RED_TEAM_REVIEW.md"],
+        "why": "review artefacts produced against this exact set; pinned so they cannot drift "
+               "away from what they reviewed",
+    },
     "probes": {
         "roots": ["shortcut_probe"],
         "why": ("the RT-03 shortcut probe. Not score-bearing, but it contains an extractor, so a "
@@ -163,6 +168,17 @@ def build(task_set_dir: pathlib.Path, env_dir: pathlib.Path) -> Manifest:
                  and p.name not in MANIFEST_FILENAMES}
     unclaimed = sorted(str(p.relative_to(ts)) for p in all_files - set(seen))
 
+    if unclaimed:
+        # D-6: `INDEPENDENT_VERIFICATION.md` landed inside the frozen set two commits after
+        # "unclaimed is empty" was recorded, and appending text to it left verification green.
+        # Reporting unclaimed files was never enough - a report nobody reads is not coverage.
+        raise ManifestError(
+            "these files are inside the task set and no hash group covers them: "
+            + ", ".join(unclaimed)
+            + ". Add them to a group, or add an explicit exclusion rule. A file inside a frozen "
+              "set that nothing hashes is a hole in the freeze."
+        )
+
     return Manifest({
         "manifest_version": MANIFEST_VERSION,
         "task_set_dir": str(ts),
@@ -198,10 +214,21 @@ def verify(manifest_path: pathlib.Path, task_set_dir: pathlib.Path,
         added = sorted(set(new) - set(old))
         deleted = sorted(set(old) - set(new))
         ok = not (modified or added or deleted)
+        rec_hash = recorded.data["groups"].get(name, {}).get("hash")
+        cur_hash = current.data["groups"].get(name, {}).get("hash")
+        # D-5: the per-file comparison alone is not enough. Zeroing a group hash inside the
+        # manifest left every file matching and the manifest still reported ok. A manifest whose
+        # own recorded hash disagrees with the files it lists has been edited, and that is the
+        # thing a manifest exists to notice.
+        hash_ok = rec_hash == cur_hash
+        if not hash_ok:
+            ok = False
         report["groups"][name] = {
             "ok": ok,
-            "hash_recorded": recorded.data["groups"].get(name, {}).get("hash"),
-            "hash_current": current.data["groups"].get(name, {}).get("hash"),
+            "hash_recorded": rec_hash,
+            "hash_current": cur_hash,
+            "hash_matches": hash_ok,
+            "tampered_manifest": (not hash_ok) and not (modified or added or deleted),
             "modified": modified, "added": added, "deleted": deleted,
         }
         report["ok"] &= ok

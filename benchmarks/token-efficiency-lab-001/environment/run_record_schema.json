@@ -315,6 +315,20 @@
         "null"
       ],
       "description": "The run ended before the declared turn count. Recorded honestly; missing turns are never fabricated."
+    },
+    "scorer_hash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "sha256 of judge.py, the scorer that produced this record's quality figures. Named in the evidence manifest and previously present in no record (D-7)."
+    },
+    "run_config_hash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The RUN configuration hash - condition, pricing snapshot, task set. A DIFFERENT quantity from the manifest's config_hash, which covers the schema and harness modules (D-8)."
     }
   },
   "additionalProperties": false,

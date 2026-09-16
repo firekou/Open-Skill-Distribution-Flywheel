@@ -88,10 +88,14 @@ Refusal is not a quality judgement: a byte-perfect answer in an unversioned pack
 There is no default and no guess, because a guess is exactly how a v1.0.0 relative floor would
 survive into a v1.1.0 result.
 
-> **Open handoff — Harness/Evidence Producer.** `blind.build_packet` does not currently set
-> `methodology_version` on the packet it constructs, so every packet it builds today is refused.
-> Any one of the three sources above satisfies the gate. This is a one-line change in a file this
-> seat does not own; it is named here so it cannot fall between seats the way RT-01 did.
+> **CLOSED, and it was never benign.** `blind.build_packet` now sets `methodology_version` from
+> `harness.METHODOLOGY_VERSION` — the single declared source — and `runner.py` threads the
+> record's value through. The note above said packets "are refused"; they were not. `runner.py`
+> carried the literal `"1.0.0"`, so the gate resolved cleanly to the **wrong** rulebook and every
+> real run was scored under v1.0.0, with none of this round's repairs executing (Red Team
+> NEW-01, Reproduction D-15). A stale handoff note is worse than none: it told the next reviewer
+> the seam had a known, harmless symptom. A seam test now asserts the resolved version on all 17
+> packets and that a correct answer passes **under those rules**.
 
 ### 1.2 What is version-gated and what is not
 
@@ -317,11 +321,18 @@ finding. `corpus_access_log` **absent** ⇒ `required_evidence_missing:corpus_ac
 `corpora/mcp_toolset/fixtures/` ⇒ `fixtures_read_tool_selection_unmeasurable`. Absent **or empty**
 ⇒ `required_evidence_missing:corpus_access_log`, per D's own wording.
 
-> **Open handoff — Harness/Evidence Producer.** `evidence.py` today produces `corpus_hashes` (the
-> start-of-run map) but neither `corpus_hashes_after` nor `corpus_access_log`. Both are named in
-> all 17 v1.1.0 task texts. Until they are produced, every v1.1.0 attempt is `INVALID` — which is
-> the correct fail-closed behaviour and is exactly why it is written here rather than worked
-> around.
+> **CLOSED.** `evidence.py` now produces `corpus_hashes_before`, `corpus_hashes_after` and
+> `corpus_access_log`, plus the five document-inventory fields this contract requires
+> (`document_incident_ids`, `document_req_ids`, `corpus_files`, `document_award_ids`,
+> `registry_plugin_ids`) — which were named here and produced by nobody, so B-002, B-003 and all
+> three C tasks were structurally unscorable (Red Team NEW-02).
+>
+> `corpus_access_log` is `list[str]`, matching this spec and the judge. It was `list[dict]`, and
+> that single mismatch produced two opposite failures: A-001's read guard never saw a hit and
+> failed every legitimate run, while D's fixtures-read prohibition never saw a hit and **failed
+> open** (NEW-04). Workload A's reads now come from a real audited reader,
+> `harness/corpus_reader.py`; they were previously fabricated by the lab's own proof harness
+> (NEW-03).
 
 ### 4.3 Workload E: the transcript must be complete (RT-13)
 

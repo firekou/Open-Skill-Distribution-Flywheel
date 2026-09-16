@@ -133,6 +133,7 @@ def c6_task_data_mounted() -> str:
 
 def c7_run_record_writable() -> str:
     sys.path.insert(0, "/lab")
+    from harness import METHODOLOGY_VERSION
     from harness.record import validate, write_record
 
     record = {
@@ -163,7 +164,7 @@ def c7_run_record_writable() -> str:
         "quality_judged_before_cost": True,
         "environment_id": os.environ.get("LAB_ENVIRONMENT_ID", "selfcheck"),
         "raw_evidence_path": "/lab/evidence/selfcheck-0001",
-        "methodology_version": "1.0.0",
+        "methodology_version": METHODOLOGY_VERSION,
     }
     validate(record)
     out = pathlib.Path("/lab/evidence/selfcheck_records")

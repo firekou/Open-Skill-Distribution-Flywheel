@@ -8,8 +8,8 @@
   "methodology_version": "1.1.0 (DRAFT) / 1.0.0 (frozen)",
   "environment_id": "lab001-env-v11-2026-09-16",
   "image": {
-    "manifest_digest": "sha256:04d7fac698f8b1cedec9f26c8b2bbd9745f99839d9a2dcd4153b9efea5defa68",
-    "config_digest": "sha256:c7caefe66a6fca7aa7b8230466779cba838a694e20831b46787ec2b0a6e010bb",
+    "manifest_digest": "sha256:81f8bfc6182263bbce89d07b6f878b5862700e8e70836ebe85198592c9264e26",
+    "config_digest": "sha256:d6669f2bcd74eee42aeaa83d49f5a4babf9f5cfbba628018b5ec237979c7dd2a",
     "layers": 13,
     "base_image": "python:3.11.15-slim-bookworm",
     "base_image_digest": "sha256:d29f48a31a8b408ed19272ca1e7b10ebae13b240a27e862d3d4217c528e2e0c3",
@@ -18,7 +18,8 @@
     "superseded_digests": {
       "sha256:6edd71a6adff7eab4fca99b9b8fb2e9298c62256f5587ee9109cf02047811261": "11 layers. The Dockerfile before calibration/ and pricing/ were added. build.sh at HEAD can no longer produce it. Recorded because the first LG3 evidence quotes it.",
       "sha256:780e1f2518e6abb66bb0f824f853a501a57dcd5e89b56c9b9e87ec8293f64caa": "13 layers, but a pre-E027 blind.py, no judge.py, and a calibration fixture matching no commit. The first dry run stamped this digest on its records, and the Reproduction Agent proved that image cannot produce them - re-running inside it gives 9 completed, not 10. This is why container_digest is now recorded alongside a self-derived image_content_sha256.",
-      "sha256:5a302f2f24b817adb7f42343c8206132c8392d99bf534bebb375a327c876885c": "The v1.0.0-era image. Superseded by the v1.1.0 repair round, which added evidence.py, manifest.py, aggregate.py, pricing_preflight.py and the repaired judge. LG3 PASS does not transfer between images - this one was re-verified from scratch."
+      "sha256:5a302f2f24b817adb7f42343c8206132c8392d99bf534bebb375a327c876885c": "The v1.0.0-era image. Superseded by the v1.1.0 repair round, which added evidence.py, manifest.py, aggregate.py, pricing_preflight.py and the repaired judge. LG3 PASS does not transfer between images - this one was re-verified from scratch.",
+      "sha256:04d7fac698f8b1cedec9f26c8b2bbd9745f99839d9a2dcd4153b9efea5defa68": "Superseded by the post-Red-Team repair: the version stamp fix (NEW-01), five new evidence producers (NEW-02), the audited corpus reader (NEW-03), the corpus_access_log shape (NEW-04), the blind gate over required_evidence (NEW-06) and the seam test (NEW-07). D-14: this digest was quoted in a report while HEAD moved past it - the same class of stale attestation the previous round found with container_digest, recurring in the round that fixed it."
     }
   },
   "runtime": {
@@ -36,7 +37,7 @@
       "packaging"
     ],
     "dependency_manifest_recipe": "harness/attest.py:dependency_manifest_hash - sha256 over sorted 'name==version\\n' lines for every installed distribution, names lowercased with underscores normalised to hyphens. The previous value (93d9ecce...) was computed by no code and documented by no recipe; the Reproduction Agent tried six plausible derivations and matched none.",
-    "image_content_sha256": "e685557957de30356ffcd29e424c157cf3183d837bec464f6a6916f0c7599425",
+    "image_content_sha256": "88ece1882d1c7ef629c404fe3f1bade4f93eff55b47cbb22a6bd0ccaa70be5b2",
     "image_content_recipe": "harness/attest.py:image_content_hash - computed INSIDE the running container over harness/, run_record_schema.json, requirements.lock.txt, calibration/ and pricing/. Unlike container_digest it cannot be forged by a command-line flag."
   },
   "build": {
@@ -51,7 +52,8 @@
     "provenance_attestation": false,
     "sbom_attestation": false,
     "dockerignore": "present, and its patterns are **/-prefixed. Docker ignore patterns match against paths relative to the context root, so a bare `__pycache__/` matches only a top-level one and silently misses harness/__pycache__/. Measured: without the prefix a contaminated tree still produced a different digest. See EVIDENCE_LEDGER E029.",
-    "insensitive_to_working_tree_caches": true
+    "insensitive_to_working_tree_caches": true,
+    "git_archive_caveat": "D-1, measured by an independent seat: a `git archive` checkout yields mode 0664 where a clone yields 0644, and COPY records the mode, so an archive-based build produces a DIFFERENT digest from a clone or working-tree build with byte-identical content. Build from a clone. The RUNBOOK previously asserted the opposite."
   },
   "clean_rebuild": {
     "performed": true,
@@ -77,7 +79,8 @@
       "description": "the same image on --network bridge fails check 5 and exits non-zero",
       "result": "FAIL, as required"
     },
-    "found_by_this_rebuild": "check 7 failed on the first v1.1.0 build because the self-check's own sample record predated the new required `outcome` field. The schema caught the harness, which is the right direction."
+    "found_by_this_rebuild": "check 7 failed on the first v1.1.0 build because the self-check's own sample record predated the new required `outcome` field. The schema caught the harness, which is the right direction.",
+    "reproduced_twice": true
   },
   "defects_found_and_fixed": [
     {

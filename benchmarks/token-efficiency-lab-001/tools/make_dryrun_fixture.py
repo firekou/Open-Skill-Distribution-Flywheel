@@ -184,7 +184,11 @@ def main() -> int:
 
     fixture = {
         "fixture_version": "1.1.0",
-        "tool_audit": str(audit_out),
+        # D-2: this used to be the ABSOLUTE path, which the runner hashed into raw.json, so
+        # two runs of identical inputs into different output directories produced different
+        # raw-evidence hashes. The evidence hash must depend on the evidence, not on where it
+        # was written. The name is enough: the runner is told the audit path on the command line.
+        "tool_audit": audit_out.name,
         "synthetic": True,
         "salt": args.salt,
         "purpose": "harness dry run - plumbing verification only",

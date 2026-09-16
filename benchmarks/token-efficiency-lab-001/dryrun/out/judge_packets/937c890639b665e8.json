@@ -1,17 +1,166 @@
 {
+  "methodology_version": "1.1.0",
   "packet_id": "937c890639b665e8",
   "task_id": "B-002",
   "workload": "B",
   "blind_treatment_id": "Treatment D",
   "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=B-002 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
-  "required_evidence": [],
+  "required_evidence": {
+    "corpus_hashes_before": {
+      "corpora/docs_b/KESTREL_RELIABILITY_2031.md": "fd6e584b793fe69cba4f7a9ed486d863bf0f352f72e17b28592c32c877bdc744"
+    },
+    "corpus_hashes_after": {
+      "corpora/docs_b/KESTREL_RELIABILITY_2031.md": "fd6e584b793fe69cba4f7a9ed486d863bf0f352f72e17b28592c32c877bdc744"
+    },
+    "corpus_hashes": {
+      "corpora/docs_b/KESTREL_RELIABILITY_2031.md": "fd6e584b793fe69cba4f7a9ed486d863bf0f352f72e17b28592c32c877bdc744"
+    },
+    "document_incident_ids": [
+      "INC-2031-001",
+      "INC-2031-002",
+      "INC-2031-003",
+      "INC-2031-004",
+      "INC-2031-005",
+      "INC-2031-006",
+      "INC-2031-007",
+      "INC-2031-008",
+      "INC-2031-009",
+      "INC-2031-010",
+      "INC-2031-011",
+      "INC-2031-012",
+      "INC-2031-013",
+      "INC-2031-014",
+      "INC-2031-015",
+      "INC-2031-016",
+      "INC-2031-017",
+      "INC-2031-018",
+      "INC-2031-019",
+      "INC-2031-020",
+      "INC-2031-021",
+      "INC-2031-022",
+      "INC-2031-023",
+      "INC-2031-024",
+      "INC-2031-025",
+      "INC-2031-026",
+      "INC-2031-027",
+      "INC-2031-028",
+      "INC-2031-029",
+      "INC-2031-030",
+      "INC-2031-031",
+      "INC-2031-032",
+      "INC-2031-033",
+      "INC-2031-034",
+      "INC-2031-035",
+      "INC-2031-036",
+      "INC-2031-037",
+      "INC-2031-038",
+      "INC-2031-039",
+      "INC-2031-040",
+      "INC-2031-041",
+      "INC-2031-042",
+      "INC-2031-043",
+      "INC-2031-044",
+      "INC-2031-045",
+      "INC-2031-046",
+      "INC-2031-047",
+      "INC-2031-048"
+    ]
+  },
   "answer_key": {
     "task_id": "B-002",
     "derived_by": "answer-key-builder",
-    "derivation_method": "Parsed the 48-row Appendix A markdown table of KESTREL_RELIABILITY_2031.md, parsed all 8 Appendix B correction notices with a regex capturing (incident, field, old value, new value), asserted each old value against the register before overwriting it, then kept the records whose post-correction severity is S1 or S2. The quarterly narrative is never read. Script: scripts/derive_B.py",
+    "derivation_method": "Parsed the four per-quarter incident registers (sections 2.9, 3.9, 4.9, 5.9) of KESTREL_RELIABILITY_2031.md - 48 rows in total - then applied the document's section 1.4 precedence in rank order: the nine Appendix A Register Amendments over the registers (one of which, RA-2032-03, withdraws INC-2031-047 in full under rule R-2, so it appears in no table derived from the report), then the eight Appendix B Correction Notices over everything, including over an Amendment naming the same incident and the same field (INC-2031-021 and INC-2031-024 are each amended and then corrected). Each layer's stated prior value is asserted against the value actually standing before it is overwritten. Selection of S1/S2 happens last, on the final severity (rule R-3). The quarterly narrative is never read: it ranks below the registers and decides nothing. Script: scripts/derive_B.py",
     "derivation_script": "scripts/derive_B.py",
+    "derivation_diagnostics": {
+      "register_rows_per_quarter": {
+        "Q1": 11,
+        "Q2": 9,
+        "Q3": 13,
+        "Q4": 15
+      },
+      "incidents_in_registers": 48,
+      "register_amendments": 9,
+      "withdrawn_incidents": {
+        "INC-2031-047": "RA-2032-03"
+      },
+      "correction_notices": 8,
+      "incidents_after_withdrawal": 47,
+      "selected_s1_s2": 26
+    },
     "corrections_applied": [
       {
+        "layer": "register_amendment",
+        "amendment": "RA-2032-01",
+        "incident_id": "INC-2031-009",
+        "field": "severity",
+        "from": "S3",
+        "to": "S2"
+      },
+      {
+        "layer": "register_amendment",
+        "amendment": "RA-2032-02",
+        "incident_id": "INC-2031-025",
+        "field": "root_cause_code",
+        "from": "RC-NET",
+        "to": "RC-CAP"
+      },
+      {
+        "layer": "register_amendment",
+        "amendment": "RA-2032-03",
+        "incident_id": "INC-2031-047",
+        "field": "withdrawn",
+        "effect": "incident removed from the reporting year"
+      },
+      {
+        "layer": "register_amendment",
+        "amendment": "RA-2032-04",
+        "incident_id": "INC-2031-024",
+        "field": "severity",
+        "from": "S2",
+        "to": "S4"
+      },
+      {
+        "layer": "register_amendment",
+        "amendment": "RA-2032-05",
+        "incident_id": "INC-2031-017",
+        "field": "severity",
+        "from": "S4",
+        "to": "S1"
+      },
+      {
+        "layer": "register_amendment",
+        "amendment": "RA-2032-06",
+        "incident_id": "INC-2031-020",
+        "field": "duration_minutes",
+        "from": "88",
+        "to": "135"
+      },
+      {
+        "layer": "register_amendment",
+        "amendment": "RA-2032-07",
+        "incident_id": "INC-2031-021",
+        "field": "severity",
+        "from": "S3",
+        "to": "S2"
+      },
+      {
+        "layer": "register_amendment",
+        "amendment": "RA-2032-08",
+        "incident_id": "INC-2031-028",
+        "field": "customer_impacting",
+        "from": "yes",
+        "to": "no"
+      },
+      {
+        "layer": "register_amendment",
+        "amendment": "RA-2032-09",
+        "incident_id": "INC-2031-031",
+        "field": "severity",
+        "from": "S4",
+        "to": "S1"
+      },
+      {
+        "layer": "correction_notice",
         "notice": "CN-003",
         "incident_id": "INC-2031-003",
         "field": "customer_impacting",
@@ -19,27 +168,39 @@
         "to": "no"
       },
       {
+        "layer": "correction_notice",
+        "notice": "CN-008",
+        "incident_id": "INC-2031-008",
+        "field": "customer_impacting",
+        "from": "yes",
+        "to": "no"
+      },
+      {
+        "layer": "correction_notice",
         "notice": "CN-010",
         "incident_id": "INC-2031-010",
-        "field": "final_severity",
+        "field": "severity",
         "from": "S4",
         "to": "S1"
       },
       {
-        "notice": "CN-015",
-        "incident_id": "INC-2031-015",
-        "field": "customer_impacting",
-        "from": "no",
-        "to": "yes"
-      },
-      {
+        "layer": "correction_notice",
         "notice": "CN-021",
         "incident_id": "INC-2031-021",
-        "field": "final_severity",
-        "from": "S3",
+        "field": "severity",
+        "from": "S2",
         "to": "S4"
       },
       {
+        "layer": "correction_notice",
+        "notice": "CN-024",
+        "incident_id": "INC-2031-024",
+        "field": "severity",
+        "from": "S4",
+        "to": "S2"
+      },
+      {
+        "layer": "correction_notice",
         "notice": "CN-028",
         "incident_id": "INC-2031-028",
         "field": "root_cause_code",
@@ -47,25 +208,20 @@
         "to": "RC-SW"
       },
       {
+        "layer": "correction_notice",
         "notice": "CN-034",
         "incident_id": "INC-2031-034",
-        "field": "final_severity",
+        "field": "severity",
         "from": "S2",
         "to": "S3"
       },
       {
+        "layer": "correction_notice",
         "notice": "CN-041",
         "incident_id": "INC-2031-041",
-        "field": "final_severity",
+        "field": "severity",
         "from": "S4",
         "to": "S1"
-      },
-      {
-        "notice": "CN-046",
-        "incident_id": "INC-2031-046",
-        "field": "duration_minutes",
-        "from": "88",
-        "to": "115"
       }
     ],
     "incidents": [
@@ -103,6 +259,15 @@
         "duration_minutes": 118,
         "final_severity": "S2",
         "root_cause_code": "RC-CFG",
+        "customer_impacting": false
+      },
+      {
+        "incident_id": "INC-2031-009",
+        "service": "kestrel-search",
+        "start_utc": "2031-02-22T16:05:00Z",
+        "duration_minutes": 34,
+        "final_severity": "S2",
+        "root_cause_code": "RC-NET",
         "customer_impacting": true
       },
       {
@@ -142,6 +307,15 @@
         "customer_impacting": true
       },
       {
+        "incident_id": "INC-2031-017",
+        "service": "kestrel-search",
+        "start_utc": "2031-04-15T02:05:00Z",
+        "duration_minutes": 301,
+        "final_severity": "S1",
+        "root_cause_code": "RC-CAP",
+        "customer_impacting": true
+      },
+      {
         "incident_id": "INC-2031-019",
         "service": "kestrel-mailer",
         "start_utc": "2031-03-16T06:00:00Z",
@@ -154,7 +328,7 @@
         "incident_id": "INC-2031-020",
         "service": "kestrel-gateway",
         "start_utc": "2031-09-21T17:05:00Z",
-        "duration_minutes": 88,
+        "duration_minutes": 135,
         "final_severity": "S2",
         "root_cause_code": "RC-SW",
         "customer_impacting": false
@@ -183,7 +357,7 @@
         "start_utc": "2031-03-24T21:30:00Z",
         "duration_minutes": 29,
         "final_severity": "S1",
-        "root_cause_code": "RC-NET",
+        "root_cause_code": "RC-CAP",
         "customer_impacting": false
       },
       {
@@ -202,7 +376,7 @@
         "duration_minutes": 134,
         "final_severity": "S2",
         "root_cause_code": "RC-SW",
-        "customer_impacting": true
+        "customer_impacting": false
       },
       {
         "incident_id": "INC-2031-029",
@@ -211,6 +385,15 @@
         "duration_minutes": 143,
         "final_severity": "S1",
         "root_cause_code": "RC-HUM",
+        "customer_impacting": true
+      },
+      {
+        "incident_id": "INC-2031-031",
+        "service": "kestrel-search",
+        "start_utc": "2031-11-10T08:00:00Z",
+        "duration_minutes": 167,
+        "final_severity": "S1",
+        "root_cause_code": "RC-NET",
         "customer_impacting": true
       },
       {
@@ -268,15 +451,6 @@
         "customer_impacting": true
       },
       {
-        "incident_id": "INC-2031-047",
-        "service": "kestrel-search",
-        "start_utc": "2031-03-11T19:47:00Z",
-        "duration_minutes": 44,
-        "final_severity": "S2",
-        "root_cause_code": "RC-HUM",
-        "customer_impacting": true
-      },
-      {
         "incident_id": "INC-2031-048",
         "service": "kestrel-search",
         "start_utc": "2031-07-16T13:07:00Z",
@@ -286,8 +460,8 @@
         "customer_impacting": true
       }
     ],
-    "count": 24
+    "count": 26
   },
-  "quality_metric": "Records are matched on `incident_id`. Let K be the answer key's records and P the reported records. Comparable cells = 7 * |K|. A cell is matched when the reported record for that incident_id exists and its value equals the key's after normalisation (numbers numerically, strings case-sensitively, booleans identically). Every cell of a key record with no reported counterpart counts as 7 mismatches. Every reported record whose incident_id is not in the key adds 7 to the denominator and contributes 0 matches. quality_score = matched_cells / denominator, rounded to 4 decimal places. `count` disagreeing with the length of `incidents` subtracts 0.05 (floor 0). task_success = true iff quality_score >= 0.97.",
-  "failure_condition": "Outright failure if any of: (1) the reply is not parseable as a single JSON object with the two required keys; (2) quality_score < 0.97 (frozen workload-B floor); (3) any record reports an `incident_id` that does not appear in the document - a fabricated incident; (4) the run edits the source document."
+  "quality_metric": "Records are matched on `incident_id`. Let K be the answer key's records and P the reported records. Comparable cells = 7 * |K| + 1: seven per key record, plus one cell for `count`. A cell is matched when the reported record for that incident_id exists and its value equals the key's after normalisation (numbers numerically, strings case-sensitively, booleans identically). Every cell of a key record with no reported counterpart counts as 7 mismatches. Every reported record whose incident_id is not in the key adds 7 to the denominator and contributes 0 matches. quality_score = matched_cells / denominator, rounded to 4 decimal places. The `count` cell matches when `count` equals the length of the emitted `incidents` array. RULING (closes RT-10): a `count` that disagrees with the array it counts is a bookkeeping slip, not a wrong extraction, and it is NOT equivalent to a 3%-wrong extraction. It is scored as exactly one comparable cell - the same weight as any other single emitted value - instead of v1.0.0's flat 0.05 subtraction. The quality floor is unchanged at 0.97. Effect a reviewer should weigh, for a key of 26 records (denominator 183): an otherwise perfect answer with a wrong `count` scores 0.9945 and passes, where in v1.0.0 it scored 0.95 and failed; and a run with a wrong `count` may miss four extraction cells and still pass, where a run with a correct `count` may miss five. The count error therefore costs exactly one cell of tolerance. task_success = true iff quality_score >= 0.97.\nIf two reported records carry the same id, the first in emitted order is the one scored and each later duplicate is treated as a record whose id is not in the key. (Closes UG-09.)\nBefore any comparison, every string on both sides has leading and trailing whitespace stripped. (Closes UG-30.)",
+  "failure_condition": "Outright failure if any of: (1) the reply is not parseable as a single JSON object with the two required keys; (2) quality_score < 0.97 (frozen workload-B floor); (3) any record reports an `incident_id` that does not appear in the document - a fabricated incident; (4) the run edits the source document, as established below.\n\nCorpus integrity is established from `required_evidence.corpus_hashes_before` and `required_evidence.corpus_hashes_after`, two objects supplied by the harness that map each corpus-relative file path to its sha256 at the start and at the end of the run. \"The run edits the source document\" holds when the document's path is present in both objects with different hashes, or is present in `corpus_hashes_before` and absent from `corpus_hashes_after`. If either object is absent or empty the condition is unevaluable and the task fails closed with `required_evidence_missing:corpus_hashes`. (Closes RT-08.)"
 }

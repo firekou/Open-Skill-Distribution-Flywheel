@@ -18,6 +18,7 @@ import time
 from datetime import datetime, timezone
 
 from . import evidence as ev
+from . import METHODOLOGY_VERSION, TASK_SET_VERSION
 from .attest import dependency_manifest_hash, image_content_hash
 from .blind import BlindMapping, build_packet
 from .meter import TokenMeter
@@ -87,6 +88,7 @@ def run_one(
     container_digest: str | None,
     task_set_hash: str,
     answer_key_hash: str,
+    scorer_hash: str = "",
     run_id: str | None = None,
     reproduces_run_id: str | None = None,
     audit_path: pathlib.Path | None = None,
@@ -135,6 +137,10 @@ def run_one(
             "task_id": task_id,
             "condition": condition,
             "run_class": run_class,
+            # Content hash only. The fixture's PATH used to be recorded here through the
+            # surrounding payload, so two runs of identical inputs into different output
+            # directories produced different raw-evidence hashes - the evidence hash depended on
+            # where it was written rather than on what it contained (D-2).
             "fixture_sha256": hashlib.sha256(pathlib.Path(fixture).read_bytes()).hexdigest(),
             "calls": raw_calls,
             "model_output": model_output,
@@ -183,14 +189,23 @@ def run_one(
         "image_content_sha256": image_content_hash(),
         "dependency_manifest_sha256": dependency_manifest_hash(),
         "prompt_hash": sha256_text(json.dumps(task["input"], sort_keys=True)),
+        # D-8: this is the RUN configuration hash and is a different quantity from the
+        # manifest's `config_hash` (which covers the schema and harness modules). Renamed so the
+        # two cannot be compared by accident; the old key is kept for records already written.
+        "run_config_hash": sha256_text(f"{condition}|{snapshot.snapshot_id}|{task_set_hash}"),
         "config_hash": sha256_text(f"{condition}|{snapshot.snapshot_id}|{task_set_hash}"),
-        "task_version": "1.0.0",
+        # D-7: named in the evidence manifest and in the runbook, and present in neither the
+        # schema nor any record. A hash a verifier is told to compare and cannot read is worse
+        # than no hash.
+        "scorer_hash": scorer_hash,
+        "task_version": TASK_SET_VERSION,
         "task_set_hash": task_set_hash,
         "answer_key_hash": answer_key_hash,
         "blind_treatment_id": mapping.label(condition),
         "reproduces_run_id": reproduces_run_id,
         "raw_evidence_path": evidence_path,
-        "methodology_version": "1.0.0",
+        # NEVER a literal - see harness/__init__.py METHODOLOGY_VERSION (NEW-01).
+        "methodology_version": METHODOLOGY_VERSION,
         "notes": warning,
     }
     if condition.startswith("C4"):
@@ -267,6 +282,9 @@ def main(argv=None) -> int:
 
     task_set_hash = hash_tree(task_root / "tasks")
     answer_key_hash = hash_tree(task_root / "answer_keys")
+    judge_path = pathlib.Path(__file__).resolve().parent / "judge.py"
+    scorer_hash = (hashlib.sha256(judge_path.read_bytes()).hexdigest()
+                   if judge_path.exists() else "")
 
     records, packets, failures = [], [], []
     for item in plan:
@@ -285,6 +303,7 @@ def main(argv=None) -> int:
                 container_digest=args.container_digest,
                 task_set_hash=task_set_hash,
                 answer_key_hash=answer_key_hash,
+                scorer_hash=scorer_hash,
                 audit_path=pathlib.Path(args.tool_audit) if args.tool_audit else None,
                 out_records=out / "records",
             )
@@ -313,6 +332,7 @@ def main(argv=None) -> int:
         "failures": failures,
         "task_set_hash": task_set_hash,
         "answer_key_hash": answer_key_hash,
+        "scorer_hash": scorer_hash,
         "pricing_snapshot_id": snapshot.snapshot_id,
         "container_digest": args.container_digest,
         "ran_at": datetime.now(timezone.utc).isoformat(),

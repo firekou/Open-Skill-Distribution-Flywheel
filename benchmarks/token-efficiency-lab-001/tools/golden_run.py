@@ -17,8 +17,25 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import sys
+
+sys.path.insert(
+    0, str(pathlib.Path(__file__).resolve().parent.parent / "environment"))
+
+from harness import corpus_reader as cr  # noqa: E402
 
 # Provenance, not answer. Everything else in a key is what a correct reply contains.
+def _first_file(root: pathlib.Path, corpus_path: str) -> str:
+    """One concrete file under a declared corpus path, so the reader has something to open."""
+    target = root / corpus_path
+    if target.is_file():
+        return corpus_path
+    for p in sorted(target.rglob("*")):
+        if p.is_file():
+            return str(p.relative_to(root).as_posix())
+    raise SystemExit(f"{corpus_path} contains no file to read")
+
+
 KEY_META = {"task_id", "derived_by", "derivation_method", "derivation_script",
             "derivation_diagnostics", "notes", "contested_families", "required_tools",
             "tool_calls_made_by_this_derivation", "citation_support"}
@@ -56,6 +73,8 @@ def main() -> int:
     root = pathlib.Path(args.task_root)
     out = pathlib.Path(args.out); out.mkdir(parents=True, exist_ok=True)
 
+    audit_file = out / "TOOL_AUDIT.jsonl"
+    audit_file.write_text("")          # the reader appends; start from empty
     plan, calls, audit, seq = [], [], [], 0
     for wl in "ABCDE":
         for tp in sorted((root / "tasks" / wl).glob("*.json")):
@@ -85,18 +104,21 @@ def main() -> int:
                 })
 
             if wl in ("A", "D"):
+                # NEW-03: these entries used to be FABRICATED here - `{"tool": "fs.read"}` with
+                # no reader behind it - so the lab's own proof harness forged the evidence it was
+                # meant to check, and the fact that nothing in the lab could produce a workload-A
+                # corpus read stayed invisible. They now come from the real audited reader
+                # (`harness/corpus_reader.py`), which reads the file and writes the entry in the
+                # same call, so an entry cannot exist for a file that was not read.
                 for cp in (task["input"].get("corpus_paths") or ["corpora/"])[:2]:
-                    seq += 1
-                    audit.append({"seq": seq, "run_id": rid, "mode": "read", "tool": "fs.read",
-                                  "family": "corpus", "arguments": {"path": cp}})
-                for t in (key.get("required_tools") or [])[:4]:
-                    seq += 1
-                    audit.append({"seq": seq, "run_id": rid, "mode": "call", "tool": t,
-                                  "family": "required", "arguments": {}})
-                if not key.get("required_tools"):
-                    seq += 1
-                    audit.append({"seq": seq, "run_id": rid, "mode": "call",
-                                  "tool": "catalog.list_tools", "family": "meta", "arguments": {}})
+                    cr.read(_first_file(root, cp), task_root=root,
+                            allowed=task["input"].get("corpus_paths"),
+                            run_id=rid, audit_path=audit_file)
+                # Tool calls still come from the tool server's own format. They are marked
+                # synthetic so nothing mistakes them for a real invocation.
+                for t in (key.get("required_tools") or ["catalog.list_tools"])[:4]:
+                    audit.append({"run_id": rid, "mode": "call", "tool": t,
+                                  "family": "required", "arguments": {}, "synthetic": True})
 
     (out / "PLAN.json").write_text(json.dumps(plan, indent=2) + "\n")
     (out / "FIXTURE.json").write_text(json.dumps({
@@ -107,8 +129,12 @@ def main() -> int:
                         "nothing about any model, any intervention, or any hypothesis."),
         "calls": calls,
     }, ensure_ascii=False, indent=2) + "\n")
-    (out / "TOOL_AUDIT.jsonl").write_text(
-        "\n".join(json.dumps(a, sort_keys=True) for a in audit) + "\n")
+    # Append the tool-call entries after the reader's, renumbering `seq` continuously.
+    existing = [l for l in audit_file.read_text().splitlines() if l.strip()]
+    lines = list(existing)
+    for i, a in enumerate(audit, start=len(existing) + 1):
+        lines.append(json.dumps(dict(a, seq=i), sort_keys=True))
+    audit_file.write_text("\n".join(lines) + "\n")
 
     from collections import Counter
     cells = Counter((p["task_id"][0], p["condition"]) for p in plan)

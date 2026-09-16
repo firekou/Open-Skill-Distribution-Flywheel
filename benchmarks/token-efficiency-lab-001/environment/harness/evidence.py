@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import ast
 import csv
+import re
 import hashlib
 import json
 import pathlib
@@ -39,29 +40,51 @@ class EvidenceError(RuntimeError):
 
 # Which evidence fields each workload's zero-tolerance criteria consume. A workload whose
 # required fields are absent, empty or wrongly typed yields INVALID.
+# Fields that must be PRESENT AND NON-EMPTY. This list must agree with
+# `judge.EVIDENCE_CONTRACT`; where the two disagree the stricter one silently decides, which is
+# how NEW-11 happened - `corpus_access_log` was required non-empty here while the scorer reads
+# its emptiness as a fact about the run, so every clean workload-D attempt was INVALID.
 REQUIRED_BY_WORKLOAD = {
     # RT-08: all 17 v1.1.0 tasks name corpus_hashes_before AND corpus_hashes_after in their
     # failure_condition. One hash proves nothing about modification; two do.
-    "A": ("valid_symbols", "tool_calls", "corpus_hashes_before", "corpus_hashes_after",
-          "corpus_access_log"),
+    "A": ("valid_symbols", "corpus_hashes_before", "corpus_hashes_after"),
     "B": ("corpus_hashes_before", "corpus_hashes_after"),
-    "C": ("corpus_hashes_before", "corpus_hashes_after"),
-    "D": ("tool_calls", "corpus_hashes_before", "corpus_hashes_after", "corpus_access_log"),
+    "C": ("corpus_hashes_before", "corpus_hashes_after", "corpus_files"),
+    "D": ("corpus_hashes_before", "corpus_hashes_after"),
     "E": ("turns", "corpus_hashes_before", "corpus_hashes_after"),
 }
 
-# Task-specific additions on top of the workload defaults.
+# Task-specific additions, mirroring judge.EVIDENCE_CONTRACT exactly.
 REQUIRED_BY_TASK = {
+    "B-002": ("document_incident_ids",),
+    "B-003": ("document_req_ids",),
+    "C-002": ("document_award_ids",),
+    "C-003": ("registry_plugin_ids",),
     "E-001": ("catalog_part_ids", "halberd_part_ids"),
     "E-003": ("shifts", "roster"),
 }
 
-# Nothing in here may identify a treatment. Asserted by `assert_treatment_neutral`.
-TREATMENT_LEAKING_KEYS = frozenset(
-    {"condition", "treatment", "candidate", "candidate_name", "model", "model_pair", "provider",
-     "cost", "input_tokens", "output_tokens", "total_tokens", "cached_tokens", "token_source",
-     "pricing_snapshot_id", "retries", "escalations", "latency_ms", "repository", "repo"}
-)
+# Produced for A and D, and allowed to be EMPTY. `tool_calls` empty is a finding the scorer makes
+# (answered_without_calling_any_tool); `corpus_access_log` empty is a fact about the run. Neither
+# is missing evidence, and requiring them non-empty here overrode the scorer's own judgement.
+PRODUCED_BUT_MAY_BE_EMPTY = ("tool_calls", "corpus_access_log")
+
+# Present in the audit for attribution and integrity, forbidden in a judge packet.
+_AUDIT_ONLY_KEYS = frozenset({"run_id", "synthetic", "bytes"})
+
+def _forbidden_keys() -> frozenset:
+    """ONE list, shared with the blind gate.
+
+    NEW-06: this module's own list was a strict SUBSET of `blind.FORBIDDEN_KEYS`, so
+    `treatment_name`, `candidate_commit_sha` and `model_version` were caught by neither. Two
+    lists that are supposed to agree and do not is the same defect as two seats that each believe
+    the other's data shape. Imported lazily to keep the import graph acyclic.
+    """
+    from .blind import FORBIDDEN_KEYS
+    return FORBIDDEN_KEYS
+
+
+TREATMENT_LEAKING_KEYS = _forbidden_keys()
 
 
 @dataclass
@@ -124,6 +147,49 @@ def csv_rows(path: pathlib.Path, key: str) -> dict:
     return {r[key]: dict(r) for r in rows}
 
 
+def document_ids(path: pathlib.Path, pattern: str) -> list[str]:
+    """Every id of a given shape catalogued in a frozen document.
+
+    The scorer needs the document's own inventory to decide whether a reported id was
+    **fabricated**. Deriving it from the frozen artefact is the only way that check means
+    anything: taken from the model's answer it would be circular, and taken from the answer key
+    it would make any id the key omits unfalsifiable.
+    """
+    text = pathlib.Path(path).read_text(errors="ignore")
+    found = sorted(set(re.findall(pattern, text)))
+    if not found:
+        raise EvidenceError(
+            f"no id matching {pattern!r} found in {path}. Zero means the producer failed, not "
+            "that the document is empty - the scorer would read it as an empty inventory and "
+            "every reported id would look fabricated."
+        )
+    return found
+
+
+def corpus_file_names(directory: pathlib.Path) -> list[str]:
+    """The file listing a citation is checked against.
+
+    A citation cannot be validated against an empty corpus listing, so this fails closed.
+    """
+    d = pathlib.Path(directory)
+    names = sorted(p.name for p in d.iterdir() if p.is_file())
+    if not names:
+        raise EvidenceError(f"{d} lists no files; citations could not be checked against it")
+    return names
+
+
+# Build artefacts are not corpus. `manifest.py` and `attest.py` already skip them; this module
+# did not, so running the corpus once put 51 `.pyc` files into `corpus_hashes` for every
+# workload-A packet - and `corpus_modified` (RT-08) keys on the same maps, so a stray import
+# could have failed an attempt for "modifying the corpus" (D-3).
+_BUILD_ARTIFACT_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
+_BUILD_ARTIFACT_SUFFIXES = {".pyc", ".pyo"}
+
+
+def _is_build_artifact(p: pathlib.Path) -> bool:
+    return bool(set(p.parts) & _BUILD_ARTIFACT_DIRS) or p.suffix in _BUILD_ARTIFACT_SUFFIXES
+
+
 def corpus_hashes(task_root: pathlib.Path, corpus_paths: list[str]) -> dict:
     """Hash every file the task is allowed to read.
 
@@ -135,7 +201,8 @@ def corpus_hashes(task_root: pathlib.Path, corpus_paths: list[str]) -> dict:
     out = {}
     for cp in corpus_paths:
         target = root / cp
-        files = [target] if target.is_file() else sorted(p for p in target.rglob("*") if p.is_file())
+        files = [target] if target.is_file() else sorted(
+            p for p in target.rglob("*") if p.is_file() and not _is_build_artifact(p))
         for p in files:
             out[str(p.relative_to(root))] = hashlib.sha256(p.read_bytes()).hexdigest()
     if not out:
@@ -269,31 +336,44 @@ def assert_treatment_neutral(evidence: dict) -> None:
         elif isinstance(node, list):
             for i, v in enumerate(node):
                 yield from walk(v, f"{path}[{i}]")
+    forbidden = _forbidden_keys()
     for full, key in walk(evidence):
-        if key in TREATMENT_LEAKING_KEYS:
+        if key in forbidden:
             raise EvidenceError(
                 f"evidence leaks {key!r} at {full}. required_evidence reaches the Quality Judge, "
                 "so anything identifying in it defeats the blind as surely as a metadata field."
             )
 
 
-def access_log_from_audit(calls: list[dict], corpus_paths: list[str]) -> list[dict]:
-    """Which corpus files the attempt actually touched.
+def access_log_from_audit(calls: list[dict], corpus_paths: list[str]) -> list[str]:
+    """Which corpus files the attempt actually touched, as a LIST OF PATH STRINGS.
 
-    A-001's only anti-shortcut guard is "the answer is produced without reading the corpus (empty
-    tool-call record)", and v1.0.0 implemented it nowhere — so the blanket answer that reads
-    nothing had no guard at all. The log is built from the runner's audit, never from the model
-    saying it read something.
+    A-001's only anti-shortcut guard is "the answer is produced without reading the corpus", and
+    v1.0.0 implemented it nowhere — so the blanket answer that reads nothing had no guard at all.
+    The log is built from the runner's audit, never from the model saying it read something.
+
+    **The shape is `list[str]` and that is not arbitrary.** This function previously returned
+    `list[dict]` while the judge matched with `isinstance(p, str)`, and `README.md` and
+    `SCORING_SPEC` §4.1 both declared `[path]`. One mismatch produced two opposite failures:
+    A-001's read guard never saw a hit and failed every legitimate run, while D's
+    fixtures-read prohibition never saw a hit and **failed open** — a D run reading
+    `corpora/mcp_toolset/fixtures/` scored 1.0000 with the answers handed to it (NEW-04).
+
+    Two seats each believing the other's shape is exactly the seam this round kept finding.
     """
     out = []
     for c in calls:
         args = c.get("arguments") or {}
-        target = args.get("path") or args.get("file") or args.get("corpus_path")
+        target = args.get("path") or args.get("file") or args.get("corpus_path") \
+            or c.get("reads_corpus")
         if target:
-            out.append({"path": str(target), "tool": c.get("tool"), "seq": c.get("seq")})
-        elif c.get("reads_corpus"):
-            out.append({"path": c.get("reads_corpus"), "tool": c.get("tool"), "seq": c.get("seq")})
-    return out
+            out.append(str(target))
+    # Ordered, de-duplicated: a path read twice is one access for every purpose the log serves.
+    seen, uniq = set(), []
+    for pth in out:
+        if pth not in seen:
+            seen.add(pth); uniq.append(pth)
+    return uniq
 
 
 def produce(task: dict, task_root: pathlib.Path, *, run_id: str,
@@ -327,6 +407,11 @@ def produce(task: dict, task_root: pathlib.Path, *, run_id: str,
         if audit_path is None:
             raise EvidenceError(f"workload {wl} needs a tool audit path; none was supplied")
         calls = filter_audit_to_run(tool_calls_from_audit(audit_path), run_id)
+        # The audit carries `run_id` for attribution, which is exactly what the blind gate
+        # forbids in a packet. Attribution happens HERE, at filter time; the judge only needs to
+        # know which tools were called with what. Strip it rather than widening the blind rule -
+        # the rule is right, the payload was wrong.
+        calls = [{k: v for k, v in c.items() if k not in _AUDIT_ONLY_KEYS} for c in calls]
         ev.fields["tool_calls"] = calls
         log = corpus_access_log if corpus_access_log is not None else access_log_from_audit(
             calls, paths)
@@ -345,6 +430,37 @@ def produce(task: dict, task_root: pathlib.Path, *, run_id: str,
         assert_turns_complete(turns or [], int(expected))
         ev.fields["turns"] = turns
         prov["turns"] = f"captured by the runner; {expected} turns asserted complete and ordered"
+
+    if wl == "B":
+        docs = root / "corpora" / "docs_b"
+        if tid == "B-002":
+            ev.fields["document_incident_ids"] = document_ids(
+                docs / "KESTREL_RELIABILITY_2031.md", r"INC-\d{4}-\d{3}")
+            prov["document_incident_ids"] = "every INC-nnnn-nnn catalogued in the frozen document"
+        if tid == "B-003":
+            spec = next(p for p in docs.iterdir() if "PROTOCOL" in p.name)
+            # The document catalogues SDX-REQ-nnnn. A bare `\bREQ-` pattern matches the
+            # TAIL of each id, so the produced inventory contained 96 ids none of which was a
+            # real one - and every reported id looked fabricated against it. An inventory that
+            # is non-empty is not the same as an inventory that is right.
+            ev.fields["document_req_ids"] = document_ids(spec, r"\b[A-Z]{2,5}-REQ-\d{3,5}\b")
+            prov["document_req_ids"] = f"every REQ-* catalogued in {spec.name}"
+
+    if wl == "C":
+        rc = root / "corpora" / "research_c"
+        ev.fields["corpus_files"] = corpus_file_names(rc)
+        prov["corpus_files"] = "the research_c file listing a citation is checked against"
+        blob = "\n".join(p.read_text(errors="ignore") for p in sorted(rc.iterdir()) if p.is_file())
+        if tid == "C-002":
+            ev.fields["document_award_ids"] = sorted(set(re.findall(r"\bGA-\d{4}\b", blob))) or None
+            if not ev.fields["document_award_ids"]:
+                raise EvidenceError("no GA-nnnn award ids found in corpora/research_c")
+            prov["document_award_ids"] = "every GA-nnnn award id appearing in research_c"
+        if tid == "C-003":
+            ev.fields["registry_plugin_ids"] = sorted(set(re.findall(r"\bkp-[a-z0-9-]+\b", blob)))
+            if not ev.fields["registry_plugin_ids"]:
+                raise EvidenceError("no kp-* plugin ids found in corpora/research_c")
+            prov["registry_plugin_ids"] = "every kp-* plugin id appearing in research_c"
 
     if tid == "E-001":
         wf = root / "corpora" / "workflow_e"

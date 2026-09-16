@@ -79,3 +79,35 @@ A draft is amended in place while it is a draft — that is what a draft is for,
 amendments would make the review harder rather than cleaner. **Once signed off, any further change
 requires a new version file.** Any review performed against the earlier hash
 `f4327ca9…` must be redone.
+
+## Task-set binding (the outer record, not a self-reference)
+
+The manifest lists artefacts and never hashes itself. **This record binds the manifest digest to
+the commit**, which is the direction that avoids a circular attestation.
+
+| | |
+|---|---|
+| `tasks/TASK_SET_v1.1.0/MANIFEST.json` digest | `b08d4f1fe9d4f6aacabae0c064b3aa1a664d5c3a0321391f348c9ee6b26811eb` |
+| `task_set_hash` | `4954ee84cb61bc56d271ae45df4478312147373d486e58524a92126805184ea0` |
+| `answer_key_hash` | `57ec5d50f82c0ec453a75d1c64c6a581d9ce884ef2c1d2a9cec738e86c0a252d` |
+| `answer_key_scripts_hash` | `839b95af67db206b5e4d1ed7246e231c0875b5bad5d2a938ed91df08e4fe8d2f` |
+| `scoring_spec_hash` | `887dcf10726ad2e23efb7449bc3d799b5922c3064474625dc8266d7583b09ac6` |
+| `scorer_hash` | `e558aac2901e3970c1ac91bcf79e3ab10970153eb6cf2ce0734fcd956e5713bb` |
+| `config_hash` (schema + harness modules) | `d2b324176db469b44f44e7e72a5b9eb269c47c49e949f68dda28c3ff9d13f152` |
+| Files covered | 194, **unclaimed: none** |
+| Artifact commit | recorded by the commit that carries this file; see `git log` |
+
+**Still not frozen.** These hashes exist so a later freeze has something to bind, and so a
+reviewer can tell whether anything moved between review and freeze. Recording a hash is not
+freezing a set.
+
+Verify:
+
+```bash
+python3 environment/harness/manifest.py verify \
+  --task-set tasks/TASK_SET_v1.1.0 --env environment \
+  --manifest tasks/TASK_SET_v1.1.0/MANIFEST.json
+```
+
+Exit 0 means every covered file matches, **and** the manifest's own recorded group hashes agree
+with the files it lists — a doctored manifest used to pass this check and no longer does.

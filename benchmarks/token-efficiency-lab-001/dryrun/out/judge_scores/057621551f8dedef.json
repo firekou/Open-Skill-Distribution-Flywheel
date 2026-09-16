@@ -1,23 +1,39 @@
 {
   "blind_treatment_id": "Treatment J",
   "detail": {
+    "answer_correct": false,
+    "answer_parse_failed": true,
     "contested_families": [
       "image-digest-resolution",
       "vuln-findings"
     ],
+    "corpus_access_log_entries": 2,
+    "corpus_access_log_hits": 0,
+    "corpus_integrity_basis": "corpus_hashes_before_after",
+    "corpus_integrity_evaluated": true,
+    "corpus_modified": false,
+    "extraneous_calls": 2,
+    "fixture_read_basis": "corpus_access_log",
+    "fixture_read_evidence_available": false,
+    "fixture_reads": 0,
     "format_strict": false,
     "ignored_packet_keys": [],
-    "methodology_version": "1.0.0",
+    "level": "attempt",
+    "methodology_version": "1.1.0",
     "parse_mode": "unparseable",
     "required_tools": [
       "registry.resolve_digest_pinned",
       "vulndb.get_image_findings_by_digest"
     ],
-    "spec_version": "1.0.0",
-    "tool_audit_available": false,
-    "truncation_suspected": false
+    "spec_version": "1.1.0",
+    "tool_audit_available": true,
+    "tool_call_count": 4,
+    "truncation_suspected": false,
+    "wrong_tool_calls": [],
+    "wrong_tool_invocations": 0
   },
-  "failure_reason": "required_evidence_missing:tool_calls",
+  "failure_reason": "unparseable_output",
+  "outcome": "FAIL_QUALITY",
   "packet_id": "057621551f8dedef",
   "quality_score": 0.0,
   "task_id": "D-002",

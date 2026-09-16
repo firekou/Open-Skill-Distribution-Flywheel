@@ -61,8 +61,11 @@ def finalize(records_dir: pathlib.Path, scores_dir: pathlib.Path) -> dict:
         rec["quality_score"] = float(s["quality_score"])
         rec["task_success"] = bool(s["task_success"])
         rec["quality_judged_before_cost"] = True
-        if s.get("failure_reason"):
-            rec["failure_reason"] = s["failure_reason"]
+        # D-9: this used to be `if s.get("failure_reason")`, so a PASS - which correctly has
+        # none - left the runner's placeholder in place and all 17 passing records read
+        # "awaiting Quality Judge score". The judge's answer is authoritative either way,
+        # including when its answer is "no reason, it passed".
+        rec["failure_reason"] = s.get("failure_reason") or None
 
         # v1.1.0 section 6.2. The judge decides which of the three outcomes this attempt had; the
         # runner's placeholder is replaced here. A corpus modification already failed the attempt
