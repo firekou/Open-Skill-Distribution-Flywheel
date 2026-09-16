@@ -17,10 +17,34 @@ import json
 import pathlib
 import random
 
-# One cheap and one mid-tier model from the pricing snapshot, so escalation and cross-provider
-# handling are both exercised. These names must exist in the snapshot or pricing fails loudly.
-CHEAP = ("openai", "gpt-5-mini")
-MID = ("openai", "gpt-5")
+# One cheap and one mid-tier model, so escalation is exercised.
+#
+# These are DeepSeek rather than OpenAI for a reason found by running this generator: 12 of the
+# 15 rates in PS-2026-09-15 carry NO cached input rate, and the meter refuses - correctly - to
+# price a cached call against a snapshot that cannot price cached tokens. Only DeepSeek's two
+# models have a complete rate. See EVIDENCE_LEDGER E026; that gap is a real blocker for LG4,
+# not a quirk of this generator.
+CHEAP = ("deepseek", "deepseek-flash")
+MID = ("deepseek", "deepseek-v4-pro")
+
+
+def assert_snapshot_can_price(snapshot_path: pathlib.Path, emit_cached: bool) -> None:
+    """Refuse to generate a fixture the snapshot cannot price.
+
+    Failing here, loudly and before any run, beats producing 10 records that all error out.
+    """
+    rates = json.loads(pathlib.Path(snapshot_path).read_text())["rates"]
+    for provider, model in (CHEAP, MID):
+        key = f"{provider}/{model}"
+        if key not in rates:
+            raise SystemExit(f"{key} is not in the pricing snapshot; the fixture cannot be priced")
+        if emit_cached and rates[key].get("cached_input_per_mtok") is None:
+            raise SystemExit(
+                f"{key} has no cached input rate in the snapshot, but this fixture emits cached "
+                "tokens. Folding them in at the full input rate would overstate cost, so the "
+                "meter will refuse every run. Either complete the snapshot or pass "
+                "--no-cached-tokens."
+            )
 
 
 def seeded(task_id: str, condition: str, salt: str) -> random.Random:
@@ -29,7 +53,7 @@ def seeded(task_id: str, condition: str, salt: str) -> random.Random:
     return random.Random(int(h[:16], 16))
 
 
-def make_calls(task: dict, condition: str, salt: str) -> list[dict]:
+def make_calls(task: dict, condition: str, salt: str, emit_cached: bool = True) -> list[dict]:
     rng = seeded(task["task_id"], condition, salt)
     workload = task["workload"]
 
@@ -50,7 +74,7 @@ def make_calls(task: dict, condition: str, salt: str) -> list[dict]:
             factor *= 0.5
         inp = int(base_input * factor * rng.uniform(0.95, 1.05)) + turn * 900
         out = int(rng.uniform(300, 1200))
-        cached = int(inp * 0.4) if turn > 0 else 0
+        cached = int(inp * 0.4) if (turn > 0 and emit_cached) else 0
         calls.append(
             {
                 "task_id": task["task_id"],
@@ -90,16 +114,20 @@ def main() -> int:
     ap.add_argument("--plan", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--salt", default="lab001-dryrun-2026-09-16")
+    ap.add_argument("--snapshot", required=True)
+    ap.add_argument("--no-cached-tokens", action="store_true")
     args = ap.parse_args()
 
     task_root = pathlib.Path(args.task_root)
     plan = json.loads(pathlib.Path(args.plan).read_text())
+    emit_cached = not args.no_cached_tokens
+    assert_snapshot_can_price(pathlib.Path(args.snapshot), emit_cached)
 
     calls = []
     for item in plan:
         wl = item["task_id"].split("-")[0]
         task = json.loads((task_root / "tasks" / wl / f"{item['task_id']}.json").read_text())
-        calls.extend(make_calls(task, item["condition"], args.salt))
+        calls.extend(make_calls(task, item["condition"], args.salt, emit_cached))
 
     fixture = {
         "fixture_version": "1.0.0",

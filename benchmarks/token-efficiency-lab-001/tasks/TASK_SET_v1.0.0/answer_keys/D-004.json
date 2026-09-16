@@ -1,0 +1,51 @@
+{
+  "task_id": "D-004",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Called metrics.get_error_budget_after_exclusions for the reported remaining budget and tickets.get_effective_sla for the binding target and the stopped-clock minutes, took the opened/resolved instants from tickets.get_ticket (ticket-record, an uncontested family) and computed elapsed minus stopped against the target. Script: scripts/derive_D.py",
+  "derivation_script": "scripts/derive_D.py",
+  "contested_families": [
+    "error-budget",
+    "sla-resolution"
+  ],
+  "required_tools": [
+    "metrics.get_error_budget_after_exclusions",
+    "tickets.get_effective_sla"
+  ],
+  "tool_calls_made_by_this_derivation": [
+    {
+      "tool": "metrics.get_error_budget_after_exclusions",
+      "family": "error-budget",
+      "args": {
+        "service": "kestrel-search",
+        "month": "2032-03"
+      }
+    },
+    {
+      "tool": "tickets.get_effective_sla",
+      "family": "sla-resolution",
+      "args": {
+        "ticket_id": "TCK-40118"
+      }
+    },
+    {
+      "tool": "tickets.get_ticket",
+      "family": "ticket-record",
+      "args": {
+        "ticket_id": "TCK-40118"
+      }
+    }
+  ],
+  "answer": {
+    "remaining_error_budget_minutes": 4.4,
+    "effective_resolution_target_minutes": 240,
+    "measured_resolution_minutes": 255,
+    "sla_breached": true
+  },
+  "derivation_diagnostics": {
+    "elapsed_minutes": 350,
+    "clock_stopped_minutes": 95,
+    "resolution_target_source": "contract_override:CON-2201-SLA-A",
+    "opened_at_utc": "2032-03-08T09:12:00Z",
+    "resolved_at_utc": "2032-03-08T15:02:00Z"
+  }
+}

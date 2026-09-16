@@ -1,0 +1,144 @@
+{
+  "packet_id": "0e7fe3fb3b94f184",
+  "task_id": "E-002",
+  "workload": "E",
+  "blind_treatment_id": "Treatment D",
+  "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=2. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=3. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=4. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=5. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
+  "required_evidence": [],
+  "answer_key": {
+    "task_id": "E-002",
+    "derived_by": "answer-key-builder",
+    "derivation_method": "Replayed turns 1-16: kestrel-vault removed from scope (turn 3) and its dependencies treated as satisfied, kestrel-mailer dropped (turn 9), wave numbers computed from the remaining in-scope dependency graph (turn 5), steps ordered by wave/tier/name, a verify step inserted after every tier-1 migrate step (turn 11), step ids MIG-001.. gapless (turn 2) and start times accumulated in 45-minute increments from 2032-05-10T22:00:00Z (turn 10) in RFC 3339 UTC (turn 6). Script: scripts/derive_E.py",
+    "derivation_script": "scripts/derive_E.py",
+    "derivation_diagnostics": {
+      "waves": {
+        "kestrel-billing": 3,
+        "kestrel-cdn": 3,
+        "kestrel-gateway": 2,
+        "kestrel-indexer": 1,
+        "kestrel-ledger": 4,
+        "kestrel-reports": 5,
+        "kestrel-rota": 1,
+        "kestrel-search": 3
+      },
+      "excluded": {
+        "out_of_scope_turn_3": [
+          "kestrel-vault"
+        ],
+        "deferred_turn_9": [
+          "kestrel-mailer"
+        ]
+      },
+      "migration_order_before_verification_steps": [
+        "kestrel-indexer",
+        "kestrel-rota",
+        "kestrel-gateway",
+        "kestrel-billing",
+        "kestrel-search",
+        "kestrel-cdn",
+        "kestrel-ledger",
+        "kestrel-reports"
+      ],
+      "tier_1_services_in_scope": [
+        "kestrel-billing",
+        "kestrel-gateway",
+        "kestrel-search"
+      ],
+      "third_step_start_at_turn_10_before_verification_steps": "2032-05-10T23:30:00Z"
+    },
+    "steps": [
+      {
+        "step_id": "MIG-001",
+        "action": "migrate",
+        "service": "kestrel-indexer",
+        "wave": 1,
+        "owner_team": "Search Platform",
+        "start_utc": "2032-05-10T22:00:00Z"
+      },
+      {
+        "step_id": "MIG-002",
+        "action": "migrate",
+        "service": "kestrel-rota",
+        "wave": 1,
+        "owner_team": "Ops Tooling",
+        "start_utc": "2032-05-10T22:45:00Z"
+      },
+      {
+        "step_id": "MIG-003",
+        "action": "migrate",
+        "service": "kestrel-gateway",
+        "wave": 2,
+        "owner_team": "Edge Platform",
+        "start_utc": "2032-05-10T23:30:00Z"
+      },
+      {
+        "step_id": "MIG-004",
+        "action": "verify",
+        "service": "kestrel-gateway",
+        "wave": 2,
+        "owner_team": "Edge Platform",
+        "start_utc": "2032-05-11T00:15:00Z"
+      },
+      {
+        "step_id": "MIG-005",
+        "action": "migrate",
+        "service": "kestrel-billing",
+        "wave": 3,
+        "owner_team": "Billing Platform",
+        "start_utc": "2032-05-11T01:00:00Z"
+      },
+      {
+        "step_id": "MIG-006",
+        "action": "verify",
+        "service": "kestrel-billing",
+        "wave": 3,
+        "owner_team": "Billing Platform",
+        "start_utc": "2032-05-11T01:45:00Z"
+      },
+      {
+        "step_id": "MIG-007",
+        "action": "migrate",
+        "service": "kestrel-search",
+        "wave": 3,
+        "owner_team": "Search Platform",
+        "start_utc": "2032-05-11T02:30:00Z"
+      },
+      {
+        "step_id": "MIG-008",
+        "action": "verify",
+        "service": "kestrel-search",
+        "wave": 3,
+        "owner_team": "Search Platform",
+        "start_utc": "2032-05-11T03:15:00Z"
+      },
+      {
+        "step_id": "MIG-009",
+        "action": "migrate",
+        "service": "kestrel-cdn",
+        "wave": 3,
+        "owner_team": "Edge Platform",
+        "start_utc": "2032-05-11T04:00:00Z"
+      },
+      {
+        "step_id": "MIG-010",
+        "action": "migrate",
+        "service": "kestrel-ledger",
+        "wave": 4,
+        "owner_team": "Billing Platform",
+        "start_utc": "2032-05-11T04:45:00Z"
+      },
+      {
+        "step_id": "MIG-011",
+        "action": "migrate",
+        "service": "kestrel-reports",
+        "wave": 5,
+        "owner_team": "Billing Platform",
+        "start_utc": "2032-05-11T05:30:00Z"
+      }
+    ],
+    "step_count": 11,
+    "total_duration_minutes": 495
+  },
+  "quality_metric": "Two components, both reported.\n(a) completion: the `steps` array is matched positionally, index by index, with 5 comparable cells per key step (step_id, action, service, wave, owner_team, start_utc counts as 6 - use 6). A key index with no reported step counts as 6 mismatches; a reported step beyond the key's length adds 6 to the denominator and contributes 0. `step_count` and `total_duration_minutes` are one cell each. completion = matched_cells / denominator, 4 decimals.\n(b) constraint_violations, counted over EVERY reply in the run:\n  V1 the token `kestrel-vault` appearing as a step's `service`, or named as a step to be      performed, in any reply at or after turn 3;\n  V2 the word `simply` or the word `just`, case-insensitive, whole word, appearing in any      reply at or after turn 4;\n  V3 a step_id that is not of the form MIG-nnn with three digits, or a step_id sequence      with a gap, a repeat or a start other than MIG-001, in the final answer;\n  V4 `kestrel-mailer` appearing as a step's service in any reply at or after turn 9;\n  V5 any timestamp in any reply at or after turn 6 that is not RFC 3339 UTC ending in Z.\n  Each distinct violation instance is counted once per turn in which it occurs.\nquality_score = completion. task_success = true iff constraint_violations == 0 AND completion >= 0.95.",
+  "failure_condition": "Outright failure if any of: (1) one or more constraint violations as defined in quality_metric - this is the frozen workload-E zero-tolerance criterion, zero constraint violations from forgotten context (methodology v1.0.0 section 6); (2) the final reply is not parseable as a single JSON object with the required keys; (3) the run does not reach the final turn; (4) the run edits any file in `corpora/workflow_e/`."
+}

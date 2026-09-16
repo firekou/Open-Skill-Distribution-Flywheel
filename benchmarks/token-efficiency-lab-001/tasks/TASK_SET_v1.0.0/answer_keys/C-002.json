@@ -1,0 +1,304 @@
+{
+  "task_id": "C-002",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Parsed the award table of all eight bulletins, applied the three correction notices (asserting each stated original amount against the bulletin before replacing it) and the two retraction notices, then summed the surviving amounts per project. Forum totals are ignored. Script: scripts/derive_C.py",
+  "derivation_script": "scripts/derive_C.py",
+  "notices_applied": [
+    {
+      "file": "correction_CORR-001.md",
+      "kind": "correction",
+      "award_id": "GA-0019",
+      "from_eur": 139000,
+      "to_eur": 124000
+    },
+    {
+      "file": "correction_CORR-002.md",
+      "kind": "correction",
+      "award_id": "GA-0001",
+      "from_eur": 76000,
+      "to_eur": 88500
+    },
+    {
+      "file": "correction_CORR-003.md",
+      "kind": "correction",
+      "award_id": "GA-0009",
+      "from_eur": 158000,
+      "to_eur": 143000
+    },
+    {
+      "file": "retraction_RETR-001.md",
+      "kind": "retraction",
+      "award_id": "GA-0008",
+      "amount_removed_eur": 204000
+    },
+    {
+      "file": "retraction_RETR-002.md",
+      "kind": "retraction",
+      "award_id": "GA-0017",
+      "amount_removed_eur": 267500
+    }
+  ],
+  "projects": [
+    {
+      "project": "Project Halyard",
+      "total_awarded_eur": 621500,
+      "awards_included": [
+        "GA-0001",
+        "GA-0002",
+        "GA-0003",
+        "GA-0004"
+      ],
+      "awards_excluded": [],
+      "sources": [
+        "bulletin_bul_2031_01.md",
+        "bulletin_bul_2031_02.md",
+        "correction_CORR-002.md"
+      ],
+      "citation_support": {
+        "per_award": {
+          "GA-0001": {
+            "amount_eur": 88500,
+            "stated_by": "correction_CORR-002.md",
+            "listed_in_bulletin": "bulletin_bul_2031_01.md"
+          },
+          "GA-0002": {
+            "amount_eur": 61500,
+            "stated_by": "bulletin_bul_2031_01.md",
+            "listed_in_bulletin": "bulletin_bul_2031_01.md"
+          },
+          "GA-0003": {
+            "amount_eur": 204000,
+            "stated_by": "bulletin_bul_2031_01.md",
+            "listed_in_bulletin": "bulletin_bul_2031_01.md"
+          },
+          "GA-0004": {
+            "amount_eur": 267500,
+            "stated_by": "bulletin_bul_2031_02.md",
+            "listed_in_bulletin": "bulletin_bul_2031_02.md"
+          }
+        },
+        "note": "no single file states total_awarded_eur; it is the sum of the per-award amounts that stand after the notices are applied"
+      }
+    },
+    {
+      "project": "Project Ironwood",
+      "total_awarded_eur": 574000,
+      "awards_included": [
+        "GA-0005",
+        "GA-0006",
+        "GA-0007"
+      ],
+      "awards_excluded": [
+        "GA-0008"
+      ],
+      "sources": [
+        "bulletin_bul_2031_02.md",
+        "bulletin_bul_2031_03.md",
+        "retraction_RETR-001.md"
+      ],
+      "citation_support": {
+        "per_award": {
+          "GA-0005": {
+            "amount_eur": 310000,
+            "stated_by": "bulletin_bul_2031_02.md",
+            "listed_in_bulletin": "bulletin_bul_2031_02.md"
+          },
+          "GA-0006": {
+            "amount_eur": 139000,
+            "stated_by": "bulletin_bul_2031_02.md",
+            "listed_in_bulletin": "bulletin_bul_2031_02.md"
+          },
+          "GA-0007": {
+            "amount_eur": 125000,
+            "stated_by": "bulletin_bul_2031_03.md",
+            "listed_in_bulletin": "bulletin_bul_2031_03.md"
+          },
+          "GA-0008": {
+            "retracted_by": "retraction_RETR-001.md",
+            "listed_in_bulletin": "bulletin_bul_2031_03.md"
+          }
+        },
+        "note": "no single file states total_awarded_eur; it is the sum of the per-award amounts that stand after the notices are applied"
+      }
+    },
+    {
+      "project": "Project Junction",
+      "total_awarded_eur": 472000,
+      "awards_included": [
+        "GA-0009",
+        "GA-0010",
+        "GA-0011"
+      ],
+      "awards_excluded": [],
+      "sources": [
+        "bulletin_bul_2031_03.md",
+        "bulletin_bul_2031_04.md",
+        "correction_CORR-003.md"
+      ],
+      "citation_support": {
+        "per_award": {
+          "GA-0009": {
+            "amount_eur": 143000,
+            "stated_by": "correction_CORR-003.md",
+            "listed_in_bulletin": "bulletin_bul_2031_03.md"
+          },
+          "GA-0010": {
+            "amount_eur": 267500,
+            "stated_by": "bulletin_bul_2031_04.md",
+            "listed_in_bulletin": "bulletin_bul_2031_04.md"
+          },
+          "GA-0011": {
+            "amount_eur": 61500,
+            "stated_by": "bulletin_bul_2031_04.md",
+            "listed_in_bulletin": "bulletin_bul_2031_04.md"
+          }
+        },
+        "note": "no single file states total_awarded_eur; it is the sum of the per-award amounts that stand after the notices are applied"
+      }
+    },
+    {
+      "project": "Project Kilnwork",
+      "total_awarded_eur": 880500,
+      "awards_included": [
+        "GA-0012",
+        "GA-0013",
+        "GA-0014",
+        "GA-0015"
+      ],
+      "awards_excluded": [],
+      "sources": [
+        "bulletin_bul_2031_04.md",
+        "bulletin_bul_2031_05.md"
+      ],
+      "citation_support": {
+        "per_award": {
+          "GA-0012": {
+            "amount_eur": 92500,
+            "stated_by": "bulletin_bul_2031_04.md",
+            "listed_in_bulletin": "bulletin_bul_2031_04.md"
+          },
+          "GA-0013": {
+            "amount_eur": 204000,
+            "stated_by": "bulletin_bul_2031_05.md",
+            "listed_in_bulletin": "bulletin_bul_2031_05.md"
+          },
+          "GA-0014": {
+            "amount_eur": 139000,
+            "stated_by": "bulletin_bul_2031_05.md",
+            "listed_in_bulletin": "bulletin_bul_2031_05.md"
+          },
+          "GA-0015": {
+            "amount_eur": 445000,
+            "stated_by": "bulletin_bul_2031_05.md",
+            "listed_in_bulletin": "bulletin_bul_2031_05.md"
+          }
+        },
+        "note": "no single file states total_awarded_eur; it is the sum of the per-award amounts that stand after the notices are applied"
+      }
+    },
+    {
+      "project": "Project Lodestar",
+      "total_awarded_eur": 358000,
+      "awards_included": [
+        "GA-0016",
+        "GA-0018",
+        "GA-0019"
+      ],
+      "awards_excluded": [
+        "GA-0017"
+      ],
+      "sources": [
+        "bulletin_bul_2031_06.md",
+        "bulletin_bul_2031_07.md",
+        "correction_CORR-001.md",
+        "retraction_RETR-002.md"
+      ],
+      "citation_support": {
+        "per_award": {
+          "GA-0016": {
+            "amount_eur": 76000,
+            "stated_by": "bulletin_bul_2031_06.md",
+            "listed_in_bulletin": "bulletin_bul_2031_06.md"
+          },
+          "GA-0017": {
+            "retracted_by": "retraction_RETR-002.md",
+            "listed_in_bulletin": "bulletin_bul_2031_06.md"
+          },
+          "GA-0018": {
+            "amount_eur": 158000,
+            "stated_by": "bulletin_bul_2031_06.md",
+            "listed_in_bulletin": "bulletin_bul_2031_06.md"
+          },
+          "GA-0019": {
+            "amount_eur": 124000,
+            "stated_by": "correction_CORR-001.md",
+            "listed_in_bulletin": "bulletin_bul_2031_07.md"
+          }
+        },
+        "note": "no single file states total_awarded_eur; it is the sum of the per-award amounts that stand after the notices are applied"
+      }
+    },
+    {
+      "project": "Project Marrowbone",
+      "total_awarded_eur": 807000,
+      "awards_included": [
+        "GA-0020",
+        "GA-0021",
+        "GA-0022"
+      ],
+      "awards_excluded": [],
+      "sources": [
+        "bulletin_bul_2031_07.md",
+        "bulletin_bul_2031_08.md"
+      ],
+      "citation_support": {
+        "per_award": {
+          "GA-0020": {
+            "amount_eur": 158000,
+            "stated_by": "bulletin_bul_2031_07.md",
+            "listed_in_bulletin": "bulletin_bul_2031_07.md"
+          },
+          "GA-0021": {
+            "amount_eur": 204000,
+            "stated_by": "bulletin_bul_2031_07.md",
+            "listed_in_bulletin": "bulletin_bul_2031_07.md"
+          },
+          "GA-0022": {
+            "amount_eur": 445000,
+            "stated_by": "bulletin_bul_2031_08.md",
+            "listed_in_bulletin": "bulletin_bul_2031_08.md"
+          }
+        },
+        "note": "no single file states total_awarded_eur; it is the sum of the per-award amounts that stand after the notices are applied"
+      }
+    },
+    {
+      "project": "Project Nettleford",
+      "total_awarded_eur": 386000,
+      "awards_included": [
+        "GA-0023",
+        "GA-0024"
+      ],
+      "awards_excluded": [],
+      "sources": [
+        "bulletin_bul_2031_08.md"
+      ],
+      "citation_support": {
+        "per_award": {
+          "GA-0023": {
+            "amount_eur": 310000,
+            "stated_by": "bulletin_bul_2031_08.md",
+            "listed_in_bulletin": "bulletin_bul_2031_08.md"
+          },
+          "GA-0024": {
+            "amount_eur": 76000,
+            "stated_by": "bulletin_bul_2031_08.md",
+            "listed_in_bulletin": "bulletin_bul_2031_08.md"
+          }
+        },
+        "note": "no single file states total_awarded_eur; it is the sum of the per-award amounts that stand after the notices are applied"
+      }
+    }
+  ],
+  "count": 7
+}

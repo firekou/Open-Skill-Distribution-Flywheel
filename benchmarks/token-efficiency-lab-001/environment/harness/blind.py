@@ -156,16 +156,45 @@ def _walk(node, path=""):
             yield from _walk(v, f"{path}[{i}]")
 
 
+# Fields that are FROZEN TASK-SET CONTENT: authored before any run, by seats that never saw
+# candidate identity, and hashed into the task set. The judge is supposed to read them in full.
+#
+# The forbidden-KEY scan is skipped inside these subtrees. The reason is empirical: the first
+# run of this checker against the real task set failed a packet because answer key D-002 mirrors
+# an offline tool's argument schema, one of whose arguments is named `repository`. That is a
+# synthetic repo name in a fixture, not a candidate identity, and failing on it adds no safety
+# while blocking a legitimate packet (EVIDENCE_LEDGER E027).
+#
+# The candidate-NAME scan still covers the whole packet, including these subtrees. A name is the
+# real leak vector; a key called `repo` in a frozen fixture is not.
+FROZEN_CONTENT_FIELDS = frozenset(
+    {"answer_key", "quality_metric", "failure_condition", "required_evidence"}
+)
+
+
 def assert_blind(packet: dict, candidate_names: list[str]) -> None:
     """Fail loudly if anything identifying leaked into a judge packet.
 
-    Checks keys at every depth, and scans every string value for candidate names. Called on
-    every packet before it is written to the judge's path.
+    Checks keys at every depth outside the frozen task-set content, and scans every string value
+    in the WHOLE packet for candidate names. Called on every packet before it is written to the
+    judge's path.
     """
-    for full_path, key, _value in _walk(packet):
+    for field in FROZEN_CONTENT_FIELDS & set(packet):
+        if field in FORBIDDEN_KEYS:
+            raise BlindError(
+                f"{field!r} is both frozen content and a forbidden key; the two lists disagree"
+            )
+    scannable = {k: v for k, v in packet.items() if k not in FROZEN_CONTENT_FIELDS}
+    for full_path, key, _value in _walk(scannable):
         if key in FORBIDDEN_KEYS:
             raise BlindError(
                 f"blind violation: forbidden key {key!r} present at {full_path}. "
+                "The Quality Judge may not see treatment identity or cost."
+            )
+    for key in packet:
+        if key in FORBIDDEN_KEYS:
+            raise BlindError(
+                f"blind violation: forbidden key {key!r} present at the packet top level. "
                 "The Quality Judge may not see treatment identity or cost."
             )
     blob = json.dumps(packet).lower()

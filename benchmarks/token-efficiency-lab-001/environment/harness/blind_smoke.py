@@ -38,3 +38,23 @@ except BlindError as e: print("  refused:", str(e)[:76])
 try: m.unblind([{"packet_id":"p1","quality_score":0.9}], False); print("  UNBLINDED (bad)")
 except BlindError as e: print("  refused:", str(e)[:76])
 print("  complete batch un-blinds:", m.unblind([{"packet_id":"p1","quality_score":0.9}], True)["Treatment A"])
+
+print("\n=== frozen-content boundary ===")
+base = {"packet_id":"x","task_id":"D-002","workload":"D","blind_treatment_id":"Treatment B",
+        "model_output":"{}","quality_metric":"m","failure_condition":"f","required_evidence":[]}
+try:
+    assert_blind(dict(base, answer_key={"calls":[{"args":{"repository":"acme/widgets"}}]}),
+                 ["headroom","rtk"])
+    print("  forbidden KEY inside answer_key: allowed (correct - frozen fixture content)")
+except BlindError as e:
+    print("  BLOCKED (wrong):", str(e)[:70])
+try:
+    assert_blind(dict(base, answer_key={"note":"produced with headroom"}), ["headroom","rtk"])
+    print("  candidate NAME inside answer_key: LEAKED (wrong)")
+except BlindError as e:
+    print("  candidate NAME inside answer_key: still caught (correct)")
+try:
+    assert_blind(dict(base, cost=1.23, answer_key={}), ["headroom","rtk"])
+    print("  forbidden key at top level: LEAKED (wrong)")
+except BlindError as e:
+    print("  forbidden key at top level: still caught (correct)")

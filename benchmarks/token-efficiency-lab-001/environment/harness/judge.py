@@ -82,6 +82,17 @@ NUM_TOL = 1e-9
 
 _MISSING = object()
 
+# Keys an answer key carries about its own derivation.  They are provenance,
+# never scored fields, and are excluded wherever a metric says "every key of
+# the answer key" (B-001).
+KEY_METADATA_FIELDS = frozenset({
+    "task_id", "derived_by", "derivation_method", "derivation_script",
+    "derivation_diagnostics", "corrections_applied", "notes", "note",
+    "citation_support", "required_tools", "required_tool_set",
+    "contested_families", "tool_calls_made_by_this_derivation",
+    "as_of_date", "answer", "expected", "expected_output", "payload", "value",
+})
+
 
 # ---------------------------------------------------------------------------
 # frozen per-task tables
@@ -180,6 +191,15 @@ E2_TS_OK_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 E3_SHIFT_TOKEN_RE = re.compile(r"\bSH-\d+\b")
 E3_PERSON_TOKEN_RE = re.compile(r"\bPR-\d+\b")
+# Evidence each workload-E task needs before its rule-based violation classes
+# can fire at all.  Missing evidence makes a zero-tolerance criterion
+# unverifiable, which fails the task closed (SCORING_SPEC section 2).
+E_REQUIRED_EVIDENCE = {
+    "E-001": ("catalog_part_ids", "halberd_part_ids"),
+    "E-002": (),
+    "E-003": ("shifts", "roster"),
+}
+
 E3_REASONS = (
     "no_person_with_required_certification_at_site",
     "all_eligible_on_leave",
@@ -204,10 +224,6 @@ def _round4(x: float) -> float:
     n = floor + 1 if frac >= 0.5 - 1e-12 else floor
     out = n / 10000.0
     return -out if x < 0 else out
-
-
-def _clamp01(x: float) -> float:
-    return 0.0 if x < 0.0 else (1.0 as_ := x) if False else (1.0 if x > 1.0 else x)
 
 
 def _is_number(v: Any) -> bool:
@@ -846,8 +862,23 @@ def _score_b(view: Dict[str, Any]) -> Dict[str, Any]:
     return _score_b001(view, obj, key_payload, detail)
 
 
+def _b001_terms(key_payload: dict) -> Tuple[dict, str]:
+    """The 36 scored contract terms.
+
+    The delivered key nests them under `contract_terms` alongside its own
+    derivation metadata; a bare payload is also accepted.
+    """
+    for k in ("contract_terms", "terms", "fields"):
+        if isinstance(key_payload.get(k), dict):
+            return key_payload[k], k
+    return ({k: v for k, v in key_payload.items() if k not in KEY_METADATA_FIELDS},
+            "top_level_minus_metadata")
+
+
 def _score_b001(view: Dict[str, Any], obj: dict, key_payload: dict,
                 detail: Dict[str, Any]) -> Dict[str, Any]:
+    key_payload, source = _b001_terms(key_payload)
+    detail["field_source"] = source
     fields = list(key_payload.keys())
     n = len(fields)
     detail["field_count"] = n
@@ -956,21 +987,70 @@ def _score_b_records(view: Dict[str, Any], task_id: str, obj: dict,
 # workload C
 # ---------------------------------------------------------------------------
 
-def _citation_support(view: Dict[str, Any], key_payload: Any) -> Dict[str, Dict[str, Set[str]]]:
-    """record_id -> field -> {files that state the key's value for that field}."""
-    raw = None
-    if isinstance(view.get("answer_key"), dict):
-        raw = view["answer_key"].get("citation_support")
-    if raw is None and isinstance(key_payload, dict):
-        raw = key_payload.get("citation_support")
-    out: Dict[str, Dict[str, Set[str]]] = {}
-    if isinstance(raw, dict):
-        for rid, fields in raw.items():
-            if isinstance(fields, dict):
-                out[str(rid).strip()] = {str(f): _str_set(v) for f, v in fields.items()}
-            elif isinstance(fields, (list, tuple, set)):
-                out[str(rid).strip()] = {"*": _str_set(fields)}
+def _strings_in(node: Any) -> Set[str]:
+    """Every string anywhere inside a nested structure."""
+    out: Set[str] = set()
+    if isinstance(node, str):
+        out.add(node.strip())
+    elif isinstance(node, dict):
+        for v in node.values():
+            out |= _strings_in(v)
+    elif isinstance(node, (list, tuple)):
+        for v in node:
+            out |= _strings_in(v)
     return out
+
+
+def _citation_support(view: Dict[str, Any], key_payload: Any,
+                      key_index: Dict[str, Any],
+                      id_field: str) -> Dict[str, Dict[str, Set[str]]]:
+    """record_id -> {field: {files stating the key's value}, "*": {record-level}}.
+
+    Built from the key itself.  Three shapes are accepted, because the three
+    workload-C keys use three:
+
+      * a per-field map on each key record (`citation_support: {field: [files]}`)
+        - C-001 and C-003;
+      * a nested map with no per-field breakdown (`{"per_award": {...}}`)
+        - C-002, where no single file states the summed total.  Every file name
+        anywhere inside it joins the record-level set;
+      * a top-level `citation_support` on the answer key, `{record: {...}}`.
+
+    The record-level `"*"` set also absorbs the key record's own `sources`.
+    Every file in it is drawn from the KEY, never from the run, so a file that
+    states a different value is still unsupported (SCORING_SPEC UG-11).
+    """
+    out: Dict[str, Dict[str, Set[str]]] = {}
+
+    def absorb(rid: str, blob: Any, extra_star: Any = None) -> None:
+        rid = str(rid).strip()
+        entry = out.setdefault(rid, {})
+        star = entry.setdefault("*", set())
+        if isinstance(blob, dict):
+            for fld, val in blob.items():
+                if isinstance(val, (list, tuple)) and all(isinstance(x, str) for x in val):
+                    entry.setdefault(str(fld), set()).update(x.strip() for x in val)
+            star |= _strings_in(blob)
+        elif isinstance(blob, (list, tuple)):
+            star |= _strings_in(blob)
+        if extra_star is not None:
+            star |= _strings_in(extra_star)
+
+    for rid, krec in key_index.items():
+        if isinstance(krec, dict):
+            absorb(rid, krec.get("citation_support"), krec.get("sources"))
+
+    top = None
+    if isinstance(view.get("answer_key"), dict):
+        top = view["answer_key"].get("citation_support")
+    if top is None and isinstance(key_payload, dict):
+        top = key_payload.get("citation_support")
+    if isinstance(top, dict):
+        for rid, blob in top.items():
+            absorb(rid, blob)
+
+    # A record-level set that names nothing is not a support map at all.
+    return {r: e for r, e in out.items() if any(e.values())}
 
 
 def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
@@ -1015,7 +1095,7 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
     ev = view.get("required_evidence") if isinstance(view.get("required_evidence"), dict) else {}
     corpus_files = _str_set(ev.get("corpus_files")) if ev else set()
     detail["corpus_file_list_available"] = bool(corpus_files)
-    support = _citation_support(view, key_payload)
+    support = _citation_support(view, key_payload, res["key_index"], id_field)
     detail["citation_support_available"] = bool(support)
 
     total_citations = 0
@@ -1049,21 +1129,19 @@ def _score_c(view: Dict[str, Any]) -> Dict[str, Any]:
                 continue
             rec_support = support.get(rid, {})
             if not rec_support:
-                # No per-value support map supplied: traceability is
-                # unverifiable for this record (SCORING_SPEC UG-11 fallback).
+                # No support data for this record: traceability is
+                # unverifiable, so it is unsupported (SCORING_SPEC UG-11).
                 unsupported.append({"record": rid, "file": f, "why": "support_map_missing"})
                 continue
-            ok = False
+            allowed: Set[str] = set(rec_support.get("*") or set())
             for fld in cells:
                 if fld == id_field:
                     continue
                 if not _values_equal(_get(rec, fld), _get(krec, fld),
                                      sorted_list=(fld in sorted_cells)):
                     continue
-                allowed = rec_support.get(fld) or rec_support.get("*") or set()
-                if f in allowed:
-                    ok = True
-                    break
+                allowed |= rec_support.get(fld) or set()
+            ok = f in allowed
             if ok:
                 supported += 1
             else:
@@ -1282,6 +1360,20 @@ class _Violations:
         return len(self.items)
 
 
+def _final_turn_number(turns, ev) -> int:
+    """The turn index the final reply belongs to.
+
+    Violations are registered per turn, so the final reply needs a turn number
+    even when the Runner shipped no intermediate replies.  The declared
+    `turn_count` is authoritative; otherwise the highest turn seen.
+    """
+    declared = ev.get("turn_count") if isinstance(ev, dict) else None
+    seen = max((t.get("turn", 0) for t in turns), default=0)
+    if _is_number(declared):
+        return max(int(declared), int(seen))
+    return int(seen)
+
+
 def _json_objects_in(text: str) -> List[dict]:
     """Every balanced top-level object in a reply, parsed where possible."""
     out: List[dict] = []
@@ -1323,11 +1415,22 @@ def _score_e(view: Dict[str, Any]) -> Dict[str, Any]:
     ev = view.get("required_evidence") if isinstance(view.get("required_evidence"), dict) else {}
     key_payload = _answer_payload(view.get("answer_key"))
 
+    # The Runner may ship only the replies it scanned, so a short `turns` list
+    # is not by itself evidence that the run stopped early.  Only an explicit
+    # `completed_turns` / `run_reached_final_turn` says that (SCORING_SPEC
+    # UG-28); absent either, the run is assumed to have reached the end and the
+    # final reply carries the verdict.
     declared_turns = ev.get("turn_count")
-    if _is_number(declared_turns) and turns and len(turns) < int(declared_turns):
+    completed = ev.get("completed_turns")
+    if ev.get("run_reached_final_turn") is False:
+        detail["reached_final_turn"] = False
+    elif _is_number(declared_turns) and _is_number(completed) and int(completed) < int(declared_turns):
         detail["reached_final_turn"] = False
     else:
         detail["reached_final_turn"] = True
+
+    final_turn = _final_turn_number(turns, ev)
+    detail["final_turn_number"] = final_turn
 
     v = _Violations()
     for pre in (ev.get("precomputed_violations") or []):
@@ -1337,13 +1440,13 @@ def _score_e(view: Dict[str, Any]) -> Dict[str, Any]:
 
     if task_id == "E-001":
         completion, cdet = _e001_completion(obj, key_payload)
-        _e001_violations(v, turns, obj, key_payload, ev)
+        _e001_violations(v, turns, obj, key_payload, ev, final_turn)
     elif task_id == "E-002":
         completion, cdet = _e002_completion(obj, key_payload)
-        _e002_violations(v, turns, obj)
+        _e002_violations(v, turns, obj, final_turn)
     elif task_id == "E-003":
         completion, cdet = _e003_completion(obj, key_payload)
-        _e003_violations(v, turns, obj, ev)
+        _e003_violations(v, turns, obj, ev, final_turn)
     else:
         return _result(view, failure_reason="unknown_task_id", detail=detail)
 
@@ -1361,10 +1464,20 @@ def _score_e(view: Dict[str, Any]) -> Dict[str, Any]:
                            "source": "methodology_v1.0.0_s6",
                            "instances": v.items[:20]}]})
 
+    missing_ev = [f for f in E_REQUIRED_EVIDENCE.get(task_id, ())
+                  if not isinstance(ev.get(f), (list, tuple, dict, set))]
+    detail["violation_checks_unverifiable"] = missing_ev
+
     if obj is None:
         return _result(view, quality_score=0.0, task_success=False,
                        failure_reason=("empty_output" if mode == "empty"
                                        else "unparseable_output"), detail=detail)
+    if missing_ev:
+        # Nothing was found to be breached, but the criterion could not be
+        # checked, which is a failed measurement rather than a pass.
+        return _result(view, quality_score=completion, task_success=False,
+                       failure_reason="required_evidence_missing:" + ",".join(missing_ev),
+                       detail=detail)
     if not detail["reached_final_turn"]:
         return _result(view, quality_score=completion, task_success=False,
                        failure_reason="run_did_not_reach_final_turn", detail=detail)
@@ -1419,7 +1532,7 @@ def _e001_completion(obj: Optional[dict], key: Any) -> Tuple[float, Dict[str, An
     return ((matched / denom) if denom else 0.0), d
 
 
-def _e001_violations(v: _Violations, turns, obj, key, ev) -> None:
+def _e001_violations(v: _Violations, turns, obj, key, ev, final_turn: int) -> None:
     catalog = _str_set(ev.get("catalog_part_ids"))
     halberd = _str_set(ev.get("halberd_part_ids"))
     pattern = ev.get("part_id_pattern")
@@ -1451,7 +1564,6 @@ def _e001_violations(v: _Violations, turns, obj, key, ev) -> None:
             ids |= {m.group(0) for m in part_re.finditer(text)}
         check_ids(n, ids)
 
-    final_turn = turns[-1]["turn"] if turns else 0
     if isinstance(obj, dict):
         bom = obj.get("bom")
         ids = set()
@@ -1559,11 +1671,12 @@ def _step_services_in(text: str) -> Set[str]:
     out: Set[str] = set()
     for o in _json_objects_in(text):
         for dd in _walk_dicts(o):
-            if "service" in dd and isinstance(dd["service"], str):
-                if "step_id" in dd or "action" in dd or "wave" in dd:
-                    out.add(dd["service"].strip())
-                else:
-                    out.add(dd["service"].strip())
+            # only a dict that is shaped like a step counts; naming a service
+            # in a status object is not proposing a step for it
+            if isinstance(dd.get("service"), str) and (
+                    "step_id" in dd or "action" in dd or "wave" in dd
+                    or "start_utc" in dd):
+                out.add(dd["service"].strip())
     for line in text.splitlines():
         if E2_STEP_TOKEN_RE.search(line):
             for tok in re.findall(r"[A-Za-z0-9][A-Za-z0-9_.-]*", line):
@@ -1571,7 +1684,7 @@ def _step_services_in(text: str) -> Set[str]:
     return out
 
 
-def _e002_violations(v: _Violations, turns, obj) -> None:
+def _e002_violations(v: _Violations, turns, obj, final_turn: int) -> None:
     for t in turns:
         n, text = t["turn"], t["text"]
         if n >= 3 and "kestrel-vault" in _step_services_in(text):
@@ -1587,7 +1700,6 @@ def _e002_violations(v: _Violations, turns, obj) -> None:
                 if not E2_TS_OK_RE.match(tok):
                     v.add(n, "V5_timestamp_format", tok)
 
-    final_turn = turns[-1]["turn"] if turns else 0
     if isinstance(obj, dict) and isinstance(obj.get("steps"), list):
         svc = {s.get("service") for s in obj["steps"]
                if isinstance(s, dict) and isinstance(s.get("service"), str)}
@@ -1642,7 +1754,7 @@ def _e003_completion(obj: Optional[dict], key: Any) -> Tuple[float, Dict[str, An
     return ((matched / denom) if denom else 0.0), d
 
 
-def _e003_violations(v: _Violations, turns, obj, ev) -> None:
+def _e003_violations(v: _Violations, turns, obj, ev, final_turn: int) -> None:
     shifts = ev.get("shifts") if isinstance(ev.get("shifts"), dict) else {}
     roster = ev.get("roster") if isinstance(ev.get("roster"), dict) else {}
     leave_from = ev.get("additional_on_leave") or {}       # person -> turn
@@ -1703,7 +1815,6 @@ def _e003_violations(v: _Violations, turns, obj, ev) -> None:
     for t in turns:
         check_pairs(t["turn"], pairs_in(t["text"]))
 
-    final_turn = turns[-1]["turn"] if turns else 0
     if isinstance(obj, dict) and isinstance(obj.get("assignments"), list):
         pairs = []
         for row in obj["assignments"]:

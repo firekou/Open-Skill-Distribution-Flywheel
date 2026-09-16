@@ -1,0 +1,134 @@
+{
+  "task_id": "E-002",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Replayed turns 1-16: kestrel-vault removed from scope (turn 3) and its dependencies treated as satisfied, kestrel-mailer dropped (turn 9), wave numbers computed from the remaining in-scope dependency graph (turn 5), steps ordered by wave/tier/name, a verify step inserted after every tier-1 migrate step (turn 11), step ids MIG-001.. gapless (turn 2) and start times accumulated in 45-minute increments from 2032-05-10T22:00:00Z (turn 10) in RFC 3339 UTC (turn 6). Script: scripts/derive_E.py",
+  "derivation_script": "scripts/derive_E.py",
+  "derivation_diagnostics": {
+    "waves": {
+      "kestrel-billing": 3,
+      "kestrel-cdn": 3,
+      "kestrel-gateway": 2,
+      "kestrel-indexer": 1,
+      "kestrel-ledger": 4,
+      "kestrel-reports": 5,
+      "kestrel-rota": 1,
+      "kestrel-search": 3
+    },
+    "excluded": {
+      "out_of_scope_turn_3": [
+        "kestrel-vault"
+      ],
+      "deferred_turn_9": [
+        "kestrel-mailer"
+      ]
+    },
+    "migration_order_before_verification_steps": [
+      "kestrel-indexer",
+      "kestrel-rota",
+      "kestrel-gateway",
+      "kestrel-billing",
+      "kestrel-search",
+      "kestrel-cdn",
+      "kestrel-ledger",
+      "kestrel-reports"
+    ],
+    "tier_1_services_in_scope": [
+      "kestrel-billing",
+      "kestrel-gateway",
+      "kestrel-search"
+    ],
+    "third_step_start_at_turn_10_before_verification_steps": "2032-05-10T23:30:00Z"
+  },
+  "steps": [
+    {
+      "step_id": "MIG-001",
+      "action": "migrate",
+      "service": "kestrel-indexer",
+      "wave": 1,
+      "owner_team": "Search Platform",
+      "start_utc": "2032-05-10T22:00:00Z"
+    },
+    {
+      "step_id": "MIG-002",
+      "action": "migrate",
+      "service": "kestrel-rota",
+      "wave": 1,
+      "owner_team": "Ops Tooling",
+      "start_utc": "2032-05-10T22:45:00Z"
+    },
+    {
+      "step_id": "MIG-003",
+      "action": "migrate",
+      "service": "kestrel-gateway",
+      "wave": 2,
+      "owner_team": "Edge Platform",
+      "start_utc": "2032-05-10T23:30:00Z"
+    },
+    {
+      "step_id": "MIG-004",
+      "action": "verify",
+      "service": "kestrel-gateway",
+      "wave": 2,
+      "owner_team": "Edge Platform",
+      "start_utc": "2032-05-11T00:15:00Z"
+    },
+    {
+      "step_id": "MIG-005",
+      "action": "migrate",
+      "service": "kestrel-billing",
+      "wave": 3,
+      "owner_team": "Billing Platform",
+      "start_utc": "2032-05-11T01:00:00Z"
+    },
+    {
+      "step_id": "MIG-006",
+      "action": "verify",
+      "service": "kestrel-billing",
+      "wave": 3,
+      "owner_team": "Billing Platform",
+      "start_utc": "2032-05-11T01:45:00Z"
+    },
+    {
+      "step_id": "MIG-007",
+      "action": "migrate",
+      "service": "kestrel-search",
+      "wave": 3,
+      "owner_team": "Search Platform",
+      "start_utc": "2032-05-11T02:30:00Z"
+    },
+    {
+      "step_id": "MIG-008",
+      "action": "verify",
+      "service": "kestrel-search",
+      "wave": 3,
+      "owner_team": "Search Platform",
+      "start_utc": "2032-05-11T03:15:00Z"
+    },
+    {
+      "step_id": "MIG-009",
+      "action": "migrate",
+      "service": "kestrel-cdn",
+      "wave": 3,
+      "owner_team": "Edge Platform",
+      "start_utc": "2032-05-11T04:00:00Z"
+    },
+    {
+      "step_id": "MIG-010",
+      "action": "migrate",
+      "service": "kestrel-ledger",
+      "wave": 4,
+      "owner_team": "Billing Platform",
+      "start_utc": "2032-05-11T04:45:00Z"
+    },
+    {
+      "step_id": "MIG-011",
+      "action": "migrate",
+      "service": "kestrel-reports",
+      "wave": 5,
+      "owner_team": "Billing Platform",
+      "start_utc": "2032-05-11T05:30:00Z"
+    }
+  ],
+  "step_count": 11,
+  "total_duration_minutes": 495
+}

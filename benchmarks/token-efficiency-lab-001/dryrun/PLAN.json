@@ -1,0 +1,12 @@
+[
+  {"task_id": "A-001", "condition": "C0", "repetition": 1},
+  {"task_id": "A-002", "condition": "C1", "repetition": 1},
+  {"task_id": "B-001", "condition": "C0", "repetition": 1},
+  {"task_id": "B-002", "condition": "C3", "repetition": 1},
+  {"task_id": "C-001", "condition": "C2", "repetition": 1},
+  {"task_id": "D-001", "condition": "C0", "repetition": 1},
+  {"task_id": "D-002", "condition": "C1", "repetition": 1},
+  {"task_id": "E-001", "condition": "C3", "repetition": 1},
+  {"task_id": "E-002", "condition": "C4", "repetition": 1},
+  {"task_id": "A-003", "condition": "C2+C4", "repetition": 1}
+]

@@ -1,0 +1,360 @@
+{
+  "task_id": "C-001",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Parsed the '## Feature flags' list of every official release note for 'added'/'removed' entries, then applied the three errata that name a flag and correct the release it was added in. Blog and forum statements are recorded but never allowed to decide a value. Script: scripts/derive_C.py",
+  "derivation_script": "scripts/derive_C.py",
+  "derivation_diagnostics": {
+    "flags_with_two_added_claims": {
+      "nested_span_export": [
+        "1.0",
+        "1.2"
+      ],
+      "parallel_compaction": [
+        "1.0",
+        "2.1"
+      ],
+      "opportunistic_gc": [
+        "2.0",
+        "2.2"
+      ]
+    },
+    "errata_corrections": {
+      "opportunistic_gc": {
+        "file": "erratum_ERR-001.md",
+        "wrong_release": "2.0",
+        "correct_release": "2.2"
+      },
+      "nested_span_export": {
+        "file": "erratum_ERR-002.md",
+        "wrong_release": "1.0",
+        "correct_release": "1.2"
+      },
+      "parallel_compaction": {
+        "file": "erratum_ERR-003.md",
+        "wrong_release": "1.0",
+        "correct_release": "2.1"
+      }
+    }
+  },
+  "flags": [
+    {
+      "flag": "adaptive_shard_split",
+      "introduced_in": "2.2",
+      "removed_in": null,
+      "sources": [
+        "release_notes_kestrel_2_2.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_2_2.md"
+        ],
+        "removed_in": []
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [
+        "forum_thread_4111.md"
+      ],
+      "non_authoritative_files_stating_a_different_version": []
+    },
+    {
+      "flag": "batch_ack_window",
+      "introduced_in": "0.9",
+      "removed_in": "1.1",
+      "sources": [
+        "release_notes_kestrel_0_9.md",
+        "release_notes_kestrel_1_1.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_0_9.md"
+        ],
+        "removed_in": [
+          "release_notes_kestrel_1_1.md"
+        ]
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": []
+    },
+    {
+      "flag": "cold_start_probe",
+      "introduced_in": "2.0",
+      "removed_in": "3.2",
+      "sources": [
+        "release_notes_kestrel_2_0.md",
+        "release_notes_kestrel_3_2.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_2_0.md"
+        ],
+        "removed_in": [
+          "release_notes_kestrel_3_2.md"
+        ]
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": []
+    },
+    {
+      "flag": "deferred_index_flush",
+      "introduced_in": "2.0",
+      "removed_in": "3.0",
+      "sources": [
+        "release_notes_kestrel_2_0.md",
+        "release_notes_kestrel_3_0.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_2_0.md"
+        ],
+        "removed_in": [
+          "release_notes_kestrel_3_0.md"
+        ]
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": [
+        "forum_thread_4101.md"
+      ]
+    },
+    {
+      "flag": "eager_tenant_cache",
+      "introduced_in": "1.1",
+      "removed_in": null,
+      "sources": [
+        "release_notes_kestrel_1_1.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_1_1.md"
+        ],
+        "removed_in": []
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": []
+    },
+    {
+      "flag": "fanout_rate_limit",
+      "introduced_in": "1.1",
+      "removed_in": null,
+      "sources": [
+        "release_notes_kestrel_1_1.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_1_1.md"
+        ],
+        "removed_in": []
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": [
+        "forum_thread_4107.md",
+        "forum_thread_4112.md"
+      ]
+    },
+    {
+      "flag": "greedy_merge_pass",
+      "introduced_in": "1.2",
+      "removed_in": "3.1",
+      "sources": [
+        "release_notes_kestrel_1_2.md",
+        "release_notes_kestrel_3_1.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_1_2.md"
+        ],
+        "removed_in": [
+          "release_notes_kestrel_3_1.md"
+        ]
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": []
+    },
+    {
+      "flag": "hinted_route_table",
+      "introduced_in": "2.2",
+      "removed_in": "3.1",
+      "sources": [
+        "release_notes_kestrel_2_2.md",
+        "release_notes_kestrel_3_1.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_2_2.md"
+        ],
+        "removed_in": [
+          "release_notes_kestrel_3_1.md"
+        ]
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": [
+        "blog_northwall_06.md",
+        "forum_thread_4102.md"
+      ]
+    },
+    {
+      "flag": "inline_checksum",
+      "introduced_in": "1.0",
+      "removed_in": "3.1",
+      "sources": [
+        "release_notes_kestrel_1_0.md",
+        "release_notes_kestrel_3_1.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_1_0.md"
+        ],
+        "removed_in": [
+          "release_notes_kestrel_3_1.md"
+        ]
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": [
+        "blog_northwall_04.md",
+        "forum_thread_4109.md"
+      ]
+    },
+    {
+      "flag": "lazy_schema_load",
+      "introduced_in": "2.1",
+      "removed_in": null,
+      "sources": [
+        "release_notes_kestrel_2_1.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_2_1.md"
+        ],
+        "removed_in": []
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": [
+        "blog_northwall_03.md"
+      ]
+    },
+    {
+      "flag": "mirror_write_audit",
+      "introduced_in": "2.1",
+      "removed_in": "3.1",
+      "sources": [
+        "release_notes_kestrel_2_1.md",
+        "release_notes_kestrel_3_1.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_2_1.md"
+        ],
+        "removed_in": [
+          "release_notes_kestrel_3_1.md"
+        ]
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": [
+        "blog_northwall_05.md"
+      ]
+    },
+    {
+      "flag": "nested_span_export",
+      "introduced_in": "1.2",
+      "removed_in": "2.3",
+      "sources": [
+        "erratum_ERR-002.md",
+        "release_notes_kestrel_1_2.md",
+        "release_notes_kestrel_2_3.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "erratum_ERR-002.md",
+          "release_notes_kestrel_1_2.md"
+        ],
+        "removed_in": [
+          "release_notes_kestrel_2_3.md"
+        ]
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": [
+        "blog_northwall_02.md"
+      ]
+    },
+    {
+      "flag": "opportunistic_gc",
+      "introduced_in": "2.2",
+      "removed_in": null,
+      "sources": [
+        "erratum_ERR-001.md",
+        "release_notes_kestrel_2_2.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "erratum_ERR-001.md",
+          "release_notes_kestrel_2_2.md"
+        ],
+        "removed_in": []
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [
+        "forum_thread_4106.md"
+      ],
+      "non_authoritative_files_stating_a_different_version": [
+        "forum_thread_4103.md",
+        "forum_thread_4108.md"
+      ]
+    },
+    {
+      "flag": "parallel_compaction",
+      "introduced_in": "2.1",
+      "removed_in": null,
+      "sources": [
+        "erratum_ERR-003.md",
+        "release_notes_kestrel_2_1.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "erratum_ERR-003.md",
+          "release_notes_kestrel_2_1.md"
+        ],
+        "removed_in": []
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": [
+        "forum_thread_4105.md"
+      ]
+    },
+    {
+      "flag": "quiescent_snapshot",
+      "introduced_in": "1.0",
+      "removed_in": null,
+      "sources": [
+        "release_notes_kestrel_1_0.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_1_0.md"
+        ],
+        "removed_in": []
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": [
+        "blog_northwall_01.md",
+        "forum_thread_4110.md"
+      ]
+    },
+    {
+      "flag": "relaxed_ordering",
+      "introduced_in": "1.2",
+      "removed_in": null,
+      "sources": [
+        "release_notes_kestrel_1_2.md"
+      ],
+      "citation_support": {
+        "introduced_in": [
+          "release_notes_kestrel_1_2.md"
+        ],
+        "removed_in": []
+      },
+      "non_authoritative_files_stating_the_same_introduced_in": [],
+      "non_authoritative_files_stating_a_different_version": [
+        "blog_northwall_07.md",
+        "forum_thread_4104.md"
+      ]
+    }
+  ],
+  "count": 16
+}
