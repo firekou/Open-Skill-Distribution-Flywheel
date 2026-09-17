@@ -8,8 +8,11 @@ its placeholder. It was invisible because every genuine score in a synthetic dry
 (Reproduction Agent, WOULD-INVALIDATE 7).
 
 This module is that step, and it enforces the ordering the protocol requires rather than
-assuming it: it refuses to finalize a batch in which any packet is unscored, because a
+assuming it: every record in the batch is resolved and schema-checked BEFORE any file is written, because a
 partially-finalized batch is exactly the shape of "score the ones you like, then peek".
+
+What this does and does not guarantee is stated exactly in `write_guarantee`: whole-batch
+validation before any write, and no torn file. It is **not** a multi-file transaction.
 """
 from __future__ import annotations
 
@@ -94,8 +97,17 @@ def finalize(records_dir: pathlib.Path, scores_dir: pathlib.Path) -> dict:
             "for them: " + "; ".join(mismatched[:5]) + ". Nothing has been written. A score and "
             "the record it lands on must come from the same rulebook and the same scorer.")
 
-    updated = []
+    # R2-03. The previous fix hoisted only the MISSING-SCORE check out of the write loop and
+    # the report called the result "made atomic". It was not: the outcome check and
+    # `validate(rec)` still ran per record, inside the loop, after earlier records had already
+    # been written. Two records, the second carrying an unrecognised outcome, raised
+    # FinalizeError with the first record already rewritten on disk.
+    #
+    # Phase 1 resolves and validates EVERY record in memory. Nothing touches the filesystem
+    # until all of them pass.
+    resolved, errors = [], []
     for rp, rec, pid, s in pairs:
+        rec = dict(rec)
         rec["quality_score"] = float(s["quality_score"])
         rec["task_success"] = bool(s["task_success"])
         rec["quality_judged_before_cost"] = True
@@ -118,13 +130,37 @@ def finalize(records_dir: pathlib.Path, scores_dir: pathlib.Path) -> dict:
             rec["outcome"] = s["outcome"]
         else:
             # A scorer that does not declare an outcome must not be silently interpreted.
-            raise FinalizeError(
-                f"score for packet {pid} carries no recognised `outcome`. Inferring it from "
-                "task_success would collapse INVALID into FAIL_QUALITY, which is the distinction "
-                "between 'it failed' and 'we could not measure it'."
-            )
-        validate(rec)
-        rp.write_text(json.dumps(rec, indent=2, sort_keys=True) + "\n")
+            errors.append(
+                f"score for packet {pid} carries no recognised `outcome` ({s.get('outcome')!r}). "
+                "Inferring it from task_success would collapse INVALID into FAIL_QUALITY, which "
+                "is the distinction between 'it failed' and 'we could not measure it'")
+            continue
+        try:
+            validate(rec)
+        except Exception as exc:  # the record schema decides what a record may say
+            errors.append(f"{rec.get('run_id')}: record rejected by the schema after scoring: {exc}")
+            continue
+        resolved.append((rp, rec))
+
+    if errors:
+        raise FinalizeError(
+            f"refusing to finalize: {len(errors)} record(s) did not resolve cleanly: "
+            + "; ".join(errors[:5]) + ". **Nothing has been written.** Every record in the batch "
+            "is resolved and schema-checked before any file is touched.")
+
+    # Phase 2 writes. Each file is written to a temporary neighbour and renamed, so no single
+    # record is ever left half-written.
+    #
+    # This is NOT a multi-file transaction, and is deliberately not described as one. If the
+    # process dies between two renames, some records are finalized and some are not. Making that
+    # genuinely all-or-nothing needs a new batch directory plus a single publish marker, which is
+    # a change to how records are stored, not to this function. Until then the guarantee this
+    # function offers is exactly: **whole-batch validation before any write, and no torn file.**
+    updated = []
+    for rp, rec in resolved:
+        tmp = rp.with_suffix(rp.suffix + ".tmp")
+        tmp.write_text(json.dumps(rec, indent=2, sort_keys=True) + "\n")
+        tmp.replace(rp)
         updated.append(rec["run_id"])
 
     return {
@@ -135,8 +171,12 @@ def finalize(records_dir: pathlib.Path, scores_dir: pathlib.Path) -> dict:
             1 for pid in scores if scores[pid].get("zero_tolerance_breached")
         ),
         "pending_adjudication": sorted(
-            rec["run_id"] for _, rec, _, _ in pairs if rec.get("pending_adjudication")
+            rec["run_id"] for _, rec in resolved if rec.get("pending_adjudication")
         ),
+        "write_guarantee": (
+            "whole-batch validation before any write; per-file temp+rename so no file is torn. "
+            "NOT a multi-file transaction: a crash between renames leaves a partially finalized "
+            "batch."),
     }
 
 

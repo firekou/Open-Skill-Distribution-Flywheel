@@ -17,6 +17,7 @@ usually happens by accident: you iterate over the records you have.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import pathlib
@@ -40,6 +41,9 @@ class Cell:
     condition: str
     planned: int
     attempts: list = field(default_factory=list)
+    # R2-01/R2-02: the set of attempt ids the frozen plan says belong to this cell. `None` means
+    # nobody checked, and an unchecked cell is NOT reportable - see `verdict()`.
+    expected: frozenset | None = None
 
     @property
     def counts(self) -> dict:
@@ -97,6 +101,39 @@ class Cell:
                 f"{len(idents) - len(set(idents))} duplicate attempt record(s) {dupes[:3]}: one "
                 "attempt counted more than once inflates the numerator against a fixed planned "
                 "denominator")
+        # R2-02: `build_cells` refused over-count at load, but a Cell built directly still
+        # reported 4 records against 3 planned as success_rate 1.3333 / PASS, and
+        # select_strongest then chose it. The first ADV-A fix put the duplicate check here and
+        # left the over-count check at the entrance - so the check that catches DISTINCT
+        # over-count never ran where the rate is computed. A rate above 1.0 is arithmetic
+        # telling you the record set is wrong; it is never clipped to 100%.
+        if recorded > self.planned:
+            ok = False
+            reasons.append(
+                f"{recorded} records for {self.planned} planned attempt(s): success rate "
+                f"{self.success_rate:.4f} exceeds 1.0, which is not a result but a broken "
+                "record set")
+        # R2-01: identity must come from the frozen plan, not from what the record calls itself.
+        if self.expected is None:
+            ok = False
+            reasons.append(
+                "attempt identity was never checked against a frozen plan. Without the plan's "
+                "own attempt id set, twelve re-runs of one task are indistinguishable from "
+                "twelve planned attempts of twelve different tasks, and both read as 12/12")
+        else:
+            observed = {a.get("attempt_id") for a in self.attempts}
+            missing = sorted(self.expected - observed)
+            unexpected = sorted(observed - self.expected)
+            if missing:
+                ok = False
+                reasons.append(
+                    f"{len(missing)} planned attempt(s) absent from this cell: {missing[:5]}. "
+                    "A re-run of another task does not substitute for them")
+            if unexpected:
+                ok = False
+                reasons.append(
+                    f"{len(unexpected)} record(s) claim an attempt this cell did not plan: "
+                    f"{unexpected[:5]}")
         pending = self.pending_adjudication
         if pending:
             ok = False
@@ -126,6 +163,7 @@ class Cell:
             "success_rate": round(self.success_rate, 4),
             "threshold": thr,
             "cell_verdict": "PASS" if ok else "FAIL",
+            "identity_verified": self.expected is not None,
             "pending_adjudication": pending,
             "reasons": reasons,
             "rate_claim_warning": (
@@ -151,6 +189,75 @@ def load_attempts(records_dir: pathlib.Path) -> list[dict]:
     return out
 
 
+class PlannedAttempts:
+    """The frozen run plan expanded into the exact set of attempts that may be counted.
+
+    R2-01: `attempt_identity` alone was not identity. Its fallback keyed on `run_id`, which
+    changes on every retry, so twelve records of the SAME task at the SAME repetition, differing
+    only in `run_id`, filled a 12-attempt D cell and reported **12/12, 1.0, PASS** - eleven
+    planned attempts of other tasks silently replaced by re-runs of one. And `attempt_id` was
+    believed because the record asserted it, so twelve invented ids did the same. Neither needs
+    anyone to act in bad faith: a retry loop, a renamed import or a re-sampled task does it.
+
+    A denominator from the plan and a numerator from self-reported identity is not a check. The
+    plan must supply BOTH: these ids, these tasks, these repetitions, and no others.
+    """
+
+    __slots__ = ("by_id", "by_cell", "plan_hash", "source")
+
+    def __init__(self, by_id: dict, plan_hash: str, source: str) -> None:
+        self.by_id = by_id
+        self.by_cell: dict = defaultdict(set)
+        for aid, exp in by_id.items():
+            self.by_cell[(exp["workload"], exp["condition"])].add(aid)
+        self.plan_hash = plan_hash
+        self.source = source
+
+    @classmethod
+    def from_run_plan(cls, run_plan: dict, source: str = "RUN_PLAN") -> "PlannedAttempts":
+        """Expand `runs[].task_attempts[]`. The plan already carries an `attempt_id` per attempt."""
+        by_id = {}
+        for run in run_plan.get("runs", []):
+            for ta in run.get("task_attempts", []):
+                aid = ta.get("attempt_id")
+                if not aid:
+                    raise AggregateError(
+                        f"run {run.get('run_id')!r} has a task attempt with no attempt_id; the "
+                        "plan cannot anchor an identity it does not name")
+                if aid in by_id:
+                    raise AggregateError(f"run plan issues attempt_id {aid!r} twice")
+                by_id[aid] = {
+                    "workload": run["workload"], "condition": run["condition"],
+                    "repetition": run["repetition"], "task_id": ta["task_id"],
+                    "planned_run_id": run["run_id"],
+                }
+        plan_hash = hashlib.sha256(
+            json.dumps(by_id, sort_keys=True).encode()).hexdigest()
+        return cls(by_id, plan_hash, source)
+
+    @classmethod
+    def from_ids(cls, spec: dict, source: str = "synthetic") -> "PlannedAttempts":
+        """`{attempt_id: {workload, condition, repetition, task_id}}` — for tests and fixtures."""
+        plan_hash = hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()
+        return cls(dict(spec), plan_hash, source)
+
+    def cell_ids(self, workload: str, condition: str) -> set:
+        return set(self.by_cell.get((workload, condition), ()))
+
+    def mismatch(self, a: dict) -> str | None:
+        """Does this record match the planned attempt it claims to be?"""
+        aid = a.get("attempt_id")
+        exp = self.by_id.get(aid)
+        if exp is None:
+            return f"attempt_id {aid!r} is not in the frozen plan"
+        for field in ("workload", "condition", "task_id", "repetition"):
+            if a.get(field) != exp[field]:
+                return (f"{aid}: record says {field}={a.get(field)!r}, plan says "
+                        f"{exp[field]!r}. A retry may keep the planned attempt's id only if it "
+                        "is the same planned attempt")
+        return None
+
+
 def attempt_identity(a: dict) -> tuple:
     """Which planned attempt this record IS.
 
@@ -169,7 +276,8 @@ def attempt_identity(a: dict) -> tuple:
     return ("triple", a.get("run_id"), a.get("task_id"), a.get("repetition"))
 
 
-def build_cells(attempts: list[dict], plan: list[dict]) -> list[Cell]:
+def build_cells(attempts: list[dict], plan: list[dict],
+                registry: "PlannedAttempts | None" = None) -> list[Cell]:
     """`plan` supplies the PLANNED denominator. Attempts never define it.
 
     Every attempt must be a DISTINCT planned attempt of a planned cell. Duplicates and
@@ -179,15 +287,29 @@ def build_cells(attempts: list[dict], plan: list[dict]) -> list[Cell]:
     planned = defaultdict(int)
     for item in plan:
         planned[(item["workload"], item["condition"])] += item.get("planned_attempts", 1)
-    cells = {k: Cell(workload=k[0], condition=k[1], planned=v) for k, v in planned.items()}
+    cells = {k: Cell(workload=k[0], condition=k[1], planned=v,
+                     expected=frozenset(registry.cell_ids(*k)) if registry else None)
+             for k, v in planned.items()}
+    if registry:
+        for k, c in cells.items():
+            if len(c.expected) != c.planned:
+                raise AggregateError(
+                    f"{k[0]}/{k[1]}: the plan's denominator says {c.planned} attempts but the "
+                    f"plan enumerates {len(c.expected)} attempt ids. The plan disagrees with "
+                    "itself and no rate computed from it means anything.")
     orphans = []
     seen: dict[tuple, str] = {}
-    duplicates = []
+    duplicates, mismatches = [], []
     for a in attempts:
         key = (a["workload"], a["condition"])
         if key not in cells:
             orphans.append(a.get("run_id", "?"))
             continue
+        if registry:
+            bad = registry.mismatch(a)
+            if bad:
+                mismatches.append(bad)
+                continue
         ident = attempt_identity(a)
         if ident in seen:
             duplicates.append(f"{ident} appears again (first seen as {seen[ident]})")
@@ -198,6 +320,11 @@ def build_cells(attempts: list[dict], plan: list[dict]) -> list[Cell]:
         raise AggregateError(
             f"{len(orphans)} attempt(s) belong to no planned cell: {orphans[:5]}. An unplanned "
             "attempt cannot be counted without changing a denominator after the fact.")
+    if mismatches:
+        raise AggregateError(
+            f"{len(mismatches)} record(s) do not match the planned attempt they claim: "
+            + "; ".join(mismatches[:5]) + ". An attempt id is issued by the plan, not asserted "
+            "by the record that wants to be counted.")
     if duplicates:
         raise AggregateError(
             f"{len(duplicates)} duplicate attempt record(s): {duplicates[:5]}. Two records for "
@@ -279,6 +406,10 @@ def select_strongest(cells: list[Cell], deltas: dict, variances: dict | None = N
         # passing, has no failure to find, so the same module that called it FAIL by verdict
         # handed it back as a winner to reproduce. The missing attempts were the failure. The
         # cell's own verdict is the single authority, so the two answers cannot disagree again.
+        v = c.verdict()
+        if not v["identity_verified"]:
+            # R2-02: a directly-constructed, plan-unverified cell was selectable as a winner.
+            rejected.append((key, "attempt identity not verified against the frozen plan")); continue
         v = c.verdict()
         if v["cell_verdict"] != "PASS":
             rejected.append((key, "cell verdict FAIL: " + "; ".join(v["reasons"])[:200])); continue

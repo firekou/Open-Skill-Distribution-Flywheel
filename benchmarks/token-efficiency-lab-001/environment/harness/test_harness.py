@@ -9,6 +9,7 @@ from inside harness/.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import pathlib
@@ -20,10 +21,11 @@ import unittest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from harness import evidence as ev  # noqa: E402
+from harness import finalize as fin  # noqa: E402
 from harness import manifest as mf  # noqa: E402
 from harness.aggregate import (  # noqa: E402
-    AggregateError, FAIL_QUALITY, INVALID, PASS, Cell, build_cells, cost_per_successful_task,
-    pair_attempts, select_strongest,
+    AggregateError, FAIL_QUALITY, INVALID, PASS, Cell, PlannedAttempts, build_cells,
+    cost_per_successful_task, pair_attempts, select_strongest,
 )
 from harness.pricing import ADDITIONAL, INCLUDED, PricingError, Rate  # noqa: E402
 from harness.pricing_preflight import check  # noqa: E402
@@ -241,18 +243,31 @@ class TestPricingPreflightBlocks(unittest.TestCase):
 
 
 def _att(tid, wl, cond, outcome, rep=1, cost=1.0, cache="cold"):
-    return {"run_id": f"{tid}-{cond}-r{rep}", "task_id": tid, "workload": wl, "condition": cond,
+    return {"run_id": f"{tid}-{cond}-r{rep}", "attempt_id": f"{tid}-{cond}-r{rep}",
+            "task_id": tid, "workload": wl, "condition": cond,
             "repetition": rep, "outcome": outcome, "cost": cost, "cache_state": cache,
             "task_version": "1.1.0"}
+
+
+def _planned_cell(wl, cond, planned, attempts):
+    """A Cell whose identity IS checked against a planned set, as R2-01/R2-02 now require.
+
+    `expected` is the planned attempt id set. Where a test deliberately records fewer attempts
+    than planned, the shortfall is carried as planned ids that produced no record — which is what
+    a missing attempt actually is, and what a re-run of another task must not stand in for.
+    """
+    observed = [a["attempt_id"] for a in attempts]
+    missing = [f"{wl}-{cond}-planned-{i}" for i in range(planned - len(observed))]
+    return Cell(wl, cond, planned=planned, attempts=attempts,
+                expected=frozenset(observed + missing))
 
 
 class TestCellLevel(unittest.TestCase):
     """CR-001-B acceptance cases B-1 to B-3, plus the denominator rule."""
 
     def _cell(self, outcomes, planned=3):
-        c = Cell("D", "C1", planned=planned)
-        c.attempts = [_att(f"D-00{i}", "D", "C1", o) for i, o in enumerate(outcomes, 1)]
-        return c
+        return _planned_cell("D", "C1", planned,
+                             [_att(f"D-00{i}", "D", "C1", o) for i, o in enumerate(outcomes, 1)])
 
     def test_B1_two_of_three_fails(self):
         v = self._cell([PASS, PASS, FAIL_QUALITY]).verdict()
@@ -287,15 +302,13 @@ class TestCostPerSuccessfulTask(unittest.TestCase):
     """Quantity 9. Failures are in the numerator; only passes are in the denominator."""
 
     def test_failed_attempts_still_cost_money(self):
-        c = Cell("A", "C2", planned=3)
-        c.attempts = [_att("A-1", "A", "C2", PASS, cost=2.0),
-                      _att("A-2", "A", "C2", FAIL_QUALITY, cost=3.0),
-                      _att("A-3", "A", "C2", INVALID, cost=1.0)]
+        c = _planned_cell("A", "C2", 3, [_att("A-1", "A", "C2", PASS, cost=2.0),
+                                        _att("A-2", "A", "C2", FAIL_QUALITY, cost=3.0),
+                                        _att("A-3", "A", "C2", INVALID, cost=1.0)])
         self.assertAlmostEqual(cost_per_successful_task(c), 6.0)
 
     def test_a_cell_with_no_passes_costs_infinity(self):
-        c = Cell("A", "C2", planned=1)
-        c.attempts = [_att("A-1", "A", "C2", FAIL_QUALITY, cost=5.0)]
+        c = _planned_cell("A", "C2", 1, [_att("A-1", "A", "C2", FAIL_QUALITY, cost=5.0)])
         self.assertEqual(cost_per_successful_task(c), float("inf"))
 
 
@@ -316,9 +329,8 @@ class TestPairingAndSelection(unittest.TestCase):
         cells = []
         for cond, outs in (("C1", [PASS] * 3), ("C2", [PASS, PASS, FAIL_QUALITY]),
                            ("C4", [PASS] * 3), ("C2+C4", [PASS] * 3)):
-            c = Cell("A", cond, planned=3)
-            c.attempts = [_att(f"A-{i}", "A", cond, o) for i, o in enumerate(outs, 1)]
-            cells.append(c)
+            cells.append(_planned_cell("A", cond, 3,
+                         [_att(f"A-{i}", "A", cond, o) for i, o in enumerate(outs, 1)]))
         deltas = {("A", "C1"): 0.30, ("A", "C2"): 0.90, ("A", "C4"): 0.40, ("A", "C2+C4"): 0.95}
         s = select_strongest(cells, deltas)
         self.assertEqual(s["chosen"], [("A", "C4"), ("A", "C1")])
@@ -330,11 +342,10 @@ class TestPairingAndSelection(unittest.TestCase):
         self.assertIn("single-intervention", rejected[("A", "C2+C4")])
 
     def test_a_shortfall_is_recorded_not_filled_with_an_ineligible_cell(self):
-        c = Cell("A", "C1", planned=3)
         # Three DISTINCT attempts. This used to repeat one object three times, which is exactly
         # the duplicate-inflation shape ADV-A found; the cell now fails on it, and a test should
         # not depend on a defect to set up its fixture.
-        c.attempts = [_att(f"A-{i}", "A", "C1", PASS) for i in (1, 2, 3)]
+        c = _planned_cell("A", "C1", 3, [_att(f"A-{i}", "A", "C1", PASS) for i in (1, 2, 3)])
         s = select_strongest([c], {("A", "C1"): 0.5})
         self.assertEqual(len(s["chosen"]), 1)
         self.assertIn("Do NOT substitute", s["shortfall"])
@@ -570,16 +581,36 @@ class TestAdversarialReviewFindings(unittest.TestCase):
         self.assertIn("duplicate", str(cm.exception))
 
     def test_duplicates_are_caught_at_the_cell_too_not_only_at_load(self):
-        c = Cell("D", "C1", planned=3)
-        c.attempts = [self._rec() for _ in range(3)]
+        # expected is supplied, so the ONLY thing wrong here is the duplication itself.
+        c = Cell("D", "C1", planned=3, attempts=[self._rec() for _ in range(3)],
+                 expected=frozenset({"D-001-C1-r1", "x2", "x3"}))
         v = c.verdict()
         self.assertEqual(v["cell_verdict"], "FAIL")
         self.assertTrue(any("duplicate" in r for r in v["reasons"]), v["reasons"])
 
     def test_a_distinct_attempt_set_still_passes(self):
-        """The fix must reject duplicates, not every full cell."""
-        recs = [self._rec(run_id=f"r{i}", task_id=f"D-00{i}") for i in (1, 2, 3)]
-        self.assertEqual(build_cells(recs, self.PLAN)[0].verdict()["cell_verdict"], "PASS")
+        """The fix must reject duplicates, not every full cell.
+
+        Updated for R2-01: a cell is now reportable only when its attempt identities come from a
+        frozen plan, so the control supplies one. Without it the cell correctly fails — being
+        unverified is itself a finding.
+        """
+        reg = PlannedAttempts.from_ids({
+            f"D-00{i}-C1-r1": {"workload": "D", "condition": "C1", "repetition": 1,
+                               "task_id": f"D-00{i}"} for i in (1, 2, 3)})
+        recs = [self._rec(run_id=f"r{i}", task_id=f"D-00{i}", attempt_id=f"D-00{i}-C1-r1")
+                for i in (1, 2, 3)]
+        v = build_cells(recs, self.PLAN, registry=reg)[0].verdict()
+        self.assertEqual(v["cell_verdict"], "PASS", v["reasons"])
+        self.assertTrue(v["identity_verified"])
+
+    def test_an_unverified_cell_is_not_reportable(self):
+        """R2-01: the same three good records, with nobody checking them against a plan."""
+        recs = [self._rec(run_id=f"r{i}", task_id=f"D-00{i}", attempt_id=f"D-00{i}-C1-r1")
+                for i in (1, 2, 3)]
+        v = build_cells(recs, self.PLAN)[0].verdict()
+        self.assertEqual(v["cell_verdict"], "FAIL")
+        self.assertFalse(v["identity_verified"])
 
     def test_a_failed_cell_is_never_selected_for_reproduction(self):
         """1 of 3 planned attempts recorded: verdict FAIL, yet it was chosen as a winner."""
@@ -607,9 +638,8 @@ class TestAdversarialReviewFindings(unittest.TestCase):
         """v1.1.0 section 7.7 step 4 orders ties by smaller variance; the sort key had none."""
         cells = []
         for cond in ("C1", "C2"):
-            c = Cell("A", cond, planned=3)
-            c.attempts = [_att(f"A-{i}", "A", cond, PASS) for i in (1, 2, 3)]
-            cells.append(c)
+            cells.append(_planned_cell("A", cond, 3,
+                         [_att(f"A-{i}", "A", cond, PASS) for i in (1, 2, 3)]))
         tied = {("A", "C1"): 0.5, ("A", "C2"): 0.5}
         s = select_strongest(cells, tied, variances={("A", "C1"): 0.9, ("A", "C2"): 0.1})
         self.assertEqual(s["chosen"][0], ("A", "C2"), "the smaller variance must win the tie")
@@ -655,6 +685,153 @@ class TestVersionConflictIsRefused(unittest.TestCase):
         import test_judge as t
         from harness import judge as j
         self.assertEqual(j.score_packet(t.e2_packet11(t.E2_KEY_11))["outcome"], "PASS")
+
+
+class TestSecondAdversarialReviewFindings(unittest.TestCase):
+    """The second external review of `59293e8`, reproduced then closed.
+
+    All three P1 findings were executable, and all three reproduced. Two of them are the SAME
+    defect the first round found, surviving in a place the first fix did not reach: identity was
+    still self-reported, and the over-count check still guarded only the entrance. The first
+    round's fix notes said a defence guarding one entrance is not a defence, and then left one.
+    """
+
+    RUN_PLAN = pathlib.Path(__file__).resolve().parents[2] / "RUN_PLAN_v1.1.0.json"
+
+    def setUp(self):
+        self.plan = json.loads(self.RUN_PLAN.read_text())
+        self.registry = PlannedAttempts.from_run_plan(self.plan)
+        self.dcell = [c for c in self.plan["cells"]
+                      if c["workload"] == "D" and c["condition"] == "C1"]
+        self.rec = dict(run_id="same", task_id="D-001", workload="D", condition="C1",
+                        repetition=1, outcome=PASS, cost=1.0)
+
+    def test_the_run_plan_enumerates_every_attempt_it_counts(self):
+        self.assertEqual(len(self.registry.by_id), 270)
+        self.assertEqual(len(self.registry.cell_ids("D", "C1")), 12)
+
+    def test_retries_of_one_task_cannot_fill_a_cell_of_twelve(self):
+        """R2-01: twelve records of ONE task, distinct only in run_id, reported 12/12 PASS."""
+        recs = [dict(self.rec, run_id=f"retry-{i}") for i in range(12)]
+        with self.assertRaises(AggregateError) as cm:
+            build_cells(recs, self.dcell, registry=self.registry)
+        self.assertIn("not in the frozen plan", str(cm.exception))
+
+    def test_an_invented_attempt_id_is_not_an_identity(self):
+        """R2-01: the record asserted twelve ids and was believed."""
+        recs = [dict(self.rec, attempt_id=f"new-{i}") for i in range(12)]
+        with self.assertRaises(AggregateError) as cm:
+            build_cells(recs, self.dcell, registry=self.registry)
+        self.assertIn("not in the frozen plan", str(cm.exception))
+
+    def test_a_planned_id_carrying_the_wrong_task_is_refused(self):
+        """Holding a real id is not enough; the record must be the attempt that id names."""
+        aid = sorted(self.registry.cell_ids("D", "C1"))[0]
+        with self.assertRaises(AggregateError) as cm:
+            build_cells([dict(self.rec, attempt_id=aid, task_id="D-999")],
+                        self.dcell, registry=self.registry)
+        self.assertIn("plan says", str(cm.exception))
+
+    def test_the_genuine_twelve_still_pass(self):
+        """The control. Over-rejection would be its own defect."""
+        recs = []
+        for aid in sorted(self.registry.cell_ids("D", "C1")):
+            e = self.registry.by_id[aid]
+            recs.append(dict(self.rec, attempt_id=aid, task_id=e["task_id"],
+                             repetition=e["repetition"], run_id=e["planned_run_id"]))
+        v = build_cells(recs, self.dcell, registry=self.registry)[0].verdict()
+        self.assertEqual(v["cell_verdict"], "PASS", v["reasons"])
+        self.assertEqual(v["success_rate"], 1.0)
+        self.assertTrue(v["identity_verified"])
+
+    def test_eleven_of_twelve_is_a_failed_cell_not_a_rounding_problem(self):
+        recs = []
+        for aid in sorted(self.registry.cell_ids("D", "C1"))[:11]:
+            e = self.registry.by_id[aid]
+            recs.append(dict(self.rec, attempt_id=aid, task_id=e["task_id"],
+                             repetition=e["repetition"], run_id=e["planned_run_id"]))
+        v = build_cells(recs, self.dcell, registry=self.registry)[0].verdict()
+        self.assertEqual(v["cell_verdict"], "FAIL")
+        self.assertTrue(any("absent from this cell" in r for r in v["reasons"]), v["reasons"])
+
+    def test_a_directly_built_cell_cannot_report_133_percent(self):
+        """R2-02: four records against three planned gave success_rate 1.3333 and PASS."""
+        c = Cell("D", "C1", planned=3,
+                 attempts=[dict(self.rec, run_id=f"run-{i}", attempt_id=f"a-{i}")
+                           for i in range(4)],
+                 expected=frozenset({"a-0", "a-1", "a-2"}))
+        v = c.verdict()
+        self.assertEqual(v["cell_verdict"], "FAIL")
+        self.assertGreater(v["success_rate"], 1.0, "the rate is reported, never clipped to 100%")
+        self.assertTrue(any("exceeds 1.0" in r for r in v["reasons"]), v["reasons"])
+
+    def test_an_overcounting_cell_cannot_be_selected(self):
+        """R2-02: select_strongest chose the 133% cell as a winner to reproduce."""
+        c = Cell("D", "C1", planned=3,
+                 attempts=[dict(self.rec, run_id=f"run-{i}", attempt_id=f"a-{i}")
+                           for i in range(4)],
+                 expected=frozenset({"a-0", "a-1", "a-2"}))
+        self.assertEqual(select_strongest([c], {("D", "C1"): 0.9})["chosen"], [])
+
+    def test_a_plan_unverified_cell_cannot_be_selected(self):
+        c = Cell("D", "C1", planned=1, attempts=[dict(self.rec, attempt_id="a-0")])
+        s = select_strongest([c], {("D", "C1"): 0.9})
+        self.assertEqual(s["chosen"], [])
+        self.assertIn("identity not verified", dict(s["rejected"])[("D", "C1")])
+
+    def test_a_plan_that_contradicts_its_own_denominator_is_refused(self):
+        bad = [{"workload": "D", "condition": "C1", "planned_attempts": 99}]
+        with self.assertRaises(AggregateError) as cm:
+            build_cells([], bad, registry=self.registry)
+        self.assertIn("disagrees with itself", str(cm.exception))
+
+
+class TestFinalizeValidatesBeforeWriting(unittest.TestCase):
+    """R2-03: the previous fix hoisted only the missing-score check and was called 'atomic'."""
+
+    def _batch(self, td, second_outcome):
+        root = pathlib.Path(td); rd = root / "records"; sd = root / "scores"
+        rd.mkdir(); sd.mkdir()
+        for i in range(2):
+            rec = dict(run_id=f"run{i}", task_id="D-001", methodology_version="1.1.0",
+                       scorer_hash="x", outcome="INVALID")
+            (rd / f"{i}.json").write_text(json.dumps(rec))
+            pid = hashlib.sha256(f"{rec['run_id']}|{rec['task_id']}".encode()).hexdigest()[:16]
+            (sd / f"{i}.json").write_text(json.dumps(dict(
+                packet_id=pid, task_id="D-001", quality_score=1.0, task_success=True,
+                outcome="PASS" if i == 0 else second_outcome,
+                detail={"methodology_version": "1.1.0"}, scorer_hash="x")))
+        return rd, sd
+
+    def setUp(self):
+        # The record schema needs jsonschema, which is not installed in every environment. The
+        # control flow under test is the ordering of validation and writes, so validation is
+        # stubbed HERE ONLY, exactly as the reviewer declared for their own probe. This does not
+        # establish end-to-end schema acceptance and is not cited as doing so.
+        self._real_validate = fin.validate
+        fin.validate = lambda rec: None
+
+    def tearDown(self):
+        fin.validate = self._real_validate
+
+    def test_a_bad_second_score_leaves_the_first_record_untouched(self):
+        with tempfile.TemporaryDirectory() as td:
+            rd, sd = self._batch(td, "UNKNOWN")
+            before = (rd / "0.json").read_bytes()
+            with self.assertRaises(fin.FinalizeError) as cm:
+                fin.finalize(rd, sd)
+            self.assertIn("Nothing has been written", str(cm.exception))
+            self.assertEqual((rd / "0.json").read_bytes(), before,
+                             "the first record was rewritten before the second was rejected")
+            self.assertEqual(list(rd.glob("*.tmp")), [], "a temp file survived the refusal")
+
+    def test_a_clean_batch_is_written(self):
+        with tempfile.TemporaryDirectory() as td:
+            rd, sd = self._batch(td, "PASS")
+            out = fin.finalize(rd, sd)
+            self.assertEqual(out["records_finalized"], 2)
+            self.assertEqual(json.loads((rd / "0.json").read_text())["outcome"], "PASS")
+            self.assertIn("NOT a multi-file transaction", out["write_guarantee"])
 
 
 if __name__ == "__main__":

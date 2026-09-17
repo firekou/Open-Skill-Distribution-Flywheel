@@ -12,6 +12,13 @@ review the decisions.
 
 ---
 
+> ## Status: revised twice on 2026-09-17, after two external adversarial reviews
+>
+> **Round 2 (`59293e8`) reopened two of round 1's fixes** and found a third defect. Nine
+> executable defects across the two rounds, none found by the seat that wrote them. See
+> `reports/LAB_001_ADVERSARIAL_REVIEW_R2_RESPONSE.md`. Reviewer verdict: **REQUEST CHANGES,
+> stay in Draft.**
+
 > ## Status: revised 2026-09-17 after external adversarial review
 >
 > An external reviewer ran executable counterexamples against this branch and found **six live

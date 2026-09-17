@@ -17,7 +17,7 @@
 | 2 | CR-001-A, B, C adjudicated and executable | **PASS** | `METHODOLOGY_CHANGE_REVIEW_001.md`; acceptance tests A-1…A-6 and B-1…B-5 implemented | methodology-reviewer |
 | 3 | `METHODOLOGY_v1.1.0` written and internally consistent | ~~PASS (as a DRAFT)~~ **PASS only after correction** | `75676732…fcc1`; **six** drafting amendments. External review found §6.1 contradicted the run plan's denominator (3 vs 12) and §7.7 named a variance tie-break the code omitted — so "internally consistent" was false at `62a16a4`. Both corrected | methodology-reviewer |
 | 4 | Independent methodology sign-off | **PENDING** | nobody outside the drafting seat has reviewed the text | **Editor-in-Chief** |
-| 5 | RT-01 – RT-13 closed | **PASS** | closure matrix in `LAB_001_BENCHMARK_REPAIR_REPORT.md`, each row naming its proof | four seats |
+| 5 | RT-01 – RT-13 closed | ~~PASS~~ **PARTIAL** | 11 of 13 closed with a named proof. **RT-04 and RT-10 are reclassified DEVIATION — ruled by a seat, against the instruction, never approved** (R2-04: this row still read PASS after they were reclassified elsewhere). RT-10 raises the pass rate | four seats |
 | 6 | RT-14 – RT-21 dispositioned | **PASS** | 7 closed, 1 retained with its consequence written into DESIGN_NOTES | Designer / Judge |
 | 7 | UG-01 – UG-33 dispositioned | **PASS** | 26 closed with clause + test; 7 retained with an argument each; the two that could hide a violation are made visible rather than waived | Quality Judge |
 | 8 | 17 tasks independently semantically verified | **PASS** | `INDEPENDENT_VERIFICATION.md`: 17 of 17 agree, every value re-derived by different methods, nothing sampled | independent verifier |
@@ -26,7 +26,8 @@
 | 11 | Scoring-integrity manifest | **PASS** | separate task-set / answer-key / scorer / config hashes, no self-reference, **zero unclaimed files**; modified, added and deleted all caught | harness |
 | 12 | Golden end-to-end run | ~~PASS~~ **SUPERSEDED — re-test required** | The 17/17 was produced under the **wrong rulebook** (records stamped 1.0.0). At the declared version the same run gave **11/17**. Superseded again on 2026-09-17: six scoring and aggregation defects found by external review, now fixed, have **not** been re-tested end to end. **This row is not evidence of anything until a fresh golden run is executed and independently reproduced.** | harness |
 | 13 | Environment rebuilt and reproducible | ~~PASS~~ **INVALIDATED — image is stale** | `sha256:04d7fac698f8…fa68` was built **before** the version fix, the six ADV fixes and the task-set corrections. It reproduces exactly, and it reproduces the wrong code. A new image must be built and independently reproduced; the old digest may not be cited as current readiness | harness |
-| 19 | Six defects from external adversarial review closed | **PASS (author-tested only)** | Version conflict refused; duplicate/over-count refused; failed cells no longer selectable; missing cost refuses; unadjudicated violations gate their cell; finalize made atomic. 12 regression tests, **9 of which fail on `62a16a4`**; 306 tests green. **Written and tested by the seat that wrote the defects — no independent verification** | harness |
+| 19 | Defects from external adversarial review round 1 | ~~PASS~~ **REOPENED, then closed again in round 2** | Six closed with 12 tests, 9 failing on `62a16a4`. **Round 2 reopened two of them**: duplicate refusal did not stop *distinct* over-count at the cell, and identity was still self-reported. This row also claimed *"finalize made atomic"*, which was **false** — only the missing-score check had been hoisted | harness |
+| 21 | Defects from external adversarial review round 2 | **PASS (author-tested only)** | R2-01 identity bound to a frozen `PlannedAttempts` registry (270 ids); R2-02 over-count and identity-unverified cells refused at the cell and barred from selection; R2-03 whole-batch validation before any write, temp+rename per file, and **the word "atomic" withdrawn** — it is not a multi-file transaction. 12 new tests; **319 green**. **Same seat, no independent verification.** The round-2 tests cannot be shown failing on `59293e8` (they import a class that does not exist there); the before-column is the probe reproduction in `LAB_001_ADVERSARIAL_REPLAY_R2_RESULT.json`, which is weaker evidence than round 1's and is not claimed as equivalent | harness |
 | 20 | Live provider execution path | **NOT BUILT** | `providers.LiveProvider.run_task()` raises `NotImplementedError`; `runner.py` constructs `ReplayProvider` unconditionally. This is **a build task, not a credential blocker** — issuing a credential and choosing a model would still not produce a runnable agent loop | harness |
 | 14 | 100-run mapping without contradiction | **PENDING** | `RUN_PLAN_v1.1.0.json` enumerates all 78 runs and 270 attempts; allocation untouched — but the **research design is unratified** (`CR-002`). The 3.46× figure is an **attempt** multiplier for the experimental subset; **the dollar consequence is withdrawn as unestablished** | **Editor-in-Chief** |
 | 14b | §7.6 INVALID re-run rule ratified | **PENDING** | §7.6 is marked "needs ratification" in the methodology itself. It was **omitted** from the review package's "one ruling outstanding" claim; there are at least **two** | **Editor-in-Chief** |
@@ -152,28 +153,41 @@ remediation. Both are PENDING for a real reason.
 
 # Verdict
 
-## **NOT FIT TO FREEZE — a complete candidate, pending two independent reviews and one ruling**
+## **NOT FIT TO FREEZE.** The instrument still had reproducible scoring and aggregation defects in two consecutive external reviews.
 
-Everything a reviewer needs exists and is internally consistent. What is missing cannot be
-supplied by the seats that built it:
+> **R2-04.** This section previously read *"a complete candidate, pending two independent reviews
+> and one ruling… Everything a reviewer needs exists and is internally consistent."* Those words
+> were withdrawn in `LAB_001_ADVERSARIAL_REVIEW_RESPONSE.md` **and left standing here**, in the
+> document a decision is actually made from. A withdrawal that does not reach the decision
+> surface has not been made. Corrected 2026-09-17 after the second review.
+
+**Two rounds of external adversarial review, ten executable defects, all reproduced, all fixed.**
+The second round found that two of the first round's fixes were incomplete in exactly the way the
+first round's own commentary warned about — identity that the record asserts about itself, and a
+check placed at one entrance while the arithmetic happens somewhere else.
 
 | # | What is needed | From whom |
 |---|---|---|
-| 1 | **Red Team re-test of the remediation** — the acceptance criterion is met, but by the seat that wrote the fixes | Task Red Team |
+| 1 | **Independent re-test of the remediation** at the current head — not at `205c1b4`, `62a16a4` or `59293e8` | an executor who wrote none of it |
 | 2 | **Independent methodology review** of `METHODOLOGY_v1.1.0` | Editor-in-Chief or a reviewing seat |
-| 3 | **CR-002 ratified** — the run-plan unit and its 3.46× cost consequence | Editor-in-Chief |
+| 3 | **CR-002 ratified** — the run-plan unit and the research design. The 3.46× figure is an **attempt** multiplier; the dollar consequence is **withdrawn as unestablished** | Editor-in-Chief |
+| 4 | **§7.6 ratified** — the INVALID re-run rule, omitted from the earlier "one ruling" claim | Editor-in-Chief |
+| 5 | **RT-04 and RT-10 approved or reversed** — both departed from the instruction without being put up for approval; RT-10 raises the pass rate | Editor-in-Chief |
 
 Pricing (gate 15) and provider-native calibration (gate 16) remain **BLOCKED** on a model
-selection nobody has made and a credential nobody has issued. Per Prompt 3.5 §9 that does not
-block a freeze candidate; it blocks representing the stack as execution-ready, and it blocks the
-Pilot outright.
+selection nobody has made and a credential nobody has issued. The live execution path (gate 20)
+is **NOT BUILT** — that one is engineering work, not a blocker anyone can unblock by deciding
+something.
 
 **LG4 remains NO GO**, and would remain NO GO even if the freeze were granted tomorrow.
 
 ## The honest summary of this round
 
-The stack is substantially better than it was and **still has not measured anything**. Its three
-most consequential findings — a task that was unpassable in every condition, a task that rewarded
+The stack is substantially better than it was and **still has not measured anything**. Two
+external reviews in two days each found live defects by executing code, and the second found that
+some of the first round's repairs were incomplete. **The rate at which an outside party finds
+real defects here has not yet fallen**, and that — not the test count — is the signal about
+whether this instrument is ready. Its three most consequential findings — a task that was unpassable in every condition, a task that rewarded
 discarding 86% of its input, and a scoring pipeline that applied the wrong rulebook to every run —
 were all invisible to review and visible only to execution. Two of the three were in work this
 coordinating seat did itself and was confident about.
