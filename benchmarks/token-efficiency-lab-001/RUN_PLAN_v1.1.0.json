@@ -18,13 +18,20 @@
     },
     "total_runs": 100,
     "mean_attempts_per_run": 3.46,
-    "allocation_changed_from_v1_0_0": false
+    "allocation_changed_from_v1_0_0": false,
+    "mean_attempts_per_run_scope": "experimental runs only (270/78); guardrail runs are not expanded into attempts"
   },
   "cost_consequence": {
-    "prior_estimate_usd": "51-94, assuming one attempt per run",
-    "revised_estimate_usd": "177-325",
-    "multiplier": 3.46,
-    "note": "Raised as CR-002. The allocation is untouched; what was never stated is the unit."
+    "prior_estimate_usd": "51-94, assuming one attempt per run, covering all 100 runs",
+    "revised_estimate_usd": null,
+    "revised_estimate_status": "WITHDRAWN - adversarial review 2026-09-17",
+    "withdrawn_value": "177-325",
+    "why_withdrawn": "3.46 is 270 experimental attempts over 78 experimental runs. It was applied to a budget covering all 100 runs; the 22 guardrail runs were never expanded into attempts; and an attempt multiplier is not a dollar multiplier, because attempt cost varies with context length, call volume, model price, cache state and retries.",
+    "established": "the experimental workload is 270 task attempts",
+    "not_established": "any dollar or wall-time figure for this run plan",
+    "attempt_multiplier": 3.46,
+    "attempt_multiplier_scope": "experimental runs only",
+    "note": "Raised as METHODOLOGY_CHANGE_REQUEST_002. The allocation is untouched; what was never stated is the unit."
   },
   "comparability": {
     "rule": "Every condition compares the same task ids, task-set version, corpora and configuration. The only permitted difference is the registered intervention.",

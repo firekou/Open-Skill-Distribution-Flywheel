@@ -22,7 +22,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from harness import evidence as ev  # noqa: E402
 from harness import manifest as mf  # noqa: E402
 from harness.aggregate import (  # noqa: E402
-    FAIL_QUALITY, INVALID, PASS, Cell, cost_per_successful_task, pair_attempts, select_strongest,
+    AggregateError, FAIL_QUALITY, INVALID, PASS, Cell, build_cells, cost_per_successful_task,
+    pair_attempts, select_strongest,
 )
 from harness.pricing import ADDITIONAL, INCLUDED, PricingError, Rate  # noqa: E402
 from harness.pricing_preflight import check  # noqa: E402
@@ -322,12 +323,18 @@ class TestPairingAndSelection(unittest.TestCase):
         s = select_strongest(cells, deltas)
         self.assertEqual(s["chosen"], [("A", "C4"), ("A", "C1")])
         rejected = dict(s["rejected"])
-        self.assertIn("FAIL_QUALITY", rejected[("A", "C2")])
+        # The rejection now quotes the cell's own verdict rather than a second, independent scan
+        # of the records (ADV-B), so it names the quality failure in the verdict's words.
+        self.assertIn("cell verdict FAIL", rejected[("A", "C2")])
+        self.assertIn("failed quality", rejected[("A", "C2")])
         self.assertIn("single-intervention", rejected[("A", "C2+C4")])
 
     def test_a_shortfall_is_recorded_not_filled_with_an_ineligible_cell(self):
         c = Cell("A", "C1", planned=3)
-        c.attempts = [_att("A-1", "A", "C1", PASS)] * 3
+        # Three DISTINCT attempts. This used to repeat one object three times, which is exactly
+        # the duplicate-inflation shape ADV-A found; the cell now fails on it, and a test should
+        # not depend on a defect to set up its fixture.
+        c.attempts = [_att(f"A-{i}", "A", "C1", PASS) for i in (1, 2, 3)]
         s = select_strongest([c], {("A", "C1"): 0.5})
         self.assertEqual(len(s["chosen"]), 1)
         self.assertIn("Do NOT substitute", s["shortfall"])
@@ -531,3 +538,124 @@ class TestRunnerToJudgeSeam(unittest.TestCase):
             if log:
                 self.assertTrue(all(isinstance(x, str) for x in log),
                                 f"{pkt['task_id']}: corpus_access_log must be list[str]")
+
+
+class TestAdversarialReviewFindings(unittest.TestCase):
+    """The external adversarial review of commit 62a16a4, reproduced then closed.
+
+    Every case below FAILED on that commit with a real counterexample the reviewer ran, not with
+    a reading of the code. They are kept as the regression that the reviewer's script would be if
+    it lived in the repo. Four of them share one shape: a rule the prose stated, that no code on
+    the path from record to published number actually applied.
+    """
+
+    PLAN = [{"workload": "D", "condition": "C1", "planned_attempts": 3}]
+
+    def _rec(self, **kw):
+        r = {"run_id": "same", "task_id": "D-001", "workload": "D", "condition": "C1",
+             "repetition": 1, "outcome": PASS, "cost": 1.0}
+        r.update(kw)
+        return r
+
+    def test_a_duplicated_record_cannot_manufacture_a_success(self):
+        """3/3 PASS built from ONE passing attempt copied three times."""
+        with self.assertRaises(AggregateError) as cm:
+            build_cells([self._rec() for _ in range(3)], self.PLAN)
+        self.assertIn("duplicate", str(cm.exception))
+
+    def test_more_records_than_planned_is_refused(self):
+        """Four copies gave success_rate 1.3333 and still reported PASS."""
+        with self.assertRaises(AggregateError) as cm:
+            build_cells([self._rec() for _ in range(4)], self.PLAN)
+        self.assertIn("duplicate", str(cm.exception))
+
+    def test_duplicates_are_caught_at_the_cell_too_not_only_at_load(self):
+        c = Cell("D", "C1", planned=3)
+        c.attempts = [self._rec() for _ in range(3)]
+        v = c.verdict()
+        self.assertEqual(v["cell_verdict"], "FAIL")
+        self.assertTrue(any("duplicate" in r for r in v["reasons"]), v["reasons"])
+
+    def test_a_distinct_attempt_set_still_passes(self):
+        """The fix must reject duplicates, not every full cell."""
+        recs = [self._rec(run_id=f"r{i}", task_id=f"D-00{i}") for i in (1, 2, 3)]
+        self.assertEqual(build_cells(recs, self.PLAN)[0].verdict()["cell_verdict"], "PASS")
+
+    def test_a_failed_cell_is_never_selected_for_reproduction(self):
+        """1 of 3 planned attempts recorded: verdict FAIL, yet it was chosen as a winner."""
+        c = build_cells([self._rec()], self.PLAN)[0]
+        self.assertEqual(c.verdict()["cell_verdict"], "FAIL")
+        self.assertEqual(select_strongest([c], {("D", "C1"): 0.9})["chosen"], [])
+
+    def test_a_missing_cost_stops_the_economic_number_instead_of_reading_as_zero(self):
+        c = build_cells([{k: v for k, v in self._rec().items() if k != "cost"}], self.PLAN)[0]
+        with self.assertRaises(AggregateError) as cm:
+            cost_per_successful_task(c)
+        self.assertIn("no cost", str(cm.exception))
+
+    def test_an_unadjudicated_possible_violation_blocks_its_cell(self):
+        """The attempt may legitimately be PASS; the CELL is not reportable until it is ruled on."""
+        c = build_cells([self._rec(pending_adjudication=True)]
+                        + [self._rec(run_id="r2", task_id="D-002"),
+                           self._rec(run_id="r3", task_id="D-003")], self.PLAN)[0]
+        v = c.verdict()
+        self.assertEqual(v["cell_verdict"], "FAIL")
+        self.assertEqual(v["pending_adjudication"], ["same"])
+        self.assertTrue(any("adjudication" in r for r in v["reasons"]), v["reasons"])
+
+    def test_the_published_tie_break_and_the_implemented_one_agree(self):
+        """v1.1.0 section 7.7 step 4 orders ties by smaller variance; the sort key had none."""
+        cells = []
+        for cond in ("C1", "C2"):
+            c = Cell("A", cond, planned=3)
+            c.attempts = [_att(f"A-{i}", "A", cond, PASS) for i in (1, 2, 3)]
+            cells.append(c)
+        tied = {("A", "C1"): 0.5, ("A", "C2"): 0.5}
+        s = select_strongest(cells, tied, variances={("A", "C1"): 0.9, ("A", "C2"): 0.1})
+        self.assertEqual(s["chosen"][0], ("A", "C2"), "the smaller variance must win the tie")
+
+
+class TestVersionConflictIsRefused(unittest.TestCase):
+    """The root-cause defence the repair report claimed, and did not have.
+
+    Moving the runner's version literal into one constant lowered the chance of writing the wrong
+    string again. It closed nothing: the downgrade needs only ONE stale field to disagree, and
+    `resolve_methodology_version` took the first candidate it could parse and never compared the
+    rest. A packet stamped 1.0.0 carrying a 1.1.0 answer key scored under the old rulebook.
+    """
+
+    def _conflicted(self, top):
+        import test_judge as t
+        p = t.e2_packet11(t.E2_KEY_11)
+        p["answer_key"] = dict(p["answer_key"], methodology_version="1.1.0")
+        p["required_evidence"]["methodology_version"] = "1.1.0"
+        p["required_evidence"]["turns"] = (
+            [{"turn": i, "text": "just" if i == 8 else "noted."} for i in range(1, 16)]
+            + [{"turn": 16, "text": t.j(t.E2_KEY_11)}])
+        p["model_output"] = t.j(t.E2_KEY_11)
+        p["methodology_version"] = top
+        from harness import judge as j
+        return j.score_packet(p)
+
+    def test_a_turn_8_violation_fails_under_the_declared_version(self):
+        r = self._conflicted("1.1.0")
+        self.assertEqual(r["outcome"], "FAIL_QUALITY")
+        self.assertEqual(r["failure_reason"], "zero_tolerance:constraint_violation")
+
+    def test_the_same_violation_can_no_longer_be_downgraded_to_a_pass(self):
+        r = self._conflicted("1.0.0")
+        self.assertNotEqual(r["outcome"], "PASS")
+        self.assertEqual(r["failure_reason"], "methodology_version_conflict")
+
+    def test_a_conflict_is_invalid_not_a_quality_failure(self):
+        """"We could not measure it" and "it failed" are different findings (section 6.2)."""
+        self.assertEqual(self._conflicted("1.0.0")["outcome"], "INVALID")
+
+    def test_agreeing_versions_are_still_scored_normally(self):
+        import test_judge as t
+        from harness import judge as j
+        self.assertEqual(j.score_packet(t.e2_packet11(t.E2_KEY_11))["outcome"], "PASS")
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

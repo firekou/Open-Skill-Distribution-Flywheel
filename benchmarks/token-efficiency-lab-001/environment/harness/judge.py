@@ -132,6 +132,9 @@ INVALID_REASON_PREFIXES = (
     "unknown_workload",
     "methodology_version_absent",
     "methodology_version_unsupported",
+    # ADV-05: a packet whose version fields contradict each other was not measured under any
+    # rulebook, so it is INVALID ("we could not measure it"), never FAIL_QUALITY ("it failed").
+    "methodology_version_conflict",
 )
 
 COUNT_PENALTY = 0.05
@@ -648,6 +651,13 @@ def _result(view: Dict[str, Any], *, quality_score: float = 0.0,
         "outcome": outcome,
         "failure_reason": failure_reason,
         "zero_tolerance_breached": bool(zero_tolerance_breached),
+        # ADV-D: `detail.unadjudicated_mentions` recorded the prose mentions that structural
+        # detection cannot decide, and the methodology says such an attempt is "flagged for Red
+        # Team adjudication BEFORE its cell is reported". Nothing downstream read it: a packet
+        # carrying an undecided possible violation returned PASS, finalize dropped the flag, and
+        # the cell reported PASS. Recording a warning is not a gate. This lifts the flag out of
+        # `detail` so the record schema, finalize and the aggregator can all see it.
+        "pending_adjudication": bool(d.get("unadjudicated_mention_count")),
         "detail": d,
     }
 
@@ -681,6 +691,13 @@ def resolve_methodology_version(view: Dict[str, Any]) -> Tuple[Optional[str], st
     ev = view.get("required_evidence")
     if isinstance(ev, dict):
         candidates.append(("required_evidence", ev.get("methodology_version")))
+    # ADV-05: this used to return the FIRST resolvable candidate and never compare the rest, so a
+    # packet stamped 1.0.0 at the top level carrying a 1.1.0 answer key and 1.1.0 evidence scored
+    # under the OLD rulebook - the exact downgrade that made the round's 17/17 green. Moving the
+    # runner's literal into one constant lowered the chance of writing the wrong string again; it
+    # closed nothing here, because the downgrade needs only one stale field to disagree. Every
+    # version field present must now agree, and a disagreement is refused rather than resolved.
+    resolved: List[Tuple[str, str, str]] = []
     for source, raw in candidates:
         if raw is None:
             continue
@@ -692,8 +709,14 @@ def resolve_methodology_version(view: Dict[str, Any]) -> Tuple[Optional[str], st
         ver = m.group(1)
         if ver not in SUPPORTED_METHODOLOGY_VERSIONS:
             return None, source, raw
-        return ver, source, raw
-    return None, "absent", None
+        resolved.append((ver, source, raw))
+    if not resolved:
+        return None, "absent", None
+    distinct = {ver for ver, _, _ in resolved}
+    if len(distinct) > 1:
+        detail = "; ".join(f"{src}={raw}" for _, src, raw in resolved)
+        return None, "conflict", detail
+    return resolved[0][0], resolved[0][1], resolved[0][2]
 
 
 def _answer_payload(answer_key: Any) -> Any:
@@ -2664,14 +2687,18 @@ def score_packet(packet: dict) -> dict:
         view["_mv"] = version
         if version is None:
             reason = ("methodology_version_absent" if vsource == "absent"
+                      else "methodology_version_conflict" if vsource == "conflict"
                       else "methodology_version_unsupported")
             return _result(view, failure_reason=reason, detail={
                 "ignored_packet_keys": ignored,
                 "methodology_version_source": vsource,
                 "methodology_version_declared": raw,
                 "supported_methodology_versions": list(SUPPORTED_METHODOLOGY_VERSIONS),
-                "refusal": "a packet whose methodology version is absent or "
-                           "unrecognised is refused, not scored under a guess"})
+                "refusal": (
+                    "a packet whose methodology version is absent, unrecognised or "
+                    "SELF-CONTRADICTORY is refused, not scored under a guess. When the "
+                    "packet, answer key and evidence disagree, scoring under any one of "
+                    "them silently selects a rulebook the other two deny (ADV-05)")})
         ignored = list(ignored)
         if version == V1_1_0:
             # v1.1.0 section 6.0.1(2): baseline_reference_quality may not

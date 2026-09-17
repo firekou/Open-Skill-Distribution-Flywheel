@@ -8,7 +8,8 @@
 | **Drafted** | 2026-09-16 |
 | **Drafting seat** | `methodology-reviewer` |
 | **Source commit** | `a8ca352dc64e792864f351f7775e2b21681b6390` |
-| **Methodology SHA-256** | `f4e5b65e204dd0a31cc3d04a639d5542c7aa49523d374da5f51bc0330e490774` |
+| **Methodology SHA-256** | `7567673240d304a63df1292991b3625aba70cb401e11938ae1a06a6a517bfcc1` |
+| *(superseded)* | `f4e5b65e204dd0a31cc3d04a639d5542c7aa49523d374da5f51bc0330e490774` — the draft as at `62a16a4`, before the 2026-09-17 adversarial-review amendments |
 | **Meter calibration SHA-256** | `726d193b8e24cc4825c151e41bef09dd0027988efce33bfa069bcafc71298113` |
 | **Independent sign-off** | **NONE. Pending.** |
 | **Freeze commit SHA** | **not assigned — nothing has been frozen** |
@@ -27,7 +28,7 @@ direction plus a draft that follows it is still a draft.
 | # | Requirement | Status |
 |---|---|---|
 | 1 | Independent Methodology Reviewer sign-off on the actual text | **PENDING** |
-| 2 | `CR-002` ratified — the run-plan unit and its 3.46× cost consequence | **PENDING** |
+| 2 | `CR-002` ratified — the run-plan unit and the design it implies (3.46× is an *attempt* multiplier; the dollar consequence is withdrawn) | **PENDING** |
 | 3 | `TASK_SET_v1.1.0` frozen, with RT-01–RT-13 closed and re-verified | see `LAB_001_FREEZE_READINESS_V1_1.md` |
 | 4 | A complete pricing snapshot, or an explicit ruling that a `BLOCKED` snapshot may be frozen alongside | **PENDING** |
 | 5 | Red Team replay against the repaired artefacts, by a seat that did not author them | see the freeze-readiness report |
@@ -57,7 +58,7 @@ cd benchmarks/token-efficiency-lab-001/methodology
 sha256sum METHODOLOGY_v1.0.0.md METHODOLOGY_v1.1.0.md \
           METER_CALIBRATION_v1.0.0.md METER_CALIBRATION_v1.1.0.md
 # v1.0.0  c1810b0481d1442937771c124c7c30668490470f00dcf71098bdf139ee7089bc
-# v1.1.0  f4e5b65e204dd0a31cc3d04a639d5542c7aa49523d374da5f51bc0330e490774
+# v1.1.0  7567673240d304a63df1292991b3625aba70cb401e11938ae1a06a6a517bfcc1
 ```
 
 Any mismatch on a v1.0.0 line means the frozen document was altered and every run under it is

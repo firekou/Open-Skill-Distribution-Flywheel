@@ -127,16 +127,26 @@ re-weighted, and no task was dropped to make the numbers work.
 
 ### The consequence, stated plainly
 
-**270 task attempts, not 100.** A mean of **3.46 attempts per run**. Any cost estimate that
-assumed one attempt per run is low by that factor: the previous **$51–94** becomes roughly
-**$177–325** on the same assumptions.
+**270 experimental task attempts, not 78.** A mean of **3.46 attempts per experimental run**.
+Any estimate that assumed one attempt per run understates the **experimental workload** by that
+factor.
+
+> **The dollar figure previously given here — "$51–94 becomes roughly $177–325" — is WITHDRAWN**
+> (external adversarial review, 2026-09-17). It applied an experimental-subset ratio to a budget
+> covering all 100 runs, left the 22 guardrail runs unexpanded, and treated an attempt count as
+> if it were a dollar count when attempt costs vary by workload, context length, cache state and
+> retries. **No revised dollar range is available.** `METHODOLOGY_CHANGE_REQUEST_002` records the
+> correction and the work needed to produce a real one.
 
 Each task in a workload is a **separate agent session**. Workload E in particular must not run
 its three scenarios inside one session — that would contaminate the context-accumulation
 measurement E exists to make.
 
-> **RATIFICATION REQUIRED.** The definition is forced by the arithmetic, but the 3.46× cost
-> consequence is material and the Editor-in-Chief has not seen it. Raised as
+> **RATIFICATION REQUIRED.** Arithmetic rules out "a run is one task attempt"; it does **not**
+> select full factorial coverage on its own — that is a design choice with cheaper alternatives
+> (CR-002 option 5). The earlier claim that the definition was "forced by the arithmetic"
+> overstated it. The 3.46× increase in **task attempts** is material and the Editor-in-Chief has
+> not seen it. Raised as
 > **`METHODOLOGY_CHANGE_REQUEST_002`**. The freeze-readiness gate for run-plan mapping is
 > **PENDING**, not PASS, until that is ruled on.
 
@@ -198,8 +208,15 @@ claim may not be made in any form, including by implication.
 Every metric in every task file, scorer, run record and report carries its level. **A threshold
 is applied at exactly one level.**
 
-**D, worked:** planned denominator 3 ⇒ **3/3 required**; 2/3 = 0.667 fails the cell. And **3/3
-does not mean the true success rate is ≥ 95%** — three observations cannot support that claim.
+**D, worked** (corrected — the earlier example contradicted the run plan):
+D holds **4 tasks × 3 repetitions**, so a D cell's planned denominator is **12**, not 3. Three is
+the repetition count, not the attempt denominator; CR-002 is the change request that made the
+attempt the unit, and this worked example was left describing the old one. At 0.95, **12/12 is
+required** — 11/12 = 0.917 fails the cell. And **12/12 does not mean the true success rate is
+≥ 95%**: twelve observations cannot support that claim either (§7.8).
+
+The denominator is always read from the run plan's `planned_attempts` for that cell. No example
+in this document overrides it.
 
 ### 6.2 Outcome taxonomy — **NEW: three outcomes, never two**
 

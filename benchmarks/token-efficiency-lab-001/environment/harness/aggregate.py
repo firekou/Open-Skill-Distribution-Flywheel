@@ -57,6 +57,17 @@ class Cell:
     def threshold(self) -> float | None:
         return CELL_SUCCESS_THRESHOLD.get(self.workload)
 
+    @property
+    def pending_adjudication(self) -> list:
+        """Attempts holding a possible violation nobody has ruled on yet.
+
+        ADV-D: the scorer records prose mentions that structural detection cannot decide, and the
+        methodology says such an attempt is adjudicated BEFORE its cell is reported. Nothing
+        enforced the "before". A PASS carrying an undecided possible violation flowed through
+        finalize into a PASS cell, so the guarantee existed only in the prose that described it.
+        """
+        return [a.get("run_id", "?") for a in self.attempts if a.get("pending_adjudication")]
+
     def verdict(self) -> dict:
         c = self.counts
         recorded = len(self.attempts)
@@ -74,10 +85,33 @@ class Cell:
         if c[FAIL_QUALITY]:
             ok = False
             reasons.append(f"{c[FAIL_QUALITY]} attempt(s) failed quality or breached zero tolerance")
+        # ADV-A, second line: build_cells refuses duplicates at load, but a Cell can also be
+        # constructed directly (tests, notebooks, any future caller), and then the numerator is
+        # again "however many records you hold". The rate is computed HERE, so the check belongs
+        # here too - a defence that only guards one entrance is not a defence.
+        idents = [attempt_identity(a) for a in self.attempts]
+        if len(set(idents)) != len(idents):
+            ok = False
+            dupes = sorted({i for i in idents if idents.count(i) > 1})
+            reasons.append(
+                f"{len(idents) - len(set(idents))} duplicate attempt record(s) {dupes[:3]}: one "
+                "attempt counted more than once inflates the numerator against a fixed planned "
+                "denominator")
+        pending = self.pending_adjudication
+        if pending:
+            ok = False
+            reasons.append(
+                f"{len(pending)} attempt(s) await Red Team adjudication of a possible constraint "
+                f"violation ({pending[:3]}); the cell is not reportable until each is ruled on. "
+                "This is NOT a quality failure - the ruling may well be 'no violation' - it is a "
+                "result that is not yet allowed to be published")
 
         thr = self.threshold
         if thr is not None:
-            # Worked example from v1.1.0 §6.1: denominator 3 means 3/3. 2/3 = 0.667 does not pass.
+            # v1.1.0 §6.1: the denominator is the run plan's planned_attempts for THIS cell -
+            # 12 for a D cell (4 tasks x 3 repetitions), not 3. The document's worked example
+            # said 3, which was the repetition count left over from before CR-002 made the
+            # attempt the unit; it has been corrected. This code always read the plan.
             if self.success_rate + 1e-12 < thr:
                 ok = False
                 reasons.append(
@@ -92,6 +126,7 @@ class Cell:
             "success_rate": round(self.success_rate, 4),
             "threshold": thr,
             "cell_verdict": "PASS" if ok else "FAIL",
+            "pending_adjudication": pending,
             "reasons": reasons,
             "rate_claim_warning": (
                 f"{c[PASS]}/{self.planned} passed. This does NOT mean the true success rate is "
@@ -116,23 +151,64 @@ def load_attempts(records_dir: pathlib.Path) -> list[dict]:
     return out
 
 
+def attempt_identity(a: dict) -> tuple:
+    """Which planned attempt this record IS.
+
+    ADV-A: the denominator was planned, but the NUMERATOR was "however many records you happen to
+    hold". Copy one passing record three times into a planned-3 cell and it reported 3/3 PASS;
+    copy it four times and it reported 4/3 = 1.3333 and still PASS. Duplicated files, a re-run
+    left beside its original, or an import run twice all become fresh successes. A planned
+    denominator is worth nothing if the numerator can be inflated by copying.
+
+    `attempt_id` is the run plan's own identity for a planned attempt and is preferred. The
+    (run_id, task_id, repetition) triple is the fallback for records written before the plan
+    carried one.
+    """
+    if a.get("attempt_id"):
+        return ("attempt_id", a["attempt_id"])
+    return ("triple", a.get("run_id"), a.get("task_id"), a.get("repetition"))
+
+
 def build_cells(attempts: list[dict], plan: list[dict]) -> list[Cell]:
-    """`plan` supplies the PLANNED denominator. Attempts never define it."""
+    """`plan` supplies the PLANNED denominator. Attempts never define it.
+
+    Every attempt must be a DISTINCT planned attempt of a planned cell. Duplicates and
+    over-count are refused here rather than corrected, because either one means the record set
+    does not describe the run that was planned, and silently de-duplicating would hide that.
+    """
     planned = defaultdict(int)
     for item in plan:
         planned[(item["workload"], item["condition"])] += item.get("planned_attempts", 1)
     cells = {k: Cell(workload=k[0], condition=k[1], planned=v) for k, v in planned.items()}
     orphans = []
+    seen: dict[tuple, str] = {}
+    duplicates = []
     for a in attempts:
         key = (a["workload"], a["condition"])
         if key not in cells:
             orphans.append(a.get("run_id", "?"))
             continue
+        ident = attempt_identity(a)
+        if ident in seen:
+            duplicates.append(f"{ident} appears again (first seen as {seen[ident]})")
+            continue
+        seen[ident] = a.get("run_id", "?")
         cells[key].attempts.append(a)
     if orphans:
         raise AggregateError(
             f"{len(orphans)} attempt(s) belong to no planned cell: {orphans[:5]}. An unplanned "
             "attempt cannot be counted without changing a denominator after the fact.")
+    if duplicates:
+        raise AggregateError(
+            f"{len(duplicates)} duplicate attempt record(s): {duplicates[:5]}. Two records for "
+            "one planned attempt cannot both be counted; one success copied twice is not two "
+            "successes. Remove the duplicate or give the re-run its own planned attempt.")
+    over = [f"{c.workload}/{c.condition}: {len(c.attempts)} records for {c.planned} planned"
+            for c in cells.values() if len(c.attempts) > c.planned]
+    if over:
+        raise AggregateError(
+            "more records than planned attempts: " + "; ".join(over[:5]) +
+            ". A success rate above 1.0 is arithmetic telling you the record set is wrong.")
     return [cells[k] for k in sorted(cells)]
 
 
@@ -141,8 +217,20 @@ def cost_per_successful_task(cell: Cell) -> float:
 
     An attempt that is cheap and fails still cost money. A cell with no passes costs infinity per
     successful task, and that is the honest number, not a gap in a table.
+
+    ADV-C: this used to read `a.get("cost", 0.0)`, so an attempt whose cost was missing was
+    counted as an attempt that cost nothing, and the cheapest-looking cell in a table could be
+    the one whose costs failed to record. The pricing entrance already refuses an undeclared
+    rate; the ANALYSIS exit refused nothing. A missing cost stops the economic number rather
+    than lowering it.
     """
-    total = sum(float(a.get("cost", 0.0)) for a in cell.attempts)
+    missing = [a.get("run_id", "?") for a in cell.attempts if a.get("cost") is None]
+    if missing:
+        raise AggregateError(
+            f"{len(missing)} attempt(s) in {cell.workload}/{cell.condition} carry no cost: "
+            f"{missing[:5]}. Treating an unpriced attempt as $0 makes an unmeasured cell look "
+            "like the cheapest one. Price it or report the cell as unpriceable.")
+    total = sum(float(a["cost"]) for a in cell.attempts)
     passes = cell.counts[PASS]
     return total / passes if passes else math.inf
 
@@ -172,7 +260,7 @@ def pair_attempts(treatment: list[dict], baseline: list[dict]) -> tuple[list[tup
     return pairs, unpaired
 
 
-def select_strongest(cells: list[Cell], deltas: dict) -> dict:
+def select_strongest(cells: list[Cell], deltas: dict, variances: dict | None = None) -> dict:
     """v1.1.0 §7.7 — pre-registered, deterministic, no discretion.
 
     `deltas` maps (workload, condition) to the cost-per-successful-task improvement versus paired
@@ -186,16 +274,26 @@ def select_strongest(cells: list[Cell], deltas: dict) -> dict:
         key = (c.workload, c.condition)
         if c.condition not in SINGLE:
             rejected.append((key, "not a single-intervention condition")); continue
-        cc = c.counts
-        if cc[FAIL_QUALITY] or cc[INVALID]:
-            rejected.append((key, f"{cc[FAIL_QUALITY]} FAIL_QUALITY / {cc[INVALID]} INVALID")); continue
+        # ADV-B: eligibility used to be a scan of the records that HAPPENED TO EXIST - any
+        # FAIL_QUALITY or INVALID among them. A cell with 1 of 3 planned attempts recorded, all
+        # passing, has no failure to find, so the same module that called it FAIL by verdict
+        # handed it back as a winner to reproduce. The missing attempts were the failure. The
+        # cell's own verdict is the single authority, so the two answers cannot disagree again.
+        v = c.verdict()
+        if v["cell_verdict"] != "PASS":
+            rejected.append((key, "cell verdict FAIL: " + "; ".join(v["reasons"])[:200])); continue
         if key not in deltas:
             rejected.append((key, "no paired delta computed")); continue
         eligible.append((key, c))
 
     def sort_key(item):
         key, c = item
-        return (-deltas[key], -c.counts[PASS], c.condition)
+        # v1.1.0 section 7.7 step 4 orders ties by delta, then passing attempts, then SMALLER
+        # VARIANCE, then condition. `variances` was absent from this key entirely, so the
+        # published rule and the implementation disagreed on any tie. Absent variance sorts last
+        # among equals rather than silently counting as zero (which would win every tie).
+        var = (variances or {}).get(key)
+        return (-deltas[key], -c.counts[PASS], math.inf if var is None else var, c.condition)
     eligible.sort(key=sort_key)
     chosen = [k for k, _ in eligible[:2]]
 
@@ -207,7 +305,10 @@ def select_strongest(cells: list[Cell], deltas: dict) -> dict:
             f"only {len(chosen)} eligible cell(s). Reproduce those and record the shortfall as a "
             "failed cell with its reason. Do NOT substitute an ineligible cell and do NOT relax "
             "eligibility to reach two."),
-        "tie_break": "delta, then passing attempts, then condition number - deterministic",
+        "tie_break": (
+            "v1.1.0 section 7.7 step 4: delta, then passing attempts, then smaller variance, "
+            "then condition number - deterministic"),
+        "variance_supplied": sorted((variances or {}).keys()),
     }
 
 
