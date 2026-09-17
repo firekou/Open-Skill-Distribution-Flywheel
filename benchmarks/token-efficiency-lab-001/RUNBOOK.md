@@ -209,10 +209,27 @@ declares no `outcome`.
 ```bash
 docker run --rm --network none -v "$PWD/dryrun:/lab/dryrun" atk-lab001:local \
   python3 -m harness.aggregate \
-    --records /lab/dryrun/out/records --plan /lab/dryrun/CELL_PLAN.json
+    --records /lab/dryrun/out/records --run-plan /lab/dryrun/RUN_PLAN.json
 ```
 
 Denominator is **planned** attempts. A planned attempt with no record still counts against it.
+
+**`--run-plan`, not `--plan` (R3-01).** The run plan supplies the denominators *and* the planned
+attempt identities from one source. The old `--plan CELL_PLAN.json` form gave counts only, so
+every cell came out `identity_verified: false` and **FAIL — on completely legitimate records**.
+That form still exists for old fixtures and now **refuses to run without `--registry`**, rather
+than quietly reporting a cell nobody checked.
+
+For the real experiment, pass the frozen plan:
+
+```bash
+    --records /lab/out/records --run-plan /lab/RUN_PLAN_v1.1.0.json
+```
+
+The report echoes `plan_hash` and `plan_source` so a result can be tied to the plan it was
+measured against. **Do not aggregate dry-run records against `RUN_PLAN_v1.1.0.json`:** its 270
+attempts are not the 17-task fixture's denominators, and every missing attempt would be reported
+as a real shortfall.
 
 ## 8b. Tool audit — the agent under test must carry its run id
 

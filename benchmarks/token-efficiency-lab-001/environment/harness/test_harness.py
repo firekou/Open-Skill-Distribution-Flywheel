@@ -14,6 +14,7 @@ import json
 import os
 import pathlib
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -256,10 +257,14 @@ def _planned_cell(wl, cond, planned, attempts):
     than planned, the shortfall is carried as planned ids that produced no record — which is what
     a missing attempt actually is, and what a re-run of another task must not stand in for.
     """
-    observed = [a["attempt_id"] for a in attempts]
-    missing = [f"{wl}-{cond}-planned-{i}" for i in range(planned - len(observed))]
+    spec = {a["attempt_id"]: {"workload": a["workload"], "condition": a["condition"],
+                              "task_id": a["task_id"], "repetition": a["repetition"]}
+            for a in attempts}
+    for i in range(planned - len(attempts)):
+        spec[f"{wl}-{cond}-planned-{i}"] = {"workload": wl, "condition": cond,
+                                            "task_id": f"{wl}-unrecorded-{i}", "repetition": 1}
     return Cell(wl, cond, planned=planned, attempts=attempts,
-                expected=frozenset(observed + missing))
+                plan=PlannedAttempts.from_ids(spec))
 
 
 class TestCellLevel(unittest.TestCase):
@@ -581,9 +586,15 @@ class TestAdversarialReviewFindings(unittest.TestCase):
         self.assertIn("duplicate", str(cm.exception))
 
     def test_duplicates_are_caught_at_the_cell_too_not_only_at_load(self):
-        # expected is supplied, so the ONLY thing wrong here is the duplication itself.
-        c = Cell("D", "C1", planned=3, attempts=[self._rec() for _ in range(3)],
-                 expected=frozenset({"D-001-C1-r1", "x2", "x3"}))
+        # The plan is supplied and every record matches it, so the ONLY thing wrong is the
+        # duplication itself.
+        rec = self._rec(attempt_id="D-001-C1-r1")
+        c = Cell("D", "C1", planned=3, attempts=[dict(rec) for _ in range(3)],
+                 plan=PlannedAttempts.from_ids({
+                     "D-001-C1-r1": {"workload": "D", "condition": "C1", "task_id": "D-001",
+                                     "repetition": 1},
+                     "x2": {"workload": "D", "condition": "C1", "task_id": "D-002", "repetition": 1},
+                     "x3": {"workload": "D", "condition": "C1", "task_id": "D-003", "repetition": 1}}))
         v = c.verdict()
         self.assertEqual(v["cell_verdict"], "FAIL")
         self.assertTrue(any("duplicate" in r for r in v["reasons"]), v["reasons"])
@@ -754,12 +765,18 @@ class TestSecondAdversarialReviewFindings(unittest.TestCase):
         self.assertEqual(v["cell_verdict"], "FAIL")
         self.assertTrue(any("absent from this cell" in r for r in v["reasons"]), v["reasons"])
 
+    def _overcounting_cell(self):
+        """Four records, all matching the plan, against a cell that planned three."""
+        spec = {f"a-{i}": {"workload": "D", "condition": "C1", "task_id": f"D-00{i}",
+                           "repetition": 1} for i in range(4)}
+        return Cell("D", "C1", planned=3,
+                    attempts=[dict(self.rec, run_id=f"run-{i}", attempt_id=f"a-{i}",
+                                   task_id=f"D-00{i}") for i in range(4)],
+                    plan=PlannedAttempts.from_ids(spec))
+
     def test_a_directly_built_cell_cannot_report_133_percent(self):
         """R2-02: four records against three planned gave success_rate 1.3333 and PASS."""
-        c = Cell("D", "C1", planned=3,
-                 attempts=[dict(self.rec, run_id=f"run-{i}", attempt_id=f"a-{i}")
-                           for i in range(4)],
-                 expected=frozenset({"a-0", "a-1", "a-2"}))
+        c = self._overcounting_cell()
         v = c.verdict()
         self.assertEqual(v["cell_verdict"], "FAIL")
         self.assertGreater(v["success_rate"], 1.0, "the rate is reported, never clipped to 100%")
@@ -767,14 +784,11 @@ class TestSecondAdversarialReviewFindings(unittest.TestCase):
 
     def test_an_overcounting_cell_cannot_be_selected(self):
         """R2-02: select_strongest chose the 133% cell as a winner to reproduce."""
-        c = Cell("D", "C1", planned=3,
-                 attempts=[dict(self.rec, run_id=f"run-{i}", attempt_id=f"a-{i}")
-                           for i in range(4)],
-                 expected=frozenset({"a-0", "a-1", "a-2"}))
-        self.assertEqual(select_strongest([c], {("D", "C1"): 0.9})["chosen"], [])
+        self.assertEqual(
+            select_strongest([self._overcounting_cell()], {("D", "C1"): 0.9})["chosen"], [])
 
     def test_a_plan_unverified_cell_cannot_be_selected(self):
-        c = Cell("D", "C1", planned=1, attempts=[dict(self.rec, attempt_id="a-0")])
+        c = Cell("D", "C1", planned=1, attempts=[dict(self.rec, attempt_id="a-0")], plan=None)
         s = select_strongest([c], {("D", "C1"): 0.9})
         self.assertEqual(s["chosen"], [])
         self.assertIn("identity not verified", dict(s["rejected"])[("D", "C1")])
@@ -832,6 +846,129 @@ class TestFinalizeValidatesBeforeWriting(unittest.TestCase):
             self.assertEqual(out["records_finalized"], 2)
             self.assertEqual(json.loads((rd / "0.json").read_text())["outcome"], "PASS")
             self.assertIn("NOT a multi-file transaction", out["write_guarantee"])
+
+
+class TestThirdAdversarialReviewFindings(unittest.TestCase):
+    """The third external review of `4e6584b`.
+
+    Both P1s are, for the third consecutive round, the same shape: the check was added at one
+    entrance and the exit was left trusting a flag. R2 fixed `build_cells`; the public `Cell` and
+    the actual command line were not fixed, so the guarantee did not exist where results are
+    produced or where anyone runs it.
+    """
+
+    RUN_PLAN = pathlib.Path(__file__).resolve().parents[2] / "RUN_PLAN_v1.1.0.json"
+
+    def setUp(self):
+        self.plan = json.loads(self.RUN_PLAN.read_text())
+        self.registry = PlannedAttempts.from_run_plan(self.plan)
+        self.cp = [c for c in self.plan["cells"]
+                   if (c["workload"], c["condition"]) == ("D", "C1")]
+        self.recs = [dict(self.registry.by_id[i], attempt_id=i, run_id="exec-" + i,
+                          outcome=PASS, cost=1.0)
+                     for i in sorted(self.registry.cell_ids("D", "C1"))]
+
+    # ---- R3-02 -----------------------------------------------------------
+    def test_legal_ids_carrying_the_wrong_task_do_not_pass_through_the_direct_cell(self):
+        """12 legal ids, every record claiming D-001 rep 1 → was 12/12 PASS, identity_verified."""
+        bad = [dict(r, task_id="D-001", repetition=1) for r in self.recs]
+        c = Cell("D", "C1", 12, bad, plan=self.registry)
+        v = c.verdict()
+        self.assertEqual(v["cell_verdict"], "FAIL")
+        self.assertFalse(v["identity_verified"])
+        self.assertEqual(select_strongest([c], {("D", "C1"): 0.9})["chosen"], [])
+
+    def test_a_record_edited_after_validation_is_caught_at_report_time(self):
+        """The Cell holds the caller's dicts. Validation at build time is not validation."""
+        cells = build_cells(self.recs, self.cp, registry=self.registry)
+        self.assertEqual(cells[0].verdict()["cell_verdict"], "PASS")
+        self.recs[0]["task_id"] = "D-999"           # edited AFTER build_cells accepted it
+        v = cells[0].verdict()
+        self.assertEqual(v["cell_verdict"], "FAIL")
+        self.assertFalse(v["identity_verified"])
+        self.assertEqual(select_strongest(cells, {("D", "C1"): 0.9})["chosen"], [])
+
+    def test_identity_verified_means_the_fields_were_compared(self):
+        """It used to mean `expected is not None` — that somebody handed the cell a set."""
+        c = Cell("D", "C1", 12, self.recs, plan=self.registry)
+        self.assertTrue(c.verdict()["identity_verified"])
+        c2 = Cell("D", "C1", 12, [dict(r, repetition=99) for r in self.recs], plan=self.registry)
+        self.assertFalse(c2.verdict()["identity_verified"])
+
+    # ---- R3-01: the documented command line, as a subprocess -------------
+    def _cli(self, args):
+        return subprocess.run([sys.executable, "-m", "harness.aggregate", *args],
+                              capture_output=True, text=True,
+                              cwd=str(pathlib.Path(__file__).resolve().parents[1]))
+
+    def _records_dir(self, td, recs):
+        rd = pathlib.Path(td) / "records"; rd.mkdir()
+        for n, r in enumerate(recs):
+            (rd / f"{n}.json").write_text(json.dumps(r))
+        return rd
+
+    def _sub_plan(self, td):
+        sub = dict(self.plan)
+        sub["cells"] = self.cp
+        sub["runs"] = [r for r in self.plan["runs"]
+                       if r["workload"] == "D" and r["condition"] == "C1"]
+        path = pathlib.Path(td) / "run_plan.json"
+        path.write_text(json.dumps(sub))
+        return path
+
+    def test_the_documented_command_passes_legitimate_records(self):
+        """POSITIVE CONTROL. This exited 1 with identity_verified false on valid data."""
+        with tempfile.TemporaryDirectory() as td:
+            p = self._cli(["--records", str(self._records_dir(td, self.recs)),
+                           "--run-plan", str(self._sub_plan(td))])
+            self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+            rep = json.loads(p.stdout)
+            self.assertEqual(rep["cells"][0]["cell_verdict"], "PASS")
+            self.assertTrue(rep["cells"][0]["identity_verified"])
+            self.assertEqual(rep["cells_identity_unverified"], [])
+            # The hash identifies the plan actually used. This test runs against a D/C1 SUBSET
+            # of the frozen plan, so it must not equal the full plan's hash — that difference is
+            # the point of recording it.
+            sub = PlannedAttempts.from_run_plan(json.loads(self._sub_plan(td).read_text()))
+            self.assertEqual(rep["plan_hash"], sub.plan_hash)
+            self.assertNotEqual(rep["plan_hash"], self.registry.plan_hash)
+
+    def test_the_documented_command_rejects_substituted_records(self):
+        """NEGATIVE CONTROL. Twelve retries of one task, through the real CLI."""
+        with tempfile.TemporaryDirectory() as td:
+            bad = [dict(self.recs[0], run_id=f"retry-{i}", attempt_id=f"invented-{i}")
+                   for i in range(12)]
+            p = self._cli(["--records", str(self._records_dir(td, bad)),
+                           "--run-plan", str(self._sub_plan(td))])
+            self.assertNotEqual(p.returncode, 0)
+            self.assertIn("not in the frozen plan", p.stdout + p.stderr)
+
+    def test_the_legacy_plan_shape_refuses_to_run_unchecked(self):
+        with tempfile.TemporaryDirectory() as td:
+            cells = pathlib.Path(td) / "cells.json"
+            cells.write_text(json.dumps(self.cp))
+            p = self._cli(["--records", str(self._records_dir(td, self.recs)),
+                           "--plan", str(cells)])
+            # It must DECLINE (argparse exit 2), not emit a report whose cells all say FAIL.
+            # The old code produced a full report with identity_verified false, which reads as a
+            # measurement result rather than a refusal to measure.
+            self.assertEqual(p.returncode, 2, p.stdout[:400])
+            self.assertEqual(p.stdout.strip(), "", "a refusal must not print a report")
+            self.assertIn("--registry", p.stderr)
+
+    # ---- R3-03: found here, not by the reviewer --------------------------
+    def test_the_record_schema_accepts_the_fields_the_harness_writes(self):
+        """R3-03. `pending_adjudication` (round 1) and `attempt_id` (round 3) were written by
+        the harness and **absent from a schema with additionalProperties: false**. Every record
+        would have been rejected in the real chain. Both round-1 and round-3 test suites missed
+        it because jsonschema was not installed and the finalize tests stubbed the validator."""
+        schema = json.loads(
+            (pathlib.Path(__file__).resolve().parents[1] / "run_record_schema.json").read_text())
+        self.assertFalse(schema.get("additionalProperties", True),
+                         "this test only means something while the schema is closed")
+        for field in ("attempt_id", "pending_adjudication"):
+            self.assertIn(field, schema["properties"],
+                          f"the harness writes {field} and the schema would reject the record")
 
 
 if __name__ == "__main__":

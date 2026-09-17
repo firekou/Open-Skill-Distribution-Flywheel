@@ -36,6 +36,13 @@
     "run_id": {
       "type": "string"
     },
+    "attempt_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "R3-01. WHICH PLANNED ATTEMPT this record is, issued by the run plan. Distinct from run_id, which identifies the EXECUTION and changes on every retry. The aggregator checks this against the frozen plan; a record without one lands in a cell that cannot be reported."
+    },
     "task_id": {
       "type": "string"
     },
@@ -155,6 +162,10 @@
         "string",
         "null"
       ]
+    },
+    "pending_adjudication": {
+      "type": "boolean",
+      "description": "ADV-D. The scorer found a possible constraint violation that structural detection cannot decide. The attempt may legitimately be PASS; its CELL is not reportable until the Red Team rules on it."
     },
     "environment_id": {
       "type": "string"

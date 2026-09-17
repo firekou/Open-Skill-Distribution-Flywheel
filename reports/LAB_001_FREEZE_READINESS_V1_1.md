@@ -185,8 +185,8 @@ something.
 
 The stack is substantially better than it was and **still has not measured anything**. Two
 external reviews in two days each found live defects by executing code, and the second found that
-some of the first round's repairs were incomplete. **The rate at which an outside party finds
-real defects here has not yet fallen**, and that — not the test count — is the signal about
+some of the first round's repairs were incomplete. **The outside defect-discovery rate has gone
+6 → 3 → 2 and has not reached zero**, and that — not the test count — is the signal about
 whether this instrument is ready. Its three most consequential findings — a task that was unpassable in every condition, a task that rewarded
 discarding 86% of its input, and a scoring pipeline that applied the wrong rulebook to every run —
 were all invisible to review and visible only to execution. Two of the three were in work this

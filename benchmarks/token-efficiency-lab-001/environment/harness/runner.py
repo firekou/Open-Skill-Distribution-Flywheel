@@ -90,6 +90,7 @@ def run_one(
     answer_key_hash: str,
     scorer_hash: str = "",
     run_id: str | None = None,
+    attempt_id: str | None = None,
     reproduces_run_id: str | None = None,
     audit_path: pathlib.Path | None = None,
     out_records: pathlib.Path | None = None,
@@ -157,6 +158,13 @@ def run_one(
 
     record = {
         "run_id": rid,
+        # R3-01: the runner wrote no attempt_id at all, so no record the runner produced could
+        # ever be identity-checked against the frozen plan - the aggregator's registry had
+        # nothing to match. PLANNED identity and EXECUTION identity are deliberately separate
+        # fields: `attempt_id` says which planned attempt this is and is issued by the plan,
+        # `run_id` says which execution produced it and changes on every retry. A retry reuses
+        # the attempt_id and gets a new run_id, so it replaces a sample instead of adding one.
+        "attempt_id": attempt_id,
         "task_id": task_id,
         "condition": condition,
         "workload": task["workload"],
@@ -262,7 +270,10 @@ def main(argv=None) -> int:
     ap.add_argument("--snapshot", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--run-class", default="dry_run")
-    ap.add_argument("--plan", required=True, help="JSON list of {task_id, condition, repetition}")
+    ap.add_argument("--plan", required=True,
+                    help="JSON list of {task_id, condition, repetition, attempt_id}. "
+                         "`attempt_id` is issued by the run plan; without it the resulting "
+                         "records cannot be identity-checked by the aggregator (R3-01).")
     ap.add_argument("--environment-id", default="lab001-env-2026-09-16")
     ap.add_argument("--container-digest", default=None)
     ap.add_argument("--blind-salt", required=True)
@@ -274,6 +285,15 @@ def main(argv=None) -> int:
     out = pathlib.Path(args.out)
     snapshot = PricingSnapshot(pathlib.Path(args.snapshot))
     plan = json.loads(pathlib.Path(args.plan).read_text())
+    # R3-01: a plan item with no attempt_id produces a record the aggregator cannot verify, and
+    # the failure would surface much later as an unexplained FAIL. Say so here instead.
+    without = [p for p in plan if not p.get("attempt_id")]
+    if without:
+        raise RunError(
+            f"{len(without)} plan item(s) carry no attempt_id, e.g. "
+            f"{[p.get('task_id') for p in without[:5]]}. An attempt id is issued by the run plan; "
+            "records written without one cannot be checked against it, and the cell they land in "
+            "will be unreportable.")
 
     mapping = BlindMapping(args.blind_salt)
     mapping.assign([p["condition"] for p in plan])
@@ -293,6 +313,7 @@ def main(argv=None) -> int:
                 task_id=item["task_id"],
                 condition=item["condition"],
                 repetition=item.get("repetition", 1),
+                attempt_id=item.get("attempt_id"),
                 task_root=task_root,
                 fixture=pathlib.Path(args.fixture),
                 snapshot=snapshot,
@@ -314,7 +335,8 @@ def main(argv=None) -> int:
             # A failed run is RECORDED, not dropped. A harness that silently skips what it
             # cannot do reports a success rate it did not earn.
             failures.append(
-                {"task_id": item["task_id"], "condition": item["condition"],
+                {"task_id": item["task_id"], "attempt_id": item.get("attempt_id"),
+                 "condition": item["condition"],
                  "error": f"{type(exc).__name__}: {exc}"}
             )
 

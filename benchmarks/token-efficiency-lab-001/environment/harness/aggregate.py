@@ -41,9 +41,17 @@ class Cell:
     condition: str
     planned: int
     attempts: list = field(default_factory=list)
-    # R2-01/R2-02: the set of attempt ids the frozen plan says belong to this cell. `None` means
-    # nobody checked, and an unchecked cell is NOT reportable - see `verdict()`.
-    expected: frozenset | None = None
+    # R3-02: this used to be `expected: frozenset | None` - the id SET only, with
+    # `identity_verified` defined as `expected is not None`. Holding a set of legal ids is not
+    # having checked anything: twelve records carrying twelve legal ids while all claiming
+    # task D-001 repetition 1 passed at 12/12 with `identity_verified: True`, and were selected.
+    # And because the Cell keeps references to the caller's dicts, a record could be validated by
+    # `build_cells` and then edited, and `verdict()` still reported the stale answer.
+    #
+    # The cell now holds the PLAN, not a set, and re-verifies every attempt inside `verdict()` -
+    # where the rate is computed, and at the moment the number is produced. Validation at the
+    # entrance plus a trusted flag at the exit is the defect this file has now shipped twice.
+    plan: "PlannedAttempts | None" = None
 
     @property
     def counts(self) -> dict:
@@ -60,6 +68,24 @@ class Cell:
     @property
     def threshold(self) -> float | None:
         return CELL_SUCCESS_THRESHOLD.get(self.workload)
+
+    @property
+    def expected(self) -> frozenset | None:
+        """The planned attempt ids for this cell, read from the plan every time."""
+        if self.plan is None:
+            return None
+        return frozenset(self.plan.cell_ids(self.workload, self.condition))
+
+    @property
+    def identity_mismatches(self) -> list:
+        """Re-check every attempt against the plan AT REPORT TIME (R3-02).
+
+        Not a cached flag, not a promise made by whoever built this cell. If the record was
+        edited after `build_cells` accepted it, this sees the edit.
+        """
+        if self.plan is None:
+            return []
+        return [m for m in (self.plan.mismatch(a) for a in self.attempts) if m]
 
     @property
     def pending_adjudication(self) -> list:
@@ -114,6 +140,13 @@ class Cell:
                 f"{self.success_rate:.4f} exceeds 1.0, which is not a result but a broken "
                 "record set")
         # R2-01: identity must come from the frozen plan, not from what the record calls itself.
+        mismatched = self.identity_mismatches
+        if mismatched:
+            ok = False
+            reasons.append(
+                f"{len(mismatched)} attempt(s) do not match the planned attempt they claim: "
+                f"{mismatched[:3]}. Carrying a legal attempt id is not the same as being that "
+                "attempt")
         if self.expected is None:
             ok = False
             reasons.append(
@@ -163,7 +196,9 @@ class Cell:
             "success_rate": round(self.success_rate, 4),
             "threshold": thr,
             "cell_verdict": "PASS" if ok else "FAIL",
-            "identity_verified": self.expected is not None,
+            # R3-02: this was `self.expected is not None` - "somebody handed me a set" reported
+            # as "the identities were checked". It now means the fields were compared, here, now.
+            "identity_verified": self.plan is not None and not mismatched,
             "pending_adjudication": pending,
             "reasons": reasons,
             "rate_claim_warning": (
@@ -287,12 +322,11 @@ def build_cells(attempts: list[dict], plan: list[dict],
     planned = defaultdict(int)
     for item in plan:
         planned[(item["workload"], item["condition"])] += item.get("planned_attempts", 1)
-    cells = {k: Cell(workload=k[0], condition=k[1], planned=v,
-                     expected=frozenset(registry.cell_ids(*k)) if registry else None)
+    cells = {k: Cell(workload=k[0], condition=k[1], planned=v, plan=registry)
              for k, v in planned.items()}
     if registry:
         for k, c in cells.items():
-            if len(c.expected) != c.planned:
+            if c.expected is None or len(c.expected) != c.planned:
                 raise AggregateError(
                     f"{k[0]}/{k[1]}: the plan's denominator says {c.planned} attempts but the "
                     f"plan enumerates {len(c.expected)} attempt ids. The plan disagrees with "
@@ -451,6 +485,8 @@ def report(cells: list[Cell]) -> dict:
         "level": "cell",
         "cells": verdicts,
         "cells_passed": sum(1 for v in verdicts if v["cell_verdict"] == "PASS"),
+        "cells_identity_unverified": [
+            (v["workload"], v["condition"]) for v in verdicts if not v["identity_verified"]],
         "cells_failed": sum(1 for v in verdicts if v["cell_verdict"] == "FAIL"),
         "attempts_planned": planned,
         "attempt_outcomes": totals,
@@ -463,15 +499,56 @@ def report(cells: list[Cell]) -> dict:
 
 
 def main(argv=None) -> int:
+    """R3-01: the registry was added as an OPTIONAL argument and this entry point never built one.
+
+    So the documented command in RUNBOOK section 8 produced `identity_verified: false` and
+    `cell_verdict: FAIL` on a set of twelve entirely legitimate records, and exited 1. The
+    library call was fixed and the only way anyone actually runs it was not. A defence that the
+    real command line cannot reach is not deployed.
+
+    The denominator and the identities now come from **one** source: the run plan. `--run-plan`
+    supplies both. `--plan` (the bare cell list) is kept for the older fixtures, and is refused
+    unless a registry is supplied alongside it, rather than silently producing a cell nobody
+    checked.
+    """
     import argparse
     ap = argparse.ArgumentParser(description="cell-level aggregation")
     ap.add_argument("--records", required=True)
-    ap.add_argument("--plan", required=True, help="JSON list of {workload, condition, planned_attempts}")
+    ap.add_argument("--run-plan", default=None,
+                    help="the frozen run plan. Supplies BOTH the planned denominators and the "
+                         "planned attempt identities. This is the normal way to run it.")
+    ap.add_argument("--plan", default=None,
+                    help="JSON list of {workload, condition, planned_attempts}. Legacy shape: "
+                         "denominators only, so --registry is required with it.")
+    ap.add_argument("--registry", default=None,
+                    help="a run plan to take attempt identities from, when --plan supplies the "
+                         "denominators separately.")
     ap.add_argument("--out", default=None)
     a = ap.parse_args(argv)
+
+    if not a.run_plan and not a.plan:
+        ap.error("one of --run-plan or --plan is required")
+    if a.run_plan and a.plan:
+        ap.error("--run-plan already carries the denominators; do not also pass --plan")
+
+    if a.run_plan:
+        run_plan = json.loads(pathlib.Path(a.run_plan).read_text())
+        registry = PlannedAttempts.from_run_plan(run_plan, source=a.run_plan)
+        plan = run_plan["cells"]
+    else:
+        if not a.registry:
+            ap.error(
+                "--plan gives planned counts but no attempt identities, and a cell whose "
+                "identities were never checked is not reportable (R2-01). Pass --run-plan, or "
+                "--registry alongside --plan.")
+        registry = PlannedAttempts.from_run_plan(
+            json.loads(pathlib.Path(a.registry).read_text()), source=a.registry)
+        plan = json.loads(pathlib.Path(a.plan).read_text())
+
     attempts = load_attempts(pathlib.Path(a.records))
-    plan = json.loads(pathlib.Path(a.plan).read_text())
-    rep = report(build_cells(attempts, plan))
+    rep = report(build_cells(attempts, plan, registry=registry))
+    rep["plan_hash"] = registry.plan_hash
+    rep["plan_source"] = registry.source
     text = json.dumps(rep, indent=2)
     print(text)
     if a.out:

@@ -12,6 +12,17 @@ review the decisions.
 
 ---
 
+> ## Status: revised three times on 2026-09-17, after three external adversarial reviews
+>
+> **Round 3 (`4e6584b`) reopened round 2's fixes**: `identity_verified` meant "somebody handed me
+> a set", and the documented command line failed legitimate records because it never built a
+> registry. Looking for those, I found **R3-03** myself — a closed record schema that rejected two
+> fields the harness writes, which would have made `finalize` fail on every record and had
+> survived two rounds behind a stubbed validator. See
+> `reports/LAB_001_ADVERSARIAL_REVIEW_R3_RESPONSE.md`.
+>
+> **Twelve executable defects across three rounds; eleven found by someone else.**
+
 > ## Status: revised twice on 2026-09-17, after two external adversarial reviews
 >
 > **Round 2 (`59293e8`) reopened two of round 1's fixes** and found a third defect. Nine

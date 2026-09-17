@@ -87,7 +87,12 @@ def main() -> int:
             # entries of its own, so a prefix mismatch here fails every A and D attempt - which
             # is what it did on the first try, correctly.
             rid = f"{args.run_class}-{tid}-{args.condition}-r1"
-            plan.append({"task_id": tid, "condition": args.condition, "repetition": 1})
+            # R3-01: the dry-run plan carried no attempt_id, so the records it produced could
+            # not be identity-checked and the documented aggregate step reported the cell
+            # unverified. The synthetic fixture gets its OWN plan and its own ids - the
+            # production run plan's 270 attempts are not a denominator for a 17-task dry run.
+            plan.append({"task_id": tid, "condition": args.condition, "repetition": 1,
+                         "attempt_id": f"{tid}-{args.condition}-r1"})
 
             turns = int(task["input"].get("turn_count") or 1) if wl == "E" else 1
             for n in range(turns):
@@ -138,9 +143,33 @@ def main() -> int:
 
     from collections import Counter
     cells = Counter((p["task_id"][0], p["condition"]) for p in plan)
-    (out / "CELL_PLAN.json").write_text(json.dumps(
-        [{"workload": w, "condition": c, "planned_attempts": n}
-         for (w, c), n in sorted(cells.items())], indent=2) + "\n")
+    cell_list = [{"workload": w, "condition": c, "planned_attempts": n}
+                 for (w, c), n in sorted(cells.items())]
+    (out / "CELL_PLAN.json").write_text(json.dumps(cell_list, indent=2) + "\n")
+
+    # A run plan for THIS fixture, in the shape `harness.aggregate --run-plan` reads: it carries
+    # the denominators and the planned attempt identities from one source, which is the whole
+    # point of R2-01. One run per (workload, condition) here, because the dry run does one
+    # repetition of every task.
+    runs = {}
+    for item in plan:
+        wl = item["task_id"][0]
+        rid = f"{wl}-{item['condition']}-r{item['repetition']}"
+        runs.setdefault(rid, {"run_id": rid, "workload": wl, "condition": item["condition"],
+                              "repetition": item["repetition"], "task_attempts": []})
+        runs[rid]["task_attempts"].append(
+            {"task_id": item["task_id"], "attempt_id": item["attempt_id"],
+             "session": "independent"})
+    (out / "RUN_PLAN.json").write_text(json.dumps({
+        "run_plan_version": "dry-run fixture, not the frozen v1.1.0 plan",
+        "methodology_version": "1.1.0",
+        "status": "SYNTHETIC - for the documented dry run only",
+        "note": ("This is the 17-task golden fixture's own plan. It must never be confused with "
+                 "RUN_PLAN_v1.1.0.json, whose 270 attempts are the real experiment's "
+                 "denominators."),
+        "cells": cell_list,
+        "runs": [runs[k] for k in sorted(runs)],
+    }, indent=2) + "\n")
 
     print(f"{len(plan)} tasks, {len(calls)} calls, {len(audit)} audit entries -> {out}")
     return 0
