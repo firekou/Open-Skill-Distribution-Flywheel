@@ -29,6 +29,25 @@ HERE = pathlib.Path(__file__).resolve().parent
 LOG = HERE / "deploy.log"
 EVIDENCE = HERE / "evidence"
 
+REDACTED = "***REDACTED***"
+INCLUDE_BODY_ENV = "ATK_INCLUDE_ERROR_BODY"
+_BODY_WITHHELD = (
+    f" — response body withheld; set {INCLUDE_BODY_ENV}=1 to include it (it may echo your "
+    "credential, so do not paste the result into a bug report)"
+)
+
+
+def redact(text: str, secrets) -> str:
+    """Remove known secret values from anything about to be shown to a human.
+
+    Called on the WHOLE text before any truncation, never after.
+    """
+    out = text
+    for secret in secrets:
+        if secret and len(secret) >= 4:
+            out = out.replace(secret, REDACTED)
+    return out
+
 TASKS = {
     "summary": "Summarise the operational problems in this deploy log in five bullets.",
     "needle": (
@@ -59,8 +78,21 @@ def call(url: str, key: str, prompt: str, via_headroom: bool) -> dict:
         with urllib.request.urlopen(req, timeout=300) as resp:
             payload = json.load(resp)
     except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", "replace")[:400]
-        raise SystemExit(f"{url} returned HTTP {exc.code}: {detail}") from exc
+        # P5-01. This used to read the provider's error body, slice it to 400 characters and
+        # print it. A server is free to echo the credential it rejected — a 401 reading
+        # {"error": "invalid key sk-..."} put the key straight onto stderr — and slicing first
+        # would even let a fragment survive redaction, because you cannot match a value the
+        # truncation already broke in half. Same defect class as PR #4's P4-01/P4-R2-01; the
+        # behaviour proven there is reused rather than reinvented.
+        detail = _BODY_WITHHELD
+        if os.environ.get(INCLUDE_BODY_ENV) == "1":
+            raw = exc.read().decode("utf-8", "replace")
+            detail = " — " + redact(raw, [key])[:400]
+        raise SystemExit(redact(f"{url} returned HTTP {exc.code}{detail}", [key])) from exc
+    except urllib.error.URLError as exc:
+        # A gateway can carry a credential in a query string, so the URL is redacted too
+        # rather than assumed safe.
+        raise SystemExit(redact(f"cannot reach {url} — {exc.reason}", [key])) from exc
     return {
         "usage": payload.get("usage"),
         "text": payload["choices"][0]["message"]["content"],

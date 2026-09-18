@@ -274,11 +274,23 @@ ADOPTION = {
                      "of it, and the one line that answers the question is a small fraction of "
                      "that. headroom compresses the payload locally before it is sent.",
    "entry_point": "integrations/headroom-atk/README.md",
+   "entry_point_ref": "branch claude/atk-headroom-adoption (PR #5, Draft). NOT on main — a "
+                      "default clone will not contain it.",
+   "issues_to": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/issues — report "
+                "problems with this record or the integration here. Bugs in headroom itself go "
+                "to https://github.com/headroomlabs-ai/headroom/issues.",
    "version_verified": "0.37.0",
    "license": "Apache-2.0",
-   "install": 'pip install "headroom-ai[proxy]"',
-   "example": "python3 integrations/headroom-atk/make_log.py > deploy.log && "
-              "python3 integrations/headroom-atk/local_check.py",
+   "install": 'pip install "headroom-ai[proxy]==0.37.0"  (Python 3.11 verified)',
+   # P5-03: the previous example wrote deploy.log into the repo root while
+   # local_check.py resolves it next to the script, so the documented command
+   # could not work. The cd is part of the instruction, not decoration.
+   "example": "git checkout claude/atk-headroom-adoption  # PR #5, not on main yet\n"
+              "cd integrations/headroom-atk && python3 make_log.py > deploy.log && "
+              "python3 local_check.py",
+   "example_on_your_own_data": "cd integrations/headroom-atk && python3 local_check.py "
+                               "--log /path/to/your.log --needle 'the line that must survive'  "
+                               "# exit 0 shrank and survived, 3 no benefit, 1 needle lost",
    "io": "in: an OpenAI-compatible /v1/chat/completions request on localhost. "
          "out: the same request, prompt compressed, forwarded to the upstream you name; "
          "the upstream's response is returned unchanged.",
@@ -301,15 +313,19 @@ ADOPTION = {
      "integrations/headroom-atk/evidence/ab_summary.json",
      "integrations/headroom-atk/evidence/local_check.txt",
    ],
-   "measured": "Live against ATK: 40,589 -> 25,525 prompt tokens (37.1% fewer) on a needle "
-               "question, same answer both paths, counts from ATK's own usage field. Offline and "
-               "reproducible without a key: 111,357 -> 94,578 characters reaching the upstream "
-               "(15.1% fewer), needle intact. Different metrics on different bytes; both recorded.",
+   "measured": "Two separate things, not one. (1) HISTORICAL, one pair of calls on 2026-09-18 "
+               "against a live gateway: 40,589 -> 25,525 prompt tokens (37.1% fewer) on a needle "
+               "question, same answer both paths; counts are the response usage field; the input "
+               "file was NOT preserved so this is not re-runnable, not re-measured since, and not "
+               "a guarantee. (2) REPRODUCIBLE, offline, no key: 111,357 -> 94,578 characters "
+               "reaching the upstream (15.1% fewer), needle intact. Tokens and characters are "
+               "different units on different bytes. No currency figure is claimed.",
    "does_not_apply_to": "Measured limit, not a guess: headroom saves by factoring text repeated "
                         "across lines. The same 1,200 records as JSON lines compress by exactly "
-                        "0.0% (byte-for-byte pass-through); flattened to plain text they compress "
-                        "27.3%. If your agent reads JSON-structured logs this tool does nothing "
-                        "for you. It also does not apply to short prompts, to payloads where "
+                        "0.0% (returned unmodified); flattened to plain text they compress "
+                        "27.3%. One JSON shape was tested, so treat this as 'check yours first', "
+                        "not as 'JSON never compresses'. It also does not apply to short prompts, "
+                        "to payloads where "
                         "every token is load-bearing, or where you need a byte-exact record of "
                         "what the model saw. Check yours first: "
                         "`python3 local_check.py --log YOUR.log --needle 'the line that matters'` "

@@ -7,7 +7,7 @@ key and no cost. Raw output in `evidence/`.
 | | |
 |---|---|
 | **Problem** | An agent reads a 1,200-line deploy log. You pay for every token of it, and the one line you need is buried at line 947 |
-| **Tool** | [headroom](https://github.com/headroomlabs-ai/headroom) `0.37.0` · Apache-2.0 · `pip install "headroom-ai[proxy]"` · compression runs locally, no content leaves your machine |
+| **Tool** | [headroom](https://github.com/headroomlabs-ai/headroom) · Apache-2.0 · `pip install "headroom-ai[proxy]==0.37.0"` · compression runs locally, no content leaves your machine |
 | **ATK integration** | **Configuration only.** No fork, no adapter, no SDK. |
 | **Live measurement** | **40,589 → 25,525 prompt tokens (37.1% fewer)**, and both paths still returned the exact migration name and SQLSTATE |
 | **Offline measurement** | **111,357 → 94,578 characters (15.1% fewer)** reaching the upstream, needle intact — reproducible without a key |
@@ -15,7 +15,7 @@ key and no cost. Raw output in `evidence/`.
 ## The whole integration
 
 ```bash
-pip install "headroom-ai[proxy]"
+pip install "headroom-ai[proxy]==0.37.0"    # the version every number here was measured on
 headroom proxy --port 8787 --no-http2
 ```
 
@@ -82,9 +82,11 @@ estimate. Raw responses: `evidence/ab_summary.json`, `evidence/ab_needle.json`.
 | Direct to ATK | 40,572 | |
 | Via headroom | 29,781 | **26.6% fewer** |
 
-**Neither summary mentioned the FATAL line.** That is not a compression failure — the *direct*
-path missed it too. A "five bullet summary" of 1,200 lines is simply the wrong instrument for
-finding one unique event, with or without compression. Recorded because it is the result.
+**Neither summary mentioned the FATAL line.** The *direct* path missed it too, so the compression
+is not the whole explanation — but "both failed" does not prove compression cost nothing here
+either, and we cannot separate the two from one pair of calls. What we can say: on this prompt,
+asking for five bullets did not surface the line on either path, and asking the specific question
+surfaced it on both. Recorded because it is the result.
 
 ### Task B — ask the actual question
 
@@ -95,7 +97,13 @@ finding one unique event, with or without compression. Recorded because it is th
 | Direct to ATK | 40,589 | ✅ `0042_add_tenant_id` | ✅ `42701` | |
 | Via headroom | 25,525 | ✅ `0042_add_tenant_id` | ✅ `42701` | **37.1% fewer** |
 
-**The compressed path answered identically at 63% of the prompt cost.**
+**The compressed path answered identically on 63% of the prompt tokens** — tokens, not cost. We
+have no currency figure (see below), so "cost" was the wrong word and is withdrawn.
+
+**Scope of this table:** one log, one model, one prompt, one moment, on 2026-09-18. It is a
+recorded historical case, not a result this round re-measured and not a guarantee for any other
+payload. The exact input file was not preserved (see *What was not preserved*), so it cannot be
+re-run identically even by us.
 
 ## Measurement 2 — offline, reproducible by anyone
 
@@ -148,9 +156,11 @@ timestamp into a header line and rewrites every line relative to it —
 00:01Z ERROR cache-warm  request failed: connection reset by peer after 3 attempts
 ```
 
-**It drops no lines** (1,200 in, 1,200 out). That is exactly why the needle always survives — and
-also exactly why the saving comes only from textual redundancy, not from any judgement about what
-matters.
+**It dropped no lines in the cases we ran** (1,200 in, 1,200 out; the needle survived in all six
+payloads we tested, including the ones where nothing was compressed). That is consistent with the
+saving coming from textual redundancy rather than from any judgement about what matters — but six
+payloads on one version is not a guarantee that a needle always survives, and we do not claim one.
+`local_check.py` exists precisely so you check your own payload instead of trusting that.
 
 **So the saving collapses to zero when the redundancy is not there.** Measured on this machine,
 same date, same proxy:
@@ -161,9 +171,10 @@ same date, same proxy:
 | The *same records* re-emitted as JSON lines | **0.0%** — byte-for-byte pass-through | survived |
 | Those same JSON records flattened back to plain text | **27.3%** | survived |
 
-**Structured JSON logging is extremely common for server logs.** If that is what your agent reads,
-this tool will do nothing for you. It will not corrupt anything — in every zero-compression case
-it passed the payload through unmodified — but you would be adding a process for no benefit.
+**Structured JSON logging is extremely common for server logs.** On the JSON payload *we* tested,
+headroom 0.37.0 returned it unmodified — no benefit, and no damage either. We tested one JSON
+shape, so treat this as "check yours first", not as "JSON never compresses". Run the preflight
+below; that is the whole point of it.
 
 **So check your own log first. One command, no key, about a minute:**
 
@@ -181,15 +192,27 @@ this page was measured without it. It may change results for code-shaped payload
 
 ## Reproduce it
 
+**This asset is not on `main` yet.** It lives on the branch below, in an open Draft pull request.
+Check that branch out explicitly; a default `git clone` will not contain these files.
+
 ```bash
-pip install "headroom-ai[proxy]"
-python3 make_log.py > deploy.log      # deterministic; md5 0ad9194a489136baa931881b78374cf7
-python3 local_check.py                # offline, no key, no cost — takes ~1 min
+git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel
+cd Open-Skill-Distribution-Flywheel
+git checkout claude/atk-headroom-adoption          # NOT on main yet — PR #5, Draft
+
+python3 -m venv .venv && . .venv/bin/activate      # Python 3.11 is what we ran
+pip install "headroom-ai[proxy]==0.37.0"
+
+cd integrations/headroom-atk                       # run from this directory
+python3 make_log.py > deploy.log                   # deterministic; md5 0ad9194a489136baa931881b78374cf7
+python3 local_check.py                             # offline, no key, no cost — about a minute
+python3 test_local_check.py                        # 17 unit tests, also offline
 ```
 
-`local_check.py` and `ab_test.py` look for `deploy.log` **next to the script**, not in your current
-directory, so `python3 path/to/local_check.py` works from anywhere. Python 3.11 is what we ran;
-both scripts are stdlib-only apart from headroom itself.
+`local_check.py` and `ab_test.py` resolve `deploy.log` **next to the script**, not in your current
+directory, so an absolute `python3 /path/to/local_check.py` also works — but `make_log.py` writes
+wherever your shell is, which is why the `cd` above is not optional. Apart from headroom itself
+both scripts are stdlib-only.
 
 To repeat the live measurement (**this spends real tokens**):
 
@@ -234,6 +257,18 @@ your client talks to the provider directly.
 
 **ATK is one value in one header here.** That is as replaceable as an integration gets.
 
+## Found a problem, or used it?
+
+Open an issue: <https://github.com/firekou/Open-Skill-Distribution-Flywheel/issues>. Bugs in
+headroom itself belong upstream at <https://github.com/headroomlabs-ai/headroom/issues>.
+
+There is **no telemetry here** — nothing phones home, nothing is logged, nothing observes you. So
+an issue is the only way we would ever know this helped or failed. If you open one, `local_check.py`
+output (sizes and pass/fail) is safe to share; **your log and your key are not — do not paste
+them.**
+
+**Third-party reports to date: none.**
+
 ## Licence and attribution
 
 headroom is **Apache-2.0** (`headroomlabs-ai/headroom`). **No headroom code is copied into this
@@ -248,4 +283,10 @@ Install it from PyPI. Its own docs: <https://docs.headroomlabs.ai/docs>.
 | `local_check.py` | offline verification **and preflight for your own log** (`--log`, `--needle`): proxy routing, compression, needle survival — no key |
 | `ab_test.py` | the live A/B against ATK — needs `ATK_API_KEY` |
 | `evidence/ab_summary.json`, `evidence/ab_needle.json` | raw ATK responses from the live run |
+| `test_local_check.py` | 17 offline unit tests for the adoption verdict and the error-body redaction |
 | `evidence/local_check.txt` | output of the offline check, with versions and log md5 |
+| `evidence/pr5-r2/controls.txt` | positive and negative controls for the two defects fixed in review round 1 |
+| `evidence/SEARCH_BASELINE.md` | the fixed queries for a discoverability re-test, and why the first run cannot be repeated |
+| `offering/` | free and paid service samples, unit economics — the paid one is an **unapproved draft** |
+| `upstream/HEADROOM_FEEDBACK_DRAFT.md` | three gotchas written up for the headroom maintainers, with duplicate check — **not sent** |
+| `DISTRIBUTION.md` | sharing drafts, distribution list, proposed About/topics — **nothing published** |

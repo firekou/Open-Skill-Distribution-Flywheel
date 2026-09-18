@@ -1,4 +1,8 @@
-# Sample deliverable — paid tier
+# Sample deliverable — paid tier · **NOT APPROVED, NOT LAUNCHED, NOT OFFERED**
+
+> **Status: unapproved draft.** The owner has not approved a paid tier, it is not offered to
+> anyone, and this round was told explicitly not to develop it further. It is kept only so the
+> shape can be reviewed later.
 
 **This is a reviewable sample, not a live service.** No price is set here, no payment path exists,
 no account can be charged, and nobody has bought this. Setting a price is an owner decision and is
@@ -29,8 +33,15 @@ whether it works on your data, and what it is worth in your currency.**
 2. We run each both ways against the provider and plan you actually use.
 3. You get: token and currency deltas per prompt, the break-even volume, the cases where
    compression changed the answer, the configuration, and the removal procedure.
-4. If the measured saving on your data does not clear the threshold agreed before we start, the
-   engagement is refunded. We do not get paid for finding out it does not help you.
+4. **Open question, deliberately not answered here:** what happens when the measurement comes back
+   negative. Two options, and they are mutually exclusive — an earlier draft of this file promised
+   both, which was incoherent:
+   - **(a) Refund if the saving misses a pre-agreed threshold.** Easy to sell; but it pays us only
+     for confirming answers, which is exactly the incentive that makes a measurement worthless.
+   - **(b) The engagement is paid on delivery, including a "this will not help you" result.**
+     Keeps the incentive honest; harder to sell.
+
+   Not decided in this round, and not for the executor to decide.
 
 **Not included:** running your production traffic, holding your credentials, or any ongoing
 service. This is a one-off measurement engagement with a deliverable, not a subscription.
@@ -44,7 +55,7 @@ re-verification would be a separate, smaller unit.
 |---|---|
 | Price | **not set** — owner decision, no figure invented here |
 | Payment | **no path exists.** No account, no processor, no x402/AP2 integration. Nothing here can take money |
-| Refund trigger | measured saving below the pre-agreed threshold |
+| Refund trigger | **undecided** — see the open question in *Scope*; (a) and (b) cannot both hold |
 | Authorisation | must come from the paying organisation, not from an agent acting on its own |
 
 ## What must be true before this is worth offering at all
@@ -62,6 +73,6 @@ on it. This sample exists to be reviewed, not to be launched.
 ## Conflict-of-interest rule this sample commits to
 
 The paid engagement measures whether a tool helps **you**. It is paid for by the buyer, never by
-the tool's vendor, and a "no, this will not save you enough" result is a delivered result that
-still gets paid for — otherwise the measurement is worthless. Sponsorship, where it exists, is
+the tool's vendor. Whether a negative result is still billable is the open question above, and it
+is the question that decides whether the measurement is worth anything. Sponsorship, where it exists, is
 labelled and kept out of the recommendation, exactly as in the free sample.

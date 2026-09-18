@@ -24,8 +24,8 @@ covering both would be counting the same customer twice.
 
 | Line | Status | What it would take to measure |
 |---|---|---|
-| Model tokens for the A/B runs | **partially measured** — our own run used ~81k prompt tokens for one workload's two tasks × two paths | Multiply by the buyer's prompt count; convert at their rate card |
-| Model cost in currency | **unmeasured** | Our provider reported `cost_usd: null`. Needs a plan with per-call cost reporting, or the rate card applied manually |
+| Model tokens for the A/B runs | **measured, and previously reported wrong here.** The four committed `usage` records sum to 40,572 + 29,781 + 40,589 + 25,525 = **136,467 prompt tokens** for one workload (two tasks × two paths). This file previously said "~81k", which had simply omitted the compressed path of each task | Multiply by the buyer's prompt count; convert at their rate card |
+| Model cost in currency | **unmeasured** | `cost_usd` was null in what we saw during the run. That is our own note, not something the committed excerpts show — the saved JSON holds only `usage` and the answer text. Needs a plan with per-call cost reporting, or the rate card applied manually |
 | Search / retrieval | **≈0** | No paid search used |
 | Compute | **≈0 marginal** | headroom runs locally; the proxy is a laptop process |
 | Payment processing | **unmeasured** | No processor chosen. Typically a percentage plus a fixed fee per transaction |
@@ -38,8 +38,10 @@ covering both would be counting the same customer twice.
    a guess, which is why none is set.
 2. **The free tier's cost is real but small and non-recurring**: one verification, published once,
    reusable by everyone. That is the tier the evidence currently supports.
-3. **Rework is the risk to contribution**, not model tokens. Model tokens for one engagement are
-   small next to the time spent getting the measurement right and defensible.
+3. **Rework is the risk to contribution.** This is a judgement, not a measurement: delivery labour
+   is unmeasured, so "model tokens are small next to it" is an expectation we have not verified.
+   What is measured is the token side — 136,467 prompt tokens for one workload. Whether that is
+   large or small relative to labour cannot be said until labour is timed.
 4. **Nothing here justifies scaling supply.** With zero external requests, adding agents or roles
    increases cost with no revenue line to offset it.
 

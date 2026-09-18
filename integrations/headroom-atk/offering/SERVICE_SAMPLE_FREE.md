@@ -22,10 +22,23 @@ format, compresses the prompt on your machine, and forwards it. Your client keep
 localhost URL; nothing about your provider setup has to change.
 
 ```bash
-pip install "headroom-ai[proxy]"
+pip install "headroom-ai[proxy]==0.37.0"
 headroom proxy --port 8787 --no-http2
-# then point your client at http://127.0.0.1:8787/v1 instead of your provider
 ```
+
+Then send to the proxy **and name your upstream on each request**:
+
+```bash
+curl -sS http://127.0.0.1:8787/v1/chat/completions \
+  -H "Authorization: Bearer $YOUR_PROVIDER_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-headroom-base-url: https://your-gateway.example/api" \
+  -d '{"model":"...","messages":[...]}'
+```
+
+**Pointing your client at the proxy is not enough on its own.** Without that header headroom
+resolves the provider itself and your key goes somewhere you did not choose — see the three
+gotchas below. If your provider *is* OpenAI, the header is optional; for anything else it is not.
 
 **When it applies:** long, repetitive machine-generated payloads — deploy logs, server logs, CI
 output, large tool results, RAG chunks.
@@ -37,14 +50,17 @@ record of what the model saw. It is a proxy, so it is also one more process that
 ## ── Evidence ────────────────────────────────────────────────────────────────
 
 Measured 2026-09-18 on a 1,200-line deploy log with a single `FATAL` line planted at index 947.
-Same model, same prompt, same moment.
+Same model, same prompt, same moment. **One workload, one pair of calls** — a recorded case, not a
+benchmark, and the exact input file was not preserved, so even we cannot re-run it identically.
 
 | | prompt tokens | answered correctly |
 |---|--:|:--|
 | Direct to provider | 40,589 | ✅ `0042_add_tenant_id`, SQLSTATE `42701` |
 | Through headroom | 25,525 | ✅ `0042_add_tenant_id`, SQLSTATE `42701` |
 
-**37.1% fewer prompt tokens, identical answer.** Counts are the provider's own `usage` field.
+**37.1% fewer prompt tokens, identical answer.** Counts are the `usage` field of the provider's
+response. We saved `usage` and the answer text, not the full raw HTTP response, so treat it as a
+recorded excerpt rather than a complete transcript. **Tokens, not money** — see below.
 
 **What went wrong, because you asked for proof and not a pitch:** on a different prompt —
 *"summarise this log in five bullets"* — the FATAL line was missed by **both** paths, compressed
@@ -55,11 +71,25 @@ fault, but it is the result and we are not hiding it.
 
 ```bash
 git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel
-cd Open-Skill-Distribution-Flywheel/integrations/headroom-atk
+cd Open-Skill-Distribution-Flywheel
+git checkout claude/atk-headroom-adoption     # not merged to main yet (PR #5, Draft)
+python3 -m venv .venv && . .venv/bin/activate
+pip install "headroom-ai[proxy]==0.37.0"
+cd integrations/headroom-atk
 python3 make_log.py > deploy.log && python3 local_check.py
 ```
 
 This measures the bytes that actually reach the upstream and asserts the needle survived.
+
+**Better: run it against your own log**, because the saving depends entirely on how repetitive
+your log is, and for some shapes it is zero:
+
+```bash
+python3 local_check.py --log /path/to/your.log --needle "the line that must survive"
+```
+
+Exit 0 = it shrank and your needle survived. Exit 3 = no size benefit, do not bother. Exit 1 = a
+needle was lost, do not adopt for that payload.
 
 ## ── Why we recommend it ─────────────────────────────────────────────────────
 
@@ -83,10 +113,18 @@ every plan, and our test provider reported `cost_usd: null` on every call.
 
 ## ── Sponsor ─────────────────────────────────────────────────────────────────
 
-*The block below is paid-for placement. It is separated from the answer, the evidence and the
-recommendation above on purpose. Nothing above was written, ranked, or chosen because of it.*
+*The block below is **ATK promoting its own work**. No third party paid for it and no sponsorship
+was sold — calling it "paid placement" would describe a transaction that does not exist. It is
+kept separate from the answer, the evidence and the recommendation so you can see where the
+promotion starts, and so you can drop it.*
 
-> **This verification was produced and is given away free by AI Token King (ATK).**
+*We cannot certify our own independence, and we are not asking you to take it on trust: the
+recommendation above is checkable without us. The tool is third-party and Apache-2.0, the offline
+command needs no ATK account, and the measurement method is stated so you can repeat it against
+your own provider. Judge the evidence, not our disclaimer.*
+
+> **This verification was produced and is given away free by AI Token King (ATK)**, who maintains
+> this asset.
 > ATK runs an OpenAI-compatible router at `https://api.aitokenking.com.tw/api/v1` and an MCP
 > endpoint at `https://api.aitokenking.com.tw/mcp`. The measurement above was run through it.
 >

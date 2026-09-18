@@ -175,6 +175,15 @@ def main(argv=None) -> int:
         return 2
     log_text = log_path.read_text(errors="replace")
     for needle in needles:
+        if not needle.strip():
+            # P5-02: an empty needle is present in every string, so it turns the
+            # survival check into a no-op that always passes. Refuse it.
+            print(
+                "an empty --needle is satisfied by any output and checks nothing. "
+                "Give the text that must survive.",
+                file=sys.stderr,
+            )
+            return 2
         if needle not in log_text:
             print(
                 f"needle {needle!r} is not in {log_path} to begin with — "
@@ -239,31 +248,56 @@ def main(argv=None) -> int:
         print("FAIL: stub received no user content through the proxy", file=sys.stderr)
         return 1
 
-    reduction = (len(direct) - len(via)) / len(direct)
+    delta = len(direct) - len(via)
+    reduction = delta / len(direct)
     print(f"direct     : {len(direct)} chars reached the upstream")
-    print(f"via proxy  : {len(via)} chars reached the upstream  ({reduction:.1%} fewer)")
+    verdict_word = "fewer" if delta > 0 else ("MORE" if delta < 0 else "identical size")
+    shown = abs(reduction)
+    print(
+        f"via proxy  : {len(via)} chars reached the upstream  "
+        + (f"({shown:.1%} {verdict_word})" if delta else "(identical size)")
+    )
 
+    # P5-02. Needle survival is checked first and is necessary, but it was never
+    # sufficient: the previous version only treated an EXACTLY identical body as
+    # "no benefit", so an equal-length rewrite and even an INFLATED body reached
+    # PASS — the inflated case printing "-166.7% fewer" on its way there. A
+    # verdict that says PASS while the payload grew is worse than no verdict.
+    # Adoption now requires a strict shrink AND every needle present.
     ok = True
     for token in needles:
         present = re.search(re.escape(token), via) is not None
-        print(f"needle {token!r}: {'present' if present else 'LOST'} after compression")
+        print(f"needle {token!r}: {'present' if present else 'LOST'} after the proxy")
         ok = ok and present
 
     if not ok:
-        print("FAIL: compression dropped a needle. Do not adopt for this payload.", file=sys.stderr)
+        print("FAIL: the proxy dropped a needle. Do not adopt for this payload.", file=sys.stderr)
         return 1
 
-    if via == direct:
-        print(
-            "NO BENEFIT: the proxy passed the payload through byte-for-byte. "
-            "headroom saves by factoring out text repeated across lines, so a payload "
-            "without that redundancy — JSON-structured logs are the common case — "
-            "shrinks by exactly 0%. Nothing was lost; there is simply nothing to gain here.",
-            file=sys.stderr,
-        )
+    if delta <= 0:
+        # Three distinct outcomes, described distinctly. Calling an equal-length
+        # rewrite "byte-for-byte" was itself a false statement.
+        if via == direct:
+            why = (
+                "the proxy returned the payload unchanged, byte for byte. headroom saves by "
+                "factoring out text repeated across lines; this payload has no such redundancy "
+                "to factor out. Nothing was lost and nothing was gained."
+            )
+        elif delta == 0:
+            why = (
+                "the payload was REWRITTEN but came back exactly the same length. Not a "
+                "byte-for-byte pass-through — the content changed — so verify the rewrite is "
+                "acceptable to you before using this path. There is no size benefit either way."
+            )
+        else:
+            why = (
+                f"the payload GREW by {-delta} characters ({-reduction:.1%} larger). Sending "
+                "this through the proxy would cost you more, not less."
+            )
+        print(f"NO BENEFIT: {why}", file=sys.stderr)
         return 3
 
-    print("PASS")
+    print(f"PASS: {delta} fewer characters ({reduction:.1%}) and every needle survived")
     return 0
 
 

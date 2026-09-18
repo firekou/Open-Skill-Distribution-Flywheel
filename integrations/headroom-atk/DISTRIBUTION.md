@@ -11,6 +11,24 @@ reinvented here. This asset lands on its Beat 2 ("we ran it, here is what broke"
 
 ---
 
+## GitHub About description and topics — proposed values, not yet applied
+
+Direction approved by the owner (1A). The values below are the concrete wording; applying them is
+a repository-settings change the owner makes, and it has **not** been made.
+
+**About description (proposed):**
+
+> Helping agents find, install and use practical AI tools — each verified entry with licence, cost,
+> install command and a dated record of someone actually running it. Optional ATK Router/API/MCP.
+
+**Topics (proposed):** `ai-agents`, `agent-tools`, `agent-skills`, `token-optimization`,
+`llm-proxy`, `prompt-compression`, `tool-registry`, `openai-compatible`, `mcp`, `llm-cost`
+
+**Why these words.** The search trial (below) used queries containing *proxy, compress, tokens,
+logs, OpenAI-compatible, gateway, per-request, registry, verified, install command, licence, cost,
+evidence*. The current description contains almost none of them. This is a hypothesis about
+visibility, **not a demonstrated cause** of the 0/3 result — see the baseline's own caveats.
+
 ## Draft 1 — short post (X / Threads)
 
 > We put a local compression proxy in front of an LLM gateway and measured it on a 1,200-line
@@ -55,9 +73,9 @@ links to. It is written to be followed by someone who was given nothing else.
 |---|---|---|---|---|---|
 | 1 | This repository (`integrations/headroom-atk/`) | anyone with the repo URL; agents given the path | itself | GitHub traffic on the path; clones | none — **done**, this is the only completed item |
 | 2 | `registry/materials.json` `_adoption` record | an agent reading the machine index | the README | fetch the raw JSON and confirm `_adoption` present | none — **done** |
-| 3 | Repository README index entry | a human landing on the repo root | the README | visible in the root README | small edit, not yet made |
-| 4 | Repo topics / description keywords (e.g. `token-optimization`, `llm-proxy`) | GitHub search | the repo | search GitHub for the topic and find the repo | owner (repo settings) |
-| 5 | An upstream issue or discussion on `headroomlabs-ai/headroom` sharing the three gotchas | headroom's own users and maintainers | the README | the thread exists; reactions; whether a maintainer folds it into their docs | **owner authorisation required — this is contacting a third party** |
+| 3 | Repository README index entry | a human landing on the repo root | the README | visible in the root README | none — **done** in this round (root `README.md`, "Verified assets you can use today") |
+| 4 | Repo About description / topics | GitHub search | the repo | search GitHub for the topic and find the repo | **owner (repo settings).** Proposed values are above; not applied |
+| 5 | An upstream issue or discussion on `headroomlabs-ai/headroom` sharing the three gotchas | headroom's own users and maintainers | the README | the thread exists; reactions; whether a maintainer folds it into their docs | **owner authorisation required — this is contacting a third party.** Draft written and duplicate-checked: `upstream/HEADROOM_FEEDBACK_DRAFT.md`. NOT SENT |
 | 6 | X / Threads / LinkedIn posts (drafts 1–2) | developer audience | the README | referral traffic; replies | owner; account access |
 | 7 | External tool directories / awesome-lists | people browsing curated lists | the repo | our entry appears in their list | owner; each has its own submission rules to follow |
 | 8 | `llms.txt` at the repo root | agents that look for one | the registry + README | **cannot be verified** — no client is known to guarantee it is read. Listed as preparation, never as discoverability | none, but see caveat |
@@ -66,6 +84,33 @@ links to. It is written to be followed by someone who was given nothing else.
 publishing JSON, Markdown, `llms.txt` or an MCP endpoint is a *delivery format*. None of them
 causes a search service to index the asset or an agent to find it. Items 1–2 are done and are the
 only ones that are. Everything else is prepared and waiting.
+
+## Feedback entry — voluntary, no telemetry
+
+There is **no tracking of any kind** in this asset: no analytics, no phone-home, no request logging,
+nothing that observes a user. If someone wants to tell us how it went, the only channel is a
+GitHub issue:
+
+<https://github.com/firekou/Open-Skill-Distribution-Flywheel/issues>
+
+Useful to include: headroom version, OS and Python version, the shape of your payload (plain text,
+JSON lines, mixed), what `local_check.py` exited with, and whether you used ATK or another
+upstream.
+
+**Do not paste an API key, a token, or a real log.** `local_check.py` prints only sizes and
+pass/fail — that output is safe to share; your log is not, and we do not want it.
+
+**Recorded third-party feedback to date: none.** Not "low" — none. When there is any, it goes in
+the executor response as its own line, kept separate from request counts, brand impressions and
+task success.
+
+## Upstream feedback drafts — prepared, NOT SENT
+
+Three gotchas found while building this asset, written up for the headroom maintainers:
+[`upstream/HEADROOM_FEEDBACK_DRAFT.md`](upstream/HEADROOM_FEEDBACK_DRAFT.md).
+
+**Status: 待核准、未送出.** No issue, discussion or comment has been opened. Sending needs separate
+owner authorisation.
 
 ## What would make item 4–7 worth doing
 
