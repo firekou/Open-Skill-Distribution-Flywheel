@@ -1,36 +1,83 @@
 # Verification record — ATK provider seam
 
-**Date:** 2026-09-18 · **Scope:** `integrations/atk-provider/`
-**Status: VERIFIED OFFLINE. NOT verified against ATK.**
+**Updated:** 2026-09-18 (round 2, after the PR #4 review of `f2a2188`)
+**Scope:** `integrations/atk-provider/`
+**Status: local behaviour VERIFIED by the author. ATK connectivity VERIFIED BY THE REVIEWER, not
+by this repository.**
 
-## The headline gap, stated first
+## The official endpoint — and who established it
 
-**No request in this record has ever reached ATK.** Two independent reasons:
+The first version of this file recorded that `api.aitokenking.com` did not resolve and concluded
+the ATK path was unverified. **That hostname was wrong**: it was missing both `.tw` and `/api`.
 
-1. **No ATK credential exists in the build environment.** `ATK_API_KEY` is unset, and none was
-   requested or created.
-2. **`api.aitokenking.com` does not resolve from the build environment.**
+**The PR #4 reviewer found the official entry point and tested it. I did not.** Attribution
+matters here, so it is stated before the table:
 
-```
-$ python3 -c "import socket; print(socket.gethostbyname('api.aitokenking.com'))"
-socket.gaierror: [Errno -5] No address associated with hostname
+| | |
+|---|---|
+| **Tested by** | the PR #4 reviewer, with their own credential |
+| **Not tested by** | this repository. **No ATK credential exists in this environment**, and nothing here has ever called ATK |
+| Source | <https://aitokenking.com.tw/assets/docs/zh-Hant/index.html#mcp-server> |
 
-$ curl -sS --max-time 15 https://api.aitokenking.com/v1/models
-curl: (56) CONNECT tunnel failed, response 502
+| Purpose | Official entry point | Evidence |
+|---|---|---|
+| OpenAI-compatible base URL | `https://api.aitokenking.com.tw/api/v1` | **TESTED (reviewer)** |
+| Model list | `GET /api/v1/models` | **TESTED (reviewer)** — HTTP 200, 52 models |
+| Chat completions | `POST /api/v1/chat/completions` | **TESTED (reviewer)** — one call through **this repository's `atk_provider.py`**, changing only the environment: `model=claude-sonnet-4.6`, `MAX_RETRIES=1`, no fallback, `max_tokens=16`. Sent "Reply with OK only." → returned `OK`, usage 12 in / 4 out. **No USD cost reported, which does not mean free** |
+| MCP | `https://api.aitokenking.com.tw/mcp`, header `X-Aitokenking-Api-Key` | **OBSERVED in the official docs only.** No MCP handshake has been performed by anyone on this PR |
 
-# control, same network, same moment:
-$ python3 -c "import socket; print(socket.gethostbyname('api.openai.com'))"
-172.66.0.243
-```
+**What that one live call establishes:** the single-text path works against the real service, and
+this adapter speaks it correctly. **What it does not establish:** MCP, other models, other
+providers, streaming, tool calls, billing behaviour, or anything about cost.
 
-`api.openai.com` resolves from the same shell, so this is **not** a blanket network block. It
-may be egress policy on this host, or the hostname in the contract document may be wrong or not
-yet live. **This record does not decide which**, and the value in `.env.example` is carried over
-from `ATK_ROUTING_INTEGRATION.md` §3 and is marked there as unverified.
+## Variable naming
 
-**Therefore `ATK_BASE_URL`, a real `ATK_MODEL` id, and ATK's response shape are all UNVERIFIED.**
-The adapter assumes ATK is OpenAI-compatible because the contract document says so. If it is not,
-the ATK path breaks and every other provider keeps working.
+The official docs use `AITOKENKING_API_KEY`; `ATK_ROUTING_INTEGRATION.md` §3 uses `ATK_API_KEY`.
+**`ATK_API_KEY` is the documented name here, and `AITOKENKING_API_KEY` is accepted as an alias**
+so a reader can paste either without knowing this history. Mapping stated in `.env.example` and
+`README.md`; regression test `test_the_official_key_name_is_accepted_as_an_alias`.
+
+## Review findings from `f2a2188` — all three closed
+
+Each was reproduced before being changed, and each fix has a **runtime** regression test. The
+reviewer's instruction was explicit: *do not let "no `sk-` in the source" stand in for a runtime
+test*. So every credential case configures a real canary value, has a real server echo it, and
+asserts on what a human would actually see.
+
+### P4-01 — a rejecting server could leak the key (was REPRODUCED, now closed)
+
+`_post` put the first 400 characters of the error body into the exception, under a comment
+reasoning that keys travel in headers so bodies are safe. **That inference was wrong.** A server
+answering `401 {"error": "invalid credential <key>"}` put the key into text the example prints
+to stderr. Reproduced: `CANARY in str(exc)` → `True`.
+
+**Fix:** the body is **withheld by default**; the message carries status and provider only.
+`ATK_INCLUDE_ERROR_BODY=1` opts in for debugging, and **redaction still applies on that path**.
+Every known `*_API_KEY` value is also redacted from the aggregated fallback error, and from the
+URL in an unreachable-host error, since some gateways carry credentials in a query string.
+
+Tests: rejecting server · opt-in body · aggregated fallback · unreachable host with the key in
+the URL · `--show-payload` never prints the key or an `Authorization` header.
+
+**Honest limit:** redaction only removes values it knows. A proxy that re-encodes or truncates a
+key can still defeat it — which is why withholding, not redaction, is the default.
+
+### P4-02 — a 200 with no text counted as success (was REPRODUCED, now closed)
+
+`content: null` returned `Completion(text=None)`; the example printed `None` and exited 0. For a
+summarising asset that is a failure reported as a success. Reproduced: `c.text is None` → `True`.
+
+**Fix:** a non-empty string is required. `null`, whitespace-only, and wrong-typed content all
+raise, and the message names `finish_reason` so the reader learns *why* it was empty. Same rule
+for empty Anthropic `content` blocks. **Control:** genuine text still succeeds.
+
+### P4-03 — Quick Start did not match the implementation (was OBSERVED, now closed)
+
+1. `.env.example` carried the wrong base URL and the README only said "fill in key/model", so
+   following it could not work. **Fixed** to the official URL, with the model-list command.
+2. The README claimed `--dry-run` printed "the exact request" while the code printed 300-char
+   excerpts. **Fixed both ways**: the default is now labelled a **PREVIEW**, and `--show-payload`
+   prints the **complete JSON body**. Headers are never printed.
 
 ## What was verified, and how
 
@@ -40,8 +87,12 @@ body, status handling, retries and fallback are genuinely exercised.
 
 ```
 $ python3 -m unittest test_atk_provider
-Ran 14 tests — OK
+Ran 25 tests — OK
 ```
+
+Against the reviewed commit `f2a2188`, the 11 new PR #4 tests give **10 failures /
+1 error**, and the single pass is the deliberate control (`test_real_text_still_succeeds`) — a fix that rejected everything would be its own
+defect.
 
 | Contract property (`ATK_ROUTING_INTEGRATION.md` §1) | Evidence |
 |---|---|
@@ -83,21 +134,27 @@ input 1100 chars -> prompt 1443 chars
 
 ## Not verified, and not claimed
 
-- **Any ATK behaviour at all.** See above.
-- **Any real provider.** No request has gone to OpenAI, Anthropic or anyone else. The wire
-  formats follow published API shapes; that they match today's live APIs is **untested here**.
+- **Anything about ATK, by this repository.** The one live call on record is the reviewer's,
+  with their credential. **I have not run against ATK and do not claim to have.**
+- **MCP.** Endpoint and header come from the official docs. No handshake performed.
+- **Other models, other providers.** 52 models are listed; one was called, once, by the reviewer.
 - **Any cost or token saving.** This code moves requests. It does not compress, cache or
-  optimise, and **nothing in this asset may be cited as evidence of a saving.**
-- **Latency, throughput, concurrency.** Not measured.
-- **Streaming, tool calls, batching.** Not implemented.
+  optimise, and **nothing here may be cited as evidence of a saving.** The one live call reported
+  no USD cost, which is not the same as free.
+- **Latency, throughput, concurrency, billing.** Not measured.
+- **Streaming, tool calls, batching.** Not implemented; a tool-only reply now fails loudly.
 - **`TOKEN_BUDGET_PER_RUN` / `COST_BUDGET_USD_PER_RUN`.** Named in the contract, **not
-  implemented**. A caller setting them today gets no enforcement. Recorded as an open gap rather
-  than silently ignored.
+  implemented**. Recorded as an open gap rather than silently ignored.
+- **Integration with any registry candidate.** This is a standalone example. headroom, rtk and
+  open-code-review are **not** wired in, and the claim that every integration must first have a
+  common adapter is **not evidenced** — ATK's native MCP and OpenAI-compatible config may be
+  enough for some assets.
 
-## What would close the live gap
+## What would close the remaining gap
 
-1. Confirm the real ATK base URL and one valid model id.
-2. One credential with a small budget.
-3. Re-run `example_summarise_tool_output.py` against it and append the transcript here.
-
-Until then this is **a verified client with an unverified counterparty.**
+1. **A credential in the executor's environment**, so the author can reproduce the reviewer's
+   live call rather than citing it. (Items 1 and 2 of the previous version are now **done** —
+   by the reviewer.)
+2. An MCP handshake against `https://api.aitokenking.com.tw/mcp`, to move that row from OBSERVED
+   to TESTED.
+3. One real integration with a registry candidate, which is the next asset and not this one.

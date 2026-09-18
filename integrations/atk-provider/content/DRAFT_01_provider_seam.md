@@ -2,95 +2,113 @@
 status: DRAFT — 未發布。發布需另行授權（reviews/ATK_STRATEGY_REALIGNMENT_2026-09-18.md §5）
 asset: integrations/atk-provider/
 claims_requiring_evidence: none（本文不宣稱省錢或品質提升）
+live_evidence: ATK 單次 chat 由 PR #4 reviewer 以自有憑證實測；本文作者未跑過真實 ATK
 ---
 
-# 你的 Agent 不該知道自己在跟誰講話
+# 三分鐘接上 ATK，而且隨時換得掉
 
-## 一個很常見的下場
+## 先講最短路徑
 
-你寫了一個 skill。它跑得很好，因為你在裡面 `import openai`。
+如果你的客戶端支援 MCP，**你不需要任何程式碼**：
 
-三個月後：客戶要求資料不出境、你想用便宜的模型跑批次、某家供應商當機兩小時。每一件事都要你改程式碼，而那行 `import` 已經散在十七個檔案裡。
+```json
+{
+  "mcpServers": {
+    "aitokenking": {
+      "url": "https://api.aitokenking.com.tw/mcp",
+      "headers": { "X-Aitokenking-Api-Key": "${AITOKENKING_API_KEY}" }
+    }
+  }
+}
+```
 
-這不是供應商的問題，是**接縫**的問題。你的 skill 知道了它不該知道的事。
+key 從環境變數讀，不要寫進會 commit 的檔案。設定格式各家客戶端略有不同，以你的為準。
 
-## 一個檔案的解法
+如果你在寫 Python、而且不想被單一供應商綁住，才需要看下去。
 
-ATK 的 `ATK_ROUTING_INTEGRATION.md` 早就寫下這個接縫的規格，但一直沒有實作。我們把它補上了，**一個檔案、只用標準函式庫、沒有任何依賴**：
+## OpenAI 相容端點
+
+ATK 提供 OpenAI 相容 API，所以你原本的程式幾乎不用改：
+
+```bash
+ATK_BASE_URL=https://api.aitokenking.com.tw/api/v1
+```
+
+先確認你的 key 能看到哪些模型（撰稿時是 52 個）：
+
+```bash
+curl -s https://api.aitokenking.com.tw/api/v1/models \
+  -H "Authorization: Bearer $ATK_API_KEY" | python3 -m json.tool | head
+```
+
+> **變數名稱有兩種寫法。** 官方文件叫 `AITOKENKING_API_KEY`，我們的接入契約叫 `ATK_API_KEY`。**兩個都吃得下**，貼哪一個都行——但不要兩個都設成不同的值。
+
+## 為什麼還要一層接縫
+
+你寫了一個 skill，裡面 `import openai`。三個月後：客戶要資料不出境、你想用便宜模型跑批次、某家供應商當機兩小時。每一件事都要改程式，而那行 import 已經散在十七個檔案裡。
+
+這不是供應商的問題，是**接縫**的問題。
 
 ```python
 from atk_provider import Message, complete
 
-c = complete([
-    Message("system", "你很簡潔。"),
-    Message("user", "一句話解釋什麼是 context window。"),
-])
+c = complete([Message("user", "一句話解釋 context window。")])
 print(c.text)
 print(c.provider, c.model, c.usage.total_tokens)   # 誰真的服務了這一次
 ```
 
-這就是全部的 API。你的程式碼**不再 import 任何廠商 SDK**。
-
-換供應商是 `.env` 裡的一行：
+**一個檔案、只用標準函式庫、零依賴。** 換供應商是 `.env` 裡一行：
 
 ```bash
 PROVIDER=openai     # 或 anthropic / deepseek / qwen / openrouter / custom
 ```
 
-`PROVIDER=custom` 可以指向**任何 OpenAI 相容的 host**——閘道、代理、你自己跑的本地模型。
+`PROVIDER=custom` 可以指向任何 OpenAI 相容 host——閘道、代理、你自己跑的本地模型。
 
-## 四條規矩，每一條都有測試
-
-ATK 的規格寫了一句話，我們把它當成驗收條件：
+## 四條規矩，每一條都是測試
 
 > **ATK 可以是預設，但永遠不可以是唯一。**
 
 | 規矩 | 怎麼驗的 |
 |---|---|
-| **看得見** | 每次回應都帶 `provider`，範例每跑一次就印出來 |
-| **換得掉** | 同一段程式、同一個呼叫，靠環境變數送到兩台不同伺服器，兩邊各自驗證收到什麼 |
-| **寫清楚** | README 的「怎麼換掉 ATK」放在顯眼位置，不是附錄 |
-| **可移除** | 把所有 `ATK_*` 變數拿掉、`PROVIDER=openai`，整個東西照常運作——這是一條測試，不是一句保證 |
+| **看得見** | 每次回應都帶 `provider`，範例每跑一次就印 |
+| **換得掉** | 同一段程式靠環境變數送到兩台不同伺服器、用兩把不同 key，兩邊各自驗證收到什麼 |
+| **寫清楚** | README 的「怎麼換掉 ATK」在顯眼處 |
+| **可移除** | 所有 `ATK_*` 拿掉照常運作——這是一條測試，不是一句保證 |
 
-第四條最容易嘴上說說。所以它是 `TestOptional.test_it_runs_with_no_atk_variables_at_all`。
+## 兩個外部審查抓到的問題，值得你也檢查自己的程式
 
-## 幾個刻意的設計決定
+這個資產被獨立審查過，抓到兩個我自己沒看到的洞。它們都很常見：
 
-**沒有回報成本，就是 `None`，不是 `0.0`。**
-把「沒告訴我」寫成 `0`，讀起來像「這次免費」。這兩件事差很多。
+**第一，錯誤訊息會洩漏你的 key。**
 
-**設定不完整，在送出請求前就失敗。**
-少一個 `ATK_MODEL`，你會立刻看到少了哪一個變數，而不是等 HTTP 400 回來再猜。測試斷言了伺服器收到**零**個請求。
+我原本把服務端錯誤本文前 400 字塞進例外訊息，還在註解裡寫「key 在 header 不在 body，所以安全」。**這個推論是錯的**——伺服器或代理完全可以把它拒絕的那把 key 回顯在 body 裡。審查者用假憑證重現了：401 回 `{"error": "invalid credential <你的key>"}`，例外訊息就帶著它印到 stderr。
 
-**不認得的 `PROVIDER` 直接拒絕，不會退回預設值。**
-打錯字就靜靜送到別家去，是我們不想要的那種貼心。
+現在預設**不含 body**，只留 status。要 debug 再開 `ATK_INCLUDE_ERROR_BODY=1`，而且**那條路徑也會遮蔽已知 key**。
 
-**4xx 不重試。**
-第三次還是會 400。重試只是浪費你的時間。5xx 才重試，然後換下一家。
+> 順帶一提：「原始碼裡搜不到 `sk-`」**不能**當作執行時不會洩漏的證據。審查者這句話值得抄在牆上。
 
-**沒設定的 fallback 是跳過，不是重試。**
-少的那把 key，第三次還是會少。
+**第二，HTTP 200 但沒有內容，被當成成功。**
 
-**最後的錯誤訊息會列出每一家試過什麼、為什麼失敗。**
-「所有供應商都失敗」這種訊息沒有人能拿來 debug。
+`content: null`（例如模型回了 tool call）原本回傳 `text=None`，範例印出 `None` 然後 exit 0。對一個做摘要的東西來說，那是把失敗報成成功。現在會明確失敗，而且訊息裡帶 `finish_reason` 告訴你為什麼是空的。
+
+## 先看，再花錢
+
+```bash
+python3 example_summarise_tool_output.py --dry-run --show-payload --file build.log
+```
+
+印出**完整的 JSON request body**，然後什麼都不送。header 永遠不印，因為其中一個是你的 key。
 
 ## 老實說有什麼沒做
 
-- **沒有跟真的 ATK 連過。** 環境裡沒有憑證，而且 `api.aitokenking.com` 在我們的網路上**解不出 DNS**——同一個 shell 裡 `api.openai.com` 解得出來，所以不是整體封鎖。可能是出口政策，也可能是文件裡的位址不對。我們沒有替它決定，全部記在 `VERIFICATION.md`。
-- **沒有任何省錢或品質主張。** 這個檔案只負責把請求送出去。它不壓縮、不快取、不優化。
-- **沒有 streaming、tool call、batch。**
-- **預算上限沒實作。** 規格文件裡有 `TOKEN_BUDGET_PER_RUN`，我們**沒做**，而且明講沒做，而不是收下參數然後忽略它。
+- **我沒有跑過真實 ATK。** 這份資產上唯一一次 live 呼叫是 **PR 審查者用他自己的憑證做的**：`claude-sonnet-4.6`、`max_tokens=16`、回 `OK`、12 in / 4 out。我的環境裡沒有憑證，我不會說那是我跑的。
+- **那一次沒有回報美元成本**，但沒回報不等於免費。
+- **MCP 沒有實際握手過**，端點和 header 名稱來自官方文件。
+- **沒有任何省錢或品質主張。** 這個檔案只負責把請求送出去，它不壓縮、不快取、不優化。
+- **契約裡的預算上限沒實作**，明講沒做，而不是收下參數然後忽略。
 
-14 個測試跑在**真的 HTTP 伺服器**上——真的 socket、真的請求、真的解析。合成的是「供應商」，不是傳輸層。
-
-## 拿去用
-
-```bash
-cd integrations/atk-provider
-python3 example_summarise_tool_output.py --dry-run --file build.log
-```
-
-`--dry-run` 印出**會送出什麼**，然後什麼都不送。不需要憑證。在花任何錢之前，先看清楚它要做什麼。
+25 個測試跑在真的 HTTP 伺服器上。憑證相關的都是**執行時 canary**：真的設一個秘密值、真的讓伺服器回顯它、再斷言人看到的字串裡沒有它。
 
 ---
-*程式碼：`integrations/atk-provider/`。Apache-2.0 相容，只用標準函式庫。*
+*程式碼：`integrations/atk-provider/`，只用標準函式庫。*

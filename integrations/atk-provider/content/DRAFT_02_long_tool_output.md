@@ -2,6 +2,7 @@
 status: DRAFT — 未發布。發布需另行授權（reviews/ATK_STRATEGY_REALIGNMENT_2026-09-18.md §5）
 asset: integrations/atk-provider/example_summarise_tool_output.py
 claims_requiring_evidence: none（本文不宣稱壓縮率、省錢或品質提升）
+live_evidence: ATK 單次 chat 由 PR #4 reviewer 以自有憑證實測；本文作者未跑過真實 ATK
 ---
 
 # 4000 行 build log，模型只需要其中三行
@@ -39,21 +40,32 @@ cat build.log | python3 example_summarise_tool_output.py
 
 最後那句是刻意的。模型很願意把「build 成功」寫成三段有洞見的分析。
 
+## 三行設定就能跑
+
+```bash
+ATK_API_KEY=<你的 key>
+ATK_BASE_URL=https://api.aitokenking.com.tw/api/v1
+ATK_MODEL=claude-sonnet-4.6
+```
+
+模型清單（撰稿時 52 個）：
+
+```bash
+curl -s https://api.aitokenking.com.tw/api/v1/models \
+  -H "Authorization: Bearer $ATK_API_KEY" | python3 -m json.tool | head
+```
+
+官方文件叫 `AITOKENKING_API_KEY`，我們的契約叫 `ATK_API_KEY`，**兩個都吃**。
+
 ## 先看，再花錢
 
 ```bash
-python3 example_summarise_tool_output.py --dry-run --file build.log
+python3 example_summarise_tool_output.py --dry-run --show-payload --file build.log
 ```
 
-```
-PROVIDER=atk
-provider not configured: PROVIDER=atk needs ATK_API_KEY, ATK_BASE_URL, ATK_MODEL. ...
-input 1100 chars -> prompt 1443 chars
---- messages ---
-[system] 你為一位必須採取行動的工程師總結機器輸出 ...
-```
+**印出完整的 JSON request body，然後什麼都不送。** 不需要憑證。header 永遠不印，因為其中一個是你的 key。
 
-**印出會送出什麼，然後什麼都不送。** 不需要憑證。任何要你先給 key 才肯讓你看它要幹嘛的工具，都值得懷疑。
+任何要你先給 key 才肯讓你看它要幹嘛的工具，都值得懷疑。
 
 ## 換一家供應商是一行
 
@@ -69,11 +81,21 @@ PROVIDER=openai python3 example_summarise_tool_output.py --file build.log
 
 `cost not reported` 是真的沒回報，不是 0。供應商沒告訴我們，我們就不替它編一個。
 
+## 一個容易忽略的失敗模式
+
+如果模型回了 tool call 而不是文字，HTTP 是 200，但 `content` 是 `null`。
+
+這個範例的早期版本會印出 `None` 然後 exit 0——**把失敗報成成功**。是外部審查抓到的。現在它會明確失敗，並告訴你 `finish_reason` 是什麼。
+
+如果你自己在寫類似的東西，值得檢查一下：**你的「成功」判斷，是不是只看了 HTTP 狀態碼？**
+
 ## 老實說清楚
 
-**這個範例只是節錄，不是壓縮。** 它砍掉中間然後講明砍了。真正的壓縮是另一件事——`headroom`（Apache-2.0，在我們的 registry 裡）就是在做這件事，而且它有自己公開的品質 benchmark。把它接到這個接縫前面是很自然的下一步資產，**但本輪沒有做，所以本文不引用它的任何數字**。
+**這個範例只是節錄，不是壓縮。** 它砍掉中間然後講明砍了。真正的壓縮是另一件事——`headroom`（Apache-2.0，在我們的 registry 裡）就是在做這件事，而且它有自己公開的品質 benchmark。把它接到這個接縫前面是很自然的下一步資產，**但還沒做，所以本文不引用它的任何數字**。
 
-**我們沒有跟真的 ATK 連過。** 環境裡沒有憑證，而且那個 endpoint 在我們的網路上解不出 DNS。全部記在 `VERIFICATION.md`，沒有用 mock 冒充成功。
+**我沒有跑過真實 ATK。** 這份資產上唯一一次 live 呼叫是 **PR 審查者用他自己的憑證做的**（`claude-sonnet-4.6`，回 `OK`，12 in / 4 out，未回報美元成本）。我的環境裡沒有憑證，所以我不會說那是我跑的。本機測試打的是 localhost 伺服器，測的是 client，不是 ATK。全部記在 `VERIFICATION.md`。
+
+**這個範例還不是任何工具的整合。** 它是獨立範例，headroom 還沒接上。
 
 **本文沒有任何省錢主張。** 少送 token 當然少付錢，但「少多少」需要在你自己的工作負載上量，而那是另一件事，需要另一份證據。
 

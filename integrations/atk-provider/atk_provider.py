@@ -38,6 +38,7 @@ from typing import Iterable, Sequence
 __all__ = [
     "Message", "Usage", "Completion", "ProviderError", "ConfigError",
     "OpenAICompatibleProvider", "AnthropicProvider", "build_provider", "complete",
+    "redact", "REDACTED",
 ]
 
 DEFAULT_TIMEOUT = 120
@@ -99,7 +100,32 @@ def _env(prefix: str, name: str, default: str | None = None) -> str | None:
     return value if value not in (None, "") else default
 
 
-def _post(url: str, payload: dict, headers: dict, timeout: int, provider: str) -> dict:
+REDACTED = "***REDACTED***"
+
+
+def redact(text: str, secrets: Iterable[str]) -> str:
+    """Remove known secret values from anything about to be shown to a human.
+
+    P4-01. The previous version echoed the first 400 characters of a provider's error body into
+    the exception, with a comment reasoning that "keys travel in headers, not bodies, so this does
+    not surface a credential". **That inference is wrong and was demonstrated wrong**: a server or
+    proxy is free to echo the credential it rejected, and one that answers
+    `401 {"error": "invalid credential <key>"}` put the key straight into the message the example
+    prints to stderr.
+
+    Redaction is the second line here, not the first: by default the body is not included at all
+    (see `_post`). It still runs, because a secret can also reach a message through a URL or a
+    reason string, and a defence that guards one entrance is not a defence.
+    """
+    out = text
+    for secret in secrets:
+        if secret and len(secret) >= 4:
+            out = out.replace(secret, REDACTED)
+    return out
+
+
+def _post(url: str, payload: dict, headers: dict, timeout: int, provider: str,
+          secrets: Sequence[str] = (), include_body: bool = False) -> dict:
     body = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(url, data=body, method="POST")
     req.add_header("Content-Type", "application/json")
@@ -109,14 +135,21 @@ def _post(url: str, payload: dict, headers: dict, timeout: int, provider: str) -
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", "replace")[:400]
-        # The body is echoed because a 400 from a provider usually says exactly what is wrong,
-        # and hiding it behind "request failed" wastes the reader's afternoon. Keys travel in
-        # headers, not bodies, so this does not surface a credential.
-        raise ProviderError(f"{provider}: HTTP {exc.code} — {detail}",
+        # P4-01: a controlled message by default. The status code and provider are the
+        # diagnostics that matter and cannot carry a credential; the server's prose might.
+        detail = ""
+        if include_body:
+            raw = exc.read().decode("utf-8", "replace")[:400]
+            detail = " — " + redact(raw, secrets)
+        else:
+            detail = (" — body withheld; set ATK_INCLUDE_ERROR_BODY=1 to include it (it may "
+                      "echo your credential, so do not paste the result into a bug report)")
+        raise ProviderError(redact(f"{provider}: HTTP {exc.code}{detail}", secrets),
                             provider=provider, status=exc.code) from exc
     except urllib.error.URLError as exc:
-        raise ProviderError(f"{provider}: cannot reach {url} — {exc.reason}",
+        # The URL can contain a credential in a query string on some gateways, so it is
+        # redacted too rather than assumed safe.
+        raise ProviderError(redact(f"{provider}: cannot reach {url} — {exc.reason}", secrets),
                             provider=provider) from exc
 
 
@@ -124,12 +157,13 @@ class OpenAICompatibleProvider:
     """`/chat/completions`. Serves ATK, OpenAI, DeepSeek, Qwen, OpenRouter and any custom host."""
 
     def __init__(self, name: str, api_key: str, base_url: str, model: str,
-                 timeout: int = DEFAULT_TIMEOUT) -> None:
+                 timeout: int = DEFAULT_TIMEOUT, include_error_body: bool = False) -> None:
         self.name = name
         self._key = api_key
         self._base = base_url.rstrip("/")
         self.model = model
         self._timeout = timeout
+        self._include_error_body = include_error_body
 
     def complete(self, messages: Sequence[Message], **kwargs) -> Completion:
         payload = {
@@ -138,7 +172,8 @@ class OpenAICompatibleProvider:
         }
         payload.update({k: v for k, v in kwargs.items() if v is not None})
         data = _post(f"{self._base}/chat/completions", payload,
-                     {"Authorization": f"Bearer {self._key}"}, self._timeout, self.name)
+                     {"Authorization": f"Bearer {self._key}"}, self._timeout, self.name,
+                     secrets=(self._key,), include_body=self._include_error_body)
         try:
             text = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
@@ -146,6 +181,16 @@ class OpenAICompatibleProvider:
                 f"{self.name}: response did not contain choices[0].message.content. "
                 "The endpoint answered, but not in the OpenAI chat-completions shape this "
                 "adapter speaks.", provider=self.name) from exc
+        # P4-02: HTTP 200 with `content: null` used to return Completion(text=None), the example
+        # printed "None" and exited 0. A tool-only or refused reply is not a summary, and an
+        # asset whose job is to produce text must not report success without any.
+        if not isinstance(text, str) or not text.strip():
+            finish = (data.get("choices") or [{}])[0].get("finish_reason")
+            raise ProviderError(
+                f"{self.name}: the request succeeded (HTTP 200) but returned no text "
+                f"(content={type(text).__name__}, finish_reason={finish!r}). This adapter "
+                "handles plain text only; a tool-call or empty completion is reported as a "
+                "failure rather than as an empty summary.", provider=self.name)
         u = data.get("usage") or {}
         return Completion(
             text=text,
@@ -167,13 +212,15 @@ class AnthropicProvider:
     """`/v1/messages`. A different wire format, so it is a different adapter, not a flag."""
 
     def __init__(self, name: str, api_key: str, base_url: str, model: str,
-                 timeout: int = DEFAULT_TIMEOUT, max_tokens: int = 1024) -> None:
+                 timeout: int = DEFAULT_TIMEOUT, max_tokens: int = 1024,
+                 include_error_body: bool = False) -> None:
         self.name = name
         self._key = api_key
         self._base = base_url.rstrip("/")
         self.model = model
         self._timeout = timeout
         self._max_tokens = max_tokens
+        self._include_error_body = include_error_body
 
     def complete(self, messages: Sequence[Message], **kwargs) -> Completion:
         system = " ".join(m.content for m in messages if m.role == "system") or None
@@ -186,12 +233,17 @@ class AnthropicProvider:
         payload.update({k: v for k, v in kwargs.items() if v is not None})
         data = _post(f"{self._base}/v1/messages", payload,
                      {"x-api-key": self._key, "anthropic-version": "2023-06-01"},
-                     self._timeout, self.name)
+                     self._timeout, self.name,
+                     secrets=(self._key,), include_body=self._include_error_body)
         try:
             text = "".join(block.get("text", "") for block in data["content"])
         except (KeyError, TypeError) as exc:
             raise ProviderError(f"{self.name}: response contained no `content` blocks",
                                 provider=self.name) from exc
+        if not text.strip():                                          # P4-02, same rule here
+            raise ProviderError(
+                f"{self.name}: the request succeeded but returned no text "
+                f"(stop_reason={data.get('stop_reason')!r}).", provider=self.name)
         u = data.get("usage") or {}
         inp, out = int(u.get("input_tokens") or 0), int(u.get("output_tokens") or 0)
         return Completion(text=text, model=data.get("model") or self.model, provider=self.name,
@@ -208,7 +260,13 @@ def build_provider(name: str | None = None, env: dict | None = None):
             "falling back to a default provider would send your prompt somewhere you did not ask "
             "for.")
     prefix, wire = PROVIDERS[name]
+    # P4-03: the official ATK docs name the variable AITOKENKING_API_KEY; this repository's
+    # contract (ATK_ROUTING_INTEGRATION.md §3) names it ATK_API_KEY. Rather than make the reader
+    # guess, ATK_API_KEY is the documented name here and the official spelling is accepted as an
+    # alias. The mapping is stated in .env.example and README.
     key = env.get(f"{prefix}_API_KEY") or ""
+    if not key and name == "atk":
+        key = env.get("AITOKENKING_API_KEY") or ""
     base = env.get(f"{prefix}_BASE_URL") or ""
     model = env.get(f"{prefix}_MODEL") or ""
     missing = [n for n, v in (("API_KEY", key), ("BASE_URL", base), ("MODEL", model)) if not v]
@@ -218,9 +276,13 @@ def build_provider(name: str | None = None, env: dict | None = None):
             ". Copy .env.example and fill it in. No value here is guessed or hardcoded, so an "
             "incomplete configuration fails before a request is sent rather than after.")
     timeout = int(env.get("REQUEST_TIMEOUT_SECONDS") or DEFAULT_TIMEOUT)
+    # Off by default: a provider's error prose may echo the credential it rejected (P4-01).
+    include_body = str(env.get("ATK_INCLUDE_ERROR_BODY") or "").strip().lower() in ("1", "true", "yes")
     if wire == "anthropic":
-        return AnthropicProvider(name, key, base, model, timeout)
-    return OpenAICompatibleProvider(name, key, base, model, timeout)
+        return AnthropicProvider(name, key, base, model, timeout,
+                                 include_error_body=include_body)
+    return OpenAICompatibleProvider(name, key, base, model, timeout,
+                                    include_error_body=include_body)
 
 
 def _chain(env: dict) -> list[str]:
@@ -246,6 +308,10 @@ def complete(messages: Iterable[Message], *, env: dict | None = None, **kwargs) 
     messages = list(messages)
     retries = max(1, int(env.get("MAX_RETRIES") or DEFAULT_RETRIES))
     problems: list[str] = []
+    # P4-01: every configured key, so the summary below cannot reassemble a secret that an
+    # individual adapter already redacted from its own message.
+    secrets = [v for k, v in env.items()
+               if k.endswith("_API_KEY") and isinstance(v, str) and v]
 
     for name in _chain(env):
         try:
@@ -264,5 +330,5 @@ def complete(messages: Iterable[Message], *, env: dict | None = None, **kwargs) 
                 if attempt < retries:
                     time.sleep(min(2 ** (attempt - 1), 8))
     raise ProviderError(
-        "every configured provider failed:\n  " + "\n  ".join(problems),
+        redact("every configured provider failed:\n  " + "\n  ".join(problems), secrets),
         provider="none")

@@ -11,6 +11,7 @@ exists in this environment and the host does not resolve from here. See `VERIFIC
 from __future__ import annotations
 
 import json
+import pathlib
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -229,6 +230,134 @@ class TestRequestShape(unittest.TestCase):
         self.assertEqual(body["messages"],
                          [{"role": "system", "content": "S"}, {"role": "user", "content": "U"}])
         self.assertEqual(body["temperature"], 0.2)
+
+
+class TestPR4ReviewFindings(unittest.TestCase):
+    """The three findings from the PR #4 review of `f2a2188`, reproduced then closed.
+
+    The lesson the reviewer named explicitly: *"do not let 'no sk- in the source' stand in for a
+    runtime test"*. So every case here is a **canary at runtime** — a real secret value is
+    configured, a real server echoes it, and the assertion is about what a human would actually
+    see.
+    """
+
+    CANARY = "CANARY-SECRET-do-not-leak-7f3a9c"
+
+    # ---- P4-01: credential in error output --------------------------------
+    def test_a_rejecting_server_cannot_leak_the_key_through_the_error(self):
+        """A 401 whose body echoes the credential. This leaked before the fix."""
+        with _Server([(401, {"error": f"invalid credential {self.CANARY}"})]) as s:
+            env = {"PROVIDER": "atk", "ATK_API_KEY": self.CANARY, "ATK_BASE_URL": s.url,
+                   "ATK_MODEL": "m", "MAX_RETRIES": "1"}
+            with self.assertRaises(ap.ProviderError) as cm:
+                ap.complete([Message("user", "q")], env=env)
+        self.assertNotIn(self.CANARY, str(cm.exception))
+        self.assertIn("401", str(cm.exception), "the status must survive: it is the diagnostic")
+
+    def test_the_opt_in_body_is_still_redacted(self):
+        """Asking for the body is a debugging aid, not consent to print the key."""
+        with _Server([(401, {"error": f"invalid credential {self.CANARY}"})]) as s:
+            env = {"PROVIDER": "atk", "ATK_API_KEY": self.CANARY, "ATK_BASE_URL": s.url,
+                   "ATK_MODEL": "m", "MAX_RETRIES": "1", "ATK_INCLUDE_ERROR_BODY": "1"}
+            with self.assertRaises(ap.ProviderError) as cm:
+                ap.complete([Message("user", "q")], env=env)
+        msg = str(cm.exception)
+        self.assertNotIn(self.CANARY, msg)
+        self.assertIn(ap.REDACTED, msg)
+        self.assertIn("invalid credential", msg, "the useful prose still comes through")
+
+    def test_the_aggregated_fallback_error_is_redacted(self):
+        """Each adapter redacts its own message; the summary must not reassemble a secret."""
+        with _Server([(401, {"error": self.CANARY})]) as a_s, \
+             _Server([(401, {"error": self.CANARY})]) as b_s:
+            env = {"PROVIDER": "atk", "ATK_API_KEY": self.CANARY, "ATK_BASE_URL": a_s.url,
+                   "ATK_MODEL": "m", "FALLBACK_PROVIDERS": "openai",
+                   "OPENAI_API_KEY": self.CANARY, "OPENAI_BASE_URL": b_s.url,
+                   "OPENAI_MODEL": "m", "MAX_RETRIES": "1", "ATK_INCLUDE_ERROR_BODY": "1"}
+            with self.assertRaises(ap.ProviderError) as cm:
+                ap.complete([Message("user", "q")], env=env)
+        self.assertNotIn(self.CANARY, str(cm.exception))
+
+    def test_an_unreachable_host_cannot_leak_a_key_in_the_url(self):
+        """Some gateways carry credentials in the query string."""
+        env = {"PROVIDER": "custom", "CUSTOM_API_KEY": self.CANARY, "MAX_RETRIES": "1",
+               "CUSTOM_BASE_URL": f"http://127.0.0.1:1/v1?token={self.CANARY}",
+               "CUSTOM_MODEL": "m"}
+        with self.assertRaises(ap.ProviderError) as cm:
+            ap.complete([Message("user", "q")], env=env)
+        self.assertNotIn(self.CANARY, str(cm.exception))
+
+    # ---- P4-02: a 200 with no text is not a summary -----------------------
+    def test_a_200_with_null_content_is_a_failure_not_an_empty_summary(self):
+        """This returned Completion(text=None); the example printed "None" and exited 0."""
+        with _Server([(200, {"model": "m", "usage": {},
+                             "choices": [{"message": {"content": None},
+                                          "finish_reason": "tool_calls"}]})]) as s:
+            env = {"PROVIDER": "atk", "ATK_API_KEY": "k", "ATK_BASE_URL": s.url,
+                   "ATK_MODEL": "m", "MAX_RETRIES": "1"}
+            with self.assertRaises(ap.ProviderError) as cm:
+                ap.complete([Message("user", "q")], env=env)
+        self.assertIn("no text", str(cm.exception))
+        self.assertIn("tool_calls", str(cm.exception), "say WHY it was empty")
+
+    def test_whitespace_only_and_wrong_typed_content_also_fail(self):
+        for content in ("   \n  ", 42, [], {}):
+            with self.subTest(content=content):
+                with _Server([(200, {"model": "m", "usage": {},
+                                     "choices": [{"message": {"content": content}}]})]) as s:
+                    env = {"PROVIDER": "atk", "ATK_API_KEY": "k", "ATK_BASE_URL": s.url,
+                           "ATK_MODEL": "m", "MAX_RETRIES": "1"}
+                    with self.assertRaises(ap.ProviderError):
+                        ap.complete([Message("user", "q")], env=env)
+
+    def test_an_empty_anthropic_reply_also_fails(self):
+        with _Server([(200, {"model": "c", "content": [], "usage": {}})]) as s:
+            env = {"PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "k",
+                   "ANTHROPIC_BASE_URL": s.url.replace("/v1", ""), "ANTHROPIC_MODEL": "c",
+                   "MAX_RETRIES": "1"}
+            with self.assertRaises(ap.ProviderError):
+                ap.complete([Message("user", "q")], env=env)
+
+    def test_real_text_still_succeeds(self):
+        """CONTROL. Rejecting everything would be its own defect."""
+        with _Server([_openai_reply("a genuine summary")]) as s:
+            env = {"PROVIDER": "atk", "ATK_API_KEY": "k", "ATK_BASE_URL": s.url,
+                   "ATK_MODEL": "m"}
+            self.assertEqual(ap.complete([Message("user", "q")], env=env).text,
+                             "a genuine summary")
+
+    # ---- P4-03: documentation matches the implementation -------------------
+    def test_the_env_template_carries_the_official_base_url(self):
+        env_example = (pathlib.Path(__file__).parent / ".env.example").read_text()
+        self.assertIn("https://api.aitokenking.com.tw/api/v1", env_example)
+        self.assertNotIn("ATK_BASE_URL=https://api.aitokenking.com/v1", env_example,
+                         "the old URL was missing .tw and /api and did not resolve")
+
+    def test_the_official_key_name_is_accepted_as_an_alias(self):
+        """The docs say AITOKENKING_API_KEY; the contract says ATK_API_KEY. Both must work."""
+        p = ap.build_provider("atk", {"AITOKENKING_API_KEY": "k",
+                                      "ATK_BASE_URL": "https://example.invalid/api/v1",
+                                      "ATK_MODEL": "m"})
+        self.assertEqual(p.name, "atk")
+
+    def test_show_payload_prints_the_complete_body_and_never_a_header(self):
+        import subprocess, sys, tempfile, os
+        with tempfile.TemporaryDirectory() as td:
+            log = pathlib.Path(td) / "x.log"
+            log.write_text("ERROR: boom at a.c:1\n" + "pad\n" * 50)
+            r = subprocess.run(
+                [sys.executable, "example_summarise_tool_output.py", "--dry-run",
+                 "--show-payload", "--file", str(log)],
+                capture_output=True, text=True, cwd=str(pathlib.Path(__file__).parent),
+                env={**os.environ, "PROVIDER": "atk", "ATK_API_KEY": self.CANARY,
+                     "ATK_BASE_URL": "https://example.invalid/api/v1", "ATK_MODEL": "m"})
+        self.assertEqual(r.returncode, 0, r.stderr)
+        payload = json.loads(r.stdout[r.stdout.index("{"):])   # the body is the JSON tail
+        self.assertEqual(payload["model"], "m")
+        self.assertEqual([m["role"] for m in payload["messages"]], ["system", "user"])
+        self.assertIn("ERROR: boom at a.c:1", payload["messages"][1]["content"])
+        self.assertNotIn(self.CANARY, r.stdout, "a dry run must never print the key")
+        self.assertNotIn("Authorization", r.stdout)
 
 
 if __name__ == "__main__":

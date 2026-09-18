@@ -1,8 +1,80 @@
 # ATK 分發與接入：第一個交付
 
 **狀態：待獨立 review（IMPLEMENTED_PENDING_REVIEW）**
-**分支：** `claude/atk-distribution-provider-seam` ｜ **起始 commit：** `345b1aa`
+**分支：** `claude/atk-distribution-provider-seam` ｜ **PR：** #4（Draft，未合併）
 **交付：** `integrations/atk-provider/`
+
+---
+
+## 第二輪：PR #4 review（`f2a2188`）的三項修正
+
+**P4-01～03 全部重現、全部修復。審查結論 APPROVED_WITH_CONDITIONS 的條件已處理，維持 Draft。**
+
+### 先更正我上一輪的一個結論
+
+我上一輪寫「`api.aitokenking.com` 解不出 DNS，所以 ATK 端點未驗證」，並把那當成需要負責人回答的問題。
+
+**那個主機名稱本來就是錯的**——少了 `.tw` 和 `/api`。**審查者找到官方入口並實測成功。** 官方文件：<https://aitokenking.com.tw/assets/docs/zh-Hant/index.html#mcp-server>
+
+| 用途 | 官方入口 | 證據 |
+|---|---|---|
+| OpenAI 相容 base URL | `https://api.aitokenking.com.tw/api/v1` | **TESTED（審查者）** |
+| 模型清單 | `GET /api/v1/models` | **TESTED（審查者）**：HTTP 200，52 個模型 |
+| Chat | `POST /api/v1/chat/completions` | **TESTED（審查者）**：用**本 PR 的 `atk_provider.py`**，只改環境設定；`claude-sonnet-4.6`、`max_tokens=16`，回 `OK`，12 in / 4 out，**未回報美元成本（≠ 免費）** |
+| MCP | `https://api.aitokenking.com.tw/mcp`，`X-Aitokenking-Api-Key` | **僅 OBSERVED（官方文件）**，未做 handshake |
+
+**這一次 live 呼叫是審查者用他自己的憑證做的，不是我。** 我的環境仍然沒有 ATK 憑證，我沒有跑過真實 ATK，也不會說我跑過。
+
+### P4-01 — 錯誤輸出會洩漏憑證（REPRODUCED → 已修）
+
+`_post` 把服務端錯誤本文前 400 字放進例外，註解還寫「key 在 header 不在 body，所以不會洩漏」。**那個推論是錯的**，而且被證明是錯的：伺服器可以回顯它拒絕的那把 key。
+
+重現：401 回 `{"error": "invalid credential <CANARY>"}` → `CANARY in str(exc)` 為 `True`。
+
+**修法：預設不含 body**，只留 status 與 provider。`ATK_INCLUDE_ERROR_BODY=1` 才納入，**且該路徑仍會遮蔽**。彙總的 fallback 錯誤、以及連不上時的 URL（有些閘道把憑證放 query string）也都遮蔽。
+
+**測試全部是執行時 canary**——真的設秘密值、真的讓伺服器回顯、斷言人看到的字串裡沒有它。審查者那句「不要用『原始碼搜不到 sk-』代替執行時測試」我照做了。
+
+**誠實的限制：遮蔽只能移除它知道的值。** 代理若重新編碼或截斷 key 仍可能繞過——所以預設是「不含」而不是「靠遮蔽」。
+
+### P4-02 — 沒有摘要也算成功（REPRODUCED → 已修）
+
+`content: null`（例如 tool call）原本回 `Completion(text=None)`，範例印 `None`、exit 0。**對摘要資產而言是把失敗報成成功。**
+
+**修法：要求非空字串。** `null`、純空白、型別不符一律失敗，訊息帶 `finish_reason` 說明為何是空的；Anthropic 空 `content` 同規則。**正控制：真的有文字時照常成功。**
+
+### P4-03 — Quick Start 與實作不符（OBSERVED → 已修）
+
+1. `.env.example` 的 URL 錯誤、README 只說「填 key/model」，照抄跑不起來 → **已改成官方 URL**，並加上列模型的指令。
+2. README 宣稱 dry-run 印出 exact request，實際只印每則前 300 字 → **兩邊都修**：預設明確標示為 **PREVIEW**，新增 `--show-payload` 印出**完整 JSON body**；**header 永不輸出**。
+3. 變數命名：官方用 `AITOKENKING_API_KEY`，契約用 `ATK_API_KEY`。**選 `ATK_API_KEY` 為本處標準名，官方拼法接受為別名**，映射寫在 `.env.example` 與 README，並有測試。
+
+### 另外補的（審查者第 3 點）
+
+README 新增 **ATK MCP 區段**：若客戶端支援 MCP，**完全不需要這個 adapter**，直接貼官方端點設定即可。並明講 MCP 與 OpenAI 相容 API 是兩種協定，**MCP URL 不是 `ATK_BASE_URL`**。
+
+### 測試
+
+```
+$ python3 -m unittest test_atk_provider
+Ran 25 tests — OK        （上一輪 14）
+```
+
+新增的 11 個 PR #4 測試對 `f2a2188`：**10 failures / 1 error**；唯一通過的是刻意的正控制
+（`test_real_text_still_succeeds`）——會把正常情況也擋掉的修法是另一種缺陷。
+
+### 我接受的一個判斷
+
+審查者說：**「每個接入都必須先寫共同 adapter」沒有證據**，而且官方已提供原生 MCP 與 OpenAI 相容設定。
+
+**接受。** 我上一輪把這個接縫說成所有接入的前置條件，那是過度推論。它是**寫 Python 且想換得掉供應商時**的工具；能用原生設定解決的就該用原生設定。README 和兩篇稿子都已改成這個定位，並明列**本資產尚未整合 registry 任何候選工具**。
+
+---
+
+## 第一輪紀錄（保留，時間標示如下）
+
+以下為 2026-09-18 第一輪提交時的內容。**其中「ATK endpoint 未驗證／DNS 解不出」已被上方更正**，
+但原文保留，不改寫歷史。
 
 ---
 
@@ -139,4 +211,17 @@ socket.gethostbyname('api.openai.com')      → 172.66.0.243          ← 同一
 5. 文件是否跟得下去（照 README 從零走一次）。
 6. **請不要**把本輪當成 ATK 連線已驗證，也不要當成任何節省的證據。
 
-**未解事項：** ATK endpoint 是否正確／已上線（見第五節）。這是需要負責人或有權限者確認的事實，不是我能從程式決定的。
+**未解事項（第一輪原文）：** ATK endpoint 是否正確／已上線。**已由第二輪解決——見本文件開頭。**
+
+---
+
+## 下一 reviewer 要驗什麼（第二輪更新）
+
+1. `python3 -m unittest test_atk_provider` 在乾淨 checkout → 25/25。
+2. **P4-01 負控制**：設一個 canary 當 key、讓伺服器回顯它，確認例外文字裡沒有它；`ATK_INCLUDE_ERROR_BODY=1` 也一樣。
+3. **P4-02**：`content: null` 必須失敗；有文字時必須成功。
+4. **P4-03**：照 README 從零走一次，確認 `.env.example` 的 URL 可用；`--show-payload` 印出完整 body 且**沒有 header**。
+5. **不要**把本輪當成我跑過 ATK——live 證據是審查者的，已標註來源。
+6. **不要**當成任何節省的證據，也不要當成已整合 headroom。
+
+**仍未做：** 我這邊沒有 ATK 憑證，所以無法自行重現 live 呼叫；MCP 未 handshake；尚未接上任何 registry 候選工具（那是下一個資產）。

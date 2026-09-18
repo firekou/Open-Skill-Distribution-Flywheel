@@ -15,12 +15,14 @@ Provider Interface, with the provider chosen by configuration alone.
     PROVIDER=openai python3 example_summarise_tool_output.py --file build.log   # same code path
 
     python3 example_summarise_tool_output.py --dry-run --file build.log
-        Prints the request that WOULD be sent, and sends nothing. Works with no credential,
-        which makes it the honest way to read this file before spending anything.
+        Shows what WOULD be sent and sends nothing. Works with no credential, which makes it
+        the honest way to read this file before spending anything. Add --show-payload for the
+        complete JSON body; headers are never printed, because one of them is your key.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 
@@ -55,7 +57,10 @@ def main(argv=None) -> int:
     ap.add_argument("--max-chars", type=int, default=12000,
                     help="excerpt size before the middle is dropped (default 12000)")
     ap.add_argument("--dry-run", action="store_true",
-                    help="print the request and send nothing; needs no credential")
+                    help="show what would be sent and send nothing; needs no credential")
+    ap.add_argument("--show-payload", action="store_true",
+                    help="with --dry-run, print the COMPLETE JSON request body. Headers are "
+                         "never printed: the Authorization header carries your key")
     a = ap.parse_args(argv)
 
     text = open(a.file, encoding="utf-8", errors="replace").read() if a.file else sys.stdin.read()
@@ -67,15 +72,29 @@ def main(argv=None) -> int:
     if a.dry_run:
         selected = (os.environ.get("PROVIDER") or "atk").lower()
         print(f"PROVIDER={selected}")
+        model = None
         try:
             p = build_provider()
+            model = p.model
             print(f"would call: {p.name} / model {p.model}")
         except Exception as exc:                      # ConfigError, printed not raised
             print(f"provider not configured: {exc}")
         print(f"input {len(text)} chars -> prompt {sum(len(m.content) for m in messages)} chars")
-        print("--- messages ---")
-        for m in messages:
-            print(f"[{m.role}] {m.content[:300]}{'...' if len(m.content) > 300 else ''}")
+
+        if a.show_payload:
+            # P4-03: the README used to promise dry-run printed "the exact request" while this
+            # printed 300-character excerpts. It now prints the complete body on request, and
+            # labels the default honestly as a preview.
+            body = {"model": model or "<unset: fill in *_MODEL>",
+                    "messages": [{"role": m.role, "content": m.content} for m in messages]}
+            print("--- complete request body (headers omitted: they carry your key) ---")
+            print(json.dumps(body, ensure_ascii=False, indent=2))
+        else:
+            print("--- messages (PREVIEW, first 300 chars each) ---")
+            for m in messages:
+                clipped = len(m.content) > 300
+                print(f"[{m.role}] {m.content[:300]}{'...' if clipped else ''}")
+            print("--- use --show-payload for the complete request body ---")
         return 0
 
     try:
