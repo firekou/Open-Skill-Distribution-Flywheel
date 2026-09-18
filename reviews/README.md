@@ -1,3 +1,5 @@
+> **負責人最新目標補充：[外部 Agent 發現、採用與解題驗收](ATK_AGENT_DISCOVERY_AND_ADOPTION.md)。** PR #4 的小交付結案不代表整體目標達成。下一個工作包是一個真實工具的可發現入口、可跟做接入與任務驗證，回覆於 `reviews/ATK_AGENT_DISCOVERY_EXECUTOR_RESPONSE.md`；下方舊「下一步／停止」只適用原交付，不得據此停止整體主線。
+
 > **最新結案（PR #4）：[829c7e9 文件核對與 APPROVED 結論](PR4_R3_REVIEW_328a33b.md#文件結案追加829c7e92026-09-18)。** 阻擋項 0、條件 0、負責人待決 0。DOC-SYNC 已關閉，程式未變更，沿用先前獨立驗證。新增 live 表格為 executor 自報，本次未獨立重跑。修復輪結束；PR 維持 Draft、未合併。
 
 > **規劃、執行與 review 的共同前置規則：[ATK 目標對齊與防偏航 skill](../.claude/skills/atk-goal-alignment/SKILL.md)。** 每轮先確認工作如何服務最新用戶目標，再決定必要測試與停止點。小修正沿用既有目標摘要，不另開治理或批准流程。
