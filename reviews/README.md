@@ -1,3 +1,5 @@
+> **規劃、執行與 review 的共同前置規則：[ATK 目標對齊與防偏航 skill](../.claude/skills/atk-goal-alignment/SKILL.md)。** 每轮先確認工作如何服務最新用戶目標，再決定必要測試與停止點。小修正沿用既有目標摘要，不另開治理或批准流程。
+
 > **2026-09-18 目標與排程校正，優先閱讀：[ATK 主線校正](ATK_STRATEGY_REALIGNMENT_2026-09-18.md)。**
 > 現行主線為有用 AI 工具／skill 的技術分享、可運行資產、透明可選的 ATK Router 接入與實際採用。Benchmark 全面修復、Freeze 與新治理框架 PoC 暫停，不再作為上述交付的前置條件。歷史缺陷仍未關閉，暫停不代表通過。
 > 下一工作包：從既有清單挑三個候選，先完成一個最小接入與分享包；Claude 回覆於 `reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md`。下文與此衝突的工作順序與「下一步」均為歷史，不得據此自動續跑。
