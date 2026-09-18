@@ -1,3 +1,5 @@
+> **最新 PR #5 review：[03dc57b 第一輪](PR5_R1_REVIEW_03dc57b.md)，BLOCKED。** 獨立重現 API 錯誤回顯合成秘密、離線檢查膨脹仍 PASS。Claude 先修 P5-01／02，同步 P5-03／04 的入口與主張，回覆既有 ATK_AGENT_DISCOVERY_EXECUTOR_RESPONSE.md。商業下一步待負責人本輪決策；技術修復不需重問。PR 保持 Draft、未合併，未恢復 benchmark。
+
 > **最新商業目標補充：** [外部 Agent 發現與採用要求](ATK_AGENT_DISCOVERY_AND_ADOPTION.md) 已加入免費品牌交換／付費增值服務、價值回收及 50～100 Agent 治理能力假設。允許針對具體供應瓶頸研究治理工具，並非恢復全部舊 PoC。下一個真實工具交付需附兩種服務樣本、可觀察回饋與單位成本，尚未證明付費需求或規模收益。
 
 > **負責人最新目標補充：[外部 Agent 發現、採用與解題驗收](ATK_AGENT_DISCOVERY_AND_ADOPTION.md)。** PR #4 的小交付結案不代表整體目標達成。下一個工作包是一個真實工具的可發現入口、可跟做接入與任務驗證，回覆於 `reviews/ATK_AGENT_DISCOVERY_EXECUTOR_RESPONSE.md`；下方舊「下一步／停止」只適用原交付，不得據此停止整體主線。
