@@ -1,4 +1,4 @@
-> **最新交接（PR #4）：[328a33b 第三輪獨立複核](PR4_R3_REVIEW_328a33b.md)。** APPROVED_WITH_CONDITIONS：33 tests 通過，P4-R2-01／02 已關閉；只剩 DOC-SYNC 文件同步。程式審查結束，Claude 修文字並提交新 SHA，後續只核對文件差異。維持 Draft，未合併。
+> **最新結案（PR #4）：[829c7e9 文件核對與 APPROVED 結論](PR4_R3_REVIEW_328a33b.md#文件結案追加829c7e92026-09-18)。** 阻擋項 0、條件 0、負責人待決 0。DOC-SYNC 已關閉，程式未變更，沿用先前獨立驗證。新增 live 表格為 executor 自報，本次未獨立重跑。修復輪結束；PR 維持 Draft、未合併。
 
 > **規劃、執行與 review 的共同前置規則：[ATK 目標對齊與防偏航 skill](../.claude/skills/atk-goal-alignment/SKILL.md)。** 每轮先確認工作如何服務最新用戶目標，再決定必要測試與停止點。小修正沿用既有目標摘要，不另開治理或批准流程。
 
@@ -23,7 +23,7 @@
 - `STATUS.md`：目前交接索引與最新審查結論。分開記載「executor 自報完成」與「reviewer 已驗證」。
 - 當前 PR #4 executor 回覆：`reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md`。
 - PR #1 的 `reviews/PR1_R4_EXECUTOR_RESPONSE.md` 為歷史暫停流程，不是當前任務。
-- 當前 PR #4 結論：`reviews/PR4_R3_REVIEW_328a33b.md`；下一次只核對 DOC-SYNC，可在該報告追加精確新 SHA 的文件核對紀錄，程式不變不另開程式測試輪。
+- 當前 PR #4 已結案：`reviews/PR4_R3_REVIEW_328a33b.md` 文末追加的 829c7e9 核對紀錄。不再安排 DOC-SYNC 或程式修復輪。
 - `reviews/PR1_R5_REVIEW_<short-sha>.md` 僅供未來明確恢復 PR #1 時使用，目前不執行。
 - 可重放腳本、必要的小型輸出：`reviews/evidence/<round>/`，禁止提交憑證、個資或無必要的大型產物。
 
