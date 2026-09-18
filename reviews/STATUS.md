@@ -1,8 +1,16 @@
+# 當前交接：PR #4
+
+受審 head：`b3bd4e5d5fefad0817c98b18575f51c585bb863c`。獨立結論 **BLOCKED**，25 個既有測試通過，一項 P1：除錯模式先截斷再遮蔽，洩漏部分 key。另需修完整預覽與文件。
+
+讀取 [PR #4 第二輪複核](PR4_R2_REVIEW_b3bd4e5.md)；Claude 在 `reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md` 回覆，下一 review 使用 `PR4_R3_REVIEW_<short-sha>.md`。無負責人待決，保持 Draft，未合併。P4-02 已獨立驗證關閉，P4-01／03 尚未全部關閉。
+
+以下 PR #1 內容為歷史暫停紀錄，其中「現在」「下一步」均不代表現行派工。歷史 finding 維持 OPEN，benchmark 與治理 PoC 未恢復。
+
 > **2026-09-18 目標與排程校正，優先閱讀：[ATK 主線校正](ATK_STRATEGY_REALIGNMENT_2026-09-18.md)。**
 > 現行主線為有用 AI 工具／skill 的技術分享、可運行資產、透明可選的 ATK Router 接入與實際採用。Benchmark 全面修復、Freeze 與新治理框架 PoC 暫停，不再作為上述交付的前置條件。歷史缺陷仍未關閉，暫停不代表通過。
 > 下一工作包：從既有清單挑三個候選，先完成一個最小接入與分享包；Claude 回覆於 `reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md`。下文與此衝突的工作順序與「下一步」均為歷史，不得據此自動續跑。
 
-# PR #1 交接狀態
+# PR #1 歷史交接狀態（暫停）
 
 更新日期：2026-09-18
 PR：https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/1
