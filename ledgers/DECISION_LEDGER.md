@@ -31,3 +31,10 @@ If a decision is not evidence-backed, label the rationale **STRATEGIC BET**. Eve
 **Two decisions (D007, D008) are STRATEGIC BETs.** Both concern whether ATK's core commercial
 premise holds. Neither is supported by demand data, and D007 has direct counterevidence on
 file. They are recorded as bets so they are not later mistaken for findings.
+
+
+## STRATEGY_RESET_20260918：負責人明確校正主線
+
+依 2026-09-18 最新指示，回到技術分發與 ATK Router 接入。此為方向決策，不聲稱由新市場需求證據證明。D007 保留為未採用的研究假設，不再授權量測產品建置；Lab 與全面修復排程暫停，歷史 gate 和缺陷不改為通過。Omnigent 等協作 PoC 亦暫停優先導入。
+
+下一步、驗收與治理範圍見 [主線校正](../reviews/ATK_STRATEGY_REALIGNMENT_2026-09-18.md)。成功以可用資產、可選 ATK 接入與實際採用判定，不以 review 輪數、文件量或測試數判定。
