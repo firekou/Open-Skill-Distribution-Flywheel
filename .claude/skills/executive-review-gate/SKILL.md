@@ -15,6 +15,10 @@ Give the owner enough reliable information to control the project without follow
 
 Use the owner's request, current repository instructions, approved plan or specification, changed files, diff, commits, PR discussion, test output, runtime evidence, cost information, and rollback evidence. If a required artifact is unavailable, mark it unavailable and lower the confidence. Do not silently infer that it exists.
 
+## 本 repository 的方向前置檢查
+
+先讀取並套用 [atk-goal-alignment](../atk-goal-alignment/SKILL.md)。在既有 review 摘要交代本輪如何服務使用者目標，再進行技術驗收。不要因局部缺陷自動擴大範圍；也不得以防偏航省略必要驗證。沿用本 skill 的結論與證據格式，不新增平行批准程序。
+
 ## Review method
 
 1. Reconstruct the intended outcome and acceptance criteria from the owner's request and approved artifacts. Resolve conflicts in favor of the latest explicit human decision.
