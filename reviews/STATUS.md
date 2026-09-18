@@ -1,3 +1,5 @@
+> **負責人最新目標補充：[外部 Agent 發現、採用與解題驗收](ATK_AGENT_DISCOVERY_AND_ADOPTION.md)。** PR #4 的小交付結案不代表整體目標達成。下一個工作包是一個真實工具的可發現入口、可跟做接入與任務驗證，回覆於 `reviews/ATK_AGENT_DISCOVERY_EXECUTOR_RESPONSE.md`；下方舊「下一步／停止」只適用原交付，不得據此停止整體主線。
+
 # 當前交接：PR #4 已完成本輪審查
 
 核准 head：`829c7e9d800b8aeb19ef13d20af9678511c72cb4`。**APPROVED**，阻擋項 0、條件 0、負責人待決 0。DOC-SYNC 與 P4-R2-03 已關閉。
