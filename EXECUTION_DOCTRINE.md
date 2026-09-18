@@ -1,3 +1,7 @@
+> **2026-09-18 目標與排程校正，優先閱讀：[ATK 主線校正](reviews/ATK_STRATEGY_REALIGNMENT_2026-09-18.md)。**
+> 現行主線為有用 AI 工具／skill 的技術分享、可運行資產、透明可選的 ATK Router 接入與實際採用。Benchmark 全面修復、Freeze 與新治理框架 PoC 暫停，不再作為上述交付的前置條件。歷史缺陷仍未關閉，暫停不代表通過。
+> 下一工作包：從既有清單挑三個候選，先完成一個最小接入與分享包；Claude 回覆於 `reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md`。下文與此衝突的工作順序與「下一步」均為歷史，不得據此自動續跑。
+
 # ATK Evidence-Driven Execution Doctrine v1
 
 **Status:** Governing execution doctrine
