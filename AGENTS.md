@@ -13,3 +13,7 @@
 沿用 [reviews/README.md](reviews/README.md) 與 [Claude 執行入口](CLAUDE_EXECUTION_START.md)。技術驗收使用 [.claude/skills/executive-review-gate/SKILL.md](.claude/skills/executive-review-gate/SKILL.md)。一般範圍內工作不新增批准流程。
 
 把交接、修復回覆與 review 留在 repository，不要求負責人搬運檔案。Skill 與 review 判定本身不授權 merge、部署或支出。
+
+## 外部 Agent 採用目標
+
+必讀 [外部 Agent 發現、採用與解題驗收](reviews/ATK_AGENT_DISCOVERY_AND_ADOPTION.md)。每次交付都分辨「已公開」「能被找到」「能採用」「解決任務」「外部實際使用」；不能互相代替。小 PR 結案後指出下一個未驗證目標並繼續主線，不無限重驗已解問題，也不把停止點誤作整體專案停止。下一工作包與回覆位置以該文件為準。
