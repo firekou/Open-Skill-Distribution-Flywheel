@@ -52,7 +52,7 @@
 
 目前先做 decode(... )[:400]，才 redact(raw, secrets)。完整 key 跨過第 400 字時，字串替換無法找到完整值。這不是代理先編碼／截斷 key 的外部限制，是本程式自己製造的洩漏。
 
-本機伺服器回 HTTP 401，error 值是 370 個 x 加上 38 字元假 key；開 ATK_INCLUDE_ERROR_BODY=1。例外含假 key 前 19 字，完整 key 則不存在。既有 assertNotIn(完整key) 會因此通過，卻漏掉部分洩漏。
+本機伺服器回 HTTP 401，error 值是 370 個 x 加上 41 字元假 key；開 ATK_INCLUDE_ERROR_BODY=1。例外含假 key 前 19 字，完整 key 則不存在。既有 assertNotIn(完整key) 會因此通過，卻漏掉部分洩漏。
 
 影響：使用者開除錯時可能把憑證片段寫入日誌或貼到 issue。預設模式沒有這個回顯路徑；本輪不宣稱完整真實 key 已外洩。
 
