@@ -1,3 +1,5 @@
+> **最新交接（PR #4，2026-09-18）：[官方 ATK 接入確認與最小修正](PR4_ATK_INTEGRATION_REVIEW_f2a2188.md)。** 單次真實文字呼叫成功；Claude 先完成報告中的三項必要修正與原生接入教學，維持 Draft，不合併。下方原始「下一工作包」由此進度更新。
+
 > **規劃、執行與 review 的共同前置規則：[ATK 目標對齊與防偏航 skill](../.claude/skills/atk-goal-alignment/SKILL.md)。** 每轮先確認工作如何服務最新用戶目標，再決定必要測試與停止點。小修正沿用既有目標摘要，不另開治理或批准流程。
 
 > **2026-09-18 目標與排程校正，優先閱讀：[ATK 主線校正](ATK_STRATEGY_REALIGNMENT_2026-09-18.md)。**
