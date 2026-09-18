@@ -1,3 +1,5 @@
+> **負責人已決策 1A／2A／3A（2026-09-18）：** 集中 headroom 修復、乾淨安裝與入口；先免費品牌分發及可選 ATK 接入；上游三項心得只備稿待核准。執行最新版 [Claude Prompt](CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md)。PR #5 仍 BLOCKED，需新 SHA 獨立複核；付費樣本暫存，不需重問這三項選擇。下方歷史「待決」已被本決策取代。
+
 > **負責人最新目標補充：[外部 Agent 發現、採用與解題驗收](ATK_AGENT_DISCOVERY_AND_ADOPTION.md)。** PR #4 的小交付結案不代表整體目標達成。下一個工作包是一個真實工具的可發現入口、可跟做接入與任務驗證，回覆於 `reviews/ATK_AGENT_DISCOVERY_EXECUTOR_RESPONSE.md`；下方舊「下一步／停止」只適用原交付，不得據此停止整體主線。
 
 > **最新結案（PR #4）：[829c7e9 文件核對與 APPROVED 結論](PR4_R3_REVIEW_328a33b.md#文件結案追加829c7e92026-09-18)。** 阻擋項 0、條件 0、負責人待決 0。DOC-SYNC 已關閉，程式未變更，沿用先前獨立驗證。新增 live 表格為 executor 自報，本次未獨立重跑。修復輪結束；PR 維持 Draft、未合併。
