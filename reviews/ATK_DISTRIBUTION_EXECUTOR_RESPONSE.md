@@ -7,6 +7,25 @@
 
 ---
 
+## LIVE 驗證完成（2026-09-18，負責人直接提供憑證）
+
+**四輪以來一直掛著的 live 缺口，這次由我自己關閉，不再引用他人結果。**
+
+憑證只經環境變數使用，**沒有寫入任何檔案、沒有進 repository**。已請負責人**輪換**該把 key，因為它出現在對話紀錄中。
+
+| 檢查 | 結果 |
+|---|---|
+| DNS | `api.aitokenking.com.tw` → `47.239.51.250` |
+| `GET /api/v1/models` | **HTTP 200，52 個模型** |
+| 經 `atk_provider.py` 的最小 chat | `OK`，12 in / 4 out，`cost_usd` **`None`** |
+| **文件化 Quick Start 全程** | `--file sample-build.log` → 正確五點摘要，指出 `src/main.c:42` 與 `util.c:88`，**892 in / 115 out** |
+
+**完整複現審查者先前的結果（同一 probe，12 in / 4 out），並且再往前一步：整條文件化路徑可用，不只是單一 token 探測。**
+
+**沒有改變的事：** `cost_usd` 未回報（≠ 免費）；**不作任何節省或品質主張**；MCP 仍未 handshake；其他 provider 未 live 呼叫；延遲、吞吐、帳務未量測。
+
+---
+
 ## 第四輪：PR4_R3_REVIEW（`328a33b`）的 DOC-SYNC
 
 **審查結論：APPROVED_WITH_CONDITIONS。P4-R2-01 與 P4-R2-02 由審查者判定 CLOSED（VERIFIED）；

@@ -3,6 +3,7 @@
 **Updated:** 2026-09-18 (round 2, after the PR #4 review of `f2a2188`)
 **Scope:** `integrations/atk-provider/`
 **Status: every fix below is `IMPLEMENTED_PENDING_REVIEW`.**
+**Live ATK verification: DONE by the executor on 2026-09-18 — see "Round 4" immediately below.**
 
 **Only an independent reviewer marks a finding CLOSED** (`reviews/README.md`). An earlier version
 of this file wrote "all three closed" about my own work, which was not mine to write. The one
@@ -85,6 +86,32 @@ for empty Anthropic `content` blocks. **Control:** genuine text still succeeds.
 2. The README claimed `--dry-run` printed "the exact request" while the code printed 300-char
    excerpts. **Fixed both ways**: the default is now labelled a **PREVIEW**, and `--show-payload`
    prints the **complete JSON body**. Headers are never printed.
+
+## Round 4 — LIVE, by the executor, on this head
+
+**2026-09-18. The owner supplied a credential directly, and the live gap that had been open
+since the first version of this file is now closed by me rather than cited from someone else.**
+
+Environment only. **The key was never written to any file, never committed, and is not in this
+repository.** It is now exposed in a chat transcript and **should be rotated.**
+
+| Check | Result |
+|---|---|
+| DNS | `api.aitokenking.com.tw` → `47.239.51.250` |
+| `GET /api/v1/models` | **HTTP 200, 52 models** — e.g. `claude-sonnet-4.6`, `claude-sonnet-5`, `gemini-3.1-pro-preview`, `gpt-5.6-terra` |
+| Minimal chat through `atk_provider.py` | `"Reply with OK only."` → **`OK`**, 12 in / 4 out, `cost_usd` **`None`** |
+| **The documented Quick Start, end to end** | `python3 example_summarise_tool_output.py --file sample-build.log` → a correct five-point summary naming `src/main.c:42` and `util.c:88`, **892 in / 115 out**, served by `atk / claude-sonnet-4.6` |
+
+**This is the first time anything in this repository has been run against ATK by its author.**
+It reproduces the reviewer's earlier result exactly (12 in / 4 out on the same probe), and
+extends it: the **full documented path** works, not just a one-token probe.
+
+**Still true, and not changed by this:** `cost_usd` is **not reported**, which is not the same as
+free. **No saving or quality claim is made or evidenced.** No MCP handshake has been performed.
+No other provider has been called live. Latency, throughput and billing are unmeasured.
+
+The earlier rows in this file that read "no request has reached ATK" describe the state before
+this round and are left as written.
 
 ## Round 3 — findings from the R2 review of `b3bd4e5`
 
