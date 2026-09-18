@@ -25,7 +25,7 @@
 |---|---|
 | `f391fdb` | `integrations/headroom-atk/`：README（入口）、`make_log.py`、`local_check.py`、`ab_test.py`、`evidence/`；registry `_adoption` 記錄與 build 斷言 |
 | `4ea57d7` | `offering/SERVICE_SAMPLE_FREE.md`、`SERVICE_SAMPLE_PAID.md`、`UNIT_ECONOMICS.md`、`DISTRIBUTION.md` |
-| （本輪最後一個 commit） | registry 署名欄位、README 增補 LiteLLM 官方路徑與量測位置說明、本回覆檔 |
+| `3d883c7` | 修正 README 一項錯誤陳述、加上 JSON-lines 適用性限制與機制說明、`local_check.py` 加上 `--log`／`--needle` 預檢、registry 署名與 `does_not_apply_to` 欄位、LiteLLM 官方路徑、本回覆檔 |
 
 ---
 
