@@ -152,8 +152,10 @@ silently accepted and ignored.
 
 `VERIFICATION.md` states exactly what was tested and what was not. The short version: the local
 tests pass against a **real local HTTP server**, and **a reviewer — not this repository — made
-the one live ATK call on record**, using their own credential. Nothing here was run against ATK
-by its author.
+the one live ATK call on record**, using **a credential the owner supplied and authorised for a
+minimal test** (not the reviewer's own account). **That live call was made against commit
+`f2a2188`**, and is not promoted to any later head. Nothing here has been run against ATK by its
+author.
 
 ```bash
 python3 -m unittest test_atk_provider -v

@@ -48,14 +48,18 @@ ATK_BASE_URL=https://api.aitokenking.com.tw/api/v1
 ATK_MODEL=claude-sonnet-4.6
 ```
 
-模型清單（撰稿時 52 個）：
+先把設定載入 shell，**再**看模型清單（撰稿時 52 個）：
 
 ```bash
-curl -s https://api.aitokenking.com.tw/api/v1/models \
+set -a && . ./.env && set +a          # 先載入：下面的 curl 需要 $ATK_API_KEY
+
+curl -s "$ATK_BASE_URL/models" \
   -H "Authorization: Bearer $ATK_API_KEY" | python3 -m json.tool | head
 ```
 
-官方文件叫 `AITOKENKING_API_KEY`，我們的契約叫 `ATK_API_KEY`，**兩個都吃**。
+官方文件叫 `AITOKENKING_API_KEY`，我們的契約叫 `ATK_API_KEY`，**Python 這邊兩個都吃**。
+但**別名只在 Python 端生效**——上面的 `curl` 讀的是 shell 的 `$ATK_API_KEY`，不會因為 Python
+支援別名就自動有值。`.env` 若用官方拼法，請另外設 `ATK_API_KEY` 或在指令裡換掉。
 
 ## 先看，再花錢
 
@@ -63,7 +67,9 @@ curl -s https://api.aitokenking.com.tw/api/v1/models \
 python3 example_summarise_tool_output.py --dry-run --show-payload --file sample-build.log
 ```
 
-**印出完整的 JSON request body，然後什麼都不送。** header 永遠不印，因為其中一個是你的 key。
+**兩種都什麼都不送。** 差別是：**節錄預覽不需要憑證**（`--dry-run` 單獨用）；**完整 JSON body 需要
+已設定的 provider**，因為 body 的形狀由實際會送出它的 adapter 決定，沒設定時它明確拒絕顯示而不是猜
+一份。header 永遠不印，因為其中一個是你的 key。
 
 而且那份 body 是**由真正會送出它的 adapter 產生的**，不是另外組一份給你看的。這件事我第一版做錯了：我自己組了一份 OpenAI 形狀的 JSON，但 Anthropic 實際送出去的會把 `system` 提到頂層、還會加 `max_tokens`——所以「送出前看完整 body」對那條路徑根本不成立。獨立審查把 preview 和本機伺服器實收的內容逐欄位比對，才抓到。
 

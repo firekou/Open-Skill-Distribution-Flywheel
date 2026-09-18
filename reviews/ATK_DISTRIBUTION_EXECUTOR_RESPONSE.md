@@ -2,8 +2,26 @@
 
 **狀態：待獨立 review（IMPLEMENTED_PENDING_REVIEW）**
 **分支：** `claude/atk-distribution-provider-seam` ｜ **PR：** #4（Draft，未合併）
-**下一份 reviewer 回覆：** `reviews/PR4_R3_REVIEW_<short-sha>.md`
+**下一份 reviewer 回覆：** `reviews/PR4_R4_REVIEW_<short-sha>.md`（僅核對文件差異）
 **交付：** `integrations/atk-provider/`
+
+---
+
+## 第四輪：PR4_R3_REVIEW（`328a33b`）的 DOC-SYNC
+
+**審查結論：APPROVED_WITH_CONDITIONS。P4-R2-01 與 P4-R2-02 由審查者判定 CLOSED（VERIFIED）；
+P4-R2-03 為 PARTIALLY_VERIFIED，剩下 DOC-SYNC 一項條件。**
+
+**本輪程式與測試完全未改動**，依審查指示不重跑 33 tests、不新增對抗案例。以下四項為文件同步：
+
+| # | 項目 | 處理 |
+|---|---|---|
+| 1 | README 的 Verification 段仍寫 "using their own credential" | 改為**負責人提供並授權最小測試的憑證**（非審查者自有帳號），並明列該 live 呼叫**對應 `f2a2188`**，不推廣到後續 head |
+| 2 | `DRAFT_01` 的 MCP JSON 仍是未指定 client 的 `${AITOKENKING_API_KEY}` | 移除可貼上的 JSON，改為 endpoint／header 兩個值的**概念說明**，並加上警語：**`${VAR}` 展開是各客戶端自己的功能、不是 MCP 規格的一部分**，有些客戶端會把字面值當 key 送出；指向 README 的完整說明，並保留「未 handshake」標示 |
+| 3 | 兩篇草稿的操作步驟與 README 不一致 | 兩篇都加上 `set -a && . ./.env && set +a` **在 `curl` 之前**；明講**別名只在 Python 端生效**，`curl` 讀的是 shell 的 `$ATK_API_KEY`；`DRAFT_01` 改用隨附的 `sample-build.log`、測試數字 25 → **33**；兩篇都把「不需憑證的節錄預覽」與「需要 provider 設定的完整 payload」分清楚 |
+| 4 | executor response 的第二輪紀錄仍是舊歸屬與舊數字 | 在該節**開頭加上歷史標示**，列出被更正的三點（憑證歸屬、測試數字、P4-01/03 後來重開）。**原始發現與審查結論不回頭改寫。** |
+
+**我不自行宣稱 DOC-SYNC 已關閉。** 依審查指示回填新 SHA，由 reviewer 核對文件差異。
 
 ---
 
@@ -85,6 +103,17 @@ preview_keys == wire_keys
 ---
 
 ## 第二輪：PR #4 review（`f2a2188`）的三項修正
+
+> **⚠ 歷史紀錄，已被第三輪更正。請勿當作現況。**
+>
+> 本節寫於 `b3bd4e5`，其中兩處後來被更正：
+> - **憑證歸屬**：本節說審查者用「自己的憑證」。**實際是負責人提供並授權最小測試的憑證**，不是
+>   審查者自有帳號。
+> - **測試數字**：本節的「10 failures / 1 error，另有 1 pass」加不起來。**正確是 11 個 test
+>   method 中 10 個失敗、1 個通過**；`failures=12` 是因為一個 method 用 `subTest` 跑四個子案例各報一次。
+> - **P4-01 與 P4-03 在本節被寫成已修復**，第三輪發現修得不完整，分別以 **P4-R2-01 / P4-R2-02** 重開。
+>
+> 審查結論與原始發現不回頭改寫；現況一律以上方第三輪、以及第四輪的 DOC-SYNC 紀錄為準。
 
 **P4-01～03 全部重現、全部修復。審查結論 APPROVED_WITH_CONDITIONS 的條件已處理，維持 Draft。**
 

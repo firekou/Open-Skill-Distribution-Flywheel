@@ -9,20 +9,20 @@ live_evidence: ATK 單次 chat 由 PR #4 reviewer 實測，使用**負責人提�
 
 ## 先講最短路徑
 
-如果你的客戶端支援 MCP，**你不需要任何程式碼**：
+如果你的客戶端支援 MCP，**你不需要任何程式碼**，只要兩個值：
 
-```json
-{
-  "mcpServers": {
-    "aitokenking": {
-      "url": "https://api.aitokenking.com.tw/mcp",
-      "headers": { "X-Aitokenking-Api-Key": "${AITOKENKING_API_KEY}" }
-    }
-  }
-}
+```
+endpoint: https://api.aitokenking.com.tw/mcp
+header:   X-Aitokenking-Api-Key: <你的 key>
 ```
 
-key 從環境變數讀，不要寫進會 commit 的檔案。設定格式各家客戶端略有不同，以你的為準。
+**這是概念說明，不是可以直接貼的設定檔。** MCP 客戶端的設定格式各家不同，而且**設定檔裡的
+`${VAR}` 展開是「各家客戶端自己的功能」，不是 MCP 規格的一部分**——有些客戶端會把那串字面值原樣當成
+你的 key 送出去。請查你自己客戶端的文件怎麼從環境變數注入 header（有些提供明確的 env-to-header
+對應），並且**不要把 key 寫進會 commit 的檔案**。完整說明見 `integrations/atk-provider/README.md`
+的 MCP 段落。
+
+**我們沒有實際做過 MCP handshake**，端點與 header 名稱來自官方文件。
 
 如果你在寫 Python、而且不想被單一供應商綁住，才需要看下去。
 
@@ -34,14 +34,20 @@ ATK 提供 OpenAI 相容 API，所以你原本的程式幾乎不用改：
 ATK_BASE_URL=https://api.aitokenking.com.tw/api/v1
 ```
 
-先確認你的 key 能看到哪些模型（撰稿時是 52 個）：
+先把設定載入 shell，**再**確認你的 key 能看到哪些模型（撰稿時是 52 個）：
 
 ```bash
-curl -s https://api.aitokenking.com.tw/api/v1/models \
+set -a && . ./.env && set +a          # 先載入：下面的 curl 需要 $ATK_API_KEY
+
+curl -s "$ATK_BASE_URL/models" \
   -H "Authorization: Bearer $ATK_API_KEY" | python3 -m json.tool | head
 ```
 
-> **變數名稱有兩種寫法。** 官方文件叫 `AITOKENKING_API_KEY`，我們的接入契約叫 `ATK_API_KEY`。**兩個都吃得下**，貼哪一個都行——但不要兩個都設成不同的值。
+> **變數名稱有兩種寫法。** 官方文件叫 `AITOKENKING_API_KEY`，我們的接入契約叫 `ATK_API_KEY`。**Python 這邊兩個都吃得下**，貼哪一個都行——但不要兩個都設成不同的值。
+>
+> **別名只在 Python 端生效。** 上面的 `curl` 讀的是 shell 裡的 `$ATK_API_KEY`，**不會**因為
+> Python 支援別名就自動有值。如果你的 `.env` 用的是 `AITOKENKING_API_KEY`，請另外設一個
+> `ATK_API_KEY`，或直接在指令裡換掉。
 
 ## 為什麼還要一層接縫
 
@@ -103,10 +109,18 @@ PROVIDER=openai     # 或 anthropic / deepseek / qwen / openrouter / custom
 ## 先看，再花錢
 
 ```bash
-python3 example_summarise_tool_output.py --dry-run --show-payload --file build.log
+# 節錄預覽：不需要憑證
+python3 example_summarise_tool_output.py --dry-run --file sample-build.log
+
+# 完整 JSON body：需要已設定的 provider（body 的形狀由 adapter 決定）
+python3 example_summarise_tool_output.py --dry-run --show-payload --file sample-build.log
 ```
 
-印出**完整的 JSON request body**，然後什麼都不送。header 永遠不印，因為其中一個是你的 key。
+`sample-build.log` 隨附在資料夾裡，你不用自己生一個。
+
+兩種都**什麼都不送**。差別是：**節錄預覽不需要憑證**；**完整 body 需要設定好 provider**，因為 body 的
+形狀由實際會送出它的 adapter 決定（Anthropic 會把 `system` 提到頂層、加 `max_tokens`），沒設定時它
+**明確拒絕顯示而不是猜一份給你**。header 永遠不印，因為其中一個是你的 key。
 
 ## 老實說有什麼沒做
 
@@ -116,7 +130,7 @@ python3 example_summarise_tool_output.py --dry-run --show-payload --file build.l
 - **沒有任何省錢或品質主張。** 這個檔案只負責把請求送出去，它不壓縮、不快取、不優化。
 - **契約裡的預算上限沒實作**，明講沒做，而不是收下參數然後忽略。
 
-25 個測試跑在真的 HTTP 伺服器上。憑證相關的都是**執行時 canary**：真的設一個秘密值、真的讓伺服器回顯它、再斷言人看到的字串裡沒有它。
+**33 個測試**跑在真的 HTTP 伺服器上。憑證相關的都是**執行時 canary**：真的設一個秘密值、真的讓伺服器回顯它、再斷言人看到的字串裡**連 8 個字元的片段都沒有**。
 
 ---
 *程式碼：`integrations/atk-provider/`，只用標準函式庫。*
