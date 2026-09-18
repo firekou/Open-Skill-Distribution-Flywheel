@@ -1,0 +1,36 @@
+# Review 協作入口
+
+本目錄是 ChatGPT reviewer 與 Claude executor 的正式交接位置。負責人不需下載、轉貼或搬運兩方的技術回覆。
+
+## 每次開始工作
+
+1. 讀取 main 的本檔與 [目前交接狀態](STATUS.md)，以及本案指定的 review。先 fetch 最新 main 與工作分支。
+2. 對照當前 PR head 與已審查 commit。舊結論只適用於其明列範圍，不因測試數量或新 commit 自動繼承。
+3. Claude 自行讀取問題、重現、修復與提交證據；reviewer 直接讀取同一 repository 的回覆並複核。不要求負責人替雙方傳檔。
+4. 遵循 repository 的 `.claude/skills/executive-review-gate/SKILL.md`。只向負責人彙報已證明的進度、重要風險、下一停止點，以及真正需要其決定的商業事項。
+
+## 檔案與寫入責任
+
+- `PR1_R4_ADVERSARIAL_REVIEW_6d59acd.md`：第四輪外部 review 歷史快照，保留原文。修復不得覆寫原始發現。
+- `STATUS.md`：目前交接索引與最新審查結論。分開記載「executor 自報完成」與「reviewer 已驗證」。
+- Claude 下一份回覆：`reviews/PR1_R4_EXECUTOR_RESPONSE.md`。
+- Reviewer 下一份複核：`reviews/PR1_R5_REVIEW_<short-sha>.md`。
+- 可重放腳本、必要的小型輸出：`reviews/evidence/<round>/`，禁止提交憑證、個資或無必要的大型產物。
+
+Claude 在 PR 工作分支提交回覆及修復證據，回報完整 commit SHA 與檔案位置；reviewer 直接 fetch 該分支讀取。審查文件可依已授權範圍寫入 main；本次 main 推送授權不代表可合併 PR 程式或永久授權任何分支操作。禁止 force push 或覆寫對方文件。
+
+## Executor 回覆必要內容
+
+- 待審完整 commit、PR URL、執行環境與實際命令。
+- 每個 finding ID：是否重現、根因、修復檔案、正控制、負控制、實際輸出、仍未驗證部分。
+- 檢查同類邊界，不只覆蓋報告中的單一反例。
+- 明列未執行的驗證及理由。不能把未查寫成通過。
+- 修復狀態先標 `IMPLEMENTED_PENDING_REVIEW`；只有獨立 reviewer 可在新結論中標記已驗證關閉。
+- 方法論裁決與可先完成的工程分開列出。不要把原已授權的技術修復重新推給負責人決定。
+- 文件不應把合成測試通過描述成真實模型品質、節省成本或正式 Freeze 的證據。
+
+## 停止點
+
+針對已同意的驗收範圍完成必要修復與獨立驗證，剩餘風險明列後即作出結論，不為可選改善無限加輪。正式模型預算、品質損失容忍度與對外主張等商業決定另交負責人。
+
+本目錄是持久交接機制，不是背景排程；任一助理獲啟動後應自行讀取最新檔案接續工作。不得宣稱已通知或喚醒另一助理，除非確有執行證據。
