@@ -1,6 +1,6 @@
 {
   "binding": "the outer freeze record binds this manifest's digest to the artifact commit; do not put a commit sha inside the manifest and the manifest's hash inside that commit",
-  "environment_dir": "environment",
+  "environment_dir": "/home/user/Open-Skill-Distribution-Flywheel/benchmarks/token-efficiency-lab-001/environment",
   "groups": {
     "answer_key": {
       "count": 19,
@@ -41,17 +41,12 @@
       "why": "how the ground truth was derived; a key is only re-derivable if these are pinned"
     },
     "config": {
-      "count": 6,
+      "count": 1,
       "files": {
-        "harness/blind.py": "fcc76da38e2176feea772b3b25e06c36649e8fa208a8e956626e577b35a54baa",
-        "harness/evidence.py": "25e4aef57387c7b45faae29a930324d0b2211e6b11a0c57e12df9f4815faaa01",
-        "harness/meter.py": "cf5157b0065fb8bd9c4a5cea665a2b45be70d3aac967ea51e819d09ed9be0356",
-        "harness/pricing.py": "5371b28d48b15e3ffbb211e9d16c7ca44a9db8862652cba72c5a3ca0ecc397af",
-        "harness/record.py": "d8c484cc7cc2d3fc420f3e8dc62e025b20f3200b9303b59f91d6a45c3d46b355",
-        "run_record_schema.json": "caf5a381d9d742736abd0570e44ad4b52126db71a007e2bd9202dce652791c2c"
+        "run_record_schema.json": "b68d15c275d515a80fa601576e48c5c21f90a9433c4fc7bf41b9c77c571a5294"
       },
-      "hash": "d2b324176db469b44f44e7e72a5b9eb269c47c49e949f68dda28c3ff9d13f152",
-      "why": "schema and harness modules that change how a score is produced"
+      "hash": "a0f535358603d3f06b8742d3f6f11ff4bd9a58d3b74ce516b8e8d058a11ce9f8",
+      "why": "schemas that decide what a record may say"
     },
     "docs": {
       "count": 4,
@@ -63,6 +58,35 @@
       },
       "hash": "8fe3d82e4b4225506a1fb92cb077f30589b113f9e3ce6f9221dd8adb232a26f6",
       "why": "not score-bearing, but pinned so drift is visible"
+    },
+    "execution": {
+      "count": 17,
+      "excluded": {
+        "harness/blind_smoke.py": "a developer smoke script, never on the scoring path",
+        "harness/test_harness.py": "tests. They do not run in a scored run and do not change a result",
+        "harness/test_judge.py": "tests, as above"
+      },
+      "files": {
+        "harness/__init__.py": "d00406732409940f7bd3e7da1b86b90f85cd03140f95cd21409b1f1f463735a9",
+        "harness/aggregate.py": "ba25c14c50dad1320fc148f8c91e323cb4b2e02df0574184e0284fe87712892c",
+        "harness/analyse.py": "86215cd93e1075c4a50f15018cf03fc0092ff970ec82c34f4ffa3ed21b859cfe",
+        "harness/attest.py": "e99f32dfad6e029d596c014164615c59840b3fabd62f8eb5527a2929472c1810",
+        "harness/blind.py": "fcc76da38e2176feea772b3b25e06c36649e8fa208a8e956626e577b35a54baa",
+        "harness/calibrate.py": "c6f6087174aaad6f694833f09c080d7d23278bcfe15f639328e5f94e96765d87",
+        "harness/corpus_reader.py": "e2e5d49adac660bbf97a044fb054157005f6ffd050a2649e1a231b260398da92",
+        "harness/evidence.py": "25e4aef57387c7b45faae29a930324d0b2211e6b11a0c57e12df9f4815faaa01",
+        "harness/finalize.py": "884328a1f2d6f0c8c4e9ceb4d962c0252fd6b2c712aed264ddbacc9cb60fb47d",
+        "harness/manifest.py": "25165fb7ef852cb36447a1b6dadc8003e0a286c81ca8de63f7b8e6e184f44217",
+        "harness/meter.py": "cf5157b0065fb8bd9c4a5cea665a2b45be70d3aac967ea51e819d09ed9be0356",
+        "harness/pricing.py": "5371b28d48b15e3ffbb211e9d16c7ca44a9db8862652cba72c5a3ca0ecc397af",
+        "harness/pricing_preflight.py": "4d527edd6cfa9ebd22d79fc24cb05b1bbdcb9f6495179f5a8a11edfed0d30f06",
+        "harness/providers.py": "1b03b8a10eea8f5d2f4274a0c388bb96fab710504c2e7450fd4739ab84231c9d",
+        "harness/record.py": "d8c484cc7cc2d3fc420f3e8dc62e025b20f3200b9303b59f91d6a45c3d46b355",
+        "harness/runner.py": "1c22235f4a2e1eec8f3cdba5754669f155c49411251b2adc88b06285070f809e",
+        "harness/selfcheck.py": "048cd779c4f743a79abeb12238ca301cf14a03eccfa1bf29e38c12b2a24413b7"
+      },
+      "hash": "c4739275ea1df9bdffba4985b31576a360474aee014c8c2c74043ca51d7e816a",
+      "why": "every module on the path from a run to a published cell - runner, evidence, scoring support, finalize, aggregate, pricing. DISCOVERED from harness/*.py, not listed, so a new module cannot quietly fall outside coverage (R4-02)"
     },
     "other_docs": {
       "count": 2,
@@ -84,9 +108,9 @@
     "scorer": {
       "count": 1,
       "files": {
-        "harness/judge.py": "899621d29269ee74d87e2bb9682143405b2e3182268b5fbc8de49ba0942c9c87"
+        "harness/judge.py": "5c5443fa2d837b886ebee18f3b8f38820354d6af94e29e925da5a9fc5e5d6185"
       },
-      "hash": "e558aac2901e3970c1ac91bcf79e3ab10970153eb6cf2ce0734fcd956e5713bb",
+      "hash": "74078180f12e13f1333af5aa3e514fa4973a36e00a23c5e972654e3d2e0cde1b",
       "why": "the scorer itself"
     },
     "scoring_spec": {
@@ -263,13 +287,13 @@
   "hashes": {
     "answer_key_hash": "57ec5d50f82c0ec453a75d1c64c6a581d9ce884ef2c1d2a9cec738e86c0a252d",
     "answer_key_scripts_hash": "839b95af67db206b5e4d1ed7246e231c0875b5bad5d2a938ed91df08e4fe8d2f",
-    "config_hash": "d2b324176db469b44f44e7e72a5b9eb269c47c49e949f68dda28c3ff9d13f152",
-    "scorer_hash": "e558aac2901e3970c1ac91bcf79e3ab10970153eb6cf2ce0734fcd956e5713bb",
+    "config_hash": "a0f535358603d3f06b8742d3f6f11ff4bd9a58d3b74ce516b8e8d058a11ce9f8",
+    "scorer_hash": "74078180f12e13f1333af5aa3e514fa4973a36e00a23c5e972654e3d2e0cde1b",
     "scoring_spec_hash": "887dcf10726ad2e23efb7449bc3d799b5922c3064474625dc8266d7583b09ac6",
     "task_set_hash": "4954ee84cb61bc56d271ae45df4478312147373d486e58524a92126805184ea0"
   },
   "manifest_version": "1.1.0",
   "self_reference": "none - this manifest does not contain its own digest",
-  "task_set_dir": "tasks/TASK_SET_v1.1.0",
+  "task_set_dir": "/home/user/Open-Skill-Distribution-Flywheel/benchmarks/token-efficiency-lab-001/tasks/TASK_SET_v1.1.0",
   "unclaimed_files": []
 }

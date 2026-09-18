@@ -167,6 +167,13 @@
       "type": "boolean",
       "description": "ADV-D. The scorer found a possible constraint violation that structural detection cannot decide. The attempt may legitimately be PASS; its CELL is not reportable until the Red Team rules on it."
     },
+    "scored_packet_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "R4-06. sha256 of the exact judge packet this record's score was produced from, so the score-to-record binding stays auditable."
+    },
     "environment_id": {
       "type": "string"
     },

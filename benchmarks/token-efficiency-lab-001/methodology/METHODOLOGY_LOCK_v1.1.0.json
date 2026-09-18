@@ -11,7 +11,7 @@
     "methodology/METER_CALIBRATION_v1.1.0.md": "726d193b8e24cc4825c151e41bef09dd0027988efce33bfa069bcafc71298113",
     "methodology/METHODOLOGY_CHANGE_REVIEW_001.md": "706eaba3c9d578baf06abdddc028dd2ff2db5a9c94db21b265dce2251f06d4cd",
     "methodology/METHODOLOGY_CHANGE_REQUEST_001.md": "953541203b175033248823e617f9b13f816f8a6e44f723a1d7b58641ebf3106f",
-    "methodology/METHODOLOGY_CHANGE_REQUEST_002.md": "15d4c42e1c3e03c2d302cc06278bdc78c71a483e02a49051faca19b5efc38969"
+    "methodology/METHODOLOGY_CHANGE_REQUEST_002.md": "90e128af35140ac8a975bb905128a427e0f1347c7aa9871304e73824c7cea098"
   },
   "predecessor": {
     "methodology/METHODOLOGY_v1.0.0.md": "c1810b0481d1442937771c124c7c30668490470f00dcf71098bdf139ee7089bc",
@@ -138,5 +138,6 @@
     }
   ],
   "drafting_note": "A draft is amended in place while it is a draft; that is what a draft is for. Each amendment is recorded above with its source. Once signed off, any further change requires a new version file.",
-  "hash_note": "METHODOLOGY_v1.1.0.md was f4e5b65e204dd0a31cc3d04a639d5542c7aa49523d374da5f51bc0330e490774 at commit 62a16a4, before the three 2026-09-17 amendments above. Any document quoting that digest is quoting the pre-review draft."
+  "hash_note": "METHODOLOGY_v1.1.0.md was f4e5b65e204dd0a31cc3d04a639d5542c7aa49523d374da5f51bc0330e490774 at commit 62a16a4, before the three 2026-09-17 amendments above. Any document quoting that digest is quoting the pre-review draft.",
+  "documents_note": "R4-04: METHODOLOGY_CHANGE_REQUEST_002.md was edited in the round-1 response (the cost withdrawal) and this map was not updated, so the lock could not be used as a fingerprint of the current candidate. Refreshed 2026-09-18. While the lock is DRAFT these hashes track the draft; tools/delivery_check.py fails if any drifts again."
 }

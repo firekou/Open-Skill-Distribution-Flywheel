@@ -65,9 +65,11 @@ CLI
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
+import pathlib
 import re
 import sys
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
@@ -2746,6 +2748,41 @@ def score_packet(packet: dict) -> dict:
     return out
 
 
+def scorer_identity() -> str:
+    """sha256 of this scorer's own source.
+
+    R4-06: `finalize` compared a score's `scorer_hash` with the record's, but ONLY when both
+    carried one - and the judge never wrote one, so on real output the comparison never ran at
+    all. 17 of 17 scores carried none. A guard whose input nothing produces is not a guard; it is
+    the same defect as R3-01 and R4-01, one stage further along.
+
+    Derived here, from this file, rather than accepted as a parameter, so a score cannot claim a
+    scorer it was not produced by.
+    """
+    try:
+        return hashlib.sha256(
+            pathlib.Path(__file__).resolve().read_bytes()).hexdigest()
+    except OSError as exc:  # pragma: no cover - unreadable source
+        raise RuntimeError(
+            "cannot read the scorer's own source to derive its identity; a score written without "
+            "provenance cannot be bound to the build that produced it") from exc
+
+
+def packet_digest(packet: Any) -> str:
+    """sha256 of the exact packet scored, so a score cannot be re-attached to a different input."""
+    return hashlib.sha256(
+        json.dumps(packet, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+
+
+def _stamp_provenance(res: dict, packet: Any) -> dict:
+    """Every score carries who scored it, under which rulebook, over which input."""
+    res["scorer_hash"] = scorer_identity()
+    res["scorer_spec_version"] = SPEC_VERSION
+    res["methodology_version"] = (res.get("detail") or {}).get("methodology_version")
+    res["packet_digest"] = packet_digest(packet)
+    return res
+
+
 def score_directory(packets_dir: str, scores_dir: str, quiet: bool = False) -> List[dict]:
     os.makedirs(scores_dir, exist_ok=True)
     results: List[dict] = []
@@ -2767,8 +2804,10 @@ def score_directory(packets_dir: str, scores_dir: str, quiet: bool = False) -> L
                 "detail": {"exception": "%s: %s" % (type(exc).__name__, exc),
                            "spec_version": SPEC_VERSION},
             }
+            res = _stamp_provenance(res, None)
         else:
             res = score_packet(packet if isinstance(packet, dict) else {})
+            res = _stamp_provenance(res, packet)
         results.append(res)
         pid = res.get("packet_id") or os.path.splitext(name)[0]
         safe = re.sub(r"[^A-Za-z0-9._-]", "_", str(pid))

@@ -76,6 +76,50 @@ class Cell:
             return None
         return frozenset(self.plan.cell_ids(self.workload, self.condition))
 
+    # R4-05: which fields must be identical across every attempt of a cell for the numbers to
+    # mean anything. A cell mixing two methodology versions, two task-set builds or two scorers
+    # is not a noisy result - it is several different experiments added together.
+    BUILD_IDENTITY_FIELDS = ("methodology_version", "task_version", "task_set_hash",
+                             "answer_key_hash", "scorer_hash")
+
+    @property
+    def build_inconsistencies(self) -> list:
+        """Records in this cell that do not share one build, or contradict the plan.
+
+        R4-05: `PlannedAttempts.mismatch` compared four IDENTITY fields - which planned attempt a
+        record claims to be - and nothing compared the BUILD that produced it. One record rewritten
+        to methodology_version 1.0.0, task_version 1.0.0 and foreign task-set and scorer hashes
+        passed the real schema and the real CLI: exit 0, 5 cells passed, identity_unverified empty.
+        """
+        problems = []
+        for field in self.BUILD_IDENTITY_FIELDS:
+            seen = {}
+            for a in self.attempts:
+                seen.setdefault(a.get(field), []).append(a.get("attempt_id") or a.get("run_id"))
+            if None in seen:
+                problems.append(
+                    f"{len(seen[None])} attempt(s) declare no {field} ({seen[None][:3]}); a record "
+                    "that cannot name its build cannot be shown to belong to this cell")
+                seen.pop(None)
+            if len(seen) > 1:
+                shown = {k: v[:2] for k, v in list(seen.items())[:3]}
+                problems.append(
+                    f"attempts in this cell disagree on {field}: {shown}. These are different "
+                    "experiments; averaging them produces a number about neither")
+        # The plan says which methodology and task-set version this cell belongs to. A record set
+        # that silently belongs to a different one is not this cell's result.
+        declared = getattr(self.plan, "declared", None) or {}
+        for field, plan_key in (("methodology_version", "methodology_version"),
+                                ("task_version", "task_set_version")):
+            want = declared.get(plan_key)
+            if not want:
+                continue
+            wrong = sorted({a.get(field) for a in self.attempts} - {want, None})
+            if wrong:
+                problems.append(
+                    f"the plan declares {plan_key}={want} but attempt(s) carry {field}={wrong}")
+        return problems
+
     @property
     def identity_mismatches(self) -> list:
         """Re-check every attempt against the plan AT REPORT TIME (R3-02).
@@ -167,6 +211,14 @@ class Cell:
                 reasons.append(
                     f"{len(unexpected)} record(s) claim an attempt this cell did not plan: "
                     f"{unexpected[:5]}")
+        # R4-05. A build inconsistency is NOT a quality failure - nothing about the candidate
+        # failed. It means the record set cannot be interpreted, so it is unmeasurable, and it is
+        # reported separately from any judgement about the work.
+        build_problems = self.build_inconsistencies
+        if build_problems:
+            ok = False
+            reasons.extend(f"BUILD INCONSISTENT - not a quality failure: {b}"
+                           for b in build_problems[:4])
         pending = self.pending_adjudication
         if pending:
             ok = False
@@ -199,6 +251,8 @@ class Cell:
             # R3-02: this was `self.expected is not None` - "somebody handed me a set" reported
             # as "the identities were checked". It now means the fields were compared, here, now.
             "identity_verified": self.plan is not None and not mismatched,
+            "build_consistent": not build_problems,
+            "build_problems": build_problems,
             "pending_adjudication": pending,
             "reasons": reasons,
             "rate_claim_warning": (
@@ -238,15 +292,18 @@ class PlannedAttempts:
     plan must supply BOTH: these ids, these tasks, these repetitions, and no others.
     """
 
-    __slots__ = ("by_id", "by_cell", "plan_hash", "source")
+    __slots__ = ("by_id", "by_cell", "plan_hash", "source", "declared")
 
-    def __init__(self, by_id: dict, plan_hash: str, source: str) -> None:
+    def __init__(self, by_id: dict, plan_hash: str, source: str, declared: dict | None = None) -> None:
         self.by_id = by_id
         self.by_cell: dict = defaultdict(set)
         for aid, exp in by_id.items():
             self.by_cell[(exp["workload"], exp["condition"])].add(aid)
         self.plan_hash = plan_hash
         self.source = source
+        # R4-05: the versions the plan itself declares, so a record set can be checked against
+        # the experiment design it claims to belong to.
+        self.declared = dict(declared or {})
 
     @classmethod
     def from_run_plan(cls, run_plan: dict, source: str = "RUN_PLAN") -> "PlannedAttempts":
@@ -266,15 +323,25 @@ class PlannedAttempts:
                     "repetition": run["repetition"], "task_id": ta["task_id"],
                     "planned_run_id": run["run_id"],
                 }
-        plan_hash = hashlib.sha256(
-            json.dumps(by_id, sort_keys=True).encode()).hexdigest()
-        return cls(by_id, plan_hash, source)
+        # R4-05: plan_hash used to cover `by_id` ALONE, so changing the plan's
+        # methodology_version and task_set_version left the hash byte-identical. It was an
+        # attempt-layout fingerprint being reported as a plan fingerprint - "this result is bound
+        # to that version of the experiment design" was not true. The declared versions are now
+        # inside the hash.
+        declared = {k: run_plan.get(k) for k in
+                    ("run_plan_version", "methodology_version", "task_set_version", "status")}
+        plan_hash = hashlib.sha256(json.dumps(
+            {"attempts": by_id, "declared": declared}, sort_keys=True).encode()).hexdigest()
+        return cls(by_id, plan_hash, source, declared)
 
     @classmethod
-    def from_ids(cls, spec: dict, source: str = "synthetic") -> "PlannedAttempts":
+    def from_ids(cls, spec: dict, source: str = "synthetic",
+                 declared: dict | None = None) -> "PlannedAttempts":
         """`{attempt_id: {workload, condition, repetition, task_id}}` — for tests and fixtures."""
-        plan_hash = hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()
-        return cls(dict(spec), plan_hash, source)
+        declared = dict(declared or {})
+        plan_hash = hashlib.sha256(json.dumps(
+            {"attempts": spec, "declared": declared}, sort_keys=True).encode()).hexdigest()
+        return cls(dict(spec), plan_hash, source, declared)
 
     def cell_ids(self, workload: str, condition: str) -> set:
         return set(self.by_cell.get((workload, condition), ()))
@@ -441,6 +508,8 @@ def select_strongest(cells: list[Cell], deltas: dict, variances: dict | None = N
         # handed it back as a winner to reproduce. The missing attempts were the failure. The
         # cell's own verdict is the single authority, so the two answers cannot disagree again.
         v = c.verdict()
+        if not v.get("build_consistent", True):
+            rejected.append((key, "build inconsistent: " + "; ".join(v["build_problems"])[:200])); continue
         if not v["identity_verified"]:
             # R2-02: a directly-constructed, plan-unverified cell was selectable as a winner.
             rejected.append((key, "attempt identity not verified against the frozen plan")); continue
@@ -487,6 +556,8 @@ def report(cells: list[Cell]) -> dict:
         "cells_passed": sum(1 for v in verdicts if v["cell_verdict"] == "PASS"),
         "cells_identity_unverified": [
             (v["workload"], v["condition"]) for v in verdicts if not v["identity_verified"]],
+        "cells_build_inconsistent": [
+            (v["workload"], v["condition"]) for v in verdicts if not v.get("build_consistent", True)],
         "cells_failed": sum(1 for v in verdicts if v["cell_verdict"] == "FAIL"),
         "attempts_planned": planned,
         "attempt_outcomes": totals,

@@ -23,6 +23,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from harness import evidence as ev  # noqa: E402
 from harness import finalize as fin  # noqa: E402
+from harness import judge as jdg  # noqa: E402
 from harness import manifest as mf  # noqa: E402
 from harness.aggregate import (  # noqa: E402
     AggregateError, FAIL_QUALITY, INVALID, PASS, Cell, PlannedAttempts, build_cells,
@@ -243,11 +244,47 @@ class TestPricingPreflightBlocks(unittest.TestCase):
         self.assertEqual(check(self._snap(m), ["p/m"]).verdict, "BLOCK")
 
 
+# R4-05: one build identity shared by every synthetic attempt. Cells are build-consistent by
+# default, so a test that wants an inconsistency has to introduce one on purpose - and a fixture
+# missing these fields now fails, which is the point.
+def _schema_valid_record() -> dict:
+    """A record satisfying every required property of the real schema.
+
+    R4-06's positive control must run against the REAL validator - stubbing it is how R3-03 hid
+    for two rounds - so the fixture has to be genuinely valid rather than minimal. Built from the
+    schema itself, so adding a required property breaks this loudly instead of silently
+    weakening the control.
+    """
+    schema = json.loads(
+        (pathlib.Path(__file__).resolve().parents[1] / "run_record_schema.json").read_text())
+    known = {
+        "run_id": "run0", "attempt_id": "D-001-C1-r1", "task_id": "D-001", "condition": "C1",
+        "workload": "D", "repetition": 1, "model": "replay", "provider": "lab",
+        "model_version": "test", "model_calls": 1, "tool_calls": 0, "input_tokens": 10,
+        "output_tokens": 1, "total_tokens": 11, "cost": 0.001,
+        "pricing_snapshot_id": "PS-2026-09-16", "latency_ms": 1, "retries": 0, "escalations": 0,
+        "cache_state": "cold", "task_success": False, "quality_score": 0.0,
+        "environment_id": "test-env", "raw_evidence_path": "raw/run0.json",
+        "methodology_version": "1.1.0", "run_class": "dry_run", "token_source": "provider_usage_field",
+        "quality_judged_before_cost": False, "outcome": "INVALID",
+    }
+    missing = [k for k in schema["required"] if k not in known]
+    if missing:  # pragma: no cover - fails loudly when the schema gains a required field
+        raise AssertionError(
+            f"the schema requires {missing}, which this fixture does not supply. Add them here "
+            "rather than stubbing the validator.")
+    return known
+
+
+BUILD = {"methodology_version": "1.1.0", "task_version": "1.1.0",
+         "task_set_hash": "a" * 64, "answer_key_hash": "b" * 64, "scorer_hash": "c" * 64}
+
+
 def _att(tid, wl, cond, outcome, rep=1, cost=1.0, cache="cold"):
     return {"run_id": f"{tid}-{cond}-r{rep}", "attempt_id": f"{tid}-{cond}-r{rep}",
             "task_id": tid, "workload": wl, "condition": cond,
             "repetition": rep, "outcome": outcome, "cost": cost, "cache_state": cache,
-            "task_version": "1.1.0"}
+            **BUILD}
 
 
 def _planned_cell(wl, cond, planned, attempts):
@@ -569,7 +606,7 @@ class TestAdversarialReviewFindings(unittest.TestCase):
 
     def _rec(self, **kw):
         r = {"run_id": "same", "task_id": "D-001", "workload": "D", "condition": "C1",
-             "repetition": 1, "outcome": PASS, "cost": 1.0}
+             "repetition": 1, "outcome": PASS, "cost": 1.0, **BUILD}
         r.update(kw)
         return r
 
@@ -715,7 +752,7 @@ class TestSecondAdversarialReviewFindings(unittest.TestCase):
         self.dcell = [c for c in self.plan["cells"]
                       if c["workload"] == "D" and c["condition"] == "C1"]
         self.rec = dict(run_id="same", task_id="D-001", workload="D", condition="C1",
-                        repetition=1, outcome=PASS, cost=1.0)
+                        repetition=1, outcome=PASS, cost=1.0, **BUILD)
 
     def test_the_run_plan_enumerates_every_attempt_it_counts(self):
         self.assertEqual(len(self.registry.by_id), 270)
@@ -814,7 +851,9 @@ class TestFinalizeValidatesBeforeWriting(unittest.TestCase):
             (sd / f"{i}.json").write_text(json.dumps(dict(
                 packet_id=pid, task_id="D-001", quality_score=1.0, task_success=True,
                 outcome="PASS" if i == 0 else second_outcome,
-                detail={"methodology_version": "1.1.0"}, scorer_hash="x")))
+                detail={"methodology_version": "1.1.0"},
+                # R4-06: provenance is required now, not checked only when present.
+                scorer_hash="x", methodology_version="1.1.0", packet_digest="d" * 64)))
         return rd, sd
 
     def setUp(self):
@@ -865,7 +904,7 @@ class TestThirdAdversarialReviewFindings(unittest.TestCase):
         self.cp = [c for c in self.plan["cells"]
                    if (c["workload"], c["condition"]) == ("D", "C1")]
         self.recs = [dict(self.registry.by_id[i], attempt_id=i, run_id="exec-" + i,
-                          outcome=PASS, cost=1.0)
+                          outcome=PASS, cost=1.0, **BUILD)
                      for i in sorted(self.registry.cell_ids("D", "C1"))]
 
     # ---- R3-02 -----------------------------------------------------------
@@ -969,6 +1008,263 @@ class TestThirdAdversarialReviewFindings(unittest.TestCase):
         for field in ("attempt_id", "pending_adjudication"):
             self.assertIn(field, schema["properties"],
                           f"the harness writes {field} and the schema would reject the record")
+
+
+class TestFourthAdversarialReviewFindings(unittest.TestCase):
+    """The fourth external review of `6d59acd`.
+
+    Two of the six are the recurring shape a fourth time: a guard whose input nothing produces
+    (R4-06), and a protected scope that excludes the code doing the work (R4-02).
+    """
+
+    LAB = pathlib.Path(__file__).resolve().parents[2]
+
+    # ---- R4-02: manifest coverage --------------------------------------
+    def test_the_committed_manifest_verifies_against_the_committed_code(self):
+        """It did not: run_record_schema.json and judge.py both mismatched on 6d59acd."""
+        v = mf.verify(self.LAB / "tasks/TASK_SET_v1.1.0/MANIFEST.json",
+                      self.LAB / "tasks/TASK_SET_v1.1.0", self.LAB / "environment")
+        self.assertTrue(v["ok"], [g for g, d in v["groups"].items() if not d["ok"]])
+
+    def test_the_manifest_covers_the_aggregation_and_run_code(self):
+        """`CONFIG_FILES` omitted aggregate.py, finalize.py and runner.py — every module between
+        a scored packet and a published cell."""
+        data = json.loads((self.LAB / "tasks/TASK_SET_v1.1.0/MANIFEST.json").read_text())
+        covered = (set(data["groups"]["execution"]["files"])
+                   | set(data["groups"]["scorer"]["files"]))
+        for must in ("harness/aggregate.py", "harness/finalize.py", "harness/runner.py",
+                     "harness/judge.py", "harness/analyse.py"):
+            self.assertIn(must, covered)
+
+    def test_a_modified_aggregator_is_caught(self):
+        """NEGATIVE CONTROL. With a fresh manifest, an overridden select_strongest verified ok."""
+        with tempfile.TemporaryDirectory() as td:
+            env = pathlib.Path(td) / "env"; env.mkdir()
+            shutil.copytree(self.LAB / "environment/harness", env / "harness")
+            shutil.copy(self.LAB / "environment/run_record_schema.json", env)
+            mp = pathlib.Path(td) / "manifest.json"
+            mf.build(self.LAB / "tasks/TASK_SET_v1.1.0", env).save(mp)
+            self.assertTrue(mf.verify(mp, self.LAB / "tasks/TASK_SET_v1.1.0", env)["ok"],
+                            "positive control: an untouched tree must verify")
+            with (env / "harness/aggregate.py").open("a") as fh:
+                fh.write('\ndef select_strongest(*a, **k):\n    return {"chosen": [("D", "C1")]}\n')
+            v = mf.verify(mp, self.LAB / "tasks/TASK_SET_v1.1.0", env)
+            self.assertFalse(v["ok"])
+            self.assertIn("harness/aggregate.py", v["groups"]["execution"]["modified"])
+
+    def test_a_new_harness_module_is_caught(self):
+        """A hand-maintained list cannot notice a file nobody added it to."""
+        with tempfile.TemporaryDirectory() as td:
+            env = pathlib.Path(td) / "env"; env.mkdir()
+            shutil.copytree(self.LAB / "environment/harness", env / "harness")
+            shutil.copy(self.LAB / "environment/run_record_schema.json", env)
+            mp = pathlib.Path(td) / "manifest.json"
+            mf.build(self.LAB / "tasks/TASK_SET_v1.1.0", env).save(mp)
+            (env / "harness/extra_module.py").write_text("X = 1\n")
+            v = mf.verify(mp, self.LAB / "tasks/TASK_SET_v1.1.0", env)
+            self.assertFalse(v["ok"])
+            self.assertIn("harness/extra_module.py", v["groups"]["execution"]["added"])
+
+    # ---- R4-03: the documented dry-run path ----------------------------
+    def test_the_committed_dry_run_plan_carries_attempt_ids(self):
+        """All 10 items lacked one, so the runner refused before executing anything."""
+        plan = json.loads((self.LAB / "dryrun/PLAN.json").read_text())
+        self.assertTrue(plan)
+        self.assertEqual([i["task_id"] for i in plan if not i.get("attempt_id")], [])
+
+    def test_the_committed_dry_run_has_its_own_run_plan(self):
+        rp = json.loads((self.LAB / "dryrun/RUN_PLAN.json").read_text())
+        plan = json.loads((self.LAB / "dryrun/PLAN.json").read_text())
+        ids = {a["attempt_id"] for r in rp["runs"] for a in r["task_attempts"]}
+        self.assertEqual(ids, {i["attempt_id"] for i in plan})
+        self.assertNotEqual(rp["run_plan_version"], "1.1.0",
+                            "the dry run must not claim to be the frozen experiment plan")
+
+    # ---- R4-04: the methodology lock -----------------------------------
+    def test_every_document_the_lock_claims_hashes_to_what_it_says(self):
+        lock = json.loads((self.LAB / "methodology/METHODOLOGY_LOCK_v1.1.0.json").read_text())
+        bad = [rel for rel, want in lock["documents"].items()
+               if hashlib.sha256((self.LAB / rel).read_bytes()).hexdigest() != want]
+        self.assertEqual(bad, [], "the lock cannot fingerprint a candidate it does not match")
+
+    # ---- R4-05: build identity -----------------------------------------
+    def test_a_cell_mixing_two_builds_is_not_reportable(self):
+        atts = [_att(f"D-00{i}", "D", "C1", PASS) for i in (1, 2, 3)]
+        atts[0]["methodology_version"] = "1.0.0"
+        c = _planned_cell("D", "C1", 3, atts)
+        v = c.verdict()
+        self.assertEqual(v["cell_verdict"], "FAIL")
+        self.assertFalse(v["build_consistent"])
+        self.assertTrue(any("disagree on methodology_version" in b for b in v["build_problems"]))
+
+    def test_a_build_inconsistency_is_not_reported_as_a_quality_failure(self):
+        """Nothing about the candidate failed; the record set cannot be interpreted."""
+        atts = [_att(f"D-00{i}", "D", "C1", PASS) for i in (1, 2, 3)]
+        atts[0]["scorer_hash"] = "d" * 64
+        v = _planned_cell("D", "C1", 3, atts).verdict()
+        self.assertEqual(v["counts"][FAIL_QUALITY], 0)
+        self.assertTrue(any(r.startswith("BUILD INCONSISTENT") for r in v["reasons"]))
+
+    def test_a_build_inconsistent_cell_cannot_be_selected(self):
+        atts = [_att(f"D-00{i}", "D", "C1", PASS) for i in (1, 2, 3)]
+        atts[0]["task_set_hash"] = "e" * 64
+        c = _planned_cell("D", "C1", 3, atts)
+        self.assertEqual(select_strongest([c], {("D", "C1"): 0.9})["chosen"], [])
+
+    def test_the_plan_hash_covers_the_versions_the_plan_declares(self):
+        """Changing methodology_version and task_set_version left plan_hash byte-identical."""
+        rp = json.loads((self.LAB / "RUN_PLAN_v1.1.0.json").read_text())
+        before = PlannedAttempts.from_run_plan(rp).plan_hash
+        rp2 = json.loads((self.LAB / "RUN_PLAN_v1.1.0.json").read_text())
+        rp2["methodology_version"] = "1.0.0"
+        rp2["task_set_version"] = "1.0.0"
+        self.assertNotEqual(PlannedAttempts.from_run_plan(rp2).plan_hash, before)
+
+    def test_a_consistent_cell_still_passes(self):
+        """CONTROL. Over-rejection would be its own defect."""
+        v = _planned_cell("D", "C1", 3,
+                          [_att(f"D-00{i}", "D", "C1", PASS) for i in (1, 2, 3)]).verdict()
+        self.assertEqual(v["cell_verdict"], "PASS", v["reasons"])
+        self.assertTrue(v["build_consistent"])
+
+    # ---- R4-06: score provenance ---------------------------------------
+    def test_the_judge_stamps_its_own_identity_on_every_score(self):
+        """0 of 17 real scores carried scorer_hash, so finalize's comparison never ran."""
+        import test_judge as t
+        res = jdg.score_packet(t.e2_packet11(t.E2_KEY_11))
+        stamped = jdg._stamp_provenance(dict(res), t.e2_packet11(t.E2_KEY_11))
+        for field in ("scorer_hash", "methodology_version", "packet_digest"):
+            self.assertTrue(stamped.get(field), field)
+        self.assertEqual(stamped["scorer_hash"], jdg.scorer_identity())
+
+    def test_the_scorer_identity_is_derived_from_its_own_source(self):
+        want = hashlib.sha256(
+            (self.LAB / "environment/harness/judge.py").read_bytes()).hexdigest()
+        self.assertEqual(jdg.scorer_identity(), want)
+
+    def _prov_batch(self, td, *, score_extra=None, record_extra=None):
+        root = pathlib.Path(td); rd = root / "r"; sd = root / "s"; rd.mkdir(); sd.mkdir()
+        rec = dict(_SCHEMA_VALID_RECORD, scorer_hash="x")
+        rec.update(record_extra or {})
+        (rd / "0.json").write_text(json.dumps(rec))
+        pid = hashlib.sha256(b"run0|D-001").hexdigest()[:16]
+        score = {"packet_id": pid, "task_id": "D-001", "quality_score": 1.0,
+                 "task_success": True, "outcome": "PASS",
+                 "detail": {"methodology_version": "1.1.0"}, "scorer_hash": "x",
+                 "methodology_version": "1.1.0", "packet_digest": "d" * 64}
+        score.update(score_extra or {})
+        (sd / "0.json").write_text(json.dumps(score))
+        return rd, sd
+
+    def test_a_score_without_provenance_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            rd, sd = self._prov_batch(td, score_extra={"scorer_hash": None})
+            before = (rd / "0.json").read_bytes()
+            with self.assertRaises(fin.FinalizeError) as cm:
+                fin.finalize(rd, sd)
+            self.assertIn("no provenance", str(cm.exception))
+            self.assertEqual((rd / "0.json").read_bytes(), before)
+
+    def test_a_record_naming_a_different_scorer_is_refused(self):
+        """It used to finalize 17 records and keep the wrong hash untouched."""
+        with tempfile.TemporaryDirectory() as td:
+            rd, sd = self._prov_batch(td, record_extra={"scorer_hash": "f" * 64})
+            with self.assertRaises(fin.FinalizeError) as cm:
+                fin.finalize(rd, sd)
+            self.assertIn("scorer", str(cm.exception))
+
+    def test_a_score_missing_its_methodology_version_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            rd, sd = self._prov_batch(td, score_extra={"methodology_version": None})
+            with self.assertRaises(fin.FinalizeError) as cm:
+                fin.finalize(rd, sd)
+            self.assertIn("no provenance", str(cm.exception))
+
+    def test_a_fully_provenanced_batch_finalizes(self):
+        """CONTROL."""
+        with tempfile.TemporaryDirectory() as td:
+            rd, sd = self._prov_batch(td)
+            out = fin.finalize(rd, sd)
+            self.assertEqual(out["records_finalized"], 1)
+            self.assertEqual(
+                json.loads((rd / "0.json").read_text())["scored_packet_digest"], "d" * 64)
+
+
+_SCHEMA_VALID_RECORD = _schema_valid_record()
+
+
+class TestAnalysisEntryPoint(unittest.TestCase):
+    """R4-01: the analysis layer had no command. It computes what needs no ruling, and names
+    what it refuses."""
+
+    LAB = pathlib.Path(__file__).resolve().parents[2]
+
+    def _plan_and_records(self, td, mutate=None):
+        ids = {f"D-00{i}-C1-r1": {"workload": "D", "condition": "C1", "task_id": f"D-00{i}",
+                                  "repetition": 1} for i in (1, 2, 3)}
+        run_plan = {
+            "methodology_version": "1.1.0", "task_set_version": "1.1.0",
+            "cells": [{"workload": "D", "condition": "C1", "planned_attempts": 3}],
+            "runs": [{"run_id": "D-C1-r1", "workload": "D", "condition": "C1", "repetition": 1,
+                      "task_attempts": [{"task_id": v["task_id"], "attempt_id": k}
+                                        for k, v in sorted(ids.items())]}],
+        }
+        recs = [dict(_att(v["task_id"], "D", "C1", PASS), attempt_id=k)
+                for k, v in sorted(ids.items())]
+        if mutate:
+            mutate(recs)
+        root = pathlib.Path(td); rd = root / "r"; rd.mkdir()
+        for i, r in enumerate(recs):
+            (rd / f"{i}.json").write_text(json.dumps(r))
+        pp = root / "run_plan.json"; pp.write_text(json.dumps(run_plan))
+        return rd, pp
+
+    def _run(self, rd, pp):
+        p = subprocess.run([sys.executable, "-m", "harness.analyse", "--records", str(rd),
+                            "--run-plan", str(pp)], capture_output=True, text=True,
+                           cwd=str(pathlib.Path(__file__).resolve().parents[1]))
+        return p.returncode, json.loads(p.stdout)
+
+    def test_it_computes_cost_per_successful_task_when_every_attempt_is_priced(self):
+        with tempfile.TemporaryDirectory() as td:
+            code, d = self._run(*self._plan_and_records(td))
+            self.assertEqual(code, 0, d)
+            cost = d["cells"][0]["cost"]
+            self.assertEqual(cost["cost_status"], "COMPUTED")
+            self.assertAlmostEqual(cost["cost_per_successful_task"], 1.0)
+
+    def test_an_unpriced_attempt_blocks_the_metric_rather_than_reading_as_zero(self):
+        def drop(recs): recs[0].pop("cost")
+        with tempfile.TemporaryDirectory() as td:
+            _, d = self._run(*self._plan_and_records(td, drop))
+            cost = d["cells"][0]["cost"]
+            self.assertEqual(cost["cost_status"], "BLOCKED")
+            self.assertIsNone(cost["cost_per_successful_task"])
+
+    def test_a_cell_with_no_passes_reports_no_finite_value(self):
+        def fail(recs):
+            for r in recs:
+                r["outcome"] = FAIL_QUALITY
+        with tempfile.TemporaryDirectory() as td:
+            _, d = self._run(*self._plan_and_records(td, fail))
+            self.assertEqual(d["cells"][0]["cost"]["cost_status"], "NO_FINITE_VALUE")
+
+    def test_a_substituted_identity_refuses_the_whole_description(self):
+        def swap(recs): recs[0]["attempt_id"] = "invented-1"
+        with tempfile.TemporaryDirectory() as td:
+            code, d = self._run(*self._plan_and_records(td, swap))
+            self.assertEqual(code, 2)
+            self.assertEqual(d["status"], "REFUSED")
+
+    def test_it_refuses_every_conclusion_that_waits_on_a_ruling(self):
+        with tempfile.TemporaryDirectory() as td:
+            _, d = self._run(*self._plan_and_records(td))
+            blocked = {x["output"] for x in d["decisions_required"]}
+            for must in ("cost_delta_vs_baseline", "condition_ranking", "non_inferiority",
+                         "savings_claim", "strongest_conditions"):
+                self.assertIn(must, blocked)
+            for absent in ("delta", "ranking", "non_inferiority_result", "saving"):
+                self.assertNotIn(f'"{absent}":', json.dumps(d))
 
 
 if __name__ == "__main__":

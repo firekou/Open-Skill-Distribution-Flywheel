@@ -74,6 +74,23 @@ def finalize(records_dir: pathlib.Path, scores_dir: pathlib.Path) -> dict:
     # scorer build or under a different methodology version carries the same id and used to be
     # written back without complaint - the same class of defect as the version mis-stamp, one
     # stage later. Both sides must agree on the rulebook and on the scorer that applied it.
+    # R4-06: these comparisons used to fire only when BOTH sides carried the field, and the judge
+    # wrote none of them - so on every real batch the check silently passed. "Absent means fine"
+    # is the same shape as the missing-cost defect: the safe-looking default is the one that lets
+    # an unbound result through. Provenance is now REQUIRED, and its absence is a refusal.
+    REQUIRED_SCORE_PROVENANCE = ("scorer_hash", "methodology_version", "packet_digest")
+    missing_prov = []
+    for _, rec, pid, s in pairs:
+        absent = [k for k in REQUIRED_SCORE_PROVENANCE if not s.get(k)]
+        if absent:
+            missing_prov.append(f"{rec.get('run_id')}: score carries no {', '.join(absent)}")
+    if missing_prov:
+        raise FinalizeError(
+            f"refusing to finalize: {len(missing_prov)} score(s) carry no provenance: "
+            + "; ".join(missing_prov[:5]) + ". **Nothing has been written.** A score that does "
+            "not say which scorer produced it, under which methodology version, over which "
+            "packet, cannot be bound to the run it is written into.")
+
     mismatched = []
     for _, rec, pid, s in pairs:
         if s["task_id"] != rec["task_id"]:
@@ -81,13 +98,19 @@ def finalize(records_dir: pathlib.Path, scores_dir: pathlib.Path) -> dict:
                 f"packet {pid} scores task {s['task_id']} but record {rec['run_id']} is "
                 f"task {rec['task_id']}; the mapping is wrong and nothing may be written back"
             )
-        smv = (s.get("detail") or {}).get("methodology_version")
+        # R4-06: unconditional now. A record with no methodology_version or scorer_hash is
+        # itself the failure - it cannot be shown to belong to this build.
+        smv = s.get("methodology_version") or (s.get("detail") or {}).get("methodology_version")
         rmv = rec.get("methodology_version")
-        if smv and rmv and smv != rmv:
+        if not rmv:
+            mismatched.append(f"{rec['run_id']}: record declares no methodology_version")
+        elif smv != rmv:
             mismatched.append(
                 f"{rec['run_id']}: record declares {rmv}, its score was produced under {smv}")
         shash, rhash = s.get("scorer_hash"), rec.get("scorer_hash")
-        if shash and rhash and shash != rhash:
+        if not rhash:
+            mismatched.append(f"{rec['run_id']}: record names no scorer_hash")
+        elif shash != rhash:
             mismatched.append(
                 f"{rec['run_id']}: score came from scorer {shash[:12]}, record ran against "
                 f"{rhash[:12]}")
@@ -120,6 +143,9 @@ def finalize(records_dir: pathlib.Path, scores_dir: pathlib.Path) -> dict:
         # decide. Finalize dropped the flag, so the aggregator could never gate on it and a
         # result nobody had ruled on was published as a clean PASS. It travels with the record.
         rec["pending_adjudication"] = bool(s.get("pending_adjudication"))
+        # The score's own view of what it scored, carried into the record so the binding is
+        # auditable after the fact rather than only at finalize time.
+        rec["scored_packet_digest"] = s.get("packet_digest")
 
         # v1.1.0 section 6.2. The judge decides which of the three outcomes this attempt had; the
         # runner's placeholder is replaced here. A corpus modification already failed the attempt

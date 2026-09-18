@@ -144,6 +144,17 @@ Every record is `run_class: "dry_run"`. `runner.py` **refuses** to write a `benc
 record from a synthetic fixture. Nothing here says anything about token optimisation: the counts
 come from a seeded PRNG.
 
+**`dryrun/PLAN.json` must carry an `attempt_id` per item (R4-03).** It did not, so the moment the
+runner began requiring one this documented path failed before executing anything — while the
+separately generated golden fixture still worked, which is why "the documented commands work" was
+too broad a claim. `make_dryrun_fixture.py` now refuses a plan without them and writes
+`dryrun/RUN_PLAN.json` beside the fixture for step 8.
+
+**Expected outcome of the dry run: the runner completes 10/10 and the cells FAIL.** The fixture's
+model outputs are synthetic, so the attempts genuinely fail quality and `harness.aggregate` exits
+`1`. That is the correct result: this path proves the plumbing executes, not that anything scores
+well. **The golden fixture (§8c) is the path where passing is the expected outcome.**
+
 **`lab001-dryrun-salt-…` is a test salt, not a blinding secret.** A scored run gets a real salt
 from the Runner's secret store — see the salt-custody section of `BLIND_EVALUATION_PROTOCOL.md`.
 
@@ -219,6 +230,10 @@ attempt identities from one source. The old `--plan CELL_PLAN.json` form gave co
 every cell came out `identity_verified: false` and **FAIL — on completely legitimate records**.
 That form still exists for old fixtures and now **refuses to run without `--registry`**, rather
 than quietly reporting a cell nobody checked.
+
+**Each fixture aggregates against its OWN run plan**: the committed dry run against
+`dryrun/RUN_PLAN.json` (above), the golden fixture against the `RUN_PLAN.json` that
+`golden_run.py` writes into its output directory.
 
 For the real experiment, pass the frozen plan:
 

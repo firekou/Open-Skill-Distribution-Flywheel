@@ -128,6 +128,36 @@ def make_calls(task: dict, condition: str, salt: str, emit_cached: bool = True) 
     return calls
 
 
+def write_run_plan(plan: list, out: pathlib.Path) -> pathlib.Path:
+    """The run plan for THIS fixture: denominators and planned identities from one source.
+
+    R4-03. Never confuse it with RUN_PLAN_v1.1.0.json, whose 270 attempts are the real
+    experiment's denominators.
+    """
+    from collections import Counter
+    runs: dict = {}
+    for item in plan:
+        wl = item["task_id"].split("-")[0]
+        rep = item.get("repetition", 1)
+        rid = f"{wl}-{item['condition']}-r{rep}"
+        runs.setdefault(rid, {"run_id": rid, "workload": wl, "condition": item["condition"],
+                              "repetition": rep, "task_attempts": []})
+        runs[rid]["task_attempts"].append({"task_id": item["task_id"],
+                                           "attempt_id": item["attempt_id"],
+                                           "session": "independent"})
+    cells = Counter((i["task_id"][0], i["condition"]) for i in plan)
+    out.write_text(json.dumps({
+        "run_plan_version": "dry-run fixture, not the frozen v1.1.0 plan",
+        "methodology_version": "1.1.0",
+        "task_set_version": "1.1.0",
+        "status": "SYNTHETIC - this dry run only",
+        "cells": [{"workload": w, "condition": c, "planned_attempts": n}
+                  for (w, c), n in sorted(cells.items())],
+        "runs": [runs[k] for k in sorted(runs)],
+    }, indent=2) + "\n")
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--task-root", required=True)
@@ -139,7 +169,20 @@ def main() -> int:
     args = ap.parse_args()
 
     task_root = pathlib.Path(args.task_root)
-    plan = json.loads(pathlib.Path(args.plan).read_text())
+    plan_path = pathlib.Path(args.plan)
+    plan = json.loads(plan_path.read_text())
+
+    # R4-03: the committed dry-run plan carried no attempt_id, so the moment the runner began
+    # requiring one the documented path in RUNBOOK section 6 failed before executing anything -
+    # only the separately generated golden fixture still worked. Fail here, where it is
+    # obviously a plan problem, and emit the run plan the aggregate step now needs.
+    without = [i.get("task_id") for i in plan if not i.get("attempt_id")]
+    if without:
+        raise SystemExit(
+            f"{len(without)} plan item(s) carry no attempt_id, e.g. {without[:5]}. An attempt id "
+            "is issued by the plan; records written without one cannot be checked against it. "
+            "Add them to the plan file before generating a fixture.")
+
     emit_cached = not args.no_cached_tokens
     assert_snapshot_can_price(pathlib.Path(args.snapshot), emit_cached)
 
@@ -205,6 +248,8 @@ def main() -> int:
     out.write_text(json.dumps(fixture, indent=2, ensure_ascii=False) + "\n")
     print(f"{len(calls)} calls across {len(plan)} planned runs -> {out}")
     print(f"{len(audit_lines)} synthetic tool-audit entries -> {audit_out}")
+    rp = write_run_plan(plan, plan_path.parent / "RUN_PLAN.json")
+    print(f"run plan for this fixture -> {rp}")
     print("sha256:", hashlib.sha256(out.read_bytes()).hexdigest())
     return 0
 

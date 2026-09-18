@@ -1,5 +1,14 @@
 # Review package for round 4 — pinned at `6d59acd`
 
+> **Superseded 2026-09-18 by `reports/LAB_001_ADVERSARIAL_REVIEW_R4_RESPONSE.md`.** Round 4 found
+> six defects, all reproduced and fixed, and rejected two of this document's framings: the
+> "7 of 7 tests fail" claim (true but not all behavioural) and the "6 → 3 → 2" discovery-rate
+> curve (scopes differ; it is not a trend). **R4-01, listed below as unfixed, is now built.**
+>
+> **Index correction.** This package said every file was pinned at `6d59acd`. It was not: the code
+> was at `6d59acd`, but gates 22–24 existed only in the `401ea9a` version of the gate table. Code
+> pin and document pin were different commits and the index did not say so.
+
 **PR:** https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/1 (draft, **not merged**)
 **Head:** `6d59acd` · **Base:** `main` at `a8ca352` · **Branch:** `claude/atk-open-skill-distribution-96e4vv`
 **Prior reviewed commits:** `205c1b4` → `62a16a4` (R1) → `59293e8` (R2) → `4e6584b` (R3) → **`6d59acd`**

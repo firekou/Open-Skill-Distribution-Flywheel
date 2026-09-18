@@ -67,10 +67,26 @@ GROUPS: dict[str, dict] = {
     },
 }
 
-# Files outside the task set whose content changes scores. Hashed as `scorer` and `config`.
+# Files outside the task set whose content changes scores. Hashed as `scorer`, `execution`
+# and `config`.
 SCORER_FILES = ["harness/judge.py"]
-CONFIG_FILES = ["run_record_schema.json", "harness/evidence.py", "harness/blind.py",
-                "harness/meter.py", "harness/pricing.py", "harness/record.py"]
+
+# R4-02: `CONFIG_FILES` was a hand-maintained list, and it omitted aggregate.py, finalize.py and
+# runner.py - every module between a scored packet and a published cell. A fresh manifest built
+# over a modified aggregate.py, with select_strongest overridden to return a fixed winner, still
+# verified ok=true. The manifest was reported as covering "the whole scoring and aggregation
+# chain"; it covered neither the aggregation nor the run.
+#
+# A hand-maintained list of what to protect goes stale the first time someone adds a file, and
+# nothing tells you. So the execution group is DISCOVERED: every .py under harness/ that is not
+# explicitly excluded below. A new module is covered the moment it exists.
+EXECUTION_ROOT = "harness"
+EXECUTION_EXCLUDED = {
+    "harness/test_harness.py": "tests. They do not run in a scored run and do not change a result",
+    "harness/test_judge.py": "tests, as above",
+    "harness/blind_smoke.py": "a developer smoke script, never on the scoring path",
+}
+CONFIG_FILES = ["run_record_schema.json"]
 
 SKIP_DIR_NAMES = {"__pycache__", ".pytest_cache", ".mypy_cache"}
 SKIP_SUFFIXES = {".pyc", ".pyo"}
@@ -149,17 +165,47 @@ def build(task_set_dir: pathlib.Path, env_dir: pathlib.Path) -> Manifest:
         digest, per = _hash_files(ts, files)
         groups[name] = {"hash": digest, "files": per, "count": len(files), "why": spec["why"]}
 
-    for name, rel_files in (("scorer", SCORER_FILES), ("config", CONFIG_FILES)):
-        paths = [env / r for r in rel_files]
-        missing = [str(p) for p in paths if not p.exists()]
+    # R4-02: the execution group is discovered, not listed, so a module added later is covered
+    # without anyone remembering to add it.
+    exec_root = env / EXECUTION_ROOT
+    discovered = sorted(
+        p for p in exec_root.rglob("*.py")
+        if not (set(p.parts) & SKIP_DIR_NAMES)) if exec_root.exists() else []
+    claimed_elsewhere = {(env / r).resolve() for r in SCORER_FILES}
+    excluded = {(env / r).resolve() for r in EXECUTION_EXCLUDED}
+    execution_files = [p for p in discovered
+                       if p.resolve() not in claimed_elsewhere and p.resolve() not in excluded]
+
+    for name, paths, why in (
+        ("scorer", [env / r for r in SCORER_FILES], "the scorer itself"),
+        ("execution", execution_files,
+         "every module on the path from a run to a published cell - runner, evidence, scoring "
+         "support, finalize, aggregate, pricing. DISCOVERED from harness/*.py, not listed, so a "
+         "new module cannot quietly fall outside coverage (R4-02)"),
+        ("config", [env / r for r in CONFIG_FILES],
+         "schemas that decide what a record may say"),
+    ):
+        missing = [str(x) for x in paths if not x.exists()]
         if missing:
             raise ManifestError(f"{name} group references missing files: {missing}")
         digest, per = _hash_files(env, paths)
-        groups[name] = {
-            "hash": digest, "files": per, "count": len(paths),
-            "why": ("the scorer itself" if name == "scorer"
-                    else "schema and harness modules that change how a score is produced"),
-        }
+        groups[name] = {"hash": digest, "files": per, "count": len(paths), "why": why}
+
+    groups["execution"]["excluded"] = {
+        k: v for k, v in sorted(EXECUTION_EXCLUDED.items()) if (env / k).exists()}
+
+    # R4-02: the same "nothing unclaimed" rule the task set has, applied to the environment. A
+    # .py under harness/ is covered, or named as excluded with a reason. There is no third state.
+    unclaimed_env = sorted(
+        str(x.relative_to(env)) for x in discovered
+        if x.resolve() not in claimed_elsewhere
+        and x.resolve() not in excluded
+        and x not in set(execution_files))
+    if unclaimed_env:
+        raise ManifestError(
+            f"{len(unclaimed_env)} harness file(s) are neither covered nor declared excluded: "
+            f"{unclaimed_env[:5]}. Every module that can change a result is hashed or is named "
+            "in EXECUTION_EXCLUDED with a reason.")
 
     # Unclaimed files inside the task set: visible, not silently ignored.
     all_files = {p for p in ts.rglob("*") if p.is_file()
