@@ -1,3 +1,5 @@
+> **負責人最新目標補充：[外部 Agent 發現、採用與解題驗收](ATK_AGENT_DISCOVERY_AND_ADOPTION.md)。** PR #4 的小交付結案不代表整體目標達成。下一個工作包是一個真實工具的可發現入口、可跟做接入與任務驗證，回覆於 `reviews/ATK_AGENT_DISCOVERY_EXECUTOR_RESPONSE.md`；下方舊「下一步／停止」只適用原交付，不得據此停止整體主線。
+
 # Claude 執行 Prompt：方向校正與第一個 ATK 接入交付
 
 你是 ATK 的執行者。請在以下 repository 接續工作：
