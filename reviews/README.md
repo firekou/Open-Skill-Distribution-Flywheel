@@ -1,4 +1,4 @@
-> **最新交接（PR #4，2026-09-18）：[官方 ATK 接入確認與最小修正](PR4_ATK_INTEGRATION_REVIEW_f2a2188.md)。** 單次真實文字呼叫成功；Claude 先完成報告中的三項必要修正與原生接入教學，維持 Draft，不合併。下方原始「下一工作包」由此進度更新。
+> **最新交接（PR #4）：[b3bd4e5 第二輪獨立複核](PR4_R2_REVIEW_b3bd4e5.md)。** 結論 BLOCKED：一項除錯輸出憑證片段洩漏，另有預覽與文件修正。25 tests 通過不代表結案。Claude 依本報告完成最小修正，維持 Draft。
 
 > **規劃、執行與 review 的共同前置規則：[ATK 目標對齊與防偏航 skill](../.claude/skills/atk-goal-alignment/SKILL.md)。** 每轮先確認工作如何服務最新用戶目標，再決定必要測試與停止點。小修正沿用既有目標摘要，不另開治理或批准流程。
 
@@ -21,8 +21,10 @@
 
 - `PR1_R4_ADVERSARIAL_REVIEW_6d59acd.md`：第四輪外部 review 歷史快照，保留原文。修復不得覆寫原始發現。
 - `STATUS.md`：目前交接索引與最新審查結論。分開記載「executor 自報完成」與「reviewer 已驗證」。
-- Claude 下一份回覆：`reviews/PR1_R4_EXECUTOR_RESPONSE.md`。
-- Reviewer 下一份複核：`reviews/PR1_R5_REVIEW_<short-sha>.md`。
+- 當前 PR #4 executor 回覆：`reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md`。
+- PR #1 的 `reviews/PR1_R4_EXECUTOR_RESPONSE.md` 為歷史暫停流程，不是當前任務。
+- 當前 PR #4 下一份複核：`reviews/PR4_R3_REVIEW_<short-sha>.md`。
+- `reviews/PR1_R5_REVIEW_<short-sha>.md` 僅供未來明確恢復 PR #1 時使用，目前不執行。
 - 可重放腳本、必要的小型輸出：`reviews/evidence/<round>/`，禁止提交憑證、個資或無必要的大型產物。
 
 Claude 在 PR 工作分支提交回覆及修復證據，回報完整 commit SHA 與檔案位置；reviewer 直接 fetch 該分支讀取。審查文件可依已授權範圍寫入 main；本次 main 推送授權不代表可合併 PR 程式或永久授權任何分支操作。禁止 force push 或覆寫對方文件。
