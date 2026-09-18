@@ -72,23 +72,28 @@ def main(argv=None) -> int:
     if a.dry_run:
         selected = (os.environ.get("PROVIDER") or "atk").lower()
         print(f"PROVIDER={selected}")
-        model = None
+        provider = None
         try:
-            p = build_provider()
-            model = p.model
-            print(f"would call: {p.name} / model {p.model}")
+            provider = build_provider()
+            print(f"would call: {provider.name} / model {provider.model}")
         except Exception as exc:                      # ConfigError, printed not raised
             print(f"provider not configured: {exc}")
         print(f"input {len(text)} chars -> prompt {sum(len(m.content) for m in messages)} chars")
 
         if a.show_payload:
-            # P4-03: the README used to promise dry-run printed "the exact request" while this
-            # printed 300-character excerpts. It now prints the complete body on request, and
-            # labels the default honestly as a preview.
-            body = {"model": model or "<unset: fill in *_MODEL>",
-                    "messages": [{"role": m.role, "content": m.content} for m in messages]}
-            print("--- complete request body (headers omitted: they carry your key) ---")
-            print(json.dumps(body, ensure_ascii=False, indent=2))
+            # P4-03 asked for the complete body; P4-R2-02 found that building it here produced an
+            # OpenAI shape even for Anthropic, which hoists `system` and adds `max_tokens`. A
+            # preview assembled separately from the request is a second implementation that can
+            # drift, and it did. It now comes from the adapter that would send it.
+            if provider is None:
+                print("--- cannot show the request body: no provider is configured ---")
+                print("    The body depends on the adapter (Anthropic hoists `system` and adds")
+                print("    `max_tokens`), so it is not guessed. Fill in .env and re-run.")
+            else:
+                body = provider.build_payload(messages)
+                print(f"--- complete request body as {provider.name} would send it "
+                      "(headers omitted: they carry your key) ---")
+                print(json.dumps(body, ensure_ascii=False, indent=2))
         else:
             print("--- messages (PREVIEW, first 300 chars each) ---")
             for m in messages:

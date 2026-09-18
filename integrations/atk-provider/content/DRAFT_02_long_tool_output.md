@@ -2,7 +2,7 @@
 status: DRAFT — 未發布。發布需另行授權（reviews/ATK_STRATEGY_REALIGNMENT_2026-09-18.md §5）
 asset: integrations/atk-provider/example_summarise_tool_output.py
 claims_requiring_evidence: none（本文不宣稱壓縮率、省錢或品質提升）
-live_evidence: ATK 單次 chat 由 PR #4 reviewer 以自有憑證實測；本文作者未跑過真實 ATK
+live_evidence: ATK 單次 chat 由 PR #4 reviewer 實測，使用**負責人提供並授權**的憑證（非 reviewer 自有帳號）；本文作者未跑過真實 ATK
 ---
 
 # 4000 行 build log，模型只需要其中三行
@@ -18,8 +18,8 @@ live_evidence: ATK 單次 chat 由 PR #4 reviewer 以自有憑證實測；本文
 ## 一個小到可以讀完的範例
 
 ```bash
-python3 example_summarise_tool_output.py --file build.log
-cat build.log | python3 example_summarise_tool_output.py
+python3 example_summarise_tool_output.py --file sample-build.log
+cat sample-build.log | python3 example_summarise_tool_output.py
 ```
 
 它做三件事，沒了：
@@ -60,17 +60,21 @@ curl -s https://api.aitokenking.com.tw/api/v1/models \
 ## 先看，再花錢
 
 ```bash
-python3 example_summarise_tool_output.py --dry-run --show-payload --file build.log
+python3 example_summarise_tool_output.py --dry-run --show-payload --file sample-build.log
 ```
 
-**印出完整的 JSON request body，然後什麼都不送。** 不需要憑證。header 永遠不印，因為其中一個是你的 key。
+**印出完整的 JSON request body，然後什麼都不送。** header 永遠不印，因為其中一個是你的 key。
+
+而且那份 body 是**由真正會送出它的 adapter 產生的**，不是另外組一份給你看的。這件事我第一版做錯了：我自己組了一份 OpenAI 形狀的 JSON，但 Anthropic 實際送出去的會把 `system` 提到頂層、還會加 `max_tokens`——所以「送出前看完整 body」對那條路徑根本不成立。獨立審查把 preview 和本機伺服器實收的內容逐欄位比對，才抓到。
+
+現在兩邊共用同一個 `build_payload()`，測試也直接斷言 preview 等於伺服器實收的 body。
 
 任何要你先給 key 才肯讓你看它要幹嘛的工具，都值得懷疑。
 
 ## 換一家供應商是一行
 
 ```bash
-PROVIDER=openai python3 example_summarise_tool_output.py --file build.log
+PROVIDER=openai python3 example_summarise_tool_output.py --file sample-build.log
 ```
 
 同一段程式、同一個指令。這個範例是走 `atk_provider` 這個接縫寫的，所以它本身不知道自己在跟誰講話——這正是重點。每次跑完會告訴你誰服務了這一次：
@@ -93,7 +97,7 @@ PROVIDER=openai python3 example_summarise_tool_output.py --file build.log
 
 **這個範例只是節錄，不是壓縮。** 它砍掉中間然後講明砍了。真正的壓縮是另一件事——`headroom`（Apache-2.0，在我們的 registry 裡）就是在做這件事，而且它有自己公開的品質 benchmark。把它接到這個接縫前面是很自然的下一步資產，**但還沒做，所以本文不引用它的任何數字**。
 
-**我沒有跑過真實 ATK。** 這份資產上唯一一次 live 呼叫是 **PR 審查者用他自己的憑證做的**（`claude-sonnet-4.6`，回 `OK`，12 in / 4 out，未回報美元成本）。我的環境裡沒有憑證，所以我不會說那是我跑的。本機測試打的是 localhost 伺服器，測的是 client，不是 ATK。全部記在 `VERIFICATION.md`。
+**我沒有跑過真實 ATK。** 這份資產上唯一一次 live 呼叫是 **PR 審查者做的，用的是負責人提供並授權最小測試的憑證**（`claude-sonnet-4.6`，回 `OK`，12 in / 4 out，未回報美元成本）。我的環境裡沒有憑證，所以我不會說那是我跑的。本機測試打的是 localhost 伺服器，測的是 client，不是 ATK。全部記在 `VERIFICATION.md`。
 
 **這個範例還不是任何工具的整合。** 它是獨立範例，headroom 還沒接上。
 
@@ -103,7 +107,7 @@ PROVIDER=openai python3 example_summarise_tool_output.py --file build.log
 
 ```bash
 cd integrations/atk-provider
-python3 example_summarise_tool_output.py --dry-run --file <你的 log>
+python3 example_summarise_tool_output.py --dry-run --file sample-build.log
 ```
 
 先看它要送什麼。覺得合理，再填 `.env`。

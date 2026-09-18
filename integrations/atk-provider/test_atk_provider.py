@@ -360,5 +360,94 @@ class TestPR4ReviewFindings(unittest.TestCase):
         self.assertNotIn("Authorization", r.stdout)
 
 
+class TestPR4R2ReviewFindings(unittest.TestCase):
+    """Findings from the second review, of `b3bd4e5`.
+
+    The lesson this time: **my own test was too weak.** `test_the_opt_in_body_is_still_redacted`
+    asserted only that the FULL key was absent, so a leak of the first 19 characters passed it.
+    An assertion that a secret is absent has to cover the fragments too.
+    """
+
+    KEY = "sk-live-" + "K" * 33          # 41 chars, the length the reviewer used
+
+    def _leak_probe(self, body_text: str, key: str = None):
+        key = key or self.KEY
+        with _Server([(401, {"error": body_text})]) as s:
+            env = {"PROVIDER": "atk", "ATK_API_KEY": key, "ATK_BASE_URL": s.url,
+                   "ATK_MODEL": "m", "MAX_RETRIES": "1", "ATK_INCLUDE_ERROR_BODY": "1"}
+            with self.assertRaises(ap.ProviderError) as cm:
+                ap.complete([Message("user", "q")], env=env)
+        return str(cm.exception)
+
+    def _assert_no_fragment(self, message: str, key: str = None):
+        """No run of 8+ characters of the key may survive anywhere in the message."""
+        key = key or self.KEY
+        self.assertNotIn(key, message)
+        leaked = [key[i:i + 8] for i in range(len(key) - 7) if key[i:i + 8] in message]
+        self.assertEqual(leaked, [], f"fragments of the key survived: {leaked[:3]}")
+
+    # ---- P4-R2-01: truncation happened before redaction --------------------
+    def test_a_key_straddling_the_truncation_boundary_does_not_leak(self):
+        """The reviewer's exact case: 370 filler characters, then the key across the 400 cut."""
+        self._assert_no_fragment(self._leak_probe("x" * 370 + self.KEY))
+
+    def test_a_key_before_the_boundary_does_not_leak(self):
+        self._assert_no_fragment(self._leak_probe(f"invalid credential {self.KEY} rejected"))
+
+    def test_a_key_after_the_boundary_does_not_leak(self):
+        self._assert_no_fragment(self._leak_probe("y" * 800 + self.KEY))
+
+    def test_a_key_appearing_several_times_does_not_leak(self):
+        self._assert_no_fragment(
+            self._leak_probe(f"{self.KEY} " + "z" * 390 + f" {self.KEY} tail {self.KEY}"))
+
+    def test_an_ordinary_error_is_still_diagnosable(self):
+        """CONTROL. Redaction must not reduce every failure to "something went wrong"."""
+        msg = self._leak_probe("model 'typo-4' does not exist on this account")
+        self.assertIn("does not exist", msg)
+        self.assertIn("401", msg)
+
+    # ---- P4-R2-02: the preview was a second implementation ----------------
+    def test_the_preview_is_built_by_the_adapter_that_would_send_it(self):
+        """The preview showed an OpenAI shape for Anthropic, which hoists `system`."""
+        msgs = [Message("system", "S"), Message("user", "U")]
+        with _Server([(200, {"model": "c", "content": [{"type": "text", "text": "a"}],
+                             "usage": {}})]) as s:
+            env = {"PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "k",
+                   "ANTHROPIC_BASE_URL": s.url.replace("/v1", ""), "ANTHROPIC_MODEL": "c"}
+            provider = ap.build_provider("anthropic", env)
+            preview = provider.build_payload(msgs)
+            ap.complete(msgs, env=env)
+        self.assertEqual(preview, s.calls[0]["body"],
+                         "what the preview shows must be what the wire carries")
+        self.assertIn("system", preview)
+        self.assertIn("max_tokens", preview)
+
+    def test_the_openai_preview_also_matches_the_wire(self):
+        msgs = [Message("system", "S"), Message("user", "U")]
+        with _Server([_openai_reply()]) as s:
+            env = {"PROVIDER": "atk", "ATK_API_KEY": "k", "ATK_BASE_URL": s.url,
+                   "ATK_MODEL": "m"}
+            preview = ap.build_provider("atk", env).build_payload(msgs)
+            ap.complete(msgs, env=env)
+        self.assertEqual(preview, s.calls[0]["body"])
+
+    def test_show_payload_declines_rather_than_guessing_when_unconfigured(self):
+        """The body depends on the adapter, so an unconfigured run must not invent one."""
+        import subprocess, sys, tempfile, os
+        with tempfile.TemporaryDirectory() as td:
+            log = pathlib.Path(td) / "x.log"
+            log.write_text("ERROR: boom\n")
+            env = {k: v for k, v in os.environ.items() if not k.startswith(("ATK_", "OPENAI_"))}
+            r = subprocess.run(
+                [sys.executable, "example_summarise_tool_output.py", "--dry-run",
+                 "--show-payload", "--file", str(log)],
+                capture_output=True, text=True, cwd=str(pathlib.Path(__file__).parent),
+                env={**env, "PROVIDER": "atk"})
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("cannot show the request body", r.stdout)
+        self.assertNotIn('"messages"', r.stdout, "a guessed body is worse than none")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

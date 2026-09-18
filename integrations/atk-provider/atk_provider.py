@@ -139,8 +139,13 @@ def _post(url: str, payload: dict, headers: dict, timeout: int, provider: str,
         # diagnostics that matter and cannot carry a credential; the server's prose might.
         detail = ""
         if include_body:
-            raw = exc.read().decode("utf-8", "replace")[:400]
-            detail = " — " + redact(raw, secrets)
+            # P4-R2-01: this used to slice to 400 characters and THEN redact, so a key that
+            # straddled the cut had its prefix survive - `redact` cannot match a value the
+            # truncation already broke in half. That leak was manufactured by this function, not
+            # by an upstream proxy, and the original test missed it because it only asserted the
+            # FULL key was absent. Redact the whole body first; truncate what is already safe.
+            raw = exc.read().decode("utf-8", "replace")
+            detail = " — " + redact(raw, secrets)[:400]
         else:
             detail = (" — body withheld; set ATK_INCLUDE_ERROR_BODY=1 to include it (it may "
                       "echo your credential, so do not paste the result into a bug report)")
@@ -165,12 +170,23 @@ class OpenAICompatibleProvider:
         self._timeout = timeout
         self._include_error_body = include_error_body
 
-    def complete(self, messages: Sequence[Message], **kwargs) -> Completion:
+    def build_payload(self, messages: Sequence[Message], **kwargs) -> dict:
+        """The exact JSON body this adapter will send.
+
+        P4-R2-02: the example's `--show-payload` used to construct an OpenAI-shaped body itself,
+        so for Anthropic it showed something the adapter never sends. A preview that is assembled
+        separately from the request is a second implementation that can drift, and did. Both now
+        call this.
+        """
         payload = {
             "model": self.model,
             "messages": [{"role": m.role, "content": m.content} for m in messages],
         }
         payload.update({k: v for k, v in kwargs.items() if v is not None})
+        return payload
+
+    def complete(self, messages: Sequence[Message], **kwargs) -> Completion:
+        payload = self.build_payload(messages, **kwargs)
         data = _post(f"{self._base}/chat/completions", payload,
                      {"Authorization": f"Bearer {self._key}"}, self._timeout, self.name,
                      secrets=(self._key,), include_body=self._include_error_body)
@@ -222,7 +238,11 @@ class AnthropicProvider:
         self._max_tokens = max_tokens
         self._include_error_body = include_error_body
 
-    def complete(self, messages: Sequence[Message], **kwargs) -> Completion:
+    def build_payload(self, messages: Sequence[Message], **kwargs) -> dict:
+        """See `OpenAICompatibleProvider.build_payload`. The shape genuinely differs here:
+        `system` is hoisted out of the turns and `max_tokens` is required, which is exactly the
+        drift P4-R2-02 found between the preview and the wire."""
+        kwargs = dict(kwargs)
         system = " ".join(m.content for m in messages if m.role == "system") or None
         turns = [{"role": m.role, "content": m.content}
                  for m in messages if m.role in ("user", "assistant")]
@@ -231,6 +251,10 @@ class AnthropicProvider:
         if system:
             payload["system"] = system
         payload.update({k: v for k, v in kwargs.items() if v is not None})
+        return payload
+
+    def complete(self, messages: Sequence[Message], **kwargs) -> Completion:
+        payload = self.build_payload(messages, **kwargs)
         data = _post(f"{self._base}/v1/messages", payload,
                      {"x-api-key": self._key, "anthropic-version": "2023-06-01"},
                      self._timeout, self.name,

@@ -3,8 +3,10 @@
 A **single stdlib Python file** that implements the Provider Interface from
 [`ATK_ROUTING_INTEGRATION.md`](../../ATK_ROUTING_INTEGRATION.md) §4, plus a runnable example.
 
-The contract was written down and never implemented, so every integration would have started by
-writing it again, differently. This is that seam, once.
+The contract was written down and never implemented. **This is not a prerequisite for every
+integration** — ATK's native MCP and OpenAI-compatible configuration may be all some assets ever
+need (see "Honest status" below). It is for the case where you are writing Python and want one
+call that survives changing providers.
 
 > **ATK may be the default. ATK may never be the only option.**
 
@@ -17,42 +19,48 @@ cd integrations/atk-provider
 cp .env.example .env
 ```
 
-Fill in three lines. **The base URL is already correct in the template** — copy it as is:
+Fill in two lines in `.env` (**the base URL is already correct — leave it**):
 
 ```bash
 ATK_API_KEY=<your key>
-ATK_BASE_URL=https://api.aitokenking.com.tw/api/v1
-ATK_MODEL=claude-sonnet-4.6        # any id from the list below
+ATK_MODEL=claude-sonnet-4.6
 ```
 
-List the models your key can reach (52 at the time of writing):
+Load it, **then** list the models your key can reach:
 
 ```bash
-curl -s https://api.aitokenking.com.tw/api/v1/models   -H "Authorization: Bearer $ATK_API_KEY" | python3 -m json.tool | head
+set -a && . ./.env && set +a          # load FIRST: the curl below needs $ATK_API_KEY
+
+curl -s "$ATK_BASE_URL/models" -H "Authorization: Bearer $ATK_API_KEY" \
+  | python3 -m json.tool | head
 ```
 
-Then run it:
+Run it against the sample log in this directory — no file of your own needed:
 
 ```bash
-set -a && . ./.env && set +a
-python3 example_summarise_tool_output.py --file some-build.log
+python3 example_summarise_tool_output.py --file sample-build.log
 ```
 
 > **Key naming.** The official docs call it `AITOKENKING_API_KEY`; this repository's contract
-> (`ATK_ROUTING_INTEGRATION.md` §3) calls it `ATK_API_KEY`. **Either works** — `ATK_API_KEY` is
-> the name used here and the official spelling is accepted as an alias. Don't set both to
-> different values.
+> (`ATK_ROUTING_INTEGRATION.md` §3) calls it `ATK_API_KEY`. **For this Python code either works** —
+> `ATK_API_KEY` is the name used here and the official spelling is accepted as an alias.
+>
+> **The alias is Python-side only.** The `curl` above reads `$ATK_API_KEY` from your shell, so if
+> your `.env` uses `AITOKENKING_API_KEY`, either set `ATK_API_KEY` too or substitute it in the
+> command. Don't set both to different values.
 
 **No credential yet?** The example runs without one:
 
 ```bash
-python3 example_summarise_tool_output.py --dry-run --file some-build.log
-python3 example_summarise_tool_output.py --dry-run --show-payload --file some-build.log
+python3 example_summarise_tool_output.py --dry-run --file sample-build.log
+python3 example_summarise_tool_output.py --dry-run --show-payload --file sample-build.log
 ```
 
 `--dry-run` shows what would be sent and sends nothing. By default it prints a **preview** — the
-first 300 characters of each message. `--show-payload` prints the **complete JSON request body**.
-Headers are never printed, because one of them is your key.
+first 300 characters of each message. `--show-payload` prints the **complete JSON request body,
+built by the adapter that would send it** (so the Anthropic shape differs from the OpenAI one —
+that is real, not a display quirk). It needs a configured provider, and declines rather than
+guessing if there is none. Headers are never printed, because one of them is your key.
 
 **Requirements:** Python 3.9+. **No dependencies** — standard library only.
 
@@ -61,19 +69,17 @@ Headers are never printed, because one of them is your key.
 ATK also publishes an MCP server. If your client speaks MCP, **you do not need this adapter**:
 point the client at the endpoint and you are done.
 
-```json
-{
-  "mcpServers": {
-    "aitokenking": {
-      "url": "https://api.aitokenking.com.tw/mcp",
-      "headers": { "X-Aitokenking-Api-Key": "${AITOKENKING_API_KEY}" }
-    }
-  }
-}
+```
+endpoint: https://api.aitokenking.com.tw/mcp
+header:   X-Aitokenking-Api-Key: <your key>
 ```
 
-Read the key from your environment; do not paste it into a file you commit. Exact config shape
-varies by client — check yours.
+**This is a conceptual example, not a config file you can paste.** MCP client configuration
+differs between clients, and **`${VAR}` expansion inside a config file is a per-client feature,
+not part of MCP** — several clients will pass that string through literally and send it as your
+key. Check your own client's documentation for how it injects headers from the environment (some
+support an explicit env-to-header mapping), and read the key from the environment rather than
+writing it into a file you commit.
 
 **MCP and the OpenAI-compatible API are different protocols.** The MCP URL is **not** a valid
 `ATK_BASE_URL`, and this adapter does not speak MCP. Use MCP when your client supports it; use

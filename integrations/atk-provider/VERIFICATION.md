@@ -2,8 +2,11 @@
 
 **Updated:** 2026-09-18 (round 2, after the PR #4 review of `f2a2188`)
 **Scope:** `integrations/atk-provider/`
-**Status: local behaviour VERIFIED by the author. ATK connectivity VERIFIED BY THE REVIEWER, not
-by this repository.**
+**Status: every fix below is `IMPLEMENTED_PENDING_REVIEW`.**
+
+**Only an independent reviewer marks a finding CLOSED** (`reviews/README.md`). An earlier version
+of this file wrote "all three closed" about my own work, which was not mine to write. The one
+exception is noted per-row: **P4-02 was marked closed by the R2 reviewer**, not by me.
 
 ## The official endpoint — and who established it
 
@@ -11,11 +14,11 @@ The first version of this file recorded that `api.aitokenking.com` did not resol
 the ATK path was unverified. **That hostname was wrong**: it was missing both `.tw` and `/api`.
 
 **The PR #4 reviewer found the official entry point and tested it. I did not.** Attribution
-matters here, so it is stated before the table:
+matters here, so it is stated before the table — including whose credential it was:
 
 | | |
 |---|---|
-| **Tested by** | the PR #4 reviewer, with their own credential |
+| **Tested by** | the PR #4 reviewer, using **a credential the owner supplied and authorised for a minimal test** — corrected 2026-09-18 (P4-R2-03.4). It is not the reviewer's own account, and an earlier version of this file said it was |
 | **Not tested by** | this repository. **No ATK credential exists in this environment**, and nothing here has ever called ATK |
 | Source | <https://aitokenking.com.tw/assets/docs/zh-Hant/index.html#mcp-server> |
 
@@ -37,14 +40,14 @@ The official docs use `AITOKENKING_API_KEY`; `ATK_ROUTING_INTEGRATION.md` §3 us
 so a reader can paste either without knowing this history. Mapping stated in `.env.example` and
 `README.md`; regression test `test_the_official_key_name_is_accepted_as_an_alias`.
 
-## Review findings from `f2a2188` — all three closed
+## Review findings from `f2a2188` — status per finding
 
 Each was reproduced before being changed, and each fix has a **runtime** regression test. The
 reviewer's instruction was explicit: *do not let "no `sk-` in the source" stand in for a runtime
 test*. So every credential case configures a real canary value, has a real server echo it, and
 asserts on what a human would actually see.
 
-### P4-01 — a rejecting server could leak the key (was REPRODUCED, now closed)
+### P4-01 — a rejecting server could leak the key (REPRODUCED → **partially fixed, then REOPENED as P4-R2-01**)
 
 `_post` put the first 400 characters of the error body into the exception, under a comment
 reasoning that keys travel in headers so bodies are safe. **That inference was wrong.** A server
@@ -59,10 +62,14 @@ URL in an unreachable-host error, since some gateways carry credentials in a que
 Tests: rejecting server · opt-in body · aggregated fallback · unreachable host with the key in
 the URL · `--show-payload` never prints the key or an `Authorization` header.
 
-**Honest limit:** redaction only removes values it knows. A proxy that re-encodes or truncates a
-key can still defeat it — which is why withholding, not redaction, is the default.
+**Honest limit:** redaction only removes values it knows. A proxy that re-encodes a key can still
+defeat it — which is why withholding, not redaction, is the default.
 
-### P4-02 — a 200 with no text counted as success (was REPRODUCED, now closed)
+**This was not enough, and the R2 reviewer showed why.** See P4-R2-01 below: *this code itself*
+truncated the body to 400 characters **before** redacting, so a key straddling the cut left its
+prefix behind, and my test passed because it only checked for the whole key.
+
+### P4-02 — a 200 with no text counted as success (REPRODUCED → **CLOSED by the R2 reviewer**)
 
 `content: null` returned `Completion(text=None)`; the example printed `None` and exited 0. For a
 summarising asset that is a failure reported as a success. Reproduced: `c.text is None` → `True`.
@@ -71,13 +78,65 @@ summarising asset that is a failure reported as a success. Reproduced: `c.text i
 raise, and the message names `finish_reason` so the reader learns *why* it was empty. Same rule
 for empty Anthropic `content` blocks. **Control:** genuine text still succeeds.
 
-### P4-03 — Quick Start did not match the implementation (was OBSERVED, now closed)
+### P4-03 — Quick Start did not match the implementation (OBSERVED → **partly verified; the full-payload part REOPENED as P4-R2-02**)
 
 1. `.env.example` carried the wrong base URL and the README only said "fill in key/model", so
    following it could not work. **Fixed** to the official URL, with the model-list command.
 2. The README claimed `--dry-run` printed "the exact request" while the code printed 300-char
    excerpts. **Fixed both ways**: the default is now labelled a **PREVIEW**, and `--show-payload`
    prints the **complete JSON body**. Headers are never printed.
+
+## Round 3 — findings from the R2 review of `b3bd4e5`
+
+### P4-R2-01 (P1, blocking) — the truncation was mine, not a proxy's
+
+`_post` did `decode(...)[:400]` and *then* `redact(...)`. A 41-character key straddling the cut
+could not be matched, so its prefix survived. **My own defence created the leak**, and
+`test_the_opt_in_body_is_still_redacted` passed anyway because it asserted only that the *full*
+key was absent.
+
+Reviewer's replay on `b3bd4e5`: `client_truncation_leaks_prefix= True`.
+
+**Fix:** redact the whole decoded body, **then** truncate what is already safe.
+After: `client_truncation_leaks_prefix= False`.
+
+**Tests now assert no 8-character run of the key survives**, for a key before the boundary,
+straddling it, after it, and repeated. Plus a control that an ordinary error is still
+diagnosable — redaction must not turn every failure into "something went wrong".
+
+### P4-R2-02 (P2) — the preview was a second implementation
+
+`--show-payload` built an OpenAI-shaped body itself. `AnthropicProvider` hoists `system` to a
+top-level field and adds `max_tokens`, so the "complete request body" was wrong for that path.
+
+Reviewer's replay on `b3bd4e5`:
+`preview_keys= ['messages','model']` vs `wire_keys= ['max_tokens','messages','model','system']`.
+
+**Fix:** `build_payload()` on each adapter is the single source, used by both `complete()` and
+the preview. A test asserts preview == the body the local server actually received, for both
+wire formats. With no provider configured it **declines** rather than guessing.
+After: `anthropic_preview_matches_wire= True`.
+
+### P4-R2-03 (P2) — documentation and status
+
+All six sub-items addressed: closure authority (above), stale PR body, README ordering
+(`.env` loaded *before* `curl`, alias caveat stated as Python-side only), a committed
+`sample-build.log` so the Quick Start needs no file of your own, credential attribution,
+test arithmetic (below), and the MCP block relabelled as conceptual with the `${VAR}`
+expansion caveat.
+
+### The test arithmetic, corrected
+
+An earlier version said "10 failures / 1 error, 2 pass" for 11 tests — which does not add up, as
+the reviewer noted. Measured against the real `f2a2188` source:
+
+```
+Ran 11 tests — FAILED (failures=12, errors=1)
+```
+
+**11 test methods: 10 fail, 1 passes** (the deliberate control). `unittest` prints `failures=12`
+because one method uses `subTest` over four sub-cases and reports each separately. The earlier
+"2 pass" was simply wrong.
 
 ## What was verified, and how
 
@@ -87,11 +146,11 @@ body, status handling, retries and fallback are genuinely exercised.
 
 ```
 $ python3 -m unittest test_atk_provider
-Ran 25 tests — OK
+Ran 33 tests — OK
 ```
 
-Against the reviewed commit `f2a2188`, the 11 new PR #4 tests give **10 failures /
-1 error**, and the single pass is the deliberate control (`test_real_text_still_succeeds`) — a fix that rejected everything would be its own
+Against `f2a2188`, the 11 PR #4 test methods give **10 failing, 1 passing** — the pass being the
+deliberate control (`test_real_text_still_succeeds`) — a fix that rejected everything would be its own
 defect.
 
 | Contract property (`ATK_ROUTING_INTEGRATION.md` §1) | Evidence |

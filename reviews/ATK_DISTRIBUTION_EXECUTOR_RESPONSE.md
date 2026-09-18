@@ -2,7 +2,85 @@
 
 **狀態：待獨立 review（IMPLEMENTED_PENDING_REVIEW）**
 **分支：** `claude/atk-distribution-provider-seam` ｜ **PR：** #4（Draft，未合併）
+**下一份 reviewer 回覆：** `reviews/PR4_R3_REVIEW_<short-sha>.md`
 **交付：** `integrations/atk-provider/`
+
+---
+
+## 第三輪：PR4_R2_REVIEW（`b3bd4e5`）的修正
+
+**狀態：全部 `IMPLEMENTED_PENDING_REVIEW`。** 依 `reviews/README.md`，只有獨立 reviewer 能標 CLOSED——
+我上一輪在 `VERIFICATION.md` 自己寫「all three closed」，那不是我能寫的，已更正。
+
+**唯一已 CLOSED 的是 P4-02，由 R2 reviewer 判定，不是我。**
+
+### P4-R2-01（P1，阻擋項）— 截斷是我自己做的，不是代理
+
+`_post` 先 `decode(...)[:400]` **才** `redact(...)`。41 字元的 key 跨過切點時，`redact` 根本匹配不到被切斷的值，**前半段就留在訊息裡**。
+
+**製造這個洩漏的是我的程式，不是外部代理**——我上一輪還把它寫成「代理若重新編碼可能繞過」的外部限制，那個描述避重就輕了。
+
+更難堪的是**我的測試也放行**：`test_the_opt_in_body_is_still_redacted` 只斷言「完整 key 不在訊息裡」，前 19 字元外洩它照樣綠燈。
+
+| | reviewer 重放（`b3bd4e5`） | 修正後 |
+|---|---|---|
+| `client_truncation_leaks_prefix` | **True** | **False** |
+
+**修法：先遮蔽整份 decoded body，再截斷已經安全的內容。**
+
+**新測試斷言 key 的任何 8 字元片段都不得出現**，涵蓋切點前、跨切點、切點後、重複出現四種位置；另加一個**正控制**——一般錯誤（`model 'typo-4' does not exist`）仍要看得懂，遮蔽不能把所有失敗變成「出了點問題」。
+
+### P4-R2-02（P2）— preview 是第二套實作
+
+`--show-payload` 自己組了一份 OpenAI 形狀的 body。`AnthropicProvider` 實際會把 `system` 提到頂層並加 `max_tokens`，所以那條路徑的「完整請求」是錯的。
+
+| | reviewer 重放（`b3bd4e5`） | 修正後 |
+|---|---|---|
+| `anthropic_preview_matches_wire` | **False** | **True** |
+| preview keys | `['messages','model']` | `['max_tokens','messages','model','system']` |
+
+**修法：`build_payload()` 放在 adapter 上，`complete()` 與 preview 共用同一個來源。** 測試直接斷言 preview 等於本機伺服器**實收**的 body，兩種 wire format 都驗。沒有設定 provider 時**明確拒絕顯示**，不猜一份出來。
+
+### P4-R2-03（P2）— 文件與狀態，六項全部處理
+
+1. **關閉權責** — `VERIFICATION.md` 改為逐項標示，全部 `IMPLEMENTED_PENDING_REVIEW`，只有 P4-02 標「CLOSED by the R2 reviewer」。
+2. **PR body 過期** — 已重寫（14 tests、舊網址、「所有候選都需要 adapter」全部更正）。README 開頭那段必要性論述也改掉了，不再與結尾自相矛盾。
+3. **README 順序** — `.env` 在 `curl` **之前**載入；並明講**別名只在 Python 端生效**，`curl` 讀的是 shell 的 `$ATK_API_KEY`。新增 **committed `sample-build.log`**，Quick Start 不再依賴讀者自己生一個檔案。
+4. **憑證歸屬** — 更正為「**負責人提供並授權最小測試的憑證**」，非 reviewer 自有帳號。`VERIFICATION.md` 與兩篇草稿都改了。
+5. **測試數字自相矛盾** — 已實測更正，見下。
+6. **MCP JSON** — 改標為**概念示例**，並明講 `${VAR}` 展開是**各客戶端自己的功能、不是 MCP 的一部分**，有些客戶端會把那串字面值當成 key 送出去。維持「未 handshake」標示。
+
+### 測試數字，實測更正
+
+我上一輪寫「11 個測試：10 failures / 1 error，另有 1 pass」——**11 個卻加出 12 個，reviewer 指出這對不起來。這是對的。**
+
+拿 `f2a2188` 的真實原始碼實跑：
+
+```
+Ran 11 tests — FAILED (failures=12, errors=1)
+```
+
+**正確說法：11 個 test method，10 個失敗、1 個通過**（刻意的正控制）。`unittest` 印出 `failures=12` 是因為其中一個 method 用 `subTest` 跑四個子案例，**每個子案例各報一次**。上一輪的「2 pass」單純是我寫錯。
+
+### 本輪測試
+
+```
+$ python3 -m unittest test_atk_provider
+Ran 33 tests — OK          （上一輪 25）
+
+$ python3 ../../reviews/evidence/pr4-r2/reviewer_checks.py
+client_truncation_leaks_prefix= False        ← was True
+anthropic_preview_matches_wire= True         ← was False
+preview_keys == wire_keys
+```
+
+新增 8 個測試對 `b3bd4e5`：**4 個失敗、4 個通過**。誠實說明那 4 個通過的原因——它們測的位置（key 在切點前／切點後很遠／重複出現）舊程式剛好處理得到，**真正的行為回歸只有跨切點那一個**，也就是 reviewer 找到的那個案例；另一個是刻意的正控制。我不把介面不相容或碰巧通過的案例當成同等強度的證據。
+
+### 仍未做
+
+- **新 head 沒有 live ATK 重跑。** 我這邊沒有憑證。前一輪的 live 證據屬於 `f2a2188`，**不能升格成 `b3bd4e5` 或本輪 head 的驗證**。
+- **MCP 仍未 handshake。**
+- **仍未整合任何 registry 候選工具**，這是獨立範例。
 
 ---
 

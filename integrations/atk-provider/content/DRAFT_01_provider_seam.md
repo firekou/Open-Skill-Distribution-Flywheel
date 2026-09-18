@@ -2,7 +2,7 @@
 status: DRAFT — 未發布。發布需另行授權（reviews/ATK_STRATEGY_REALIGNMENT_2026-09-18.md §5）
 asset: integrations/atk-provider/
 claims_requiring_evidence: none（本文不宣稱省錢或品質提升）
-live_evidence: ATK 單次 chat 由 PR #4 reviewer 以自有憑證實測；本文作者未跑過真實 ATK
+live_evidence: ATK 單次 chat 由 PR #4 reviewer 實測，使用**負責人提供並授權**的憑證（非 reviewer 自有帳號）；本文作者未跑過真實 ATK
 ---
 
 # 三分鐘接上 ATK，而且隨時換得掉
@@ -80,11 +80,19 @@ PROVIDER=openai     # 或 anthropic / deepseek / qwen / openrouter / custom
 
 這個資產被獨立審查過，抓到兩個我自己沒看到的洞。它們都很常見：
 
-**第一，錯誤訊息會洩漏你的 key。**
+**第一，錯誤訊息會洩漏你的 key——而且修過一次還不夠。**
 
 我原本把服務端錯誤本文前 400 字塞進例外訊息，還在註解裡寫「key 在 header 不在 body，所以安全」。**這個推論是錯的**——伺服器或代理完全可以把它拒絕的那把 key 回顯在 body 裡。審查者用假憑證重現了：401 回 `{"error": "invalid credential <你的key>"}`，例外訊息就帶著它印到 stderr。
 
-現在預設**不含 body**，只留 status。要 debug 再開 `ATK_INCLUDE_ERROR_BODY=1`，而且**那條路徑也會遮蔽已知 key**。
+我的第一版修法：預設**不含 body**，只留 status；要 debug 再開 `ATK_INCLUDE_ERROR_BODY=1`，而且那條路徑會遮蔽已知 key。
+
+**第二輪審查發現那還是會漏。** 我的程式先把 body 切到 400 字，**才**做遮蔽——key 如果剛好跨過那個切點，前半段就留在訊息裡了。**製造這個洩漏的是我自己的截斷，不是外部代理。**
+
+更難堪的是：我的測試也沒抓到，因為它只斷言「完整的 key 不在訊息裡」。前 19 個字元外洩，它照樣綠燈。
+
+現在是先遮蔽整份 body、再截斷已經安全的內容。測試也改成**不允許 key 的任何 8 字元片段出現**，並涵蓋 key 在切點前、跨切點、切點後、重複出現四種位置。
+
+> 兩個可以帶走的教訓：**「原始碼搜不到 sk-」不能代替執行時測試**；而**「完整秘密不在裡面」也不能代替「秘密的任何片段都不在裡面」**。
 
 > 順帶一提：「原始碼裡搜不到 `sk-`」**不能**當作執行時不會洩漏的證據。審查者這句話值得抄在牆上。
 
@@ -102,7 +110,7 @@ python3 example_summarise_tool_output.py --dry-run --show-payload --file build.l
 
 ## 老實說有什麼沒做
 
-- **我沒有跑過真實 ATK。** 這份資產上唯一一次 live 呼叫是 **PR 審查者用他自己的憑證做的**：`claude-sonnet-4.6`、`max_tokens=16`、回 `OK`、12 in / 4 out。我的環境裡沒有憑證，我不會說那是我跑的。
+- **我沒有跑過真實 ATK。** 這份資產上唯一一次 live 呼叫是 **PR 審查者做的，用的是負責人提供並授權最小測試的憑證**：`claude-sonnet-4.6`、`max_tokens=16`、回 `OK`、12 in / 4 out。我的環境裡沒有憑證，我不會說那是我跑的。
 - **那一次沒有回報美元成本**，但沒回報不等於免費。
 - **MCP 沒有實際握手過**，端點和 header 名稱來自官方文件。
 - **沒有任何省錢或品質主張。** 這個檔案只負責把請求送出去，它不壓縮、不快取、不優化。
