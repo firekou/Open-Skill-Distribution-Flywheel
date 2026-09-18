@@ -1,0 +1,12 @@
+# Offline reproducible check — no credential, no cost, no model call.
+# Command: python3 make_log.py > deploy.log && python3 local_check.py
+# headroom 0.37.0  python 3.11.15  date 2026-09-18
+# deploy.log md5: 0ad9194a489136baa931881b78374cf7
+
+log        : 1200 lines, 111262 bytes
+direct     : 111357 chars reached the upstream
+via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+needle '0042_add_tenant_id': present after compression
+needle '42701': present after compression
+PASS
+exit=0
