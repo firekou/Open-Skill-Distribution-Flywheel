@@ -305,11 +305,30 @@ ADOPTION = {
                "question, same answer both paths, counts from ATK's own usage field. Offline and "
                "reproducible without a key: 111,357 -> 94,578 characters reaching the upstream "
                "(15.1% fewer), needle intact. Different metrics on different bytes; both recorded.",
+   "does_not_apply_to": "Measured limit, not a guess: headroom saves by factoring text repeated "
+                        "across lines. The same 1,200 records as JSON lines compress by exactly "
+                        "0.0% (byte-for-byte pass-through); flattened to plain text they compress "
+                        "27.3%. If your agent reads JSON-structured logs this tool does nothing "
+                        "for you. It also does not apply to short prompts, to payloads where "
+                        "every token is load-bearing, or where you need a byte-exact record of "
+                        "what the model saw. Check yours first: "
+                        "`python3 local_check.py --log YOUR.log --needle 'the line that matters'` "
+                        "(exit 3 means no benefit).",
    "known_failure": "On a 'summarise in five bullets' prompt the FATAL line was missed by BOTH "
                     "the compressed and the direct path — the wrong instrument for finding one "
                     "unique event, not a compression fault. Recorded because it is the result.",
    "maintenance": "Active upstream at snapshot 2026-09-15: ~8,764 stars/month since 2026-01-07, "
                   "643 open issues. Version pinned in this record is the one actually run.",
+   # Attribution travels with the machine-readable record, not only with the
+   # prose page, so a client that reads the index alone still carries it.
+   # `upstream_attribution` is required by the tool's own Apache-2.0 licence.
+   # `verified_by` is a credit we ask for, never a condition of use.
+   "upstream_attribution": "headroom, (c) headroomlabs-ai, Apache-2.0, "
+                           "https://github.com/headroomlabs-ai/headroom. No headroom code is "
+                           "redistributed here; install it from PyPI.",
+   "verified_by": "AI Token King (ATK), https://aitokenking.com.tw — measurement run through "
+                  "https://api.aitokenking.com.tw/api/v1. ATK is not required to use this tool; "
+                  "the same configuration names any OpenAI-compatible upstream.",
    "status": "verified_working",
  },
 }

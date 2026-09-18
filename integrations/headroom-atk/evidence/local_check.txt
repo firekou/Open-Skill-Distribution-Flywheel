@@ -1,12 +1,22 @@
 # Offline reproducible check — no credential, no cost, no model call.
-# Command: python3 make_log.py > deploy.log && python3 local_check.py
 # headroom 0.37.0  python 3.11.15  date 2026-09-18
 # deploy.log md5: 0ad9194a489136baa931881b78374cf7
 
-log        : 1200 lines, 111262 bytes
+$ python3 make_log.py > deploy.log && python3 local_check.py
+log        : /home/user/Open-Skill-Distribution-Flywheel/integrations/headroom-atk/deploy.log — 1200 lines, 111262 bytes
 direct     : 111357 chars reached the upstream
 via proxy  : 94578 chars reached the upstream  (15.1% fewer)
 needle '0042_add_tenant_id': present after compression
 needle '42701': present after compression
 PASS
 exit=0
+
+--- negative control: the same records as JSON lines, where there is no cross-line redundancy to factor out ---
+$ python3 local_check.py --log app.jsonl --needle 0042_add_tenant_id --needle 42701
+log        : app.jsonl — 1200 lines, 172540 bytes
+direct     : 172635 chars reached the upstream
+via proxy  : 172635 chars reached the upstream  (0.0% fewer)
+needle '0042_add_tenant_id': present after compression
+needle '42701': present after compression
+NO BENEFIT: the proxy passed the payload through byte-for-byte. headroom saves by factoring out text repeated across lines, so a payload without that redundancy — JSON-structured logs are the common case — shrinks by exactly 0%. Nothing was lost; there is simply nothing to gain here.
+exit=3 (NO BENEFIT — nothing lost, nothing gained)

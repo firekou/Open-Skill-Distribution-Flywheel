@@ -57,11 +57,17 @@ Correct value: `https://api.aitokenking.com.tw/api`
 
 **3. A loopback or private-network upstream is refused *silently*.** headroom 0.37.0 checks the
 client-named base URL against an SSRF guard (its CVE-2026-77775 fix). If the host resolves to
-loopback, RFC1918 or link-local space it logs `ignoring unsafe x-headroom-base-url override` and
-**falls back to the provider it resolved itself** — so you get the same misleading OpenAI 401 as
-in gotcha 1. It affects you only when pointing at something internal, such as a test stub:
-allowlist it with `HEADROOM_ALLOWED_BASE_URLS=http://127.0.0.1:PORT`. A public host like ATK needs
-nothing. `local_check.py` does exactly this, and fails loudly if the override is ignored.
+loopback, RFC1918 or link-local space it **falls back to the provider it resolved itself** — so
+you get the same misleading OpenAI 401 as in gotcha 1.
+
+The source contains a warning string, `ignoring unsafe x-headroom-base-url override`, but we
+measured that **it is not printed at default verbosity** — 0 occurrences in the proxy's combined
+stdout/stderr across a run that triggered the fallback. Grepping for it to diagnose will find
+nothing. The fallback really is silent.
+
+It affects you only when pointing at something internal, such as a test stub: allowlist it with
+`HEADROOM_ALLOWED_BASE_URLS=http://127.0.0.1:PORT`. A public host like ATK needs nothing.
+`local_check.py` sets it, and fails loudly if the override is ignored anyway.
 
 ## Measurement 1 — live, against ATK
 
@@ -98,13 +104,16 @@ both ways, and measures **the body the upstream actually receives**. No key, no 
 cost. Output committed at `evidence/local_check.txt`:
 
 ```
-log        : 1200 lines, 111262 bytes
+log        : deploy.log — 1200 lines, 111262 bytes
 direct     : 111357 chars reached the upstream
 via proxy  :  94578 chars reached the upstream  (15.1% fewer)
 needle '0042_add_tenant_id': present after compression
 needle '42701': present after compression
 PASS
 ```
+
+The same file also records the **negative control** — the same records as JSON lines, where the
+reduction is exactly 0.0%. Read *Will this help your logs?* below before adopting.
 
 **15.1% here versus 37.1% above is not a contradiction and not a correction of either number.**
 They are different metrics (characters on the wire vs. ATK-counted prompt tokens) on different
@@ -113,8 +122,8 @@ you can check without spending anything.
 
 ## What these numbers are not
 
-- **One workload, one model, two calls.** Not a benchmark. Your logs compress differently; a log
-  of near-identical lines compresses far better than prose.
+- **One workload, one model, two calls.** Not a benchmark. See *Will this help your logs?* below —
+  the honest answer for a large class of logs is "not at all".
 - **No cost figure.** ATK reported `cost_usd: null` on every call. Fewer tokens is not
   automatically less money, and this asset makes **no saving claim in currency**.
 - **No quality benchmark.** Two prompts, one needle. Headroom publishes its own quality
@@ -127,6 +136,49 @@ you can check without spending anything.
   own token counts close to, but not identical to, the table above. Stated rather than papered
   over; the offline check exists because it *is* exactly reproducible.
 
+## Will this help YOUR logs? Often the answer is no — check before adopting
+
+**How it actually saves.** We diffed the body our stub upstream received against the body we sent.
+headroom is doing **shared-prefix factoring across lines**: it hoists the repeated part of the
+timestamp into a header line and rewrites every line relative to it —
+
+```
+2026-09-18T11
+00:00Z WARN  auth-svc    connection pool at 90%, queue depth 3
+00:01Z ERROR cache-warm  request failed: connection reset by peer after 3 attempts
+```
+
+**It drops no lines** (1,200 in, 1,200 out). That is exactly why the needle always survives — and
+also exactly why the saving comes only from textual redundancy, not from any judgement about what
+matters.
+
+**So the saving collapses to zero when the redundancy is not there.** Measured on this machine,
+same date, same proxy:
+
+| payload | reduction | needle |
+|---|--:|:--|
+| Plain-text deploy log, uniform timestamp prefix (the sample here) | **15.1%** | survived |
+| The *same records* re-emitted as JSON lines | **0.0%** — byte-for-byte pass-through | survived |
+| Those same JSON records flattened back to plain text | **27.3%** | survived |
+
+**Structured JSON logging is extremely common for server logs.** If that is what your agent reads,
+this tool will do nothing for you. It will not corrupt anything — in every zero-compression case
+it passed the payload through unmodified — but you would be adding a process for no benefit.
+
+**So check your own log first. One command, no key, about a minute:**
+
+```bash
+python3 local_check.py --log /path/to/your.log --needle "the line that must survive"
+```
+
+`--needle` is repeatable. **Exit 0** = it shrank and every needle survived. **Exit 3** = it did not
+shrink at all; nothing lost, nothing gained, do not bother. **Exit 1** = a needle was lost; do not
+adopt for that payload.
+
+**One thing we did not test:** the proxy's own banner reports `Code-Aware: NOT INSTALLED (pip
+install headroom-ai[code])`. There is an optional extra we never installed, and every number on
+this page was measured without it. It may change results for code-shaped payloads; we do not know.
+
 ## Reproduce it
 
 ```bash
@@ -134,6 +186,10 @@ pip install "headroom-ai[proxy]"
 python3 make_log.py > deploy.log      # deterministic; md5 0ad9194a489136baa931881b78374cf7
 python3 local_check.py                # offline, no key, no cost — takes ~1 min
 ```
+
+`local_check.py` and `ab_test.py` look for `deploy.log` **next to the script**, not in your current
+directory, so `python3 path/to/local_check.py` works from anywhere. Python 3.11 is what we ran;
+both scripts are stdlib-only apart from headroom itself.
 
 To repeat the live measurement (**this spends real tokens**):
 
@@ -144,6 +200,30 @@ ATK_API_KEY=sk-... python3 ab_test.py
 
 `ab_test.py` refuses to run without `ATK_API_KEY` and substitutes no mock. Pass the key in the
 environment only — never on the command line, never in a file in this repo.
+
+## There is a second, official route we did NOT test
+
+While checking how discoverable this asset is, an independent search turned up something that
+belongs here: **LiteLLM ships an official Headroom guardrail** —
+<https://docs.litellm.ai/docs/proxy/headroom>. Verified at the source on 2026-09-18: the guardrail
+is named `headroom-compression`, configured with `guardrail: headroom` / `mode: pre_call` /
+`api_base`, enabled per request with `"guardrails": ["headroom-compression"]` (or
+`litellm_metadata.guardrails` in Anthropic format), with `x-headroom-bypass: true` as a
+per-request opt-out.
+
+If you already run LiteLLM as your gateway, that is probably the route you want, and it gives you
+a bypass header this one does not. **We did not test it and it carries no measured numbers on the
+LiteLLM page** — stated so the choice is yours rather than ours. What is measured here is the
+direct route: your client to `headroom proxy`, `x-headroom-base-url` naming the upstream.
+
+## Why the numbers here are taken at the upstream, not from the proxy
+
+The same search surfaced a documented case of a compression proxy whose own savings dashboard
+reported a large reduction while it actually sent *more* to the upstream than the uncompressed
+request. We have not reproduced that case and are not repeating the accusation as fact — but it
+is the reason both measurements here are taken **outside** the proxy: the live numbers are ATK's
+`usage` field, and the offline numbers are the bytes a stub upstream actually received.
+**No number on this page comes from headroom's own reporting.**
 
 ## Switching away, and removing ATK
 
@@ -165,7 +245,7 @@ Install it from PyPI. Its own docs: <https://docs.headroomlabs.ai/docs>.
 | File | |
 |---|---|
 | `make_log.py` | deterministic log generator (stdlib only) |
-| `local_check.py` | offline verification: proxy routing, compression, needle survival — no key |
+| `local_check.py` | offline verification **and preflight for your own log** (`--log`, `--needle`): proxy routing, compression, needle survival — no key |
 | `ab_test.py` | the live A/B against ATK — needs `ATK_API_KEY` |
 | `evidence/ab_summary.json`, `evidence/ab_needle.json` | raw ATK responses from the live run |
 | `evidence/local_check.txt` | output of the offline check, with versions and log md5 |

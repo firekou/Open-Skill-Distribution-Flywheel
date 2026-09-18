@@ -1,22 +1,34 @@
 #!/usr/bin/env python3
-"""Offline check: no credential, no cost, no network beyond localhost.
+"""Offline check and preflight: no credential, no cost, no network beyond localhost.
 
-Proves three things about the committed scripts, on your machine, today:
+Proves three things on your machine, today:
 
   1. `headroom proxy` starts and the `x-headroom-base-url` header really does
      redirect it to an arbitrary OpenAI-compatible upstream.
   2. The proxy shrinks the prompt before it leaves the machine (measured on the
      body a stub upstream actually receives, not estimated).
-  3. The needle survives compression: the migration name and SQLSTATE code are
-     still present in what the upstream receives.
+  3. Your needle survives compression — it is still present in what the
+     upstream receives.
+
+Against the bundled sample log:
 
     python3 make_log.py > deploy.log
     python3 local_check.py
 
-This does NOT measure ATK token usage or cost — it cannot; there is no model
-call. For that, see ab_test.py, which needs a real key.
+**Against your own log, which is the answer you actually need**, because the
+saving is entirely a function of how repetitive your log is:
+
+    python3 local_check.py --log /path/to/your.log --needle "the line that matters"
+
+--needle may be repeated. Exit 0 means it shrank and every needle survived;
+exit 1 means a needle was lost; exit 3 means it did not shrink at all, which is
+a real and common outcome (see the README on JSON-structured logs).
+
+This does NOT measure token usage or cost — it cannot; there is no model call.
+For that, see ab_test.py, which needs a real key.
 """
 
+import argparse
 import json
 import os
 import pathlib
@@ -31,12 +43,12 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 HERE = pathlib.Path(__file__).resolve().parent
-LOG = HERE / "deploy.log"
-QUESTION = (
+DEFAULT_LOG = HERE / "deploy.log"
+DEFAULT_QUESTION = (
     "Did any database migration fail? Give the migration name and the exact "
     "SQLSTATE code."
 )
-NEEDLE_TOKENS = ["0042_add_tenant_id", "42701"]
+DEFAULT_NEEDLES = ["0042_add_tenant_id", "42701"]
 
 RECEIVED: list[dict] = []
 
@@ -123,13 +135,55 @@ def wait_for(url: str, timeout: float = 60.0) -> bool:
     return False
 
 
-def main() -> int:
-    if not LOG.exists():
-        print(f"{LOG} missing. Run: python3 make_log.py > deploy.log", file=sys.stderr)
+def parse_args(argv=None) -> argparse.Namespace:
+    ap = argparse.ArgumentParser(
+        description="Will headroom help on YOUR log? Offline, no key, no cost.",
+    )
+    ap.add_argument(
+        "--log", type=pathlib.Path, default=DEFAULT_LOG,
+        help="the log or payload to test (default: the bundled sample deploy.log)",
+    )
+    ap.add_argument(
+        "--needle", action="append", default=None, metavar="TEXT",
+        help="a string that MUST survive compression; repeatable. "
+             "Defaults to the sample log's planted needle.",
+    )
+    ap.add_argument(
+        "--question", default=DEFAULT_QUESTION,
+        help="the question wrapped around the payload",
+    )
+    return ap.parse_args(argv)
+
+
+def main(argv=None) -> int:
+    args = parse_args(argv)
+    log_path = args.log
+    using_sample = log_path.resolve() == DEFAULT_LOG.resolve()
+    needles = args.needle if args.needle else (DEFAULT_NEEDLES if using_sample else [])
+    if args.needle is None and not using_sample:
+        print(
+            "--log was given without --needle, so nothing is checked for survival. "
+            "Pass --needle 'the line that matters'.",
+            file=sys.stderr,
+        )
         return 2
-    log_text = LOG.read_text()
-    prompt = f"{QUESTION}\n\n```\n{log_text}```\n"
-    print(f"log        : {len(log_text.splitlines())} lines, {len(log_text)} bytes")
+    if not log_path.exists():
+        if using_sample:
+            print(f"{log_path} missing. Run: python3 make_log.py > deploy.log", file=sys.stderr)
+        else:
+            print(f"{log_path} does not exist", file=sys.stderr)
+        return 2
+    log_text = log_path.read_text(errors="replace")
+    for needle in needles:
+        if needle not in log_text:
+            print(
+                f"needle {needle!r} is not in {log_path} to begin with — "
+                "nothing to preserve. Check the string.",
+                file=sys.stderr,
+            )
+            return 2
+    prompt = f"{args.question}\n\n```\n{log_text}```\n"
+    print(f"log        : {log_path} — {len(log_text.splitlines())} lines, {len(log_text)} bytes")
 
     stub_port = free_port()
     stub = HTTPServer(("127.0.0.1", stub_port), Stub)
@@ -190,16 +244,25 @@ def main() -> int:
     print(f"via proxy  : {len(via)} chars reached the upstream  ({reduction:.1%} fewer)")
 
     ok = True
-    if via == direct:
-        print("NOTE: the proxy passed the prompt through unchanged (no compression applied)")
-    for token in NEEDLE_TOKENS:
+    for token in needles:
         present = re.search(re.escape(token), via) is not None
         print(f"needle {token!r}: {'present' if present else 'LOST'} after compression")
         ok = ok and present
 
     if not ok:
-        print("FAIL: compression dropped the needle", file=sys.stderr)
+        print("FAIL: compression dropped a needle. Do not adopt for this payload.", file=sys.stderr)
         return 1
+
+    if via == direct:
+        print(
+            "NO BENEFIT: the proxy passed the payload through byte-for-byte. "
+            "headroom saves by factoring out text repeated across lines, so a payload "
+            "without that redundancy — JSON-structured logs are the common case — "
+            "shrinks by exactly 0%. Nothing was lost; there is simply nothing to gain here.",
+            file=sys.stderr,
+        )
+        return 3
+
     print("PASS")
     return 0
 
