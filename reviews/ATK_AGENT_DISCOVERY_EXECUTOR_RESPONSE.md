@@ -93,7 +93,7 @@ PASS
 三個案例只是初步診斷，**不能用來估算普遍發現率**。但診斷本身很具體：
 
 - 專案的公開描述命名的是**比喻**（flywheel、magazine），不是**問題**。16 條查詢裡出現的詞是 proxy、compress、tokens、logs、error lines、OpenAI-compatible、gateway、per-request、registry、verified、install command、licence、cost、evidence、dated——沒有一條包含 flywheel 或 magazine。
-- **P3 是真正空著的位置。** 該 agent 檢視了十餘個 registry，結論是「同時具備成本欄位與實跑日期證據的公開索引不存在」。本 repository 的 `_adoption` 記錄剛好就是那個形狀。這是一個可描述成一句話的差異化點，而目前沒有人佔住。
+- **P3 可能是一個空著的位置。**〔第二輪收斂：原文寫「真正空著」「沒有人佔住」，那超出一次搜尋能證明的範圍，在此撤回。〕該 agent 在它做的那次搜尋裡檢視了十餘個 registry，**沒有找到**同時具備成本欄位與實跑日期證據的公開索引。這是一次搜尋的觀察，不是市場結論——它沒找到不等於不存在。本 repository 的 `_adoption` 記錄剛好是那個形狀，值得當成假設去驗，不能當成已知的機會。
 - 這一點**未經本輪驗證為可行策略**，只是一份外部診斷；改名或改描述是負責人的決定，不在本輪自行更動。
 
 同一次搜尋另外帶回一項對交付有直接影響的事實，已回到 primary source 查證（2026-09-18，<https://docs.litellm.ai/docs/proxy/headroom>）：**LiteLLM 有官方的 `headroom-compression` guardrail**，支援逐請求啟用與 `x-headroom-bypass` 退出。本輪**沒有測它**，該頁也**沒有任何數字**。已寫進 README，明說沒測、把選擇權留給讀者——而不是假裝我們找到的是唯一路徑。
@@ -225,8 +225,208 @@ registry 的 `_adoption` 也補上 `does_not_apply_to` 欄位，讓「什麼時�
 - 不成立就是不成立，記錄後改下一個假設，不追加投放。
 - 這需要**負責人決定**（改動對外描述），本輪不自行更動。
 
+〔第二輪更正：上面寫「用**同一組** P3 查詢字串重測」——**做不到，在此撤回**。第一輪 16 條查詢的逐字
+transcript 未保存，只剩隔離 agent 事後的自述，因此那一組無法被原樣重跑，宣稱重跑同一組會是假話。
+改以 `integrations/headroom-atk/evidence/SEARCH_BASELINE.md` 建立**新基線**（九條固定查詢，尚未執行），
+並在該檔事先寫死解讀規則：結果改變**不等於**命名是原因，另列四個本基線分不開的競爭解釋。
+T0 定義為入口與描述真正公開於 main 之日，目前尚未發生，沒有啟動任何計時，也沒有排程。〕
+
 **需要負責人決定的事項（僅此三項）**
 
 1. 對外描述是否改成問題句（上述實驗的前提）。
 2. 是否授權對 headroom 上游分享那三個坑（接觸第三方）。
 3. 憑證輪替（已暴露）；以及是否要為重跑真實量測另行授權一次付費呼叫。
+
+---
+
+# 第二輪修復回覆（回應 reviews/PR5_R1_REVIEW_03dc57b.md）
+
+**Reviewed head 03dc57b → 本輪新 head `dd504a3`（再加本檔的 commit）** · PR #5 Draft、未合併
+全部修復標 **IMPLEMENTED_PENDING_REVIEW**。我是 executor，不自我判定 CLOSED／APPROVED。
+
+## 五行目標對齊
+
+| | |
+|---|---|
+| **目標來源** | 負責人 2026-09-18 的 1A／2A／3A 決定 + `reviews/PR5_R1_REVIEW_03dc57b.md` + `reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md` |
+| **本輪交付** | 兩個程式缺陷關閉（憑證外洩、採用判定失準）；一個陌生人可以從**乾淨 clone + 乾淨 venv**照文件跑完；根目錄有問題導向入口；上游回饋備稿 |
+| **主線連結** | 「找得到→選得對→用得起來→解得了題」四段裡，這輪補的是**用得起來**（安裝與指令真的可跟做）與**選得對**（判定不再把膨脹說成成功） |
+| **必要驗證與停止點** | P5-01／02 各要正負控制；P5-03 要乾淨環境實跑；P5-04 要數字對得上證據。做完送審即停 |
+| **範圍差異** | 未擴充第二、三個工具；未建平台；未發布；未送上游；未收款；未合併 |
+
+## 環境
+
+Python 3.11.15 · headroom-ai 0.37.0（PyPI 最新版，upload 2026-08-27）· Linux
+證據：`integrations/headroom-atk/evidence/pr5-r2/controls.txt`、`clean_install.txt`
+
+---
+
+## P5-01 憑證可能被錯誤訊息回顯 — IMPLEMENTED_PENDING_REVIEW
+
+**根因。** handler 讀 error body、切 400 字元、直接丟進 exception。兩個問題疊在一起：provider 有權
+把它拒絕的憑證回顯在 body 裡；而且「先切再遮罩」根本遮不掉——被切斷的值已經不等於原值了。
+這正是 PR #4 的 P4-01／P4-R2-01，我在新腳本裡重犯了一次。
+
+**修復路徑。** 不另建框架，直接沿用 PR #4 已驗過的行為：預設**完全不輸出 body**
+（`ATK_INCLUDE_ERROR_BODY=1` 才輸出）；要輸出時**先遮罩整段、再截斷**；連線錯誤連 URL 一起遮罩
+（gateway 可能把 key 放在 query string）。
+
+**正負控制**（合成秘密 `sk-SYNTHETIC…ZZ`，41 字元，全程未使用真實金鑰）：
+
+| head | 情境 | 完整 key 可見 | 任一 8 字元片段可見 |
+|---|---|---|---|
+| 舊 03dc57b | key 出現在 body | **是** | **是** |
+| 舊 03dc57b | key 跨越 400 字元切點 | 否 | **是** ← 只檢查完整 key 會漏掉這條 |
+| 新 dd504a3 | key 出現在 body | 否 | 否 |
+| 新 dd504a3 | key 跨越 400 字元切點 | 否 | 否 |
+
+正控制：正常 200 回應仍可解析（`test_positive_control_a_normal_response_still_works`）。
+另加一條：長度小於 4 的「秘密」不參與遮罩，否則普通文字會被打成一片黑。
+
+**限制。** 遮罩只能遮我們**知道**的值。若 provider 回顯的是經過轉換的憑證（雜湊、片段重組），這個
+防線不會生效——所以預設是不輸出 body，遮罩是第二道而不是第一道。
+
+## P5-02 PASS 不要求真的變短 — IMPLEMENTED_PENDING_REVIEW
+
+**根因。** 我只把「完全相同」判為 NO BENEFIT，於是**等長改寫**與**膨脹**都走到 PASS，膨脹那條還一路
+印著「-166.7% fewer」。這是「檢查點放錯位置」的老毛病：判定寫在出口，條件卻只涵蓋一種入口。
+
+**修復路徑。** PASS 現在同時要求「嚴格變短」**且**「每根針都在」。三種無效果分開描述——完全未改動／
+被改寫但等長／變大——不再一律叫 byte-for-byte（把被改寫的 payload 說成未改動，本身就是假話）。
+空白與純空格 needle 直接拒絕，因為任何輸出都滿足它，等於沒檢查。
+
+**正負控制**（`integrations/headroom-atk/test_local_check.py`，17 條，離線）：
+
+| 情境 | 期望 | 結果 |
+|---|---|---|
+| 變短且針在 | exit 0 PASS | ✅ |
+| 完全不變 | exit 3 | ✅ |
+| 等長改寫 | exit 3，且訊息不得說 byte-for-byte | ✅ |
+| 膨脹 | exit 3，且不得印 "fewer" | ✅ |
+| 針丟失（即使大幅變短） | exit 1 | ✅ |
+| 空 needle／純空格 needle | exit 2 | ✅ |
+| 多根針只活一根 | exit 1 | ✅ |
+
+**負控制（關鍵）：** 同一份測試檔對**舊 head 03dc57b** 執行 → **5 failures、6 errors**；
+對新 head → **17/17 OK**。reviewer 自己的 `reviewer_checks.py` **原檔未改**，對新 head 執行的輸出
+也一併留存，五條案例分別得到 0／3／3／3／1 與 `synthetic_key_visible: false`。
+
+## P5-03 照公開指令能跑 — IMPLEMENTED_PENDING_REVIEW
+
+| review 指出 | 處置 |
+|---|---|
+| 安裝未釘版本 | 全部改成 `pip install "headroom-ai[proxy]==0.37.0"`，並註明 Python 3.11 |
+| registry example 在 root 產生 log、script 讀另一目錄 | example 補上 `cd integrations/headroom-atk`，並加一筆 `example_on_your_own_data` |
+| 免費樣本只叫人換 localhost endpoint | 改成完整 curl，帶 `x-headroom-base-url`，並明說「只換 endpoint 不夠」——那正是同一份文件警告的錯路由 |
+| clone 預設 main，但資產在 Draft 分支 | 所有入口（README、root README、免費樣本、registry `entry_point_ref`）都寫明 `git checkout claude/atk-headroom-adoption`、**NOT on main** |
+| 試用環境已預裝 headroom | 見下 |
+
+**乾淨環境實跑**（`evidence/pr5-r2/clean_install.txt`）：全新 `git clone` → `git checkout` 該分支 →
+`python3 -m venv`（先確認 **headroom preinstalled: False**）→ 釘版安裝 exit 0 → `make_log.py` 產出
+**md5 `0ad9194a…74cf7`，與 README 印的一字不差** → `local_check.py` **PASS，15.1%** → 17 條測試 OK。
+
+`tools/build_materials.py` 在該乾淨 clone 重跑，`registry/materials.json` md5 前後相同、git status
+乾淨——`_adoption` 記錄是生成出來的，不是會被下次 build 蓋掉的手改。
+
+## P5-04 主張與證據同步 — IMPLEMENTED_PENDING_REVIEW
+
+1. **算術錯誤，reviewer 是對的。** 四筆 usage = 40,572 + 29,781 + 40,589 + 25,525 = **136,467**。
+   `UNIT_ECONOMICS.md` 原本寫「約 81k」，漏掉了兩個任務的壓縮路徑。已改，並在原處寫明改了什麼。
+   同時撤回「模型 token 相對人力很小」——人力未量測，那句是期望不是量測。
+2. **付費樣本的互斥條款。** 原本同時承諾「未達門檻退款」與「負面結果照收費」。已改寫成一個
+   **未決問題**，把 (a)(b) 兩個選項與各自的代價列出來，明說不由 executor 決定。整份標
+   **未批准、未推出**。
+3. **超出證據的主張，逐條收斂：**
+   - 「needle 永遠保留」→「我們測過的六種 payload 都保留；六種不是保證，所以才附預檢工具」。
+   - 「JSON log 完全沒用」→「我們測的那一種 JSON 形狀沒有效果；先測你自己的」。
+   - 「摘要失敗不是壓縮的問題」→「兩條路徑都失敗，所以壓縮不是全部原因；但也不能因此斷定壓縮
+     沒有額外損失，一對呼叫分不開」。
+   - 「這個空位沒人佔」→ 降為**外部 agent 的一次觀察**，不是市場結論（見下第 5 點）。
+4. **單位與完整性。** 「63% of the prompt cost」→ **prompt tokens**；全文不出現任何貨幣節省主張。
+   `cost_usd: null` 標為**我們當時的觀察筆記**，不是提交檔能佐證的事（提交的 JSON 只有 `usage`
+   與回答文字）。提交檔一律稱 **excerpt**，不稱 raw response。真實 37.1% 那組明確標為
+   **2026-09-18 的歷史單次案例**：輸入檔未保存、本輪未重測、不是保證。
+5. **搜尋紀錄。** 逐條 query 的原始 transcript **未保存**，只剩隔離 agent 事後的自述。因此
+   上一輪「用同一組查詢重測」的說法**是錯的，在此撤回**。改為 `evidence/SEARCH_BASELINE.md`：
+   固定九條新查詢、定義 T0 為**入口與描述真正公開於 main 之日**（目前尚未發生，沒有啟動任何計時），
+   並事先寫死四條解讀規則——九條是診斷不是發現率、出現只證明可見性、**結果變化不等於命名是原因**
+   （另列四個本基線分不開的競爭解釋：Draft 分支無導覽、尚未被重新索引、排名波動、該類目已飽和）。
+   基線**尚未執行**，表格沒有任何預填的 0 或 PASS。
+6. **免費樣本的贊助標示。** 原本寫 paid-for placement——**沒有這筆交易**，那是捏造。改為
+   「ATK 推廣自己的成果」，並明說我們無法自我證明獨立性：工具是第三方 Apache-2.0、離線指令不需要
+   ATK 帳號、方法寫出來讓你對自己的 provider 重跑——請看證據，不要看我們的免責聲明。
+
+---
+
+## 1A 入口與最小採用驗證
+
+- **root README 第一畫面**新增「Verified assets you can use today」表，直接連到 headroom 入口，
+  並寫明**188 筆候選裡只有 1 筆**達到已驗證標準，其餘是評分候選不是已驗證資產。
+- 描述改成問題導向：「幫助 agent 與開發者找到、安裝並實際使用實用 AI 工具，每筆已驗證條目附授權、
+  成本與權限資訊及可追溯的實跑紀錄，支援可選的 ATK 接入」。
+- **GitHub About／topics 的擬定值**放在 `DISTRIBUTION.md`（方向已批准，未套用——那是負責人的
+  repository 設定動作）。
+- 機器索引與人類入口同步：`_adoption` 新增 `entry_point_ref`（明說不在 main）、`issues_to`
+  （問題回報入口，並區分 headroom 本身的 bug 該去哪）、`example_on_your_own_data`。
+- **受控採用檢查**：乾淨 clone + 乾淨 venv 依公開指令產生預期離線結果（上節）。
+- **可重跑搜尋基線**：已建立、尚未執行。
+- 給網址的採用測試／自然搜尋／第三方使用／ATK 導流**四條帳分開記**，見基線末表。ATK 導流那一條
+  註明**不可量測**——這份資產沒有任何追蹤。
+
+## 2A 免費資產與價值回收
+
+免費交付以解題與接入為中心，ATK 明示為提供／維護者與可選接點，不綁定使用、不要求下游無條件推薦。
+自願回饋入口只有一個 GitHub issue 連結：**沒有遙測、沒有 log、沒有追蹤**，並提醒不要貼 key 或真實
+log（`local_check.py` 只印大小與通過與否，那個輸出可以安心貼）。
+**第三方回報至今：無紀錄。** 不是「少」，是沒有。本輪未建遙測、未設收款路徑、未擴寫付費業務。
+
+## 3A 上游備稿
+
+`integrations/headroom-atk/upstream/HEADROOM_FEEDBACK_DRAFT.md`。**狀態：待核准、未送出。**
+未開任何 issue／discussion／留言／PR。
+
+**先查重再寫**（2026-09-18 查上游 tracker）：
+- **#1503（已關閉）** 是第 1、2 項的上游母題；0.37.0 已有該機制，所以**第 1 項降為文件問題**，
+  而該 issue **明確沒有涵蓋** `/v1` 語意 → 第 2 項是仍未被回報的缺口。
+- **#3336（開啟中）** 與第 3 項同源（不願意靜默回退到預設 vendor）→ 建議第 3 項**以留言附在 #3336**，
+  不另開新 issue。
+- #3346、#3280 為不同問題，不混報。
+
+**結論：兩次觸碰 tracker，不是三個新 issue。**
+
+**第 3 項本輪新增了根因**（原本只知道「沒印出來」）：`logging.getLogger("headroom.proxy")` 是
+NOTSET、繼承 WARNING，`isEnabledFor(WARNING)` 為 **True**——record 有被建立；但 proxy 行程的
+**root logger 沒有掛任何 handler**，所以它被丟棄。stdout/stderr **0 次**，`--log-file` 也 **0 次**。
+不是被等級擋掉，是被送進虛空。照原始碼去 grep 那串字的人會一無所獲，然後得出「這條分支沒走到」的
+錯誤結論。
+
+版本已確認 0.37.0 **就是最新版**，不是拿舊版結果套新版。三項都附無秘密重現指令；ATK 只在必要背景
+出現，重現一律用 `your-gateway.example` 與本機 stub。
+
+---
+
+## 未做、未驗證、仍然缺的
+
+1. **真實 live 未重跑。** 已暴露憑證不重用，本輪未發任何付費請求。37.1% 那組維持為歷史單次案例。
+2. **外部自發發現 0/3**，且原始 query log 遺失；新基線尚未執行，T0 尚未發生。
+3. **第三方使用 0 筆。** 兩次隔離 agent 試驗都在我自己的 session 內，不是第三方。
+4. **上游未送出。**
+5. **About／topics 未套用**（需 repository 設定權限）。
+6. **付費側全部未驗證**：無需求、無價格、無收款、無單位成本；退款條款是未決問題。
+7. **未測**：LiteLLM 官方 guardrail 路徑；headroom 的 `[code]` 選用元件；headroom 其他警告是否
+   同樣被丟棄（只觀察了這一條路徑）。
+
+## 下一位 reviewer 需要核對的範圍
+
+- `evidence/pr5-r2/controls.txt`：P5-01 四格前後對照、P5-02 新舊 head 的測試結果、reviewer 原腳本輸出。
+- `evidence/pr5-r2/clean_install.txt`：乾淨 clone／venv 的完整指令與輸出、md5、registry build 冪等。
+- `test_local_check.py`：17 條；建議也對 03dc57b 跑一次確認它會失敗。
+- `evidence/SEARCH_BASELINE.md`：查詢是否夠中性、解讀規則是否夠嚴、T0 定義是否可被提前宣告。
+- `upstream/HEADROOM_FEEDBACK_DRAFT.md`：查重結論是否成立、語氣是否是技術回饋而非宣傳、
+  是否真的無秘密。**上游送審稿位置就是這一份。**
+- 主張收斂是否足夠：特別是 README 的「Will this help YOUR logs?」與免費樣本的贊助標示。
+
+**負責人需要決定的仍是三項**（與上一輪相同，本輪未新增）：套用 About／topics；授權送出上游回饋；
+輪替已暴露憑證。付費定價本輪依指示不請負責人選擇。
+
+下一輪 reviewer 檔名：`reviews/PR5_R2_REVIEW_<short-sha>.md`。
