@@ -147,4 +147,27 @@ has gone 6 → 3 → 2 and has not reached zero, and each round has shown my fix
 correct while leaving the class open. Until an independent seat re-tests at the current head, the
 only honest reading of a green suite from this seat is that **it is green.**
 
+---
+
+## 6. Added 2026-09-18, while packaging this for round 4: R4-01
+
+R3-01 was "the defence exists but no command reaches it." Running that same reachability check
+over the rest of the module found it again, and worse:
+
+**`cost_per_successful_task`, `select_strongest` and `pair_attempts` are reachable from no CLI and
+no documented command. Only tests call them.**
+
+`cost_per_successful_task` is **quantity 9, the benchmark's headline metric.** `select_strongest`
+is §7.7. `pair_attempts` is §7.1/§7.3. `harness.aggregate --run-plan` stops at cell verdicts, so
+**every fix made to those three across rounds 1–3 is currently unreachable in practice.**
+
+It is **not fixed here**: the command needs §7 decisions — how deltas are computed, how treatment
+and baseline records are supplied — that CR-002 and the unratified §7.6 leave open, and building
+it now would bake in rulings nobody has made. That is the RT-04 / RT-10 mistake. Recorded as
+**gate 24, NOT BUILT**.
+
+**The analysis half of this harness has never been executed by anyone.**
+
+---
+
 **Verdict unchanged: NOT FIT TO FREEZE. LG4 NO GO. Stay in Draft.**

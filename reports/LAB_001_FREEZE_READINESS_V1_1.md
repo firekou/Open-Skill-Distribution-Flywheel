@@ -27,7 +27,10 @@
 | 12 | Golden end-to-end run | ~~PASS~~ **SUPERSEDED — re-test required** | The 17/17 was produced under the **wrong rulebook** (records stamped 1.0.0). At the declared version the same run gave **11/17**. Superseded again on 2026-09-17: six scoring and aggregation defects found by external review, now fixed, have **not** been re-tested end to end. **This row is not evidence of anything until a fresh golden run is executed and independently reproduced.** | harness |
 | 13 | Environment rebuilt and reproducible | ~~PASS~~ **INVALIDATED — image is stale** | `sha256:04d7fac698f8…fa68` was built **before** the version fix, the six ADV fixes and the task-set corrections. It reproduces exactly, and it reproduces the wrong code. A new image must be built and independently reproduced; the old digest may not be cited as current readiness | harness |
 | 19 | Defects from external adversarial review round 1 | ~~PASS~~ **REOPENED, then closed again in round 2** | Six closed with 12 tests, 9 failing on `62a16a4`. **Round 2 reopened two of them**: duplicate refusal did not stop *distinct* over-count at the cell, and identity was still self-reported. This row also claimed *"finalize made atomic"*, which was **false** — only the missing-score check had been hoisted | harness |
-| 21 | Defects from external adversarial review round 2 | **PASS (author-tested only)** | R2-01 identity bound to a frozen `PlannedAttempts` registry (270 ids); R2-02 over-count and identity-unverified cells refused at the cell and barred from selection; R2-03 whole-batch validation before any write, temp+rename per file, and **the word "atomic" withdrawn** — it is not a multi-file transaction. 12 new tests; **319 green**. **Same seat, no independent verification.** The round-2 tests cannot be shown failing on `59293e8` (they import a class that does not exist there); the before-column is the probe reproduction in `LAB_001_ADVERSARIAL_REPLAY_R2_RESULT.json`, which is weaker evidence than round 1's and is not claimed as equivalent | harness |
+| 21 | Defects from external adversarial review round 2 | ~~PASS~~ **REOPENED in round 3, then closed again** | R2-01 identity bound to a frozen `PlannedAttempts` registry (270 ids); R2-02 over-count and identity-unverified cells refused at the cell and barred from selection; R2-03 whole-batch validation before any write, temp+rename per file, and **the word "atomic" withdrawn** — it is not a multi-file transaction. 12 new tests; **319 green**. **Same seat, no independent verification.** The round-2 tests cannot be shown failing on `59293e8` (they import a class that does not exist there); the before-column is the probe reproduction in `LAB_001_ADVERSARIAL_REPLAY_R2_RESULT.json`, which is weaker evidence than round 1's and is not claimed as equivalent | harness |
+| 22 | Defects from external adversarial review round 3 | **PASS (author-tested only)** | R3-01 the documented CLI never built a registry and **failed twelve legitimate records** — `--run-plan` added with `plan_hash`, `runner.py` now writes `attempt_id`, legacy `--plan` declines with exit 2 and prints no report; R3-02 `Cell` holds the plan and re-verifies every attempt **at report time**, which also catches a record edited after validation; **R3-03 (self-found)** `pending_adjudication` and `attempt_id` were absent from a closed record schema, so **round 1's fix would have made `finalize` reject every record**. 7 new tests, **all 7 fail on `4e6584b`**; **326 green**. Same seat, no independent verification | harness |
+| 23 | Documented chain runs end to end with the real record validator | **PASS (first time, author-run)** | `jsonschema` installed from the vendored wheelhouse. runner 17/17 → judge 17 passed → finalize 17 → aggregate exit 0, 5 cells, `cells_identity_unverified []`, `plan_hash a4fc427c3136…`, packets `Counter({'1.1.0': 17})`. **Previous rounds ran aggregate only as a library call and stubbed the validator in finalize tests — which is why R3-03 survived two rounds.** Still a replay of known-correct answers: D's audit is synthetic, E's turns are placeholders, no model contacted | harness |
+| 24 | Analysis half of the harness reachable from a command | **NOT BUILT** | **R4-01, self-found 2026-09-18.** `cost_per_successful_task` (**quantity 9 — the headline metric the whole benchmark exists to produce**), `select_strongest` (§7.7 reproduction selection) and `pair_attempts` (§7.1/§7.3 pairing) are called by **no CLI and no documented command** — only by tests. `harness.aggregate --run-plan` stops at cell verdicts. Every fix made to those three across rounds 1–3 is therefore unreachable in practice, which is exactly R3-01's shape, found again. **Not built here**: the command needs §7 decisions (how deltas are computed, how treatment and baseline records are supplied) that CR-002 and the unratified §7.6 leave open, and half-building it would bake in rulings the Editor-in-Chief has not made — the RT-04 / RT-10 mistake | harness |
 | 20 | Live provider execution path | **NOT BUILT** | `providers.LiveProvider.run_task()` raises `NotImplementedError`; `runner.py` constructs `ReplayProvider` unconditionally. This is **a build task, not a credential blocker** — issuing a credential and choosing a model would still not produce a runnable agent loop | harness |
 | 14 | 100-run mapping without contradiction | **PENDING** | `RUN_PLAN_v1.1.0.json` enumerates all 78 runs and 270 attempts; allocation untouched — but the **research design is unratified** (`CR-002`). The 3.46× figure is an **attempt** multiplier for the experimental subset; **the dollar consequence is withdrawn as unestablished** | **Editor-in-Chief** |
 | 14b | §7.6 INVALID re-run rule ratified | **PENDING** | §7.6 is marked "needs ratification" in the methodology itself. It was **omitted** from the review package's "one ruling outstanding" claim; there are at least **two** | **Editor-in-Chief** |
@@ -153,7 +156,7 @@ remediation. Both are PENDING for a real reason.
 
 # Verdict
 
-## **NOT FIT TO FREEZE.** The instrument still had reproducible scoring and aggregation defects in two consecutive external reviews.
+## **NOT FIT TO FREEZE.** The instrument had reproducible defects in **three** consecutive external reviews, and a fourth is open before round 4 begins.
 
 > **R2-04.** This section previously read *"a complete candidate, pending two independent reviews
 > and one ruling… Everything a reviewer needs exists and is internally consistent."* Those words
@@ -161,7 +164,18 @@ remediation. Both are PENDING for a real reason.
 > document a decision is actually made from. A withdrawal that does not reach the decision
 > surface has not been made. Corrected 2026-09-17 after the second review.
 
-**Two rounds of external adversarial review, ten executable defects, all reproduced, all fixed.**
+> **Corrected 2026-09-18.** The round-3 edit to this block did not land — the patch that was
+> supposed to update it failed and the failure was not chased, so this section spent a commit
+> still saying "two rounds, ten defects". **That is R2-04 recurring in the same document R2-04 was
+> about**: the decision surface lagging the finding again. Noted rather than quietly fixed.
+
+**Three rounds of external adversarial review, twelve executable defects, all reproduced, all
+fixed. Eleven of the twelve were found by someone else.** A thirteenth — **R4-01, gate 24** — was
+found here while packaging the round-3 response and is **open**: `cost_per_successful_task`
+(quantity 9, the headline metric), `select_strongest` (§7.7) and `pair_attempts` (§7.1/§7.3) are
+reachable from no command, so **the analysis half of this harness has never been executed by
+anyone**.
+
 The second round found that two of the first round's fixes were incomplete in exactly the way the
 first round's own commentary warned about — identity that the record asserts about itself, and a
 check placed at one entrance while the arithmetic happens somewhere else.
@@ -186,7 +200,7 @@ something.
 The stack is substantially better than it was and **still has not measured anything**. Two
 external reviews in two days each found live defects by executing code, and the second found that
 some of the first round's repairs were incomplete. **The outside defect-discovery rate has gone
-6 → 3 → 2 and has not reached zero**, and that — not the test count — is the signal about
+6 → 3 → 2 and has not reached zero, and round 4 starts with one already open**, and that — not the test count — is the signal about
 whether this instrument is ready. Its three most consequential findings — a task that was unpassable in every condition, a task that rewarded
 discarding 86% of its input, and a scoring pipeline that applied the wrong rulebook to every run —
 were all invisible to review and visible only to execution. Two of the three were in work this
