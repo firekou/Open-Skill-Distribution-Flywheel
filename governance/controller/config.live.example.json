@@ -18,9 +18,12 @@
   "guard_path": "governance/preflight.py",
   "state_dir": "/var/lib/atk-controller",
   "stop_file": "/var/lib/atk-controller/STOP",
-  "authorized_phases": ["execute", "review", "accept_review"],
+  "authorized_phases": [
+    "execute",
+    "review",
+    "accept_review"
+  ],
   "max_attempts": 2,
-  "budget": 0,
   "timeout_seconds": 2700,
   "lease_seconds": 900,
   "workspace_root": "/var/tmp/atk-runners",
@@ -28,18 +31,32 @@
     "executor": {
       "enabled": false,
       "identity_suffix": "exec-a",
-      "command": ["claude", "-p", "--output-format", "json",
-                  "--permission-mode", "acceptEdits",
-                  "--append-system-prompt", "You are the EXECUTOR. Read {prompt_file}. Work at {head}. Emit JSON: {\"new_head\": \"<sha>\", \"cost\": <usd>}."],
+      "command": [
+        "claude",
+        "-p",
+        "--output-format",
+        "json",
+        "--permission-mode",
+        "acceptEdits",
+        "--append-system-prompt",
+        "You are the EXECUTOR. Read {prompt_file}. Work at {head}. Emit JSON: {\"new_head\": \"<sha>\", \"cost\": <usd>}."
+      ],
       "timeout_seconds": 1800,
       "clone_timeout": 300
     },
     "reviewer": {
       "enabled": false,
       "identity_suffix": "rev-b",
-      "command": ["claude", "-p", "--output-format", "json",
-                  "--permission-mode", "plan",
-                  "--append-system-prompt", "You are the INDEPENDENT REVIEWER. You did not write this. Review {head} from a fresh clone. Emit JSON: {\"review\": {\"head\": \"...\", \"reviewer\": \"...\", \"decision\": \"APPROVED|APPROVED_WITH_CONDITIONS|BLOCKED|NEEDS_INFORMATION\", \"evidence\": [\"...\"]}, \"cost\": <usd>}."],
+      "command": [
+        "claude",
+        "-p",
+        "--output-format",
+        "json",
+        "--permission-mode",
+        "plan",
+        "--append-system-prompt",
+        "You are the INDEPENDENT REVIEWER. You did not write this. Review {head} from a fresh clone. Emit JSON: {\"review\": {\"head\": \"...\", \"reviewer\": \"...\", \"decision\": \"APPROVED|APPROVED_WITH_CONDITIONS|BLOCKED|NEEDS_INFORMATION\", \"evidence\": [\"...\"]}, \"cost\": <usd>}."
+      ],
       "timeout_seconds": 1800,
       "clone_timeout": 300
     }
@@ -47,5 +64,7 @@
   "credentials_expected_in_env": [
     "ANTHROPIC_API_KEY or a Claude Code OAuth token — for the runners",
     "GITHUB_TOKEN — push to the work branch only; must NOT be exposed to a PR checkout"
-  ]
+  ],
+  "run_budget": 8,
+  "run_budget_note": "Unit is RUNS, not currency. One runner invocation costs 1. Subscription plans have no per-call price to meter; runs and wall-clock are what actually run out."
 }

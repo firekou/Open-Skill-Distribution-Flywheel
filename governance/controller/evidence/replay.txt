@@ -1,6 +1,6 @@
 # Replay: execute -> review -> fix -> review -> close, from one start
 # guard: /home/user/Open-Skill-Distribution-Flywheel/governance/preflight.py
-# runners: scripted test doubles, no model call, no network. spend cap 0
+# runners: scripted test doubles, no model call, no network. run budget 8 runs
 
 ## steps
   {"action": "REVIEW_PENDING", "head": "1111111111111111111111111111111111111111"}
@@ -12,7 +12,7 @@
   status        : COMPLETE
   reviewed head : 222222222222
   fix rounds    : 1
-  spend         : 0.0
+  runs used     : 4 of 8
   human steps   : 0
 
 ## every guard decision, in order

@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "revision": 2,
+  "revision": 3,
   "automation": {
     "status": "REPLAY_VERIFIED",
     "trigger_installed": false,
     "executor_connected": false,
     "reviewer_connected": false,
-    "additional_api_budget_usd": 0,
     "status_meaning": "controller sequences execute -> independent review -> fix -> review -> close under the trusted guard, with negative controls. Runners are scripted test doubles: no AI ran, no trigger installed, no spend. NOT ACTIVE.",
     "blocking_activation": [
-      "no model credential in the runner environment",
-      "budget is 0 and the guard stops on cost > budget",
-      "no persistent trigger — the container is reclaimed when idle, so an in-container scheduler cannot be the answer"
-    ]
+      "a model credential in whichever process runs the runners — runners.SubprocessRunner targets `claude -p` (present here, 2.1.278) but this container has no credential. Run tick.py where the subscription is already authenticated. Not an owner decision.",
+      "no real AI executor/reviewer round has been run through the controller yet"
+    ],
+    "accounting_unit": "runs, not currency. The work runs on Claude and ChatGPT SUBSCRIPTIONS; there is no per-call price to approve. run_budget defaults to 8 per task and is reserved before dispatch.",
+    "trigger": "EXISTS, external. A trigger already runs on the GPT side, outside this repository. The controller is the callee: governance/controller/tick.py, documented exit codes. This repo does not schedule and does not need to."
   },
   "tasks": [
     {
@@ -32,7 +32,7 @@
     {
       "task_id": "GOV-BOOTSTRAP",
       "status": "REPLAY_VERIFIED_PENDING_REVIEW",
-      "next_action": "獨立 reviewer 驗收 controller Draft PR；真實啟動需負責人先設定預算與憑證，並選定外部持久觸發器（見 governance/controller/ACTIVATION.md）。",
+      "next_action": "獨立 reviewer 驗收 controller Draft PR（#6）。啟動不需負責人決定預算或選觸發器：預算不適用於訂閱制，觸發器 GPT 端已在運行。缺的是 runner 行程裡的模型憑證。",
       "prompt": "governance/IMPLEMENTATION_PROMPT.md",
       "branch": "claude/atk-governance-controller",
       "deliverables": [
@@ -43,7 +43,8 @@
         "governance/controller/test_controller.py",
         "governance/controller/config.live.example.json",
         "governance/controller/ACTIVATION.md"
-      ]
+      ],
+      "entry_point": "governance/controller/tick.py --config <cfg> --task <id> [--drive]"
     }
   ]
 }

@@ -44,7 +44,7 @@ def base_config(tmp: pathlib.Path, **over) -> dict:
         "stop_file": str(tmp / "STOP"),
         "authorized_phases": ["execute", "review", "accept_review"],
         "max_attempts": 2,
-        "budget": 0,
+        "run_budget": 8,
         "timeout_seconds": 2700,
         "lease_seconds": 600,
     }
@@ -266,21 +266,21 @@ class LimitsAndStop(unittest.TestCase):
             self.assertIn("STOP", [t["action"] for t in trail])
             self.assertEqual(h.store.task("T")["status"], "STOPPED")
 
-    def test_spending_over_budget_stops(self):
+    def test_running_out_of_runs_stops(self):
+        """On a subscription there is no per-call price, so the budget is counted
+        in RUNS. One runner invocation costs 1."""
         with tempfile.TemporaryDirectory() as td:
-            h = Harness(td, budget=1.0)
-
-            class Pricey(FakeExecutor):
-                def run(self, order):
-                    out = super().run(order)
-                    out["cost"] = 5.0
-                    return out
-
-            h.executor = Pricey([H1, H2])
-            h.ctl.executor = h.executor
-            h.ctl.step("T", "evt-1")                    # spends 5.0 against a budget of 1.0
+            h = Harness(td, run_budget=1)
+            h.ctl.step("T", "evt-1")                    # one executor run -> 1 of 1 used
             out = h.ctl.step("T", "evt-2")
             self.assertEqual(out, {"action": "STOP", "reason": "limit"})
+            self.assertEqual(h.store.spend(), 1)
+
+    def test_each_runner_invocation_costs_exactly_one_run(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            h.ctl.drive("T")                            # execute, review, execute, review
+            self.assertEqual(h.store.spend(), 4)
 
     def test_a_phase_outside_the_authorized_list_is_refused(self):
         with tempfile.TemporaryDirectory() as td:
@@ -368,7 +368,7 @@ class TrustBoundary(unittest.TestCase):
                           "live_head", "seen_events"):
                 self.assertIn(field, order)
             self.assertIs(order["authorized"], True)
-            self.assertEqual(order["budget"], h.config["budget"])
+            self.assertEqual(order["budget"], h.config["run_budget"])
 
     def test_the_live_runner_refuses_to_start_while_disabled(self):
         with self.assertRaises(RunnerError) as cm:
@@ -376,11 +376,15 @@ class TrustBoundary(unittest.TestCase):
                              pathlib.Path("/tmp"))
         self.assertIn("disabled", str(cm.exception))
 
-    def test_the_shipped_live_template_has_both_runners_disabled_and_zero_budget(self):
+    def test_the_shipped_live_template_has_both_runners_disabled(self):
         cfg = json.loads((HERE / "config.live.example.json").read_text())
-        self.assertEqual(cfg["budget"], 0)
         for role in ("executor", "reviewer"):
             self.assertFalse(cfg["runners"][role]["enabled"], f"{role} ships enabled")
+
+    def test_the_run_budget_is_counted_in_runs_and_says_so(self):
+        cfg = json.loads((HERE / "config.live.example.json").read_text())
+        self.assertGreater(cfg["run_budget"], 0, "a subscription has no per-call price to approve")
+        self.assertIn("RUNS", cfg["run_budget_note"])
 
 
 class AuditTrail(unittest.TestCase):

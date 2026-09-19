@@ -7,9 +7,12 @@
   "guard_path": "governance/preflight.py",
   "state_dir": "/tmp/atk-controller-replay",
   "stop_file": "/tmp/atk-controller-replay/STOP",
-  "authorized_phases": ["execute", "review", "accept_review"],
+  "authorized_phases": [
+    "execute",
+    "review",
+    "accept_review"
+  ],
   "max_attempts": 2,
-  "budget": 0,
   "timeout_seconds": 2700,
   "lease_seconds": 600,
   "replay": {
@@ -17,6 +20,11 @@
       "1111111111111111111111111111111111111111",
       "2222222222222222222222222222222222222222"
     ],
-    "reviewer_decisions": ["BLOCKED", "APPROVED"]
-  }
+    "reviewer_decisions": [
+      "BLOCKED",
+      "APPROVED"
+    ]
+  },
+  "run_budget": 8,
+  "run_budget_note": "Unit is RUNS, not currency. One runner invocation costs 1. Subscription plans have no per-call price to meter; runs and wall-clock are what actually run out."
 }

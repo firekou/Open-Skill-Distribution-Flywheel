@@ -1,90 +1,122 @@
-# Activation: what real startup needs, and what is actually missing
+# Activation: what actually has to be true
 
-The controller is finished and replayable. It is **not running**, and the gap is
-not code. This file lists exactly what is missing, so the owner is deciding
-about a real thing rather than a plan.
+Two things this file previously asked the owner to decide were the wrong
+questions, and are removed:
+
+- **"Approve a budget."** There is no per-call price to approve. The work runs
+  on Claude and ChatGPT **subscriptions**. What runs out is usage and time, not
+  dollars, so the cap is counted in **runs** (`run_budget`, one runner
+  invocation = 1) and wall-clock. Nothing here needs a spending decision.
+- **"Choose a trigger."** One already exists and already runs, on the GPT side,
+  outside this repository. The controller's job is therefore to **be called**,
+  not to ask for a scheduler. That is what `tick.py` is.
+
+## The contract an existing trigger calls
+
+```bash
+python3 governance/controller/tick.py --config <cfg.json> --task PR5
+python3 governance/controller/tick.py --config <cfg.json> --task PR5 --drive
+```
+
+One tick advances one task by at most one phase, then exits. It is not a daemon,
+it does not schedule, it does not retry in the background. Call it again when
+the caller decides it is time.
+
+| exit | meaning | what the caller should do |
+|--:|---|---|
+| **0** | progressed, not finished | call again when convenient |
+| **10** | terminal (COMPLETE / CONDITIONS_PENDING / NEEDS_INFORMATION) | stop; a human or the next work package takes it |
+| **20** | nothing to do — duplicate event, leased elsewhere, already terminal | safe to ignore; this is what a redelivered webhook looks like |
+| **30** | operator stop switch, or a limit was reached | **do not retry.** Something deliberately said stop |
+| **40** | refused by the guard — stale head, self-review, outside authority | re-read the live head and reassess; retrying unchanged will be refused again |
+| **50** | a runner failed | the task carries `recovery_point`; a retry is a decision, not automatic |
+| **2** | bad configuration | fix the config |
+
+stdout is one JSON object per line, last line a summary
+(`{"task", "status", "runs_used", "run_budget"}`). Relative paths in the config
+resolve against the repository root, not the caller's working directory — so it
+behaves the same whoever invokes it.
+
+Idempotency is on the caller's side too: pass `--event <id>` and the same id
+twice is a no-op. Omit it and one is derived from the task's revision and
+attempt, which is also stable across a redelivery.
 
 ## Where we are
 
 | Label | Meaning | Status |
 |---|---|---|
 | `FOUNDATION_ONLY` | rules + offline guard only | passed |
-| **`REPLAY_VERIFIED`** | the controller sequences the whole handoff, guard-checked, with negative controls | **reached — `evidence/replay.txt`, 26 tests** |
-| `MANUAL_RUN_VERIFIED` | a real AI executor and a real independent reviewer complete one round, started by hand | not reached |
-| `ACTIVE` | the above, plus a persistent trigger, with run IDs, SHAs, timings and cost | not reached |
+| **`REPLAY_VERIFIED`** | the controller sequences the whole handoff, guard-checked, with negative controls and mutation testing | **reached** — `evidence/` |
+| `MANUAL_RUN_VERIFIED` | a real AI executor and a real independent reviewer complete one round | not reached |
+| `ACTIVE` | the above, driven by the trigger, with run IDs, SHAs and timings | not reached |
 
-Writing `ACTIVE` into `state.json` before a real trigger and a real AI round is
-exactly the kind of claim this project keeps having to withdraw. Do not.
+## The one thing genuinely missing
 
-## Capability inventory, measured in this container
+**A model credential in whatever process runs the runners.**
 
-| Capability | Result | Consequence |
-|---|---|---|
-| `claude` CLI, non-interactive (`-p --output-format json`) | **present**, 2.1.278 | a real runner adapter has a real target — `runners.SubprocessRunner` targets exactly this |
-| model credentials (`ANTHROPIC_API_KEY`, OAuth token) | **NOT SET**; no `~/.claude/.credentials.json` | the runner is implementable but **cannot authenticate here** |
-| `GITHUB_TOKEN` / `GH_TOKEN` | set; `git ls-remote` works | branch push and PR reads are reachable |
-| `gh` CLI | absent | GitHub via git + the session's MCP tools, not `gh` |
-| `docker` | present | third-party code can be isolated |
-| `git worktree` | works | per-run isolated workspaces |
-| `crontab` | absent | — |
-| `systemctl` | present, but **this container is reclaimed when idle** | **a scheduler inside the container dies with it.** The trigger must be external |
+`runners.SubprocessRunner` targets `claude -p --output-format json`, which is
+present in this container (2.1.278). It cannot authenticate here: there is no
+`ANTHROPIC_API_KEY` and no `~/.claude/.credentials.json` in this environment.
 
-## The one thing that cannot be built inside this repository
+That is an environment fact, not a decision to make. Where the runners execute
+under a logged-in subscription, they authenticate; where they execute in a bare
+container like this one, they do not. So:
 
-**A persistent trigger.** The controller is a function that must be *called*.
-Nothing in this repo can call it on a schedule after the container is gone.
+- run `tick.py` **wherever the Claude subscription is already authenticated**, or
+- give that process a credential by the normal means for its environment.
 
-Three options, honestly compared:
+Nothing about this needs the owner to choose a plan or a price.
 
-| Option | What it costs | What it needs from the owner |
-|---|---|---|
-| **GitHub Actions** (`workflow_dispatch` + `schedule`) | free minutes on a public repo; the model calls cost whatever the runner spends | a repository secret holding a model credential, and `.github/workflows/` write access. **Recommended**: the trigger, the isolation and the audit log are all things GitHub already runs |
-| An always-on host (systemd timer) | a machine | somewhere to run it, plus credential delivery |
-| The chat session's own scheduler | model spend per firing | this is a **session** capability, not a repository one. A standalone controller process cannot call it. It also cannot be committed, reviewed or handed over |
+## Switch-on
 
-Note the third row carefully. **A chat window cannot be woken by a program.**
-Where this session can schedule something, that is the harness acting, not this
-controller — so it is not a substitute for a trigger the repo can own.
+1. Copy `config.live.example.json` outside the repository and set
+   `runners.*.enabled = true`. It ships disabled so that enabling live dispatch
+   is a deliberate, reviewable edit rather than a flag already on.
+2. Point `state_dir` at persistent disk and `stop_file` somewhere the operator
+   can write.
+3. Run **one** task with `max_attempts: 1` and keep the run IDs, SHAs and
+   timings. That earns `MANUAL_RUN_VERIFIED`.
+4. Let the existing trigger call `tick.py` on a schedule. That is `ACTIVE`, and
+   only then may `state.json` say so.
 
-## Switch-on order
+`controller.py`'s own CLI still refuses `mode != replay`; `tick.py` is the entry
+point that supports both, and `mode: "live"` plus enabled runners is the switch.
 
-1. Owner sets a **budget above zero** and says which model. Today `budget: 0`,
-   and the guard stops on `cost > budget`, so a live run would halt immediately
-   — by design.
-2. Put a model credential in the runner environment (a repo secret for Actions).
-   It must never reach a PR checkout: a PR can contain anything, and a runner
-   holding a push token must not execute PR-supplied code.
-3. Copy `config.live.example.json` outside the repo, set
-   `runners.*.enabled = true`, point `stop_file` somewhere the operator can
-   write, set `state_dir` on persistent disk.
-4. Run **one** task by hand first, with `max_attempts: 1`. Keep the run IDs,
-   SHAs, timings and cost. That earns `MANUAL_RUN_VERIFIED`.
-5. Only then install the trigger, and only then `ACTIVE`.
-
-`controller.py` refuses `mode != replay` in this build. That refusal is
-deliberate: enabling live dispatch should be an edit someone makes on purpose,
-in review, not a flag that was already on.
-
-## Switch-off, at any point
+## Switch-off
 
 | To stop | Do this | Effect |
 |---|---|---|
-| immediately | `touch $stop_file` | the next check returns `STOP` **before** any runner starts |
-| the schedule | disable the workflow or timer | no new events |
-| permanently | revoke the credential | runners cannot authenticate |
-| one task | set its status to `STOPPED` in the store | the controller treats it as terminal |
+| immediately | `touch $stop_file` | the next tick returns `STOP` **before** any runner starts, exit 30 |
+| the schedule | stop calling `tick.py` | it is not a daemon; nothing runs on its own |
+| one task | set its status to a terminal value in the store | subsequent ticks return exit 20 |
+| everything | set `runners.*.enabled = false` | `SubprocessRunner` refuses to construct |
 
-State lives in `state_dir`, not in this repository. Deleting it resets the
+State lives in `state_dir`, outside this repository. Deleting it resets the
 controller and loses history; it does not touch the repo.
 
-## What is still not covered, stated rather than implied
+## Limits that apply on a subscription
+
+| Control | Where | Default |
+|---|---|---|
+| runs per task | `run_budget`, enforced **before** dispatch | 8 |
+| fix rounds | `max_attempts` | 2 |
+| wall-clock per round | `timeout_seconds` | 2700 |
+| one worker per task | lease in the store | 600s, recoverable after expiry |
+
+The run reservation happens before the runner starts, not after it finishes — an
+earlier version checked the spend as it stood, which let the last permitted call
+start one run over the cap. Verified: `run_budget=N` starts exactly N runs.
+
+## What is still not covered
 
 - **No real AI round has been executed by this controller.** The replay uses
-  scripted doubles. Everything above `REPLAY_VERIFIED` is untested.
-- **No trigger is installed**, so nothing runs unless a human starts it.
-- The guard validates that a review record is *well formed and bound to the
-  right head and reviewer*. It cannot tell whether the review is *true*. Only a
-  real independent reviewer does that, and two runs of the same model are not
+  scripted doubles, so everything above `REPLAY_VERIFIED` is untested.
+- The guard validates that a review record is well formed and bound to the right
+  head and reviewer. It cannot tell whether the review is *true*. Only a real
+  independent reviewer does that, and two runs of the same model are not
   independent sources.
-- Runner isolation relies on a fresh clone per run. Running untrusted PR code
-  needs the container as well, which is present but not wired in here.
+- Runner isolation is a fresh clone per run. Executing untrusted PR code also
+  needs the container, which is available but not wired in here.
+- The GPT-side trigger is outside this repository and is not described by it.
+  This file specifies the interface it can call; it does not claim to know how
+  that trigger is configured.

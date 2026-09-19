@@ -140,6 +140,14 @@ class Store:
     def task(self, task_id: str) -> dict:
         return self.read()["tasks"].get(task_id, {})
 
+    def task_head_or(self, default: str) -> str:
+        """The head of whichever task currently has one. Replay only: real runs
+        resolve the head from the remote, never from stored state."""
+        for task in self.read()["tasks"].values():
+            if task.get("last_head"):
+                return task["last_head"]
+        return default
+
     # ---------- append-only audit log ----------
 
     def log(self, **fields) -> dict:

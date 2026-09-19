@@ -59,7 +59,7 @@ def main() -> int:
 
     out("# Replay: execute -> review -> fix -> review -> close, from one start")
     out(f"# guard: {config['guard_path']}")
-    out(f"# runners: scripted test doubles, no model call, no network. spend cap {config['budget']}")
+    out(f"# runners: scripted test doubles, no model call, no network. run budget {config['run_budget']} runs")
     out()
     out("## steps")
     for step in ctl.drive("GOVDEMO"):
@@ -71,7 +71,7 @@ def main() -> int:
     out(f"  status        : {task['status']}")
     out(f"  reviewed head : {task.get('reviewed_head', '')[:12]}")
     out(f"  fix rounds    : {task.get('attempt')}")
-    out(f"  spend         : {store.spend()}")
+    out(f"  runs used     : {store.spend():.0f} of {config['run_budget']}")
     out(f"  human steps   : 0")
 
     out()

@@ -90,8 +90,18 @@ class Controller:
             "executor_identity": executor_identity,
             "attempt": attempt,
             "max_attempts": self.config["max_attempts"],
-            "cost": self.store.spend(),
-            "budget": self.config["budget"],
+            # The guard compares cost against budget numerically; it does not care
+            # what the unit is. On a subscription there is no per-call money to
+            # meter, so the unit here is RUNS — one runner invocation costs 1.
+            # That is the thing which actually runs out on a subscription plan,
+            # and it is the only cap this process can enforce by itself.
+            # Reserve the run this dispatch is about to start, so the guard's
+            # `cost > budget` is a PRE-dispatch check. Reporting the spend as it
+            # stands lets the last allowed call start one more runner than the
+            # budget permits — a real off-by-one on the cap that protects the
+            # subscription. `accept_review` starts no runner, so it reserves none.
+            "cost": self.store.spend() + (1 if phase in ("execute", "review") else 0),
+            "budget": self.config["run_budget"],
             "elapsed": elapsed,
             "timeout": self.config["timeout_seconds"],
             "repo_url": self.config["repo_url"],
@@ -164,7 +174,7 @@ class Controller:
             self.store.log(kind="runner_failed", task=task_id, role="executor", detail=str(exc))
             return {"action": "FAILED", "reason": str(exc)}
 
-        self.store.add_spend(result.get("cost", 0.0))
+        self.store.add_spend(1)          # one executor run
         # The event is marked processed and the state advanced in that order, so a
         # crash between them re-runs a step that produced no state change, rather
         # than skipping one that did.
@@ -197,7 +207,7 @@ class Controller:
                                 recovery_point=f"head={head}")
             return {"action": "FAILED", "reason": str(exc)}
 
-        self.store.add_spend(result.get("cost", 0.0))
+        self.store.add_spend(1)          # one reviewer run
 
         # The verdict is put back through the guard, which re-checks that the
         # review is bound to this head and this reviewer, cites evidence, and

@@ -65,7 +65,7 @@ class FakeExecutor(Runner):
         self.calls.append(order["task_id"])
         if not self._heads:
             raise RunnerError("fake executor has no scripted head left")
-        return {"new_head": self._heads.pop(0), "cost": 0.0}
+        return {"new_head": self._heads.pop(0)}
 
 
 class FakeReviewer(Runner):
@@ -93,7 +93,6 @@ class FakeReviewer(Runner):
                 "decision": decision,
                 "evidence": [f"replay://{order['task_id']}/{order['head'][:7]}/{decision}"],
             },
-            "cost": 0.0,
         }
 
 

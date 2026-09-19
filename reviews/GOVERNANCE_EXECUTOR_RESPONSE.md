@@ -134,6 +134,7 @@ accept_review  head=222222222222 run=fake-reviewer-1  -> COMPLETE
 | 無限修復迴圈 | 超過 `max_attempts` → `STOP/limit` |
 | 超出預算 | `cost > budget` → `STOP/limit` |
 | 停止開關 | 在**任何 runner 啟動之前**回 `STOP/operator_stop` |
+| 次數上限被超額一次 | 派工**前**先預留，`run_budget=N` 恰好啟動 N 次 |
 | 越權 phase | `outside_authority` 拒絕 |
 | merge／部署 | guard 不認得的動作名 → `unknown_or_external_action` 拒絕 |
 | 行程重啟 | 同一事件重送 → `NOOP/duplicate`，已完成的寫入**不重做** |
@@ -208,11 +209,47 @@ guard——後者才是真正會無聲失效的單點，它現在會被變異測
   （**沒有**：它寫的是 `REPAIR_ROUND_COMPLETE_PENDING_OWNER`，merge 仍未授權）。
 - `ACTIVATION.md` 的缺口是否誠實、是否可據以決定要不要開預算。
 
-## 7. 真正需要負責人處理的事項
+## 7. 兩個問錯的問題，已從程式與文件移除
 
-1. **要不要開預算讓它真的跑**，以及用哪個模型。今天 `budget: 0`，guard 會在第一步就停。
-2. **憑證放哪裡**（建議 GitHub repository secret），並確認**不得**暴露給 PR checkout。
-3. **選觸發器**：GitHub Actions／常駐主機／暫不啟動。
-4. PR #5 的 merge、About／topics 套用、上游備稿送出、金鑰輪替——**與本輪無關，維持原狀**。
+第一版的交接列了「要不要開預算」與「選哪個觸發器」。**兩個都問錯了**，負責人指出後已修正：
 
-其餘工程工作不需要負責人再決定方向；1A／2A／3A 與 GOV-01 已批准，本輪未重問。
+### 預算 → 不適用。單位改成「次數」
+
+工作跑在 **Claude 與 ChatGPT 的訂閱制**上，**沒有 per-call 價格要批准**。訂閱制會用完的是
+用量與時間，不是錢。
+
+- `budget`（美元）→ `run_budget`（**次數**），一次 runner 呼叫算 1，預設 8。
+- 保留 guard 原本的 `cost > budget` 數值比較，**guard 一個字都沒改**——只是餵給它一個對訂閱制
+  真正成立的單位，並在設定檔與程式註解裡寫明單位是什麼。
+- 改的過程抓到一個真的 off-by-one：原本用「當下已用量」去比，等於允許最後一次呼叫**超額一次**。
+  改成**派工前先預留**。實測 `run_budget=N` 恰好啟動 N 次（N=1..4），證據在 `evidence/tick.txt`。
+
+### 觸發器 → 已經存在，在 GPT 端
+
+觸發器**已經在跑**，在這個 repository 之外。所以 controller 的角色是**被呼叫**，不是去要一個排程器。
+新增 `governance/controller/tick.py`：
+
+```
+python3 governance/controller/tick.py --config <cfg> --task PR5 [--drive]
+```
+
+一次 tick 推進一個 phase 就結束。**不是 daemon、不排程、不背景重試。** 退出碼讓 shell 呼叫者
+不必解析 JSON：`0` 前進中、`10` 終態、`20` 無事可做（重送的 webhook 長這樣）、`30` 停止開關或
+達上限（**不要重試**）、`40` guard 拒絕、`50` runner 失敗、`2` 設定錯。相對路徑對 repo root 解析，
+誰呼叫都一樣。
+
+**用 trigger 的方式真的跑過之後才發現的 bug：** replay 模式會去問真實 remote 要 live head，
+所以第一次之後每次 tick 都被 `stale_head` 打掉。**光讀程式不會發現**。已修，並留在證據裡。
+
+## 8. 真正還缺的，只有一項
+
+**跑 runner 的那個行程裡要有模型憑證。**
+
+`runners.SubprocessRunner` 對準的是 `claude -p --output-format json`，這個容器裡**有**（2.1.278），
+但**沒有憑證**——沒有 `ANTHROPIC_API_KEY`，也沒有 `~/.claude/.credentials.json`。
+
+這是環境事實，**不是一個要負責人決定的選項**：在已登入訂閱的環境裡跑 `tick.py` 就能認證，
+在這種裸容器裡就不能。不需要選方案，也不需要選價格。
+
+PR #5 的 merge、About／topics、上游備稿、金鑰輪替與本輪無關，維持原狀。
+1A／2A／3A 與 GOV-01 已批准，本輪未重問。
