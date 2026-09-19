@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 2,
+  "revision": 3,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -31,9 +31,14 @@
     },
     {
       "task_id": "GOV-BOOTSTRAP",
-      "status": "READY",
-      "next_action": "先驗此規範與guard，再依IMPLEMENTATION_PROMPT.md建立最小自動交接實作Draft PR",
-      "prompt": "governance/IMPLEMENTATION_PROMPT.md"
+      "status": "AWAITING_INDEPENDENT_REVIEW",
+      "next_action": "Draft PR #6 已送出，等獨立 reviewer。內容：controller/store/runners/tick，30 條正負控制 + 變異測試，replay 一次啟動走完 execute→review→fix→review→close。未安裝新觸發器（不重複 GPT 已註冊的 reviewer 觸發），未宣稱 ACTIVE。",
+      "prompt": "governance/IMPLEMENTATION_PROMPT.md",
+      "pr": 6,
+      "branch": "claude/atk-governance-controller",
+      "submitted_head": "c04ef465d000968b86065e7608a8c92761458c6d",
+      "executor_response": "reviews/GOVERNANCE_EXECUTOR_RESPONSE.md (on the PR branch)",
+      "note": "Executor 自報進度，非驗收。automation.status 由 planner 維護，本次未更動。"
     }
   ]
 }
