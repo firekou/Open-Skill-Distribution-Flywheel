@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "revision": 1,
+  "automation": {
+    "status": "FOUNDATION_ONLY",
+    "trigger_installed": false,
+    "executor_connected": false,
+    "reviewer_connected": false,
+    "additional_api_budget_usd": 0
+  },
+  "tasks": [
+    {
+      "task_id": "PR5",
+      "status": "REVIEW_PENDING",
+      "pr": 5,
+      "observed_head": "d55911e983b24928e5f4f107483c5b1c2130e689",
+      "last_reviewed_head": "f41f8d93827003de151be7e9d06b2e472c837dee",
+      "last_review_decision": "BLOCKED",
+      "next_action": "獨立R3 review最新head，不重做已關閉P5-02",
+      "prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md"
+    },
+    {
+      "task_id": "GOV-BOOTSTRAP",
+      "status": "READY",
+      "next_action": "先驗此規範與guard，再依IMPLEMENTATION_PROMPT.md建立最小自動交接實作Draft PR",
+      "prompt": "governance/IMPLEMENTATION_PROMPT.md"
+    }
+  ]
+}
