@@ -64,11 +64,13 @@ class CallUsage:
             value = getattr(self, name)
             if not isinstance(value, int) or isinstance(value, bool) or value < 0:
                 raise MeterError(f"{name} must be a non-negative integer, got {value!r}")
-        if self.cached_tokens > self.input_tokens:
-            raise MeterError(
-                f"cached_tokens ({self.cached_tokens}) exceeds input_tokens "
-                f"({self.input_tokens}); the provider is not reporting these as disjoint"
-            )
+        # NOTE: `cached_tokens > input_tokens` is NOT an error in general, and treating it as one
+        # was a bug. Anthropic reports cache reads as ADDITIONAL to input - its own pricing page
+        # carries an example with input_tokens=105 against cache_read_input_tokens=7123. OpenAI
+        # and DeepSeek report them as INCLUDED. The convention is declared per model in the
+        # pricing snapshot with the vendor sentence as evidence, and `pricing.Rate.cost` applies
+        # the declaration. Validating it here would mean encoding one vendor's convention as
+        # arithmetic, which is what produced the bug.
         if self.role not in ("primary", "escalation"):
             raise MeterError(f"unknown call role {self.role!r}")
         if self.cache_state not in ("cold", "warm", "unknown"):

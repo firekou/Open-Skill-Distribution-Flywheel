@@ -15,6 +15,8 @@ import hashlib
 import json
 import pathlib
 import string
+
+from . import METHODOLOGY_VERSION
 from dataclasses import dataclass
 
 # Anything in this list identifies the treatment, its cost, or how much ATK wants it to win.
@@ -48,6 +50,17 @@ FORBIDDEN_KEYS = frozenset(
         "retries",
         "escalations",
         "latency_ms",
+        # Added for NEW-06. These reached the judge through `required_evidence`, which the walk
+        # used to skip. There is now ONE list and both gates read it.
+        "treatment_name",
+        "candidate_commit_sha",
+        "model_version",
+        "cache_state",
+        "run_id",
+        "container_digest",
+        "egress_destinations",
+        "image_content_sha256",
+        "pricing_snapshot_id",
     }
 )
 
@@ -74,13 +87,15 @@ class JudgePacket:
     workload: str
     blind_treatment_id: str
     model_output: str
-    required_evidence: list
+    required_evidence: dict | list
     answer_key: dict
     quality_metric: str
     failure_condition: str
+    methodology_version: str = METHODOLOGY_VERSION
 
     def to_dict(self) -> dict:
         return {
+            "methodology_version": self.methodology_version,
             "packet_id": self.packet_id,
             "task_id": self.task_id,
             "workload": self.workload,
@@ -194,8 +209,16 @@ def _walk(node, path=""):
 #
 # The candidate-NAME scan still covers the whole packet, including these subtrees. A name is the
 # real leak vector; a key called `repo` in a frozen fixture is not.
+# NOTE: `required_evidence` is NOT here, and that is the fix for NEW-06.
+#
+# It was listed as "frozen task-set content", but it is the one packet field that is
+# **run-produced** — so it is precisely where run metadata would leak. With it excluded from the
+# walk, `required_evidence.treatment_name`, `.candidate_commit_sha`, `.model_version` and
+# `.cache_state` all passed both blind gates. A blind guarantee whose own assertion skips the
+# field most likely to break it is the RT-02 shape: a check that can be off without anyone
+# noticing.
 FROZEN_CONTENT_FIELDS = frozenset(
-    {"answer_key", "quality_metric", "failure_condition", "required_evidence"}
+    {"answer_key", "quality_metric", "failure_condition"}
 )
 
 
@@ -234,6 +257,42 @@ def assert_blind(packet: dict, candidate_names: list[str]) -> None:
             )
 
 
+def assert_evidence_sufficient(task: dict, required_evidence) -> None:
+    """RT-01 / RT-13 — refuse the packet BEFORE it reaches the judge.
+
+    v1.0.0 read `task.get("required_evidence", [])`, no task file carried that key, and every
+    packet shipped an empty list. Ten of seventeen byte-perfect answers failed at score 0.0 and
+    the cause was invisible from the score. Worse, an empty container passes a type check, so an
+    empty `shifts`/`roster` silently disarmed workload E's zero-tolerance criteria and let an
+    ineligible assignment score `task_success: true` (RT-02).
+
+    So the check is on CONTENT, at packet-build time, and it raises. A judge that receives a
+    packet has evidence; a judge that would have received an empty one gets nothing at all.
+    """
+    from .evidence import EvidenceError, required_fields, validate
+
+    if not isinstance(required_evidence, dict):
+        raise BlindError(
+            f"required_evidence must be a mapping produced by harness.evidence, got "
+            f"{type(required_evidence).__name__}. An empty list is how v1.0.0 shipped 17 "
+            "unscoreable packets."
+        )
+    try:
+        validate(required_evidence, task)
+    except EvidenceError as exc:
+        raise BlindError(str(exc)) from exc
+
+    if task["workload"] == "E":
+        turns = required_evidence.get("turns") or []
+        expected = task["input"].get("turn_count") or task.get("turn_count")
+        if expected and len(turns) != int(expected):
+            raise BlindError(
+                f"workload E packet carries {len(turns)} turns but the task declares {expected}. "
+                "A truncated transcript hides every violation after the cut."
+            )
+    del required_fields
+
+
 def build_packet(
     run_record: dict,
     model_output: str,
@@ -241,8 +300,12 @@ def build_packet(
     answer_key: dict,
     mapping: BlindMapping,
     candidate_names: list[str],
+    required_evidence: dict | None = None,
+    methodology_version: str | None = None,
 ) -> JudgePacket:
     label = mapping.label(run_record["condition"])
+    evidence = required_evidence if required_evidence is not None else task.get("required_evidence")
+    assert_evidence_sufficient(task, evidence)
     packet = JudgePacket(
         packet_id=hashlib.sha256(
             f"{run_record['run_id']}|{run_record['task_id']}".encode()
@@ -251,10 +314,17 @@ def build_packet(
         workload=run_record["workload"],
         blind_treatment_id=label,
         model_output=model_output,
-        required_evidence=task.get("required_evidence", []),
+        required_evidence=evidence,
         answer_key=answer_key,
         quality_metric=task["quality_metric"],
         failure_condition=task["failure_condition"],
+        # v1.1.0 section 13: the scorer refuses a packet whose version it cannot resolve rather
+        # than scoring it under a guess. Silent cross-version scoring is how a v1.0.0 relative
+        # floor would survive into a v1.1.0 result.
+        methodology_version=(methodology_version
+                             or run_record.get("methodology_version")
+                             or task.get("methodology_version")
+                             or METHODOLOGY_VERSION),
     )
     assert_blind(packet.to_dict(), candidate_names)
     return packet

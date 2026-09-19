@@ -1,0 +1,53 @@
+{
+  "task_id": "D-003",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Called billing.get_invoice for the order, which is the only tool carrying the ship date, converted that date with fiscal.convert_calendar_to_fiscal (not the calendar-quarter tool) and read the ledger close date from fiscal.get_period_close_date (fiscal-reference, an uncontested family). Script: scripts/derive_D.py",
+  "derivation_script": "scripts/derive_D.py",
+  "contested_families": [
+    "order-document-resolution",
+    "fiscal-period-resolution",
+    "calendar-period-resolution"
+  ],
+  "required_tools": [
+    "billing.get_invoice",
+    "fiscal.convert_calendar_to_fiscal"
+  ],
+  "tool_calls_made_by_this_derivation": [
+    {
+      "tool": "billing.get_invoice",
+      "family": "order-document-resolution",
+      "args": {
+        "order_id": "ORD-88213"
+      }
+    },
+    {
+      "tool": "fiscal.convert_calendar_to_fiscal",
+      "family": "fiscal-period-resolution",
+      "args": {
+        "date": "2032-01-03"
+      }
+    },
+    {
+      "tool": "fiscal.get_period_close_date",
+      "family": "fiscal-reference",
+      "args": {
+        "fiscal_year": "FY2032",
+        "fiscal_period": 12
+      }
+    }
+  ],
+  "answer": {
+    "ship_date": "2032-01-03",
+    "fiscal_year": "FY2032",
+    "fiscal_quarter": "Q4",
+    "fiscal_period": 12,
+    "period_close_date": "2032-02-06"
+  },
+  "derivation_diagnostics": {
+    "billing_date_not_used": "2032-02-09",
+    "fiscal_period_window": [
+      "2031-12-28",
+      "2032-01-30"
+    ]
+  }
+}

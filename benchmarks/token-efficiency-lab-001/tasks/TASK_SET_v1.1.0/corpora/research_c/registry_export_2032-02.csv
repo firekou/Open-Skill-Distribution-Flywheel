@@ -1,0 +1,9 @@
+plugin_id,publisher,min_kestrel_version,registry_status,last_reviewed
+kp-audit-trail,Kestrel Plugin Registry,2.3,listed,2032-02-11
+kp-blob-mirror,Kestrel Plugin Registry,2.0,listed,2032-02-11
+kp-csv-bridge,Kestrel Plugin Registry,3.0,listed,2032-02-11
+kp-dlq-replay,Kestrel Plugin Registry,2.1,listed,2032-02-11
+kp-edge-cache,Kestrel Plugin Registry,2.1,listed,2032-02-11
+kp-fx-lookup,Kestrel Plugin Registry,2.2,listed,2032-02-11
+kp-graph-export,Kestrel Plugin Registry,1.1,listed,2032-02-11
+kp-ldap-sync,Kestrel Plugin Registry,1.2,listed,2032-02-11

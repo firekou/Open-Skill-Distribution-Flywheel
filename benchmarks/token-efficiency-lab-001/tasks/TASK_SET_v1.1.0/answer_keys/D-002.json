@@ -1,0 +1,85 @@
+{
+  "task_id": "D-002",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Called registry.resolve_digest_pinned to get the digest the tag points to now (the tag has been moved), read vulndb.get_image_findings_by_digest for that digest, counted the CRITICAL findings whose status is open, took the highest CVSS among them and read the fix version for the scan's distribution from vulndb.get_fix_versions (vuln-reference, an uncontested family). Script: scripts/derive_D.py",
+  "derivation_script": "scripts/derive_D.py",
+  "contested_families": [
+    "image-digest-resolution",
+    "vuln-findings"
+  ],
+  "required_tools": [
+    "registry.resolve_digest_pinned",
+    "vulndb.get_image_findings_by_digest"
+  ],
+  "tool_calls_made_by_this_derivation": [
+    {
+      "tool": "registry.resolve_digest_pinned",
+      "family": "image-digest-resolution",
+      "args": {
+        "repository": "apps/kestrel-gateway",
+        "tag": "2031.11-stable"
+      }
+    },
+    {
+      "tool": "vulndb.get_image_findings_by_digest",
+      "family": "vuln-findings",
+      "args": {
+        "digest": "sha256:bd7745e1cc3a92f6041b8e20d5c7f3a9b61d0e4482cf7d1935ab60c2e8f41d33",
+        "status": "all"
+      }
+    },
+    {
+      "tool": "vulndb.get_fix_versions",
+      "family": "vuln-reference",
+      "args": {
+        "advisory_id": "KSA-2032-0117"
+      }
+    }
+  ],
+  "answer": {
+    "digest": "sha256:bd7745e1cc3a92f6041b8e20d5c7f3a9b61d0e4482cf7d1935ab60c2e8f41d33",
+    "critical_open_count": 3,
+    "highest_cvss_advisory_id": "KSA-2032-0117",
+    "distribution": "debian-12",
+    "fixed_version": "2.9.4-3"
+  },
+  "derivation_diagnostics": {
+    "publish_time_digest_not_used": "sha256:aa11c6f0d2b74e8390b5c1f77a4d6e29b0c8134f5ad9e7621c0fb3d84e5a7710",
+    "critical_open_findings": [
+      {
+        "advisory_id": "KSA-2032-0117",
+        "cvss": 9.8,
+        "fixed_version": null,
+        "package": "libratchet",
+        "severity": "CRITICAL",
+        "status": "open"
+      },
+      {
+        "advisory_id": "KSA-2032-0094",
+        "cvss": 9.1,
+        "fixed_version": null,
+        "package": "zlib-ng",
+        "severity": "CRITICAL",
+        "status": "open"
+      },
+      {
+        "advisory_id": "KSA-2031-0442",
+        "cvss": 9.3,
+        "fixed_version": null,
+        "package": "openssl3",
+        "severity": "CRITICAL",
+        "status": "open"
+      }
+    ],
+    "critical_findings_excluded_because_not_open": [
+      {
+        "advisory_id": "KSA-2031-0388",
+        "cvss": 9.4,
+        "fixed_version": "2.12.6-1",
+        "package": "libxml2",
+        "severity": "CRITICAL",
+        "status": "fixed"
+      }
+    ]
+  }
+}

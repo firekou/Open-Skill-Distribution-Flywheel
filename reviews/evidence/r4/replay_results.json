@@ -1,0 +1,185 @@
+{
+  "reviewed_commit": "6d59acd39bd62f64b539b106f603e91876171e94",
+  "review_package_commit": "401ea9a",
+  "environment": {
+    "python": "Python 3.11.15",
+    "jsonschema": "installed from the vendored wheelhouse; the REAL record validator ran in every command below. No stub anywhere in this table.",
+    "not_done": "no Docker rebuild, no image digest, no model contacted, no cost measured"
+  },
+  "findings": {
+    "R4-02_manifest": {
+      "on_6d59acd": {
+        "committed_manifest_verify_ok": false,
+        "mismatching_groups": [
+          "config (run_record_schema.json)",
+          "scorer (judge.py)"
+        ],
+        "fresh_manifest_over_modified_aggregate_verify_ok": true,
+        "scope_excluded": [
+          "harness/aggregate.py",
+          "harness/finalize.py",
+          "harness/runner.py"
+        ]
+      },
+      "after_fix": {
+        "committed_manifest_verify_ok": true,
+        "execution_group_files": 17,
+        "modified_aggregate_caught": true,
+        "new_module_caught": true,
+        "coverage": "DISCOVERED from harness/*.py, not a hand-maintained list",
+        "excluded_named": [
+          "harness/test_harness.py",
+          "harness/test_judge.py",
+          "harness/blind_smoke.py"
+        ]
+      }
+    },
+    "R4-03_documented_dry_run": {
+      "on_6d59acd": {
+        "plan_items": 10,
+        "missing_attempt_id": 10,
+        "run_plan_exists": false,
+        "runner_exit": 1,
+        "error": "RunError: 10 plan item(s) carry no attempt_id"
+      },
+      "after_fix": {
+        "plan_items": 10,
+        "missing_attempt_id": 0,
+        "run_plan_exists": true,
+        "runner": "10/10 completed",
+        "finalize": 10,
+        "aggregate_exit": 1,
+        "aggregate_exit_why": "EXPECTED. The dry-run fixture's outputs are synthetic, so attempts genuinely fail quality. The path executes; it is not meant to pass.",
+        "identity_unverified": [],
+        "build_inconsistent": []
+      }
+    },
+    "R4-04_methodology_lock": {
+      "on_6d59acd": {
+        "mismatching_documents": [
+          "methodology/METHODOLOGY_CHANGE_REQUEST_002.md"
+        ]
+      },
+      "after_fix": {
+        "mismatching_documents": [],
+        "enforced_by": "tools/delivery_check.py exits 1 on any drift"
+      }
+    },
+    "R4-05_build_identity": {
+      "on_6d59acd": {
+        "mixed_build_through_real_cli": {
+          "exit": 0,
+          "cells_passed": 5,
+          "identity_unverified": []
+        },
+        "plan_hash_unchanged_when_plan_versions_change": true
+      },
+      "after_fix": {
+        "mixed_build_through_real_cli": {
+          "exit": 1,
+          "cells_passed": 4,
+          "build_inconsistent": [
+            [
+              "A",
+              "C0"
+            ]
+          ]
+        },
+        "plan_hash_unchanged_when_plan_versions_change": false,
+        "classification": "BUILD INCONSISTENT, reported separately from quality failure",
+        "control_genuine_records": {
+          "exit": 0,
+          "cells_passed": 5
+        }
+      }
+    },
+    "R4-06_score_provenance": {
+      "on_6d59acd": {
+        "scores_generated": 17,
+        "scores_with_scorer_hash": 0,
+        "wrong_record_scorer_hash_finalized": 17,
+        "score_missing_methodology_version_finalized": 17
+      },
+      "after_fix": {
+        "scores_generated": 17,
+        "scores_with_full_provenance": 17,
+        "wrong_record_scorer_hash": "REFUSED, nothing written",
+        "score_missing_provenance": "REFUSED, nothing written",
+        "provenance_fields": [
+          "scorer_hash (self-derived from judge.py)",
+          "methodology_version",
+          "packet_digest"
+        ]
+      }
+    },
+    "R4-01_analysis_entry_point": {
+      "on_6d59acd": "cost_per_successful_task, select_strongest, pair_attempts reachable from no command",
+      "after_fix": {
+        "command": "python3 -m harness.analyse --records DIR --run-plan PLAN",
+        "golden_exit": 0,
+        "cost_status_first_cell": "COMPUTED",
+        "cost_per_successful_task": 0.0015,
+        "blocked_outputs": [
+          "condition_ranking",
+          "cost_delta_vs_baseline",
+          "non_inferiority",
+          "savings_claim",
+          "strongest_conditions"
+        ],
+        "controls": {
+          "unpriced_attempt": "cost_status BLOCKED, never 0",
+          "no_passes": "NO_FINITE_VALUE",
+          "substituted_identity": "exit 2 REFUSED, no description printed"
+        }
+      }
+    }
+  },
+  "documented_paths": {
+    "golden_fixture": {
+      "runner": "17/17",
+      "judge": "17 scored, 17 with provenance",
+      "finalize": 17,
+      "aggregate_exit": 0,
+      "cells_passed": 5,
+      "identity_unverified": [],
+      "build_inconsistent": [],
+      "plan_hash": "cb363d7b496c479e11939e5696f3f7d2170fe8b27ce1fbab3fb5dc33a4c64bef",
+      "analyse_exit": 0
+    },
+    "committed_dry_run": {
+      "runner": "10/10",
+      "finalize": 10,
+      "aggregate_exit": 1,
+      "expected": "cells FAIL; the fixture's outputs are synthetic"
+    }
+  },
+  "delivery_check": {
+    "command": "python3 tools/delivery_check.py",
+    "exit": 0,
+    "checks": [
+      "scoring-integrity manifest",
+      "methodology lock",
+      "run plans self-consistent",
+      "documented dry-run plan"
+    ],
+    "note": "verifies the COMMITTED artefacts; --refresh is a separate, deliberate action whose output is not evidence"
+  },
+  "tests": {
+    "total": 349,
+    "new_this_round": 23,
+    "new_tests_against_6d59acd": {
+      "failures": 11,
+      "errors": 10,
+      "passed": 2
+    },
+    "the_two_that_pass_and_why": [
+      "test_a_record_naming_a_different_scorer_is_refused: the old conditional check DID fire because this fixture supplies both hashes. It passes for a weaker reason than it does now, and is not evidence that R4-06 was already closed - 0 of 17 real scores carried the field at all.",
+      "test_a_substituted_identity_refuses_the_whole_description: identity refusal already existed from R2-01; this test covers the new analyse entry point reaching it."
+    ],
+    "errors_vs_failures": "the 10 errors are import/TypeError from modules and keyword arguments that do not exist on 6d59acd (analyse, plan=, scorer_identity). They are NOT behavioural evidence and are not counted as such."
+  },
+  "r3_claim_corrected": {
+    "previous_claim": "7 new R3 tests, all 7 fail on 4e6584b",
+    "correction": "literally true, but not all behavioural. Per the reviewer's own classification: 5 failures, 2 errors (TypeError: old Cell has no plan=), and 2 of the 5 stopped at CLI argument parsing before reaching data-validation logic. An interface change producing a red test is not the same strength of evidence as a behavioural regression. Accepted and restated."
+  }
+}

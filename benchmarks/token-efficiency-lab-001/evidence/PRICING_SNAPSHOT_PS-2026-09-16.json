@@ -1,0 +1,1613 @@
+{
+  "pricing_snapshot_id": "PS-2026-09-16",
+  "captured_at": "2026-09-16",
+  "supersedes": "PS-2026-09-15",
+  "supersedes_note": "PS-2026-09-15 is neither overwritten, amended nor re-dated (METHODOLOGY v1.1.0 section 11.1). It remains on disk unchanged.",
+  "methodology_version": "v1.1.0",
+  "source_document": "evidence/PRICING_SNAPSHOT_PS-2026-09-16.md",
+  "currency": "USD",
+  "billing_unit": "USD per 1,000,000 tokens",
+  "produced_by": "Harness / Evidence Producer seat, ATK Token Efficiency Lab 001",
+  "retrieval_method": "Each vendor pricing page fetched directly with curl over the session's egress proxy on 2026-09-16, HTML tags stripped, numbers read from the resulting text. No price in this snapshot was recalled, estimated or carried over from PS-2026-09-15; the only carried-over row is the explicitly synthetic lab/replay-synthetic constant.",
+  "rules": {
+    "missing_rate_is_never_zero": true,
+    "not_applicable_requires_evidence": true,
+    "unreadable_rate_is_BLOCKED": true
+  },
+  "findings": {
+    "F-1_openai_model_lineup": {
+      "summary": "The OpenAI flagship line on 2026-09-16 is gpt-6-astra, gpt-5.6-sol, gpt-5.6-terra, gpt-5.6-luna. None of the eight models PS-2026-09-15 recorded is a flagship model any more, but ALL EIGHT are still listed on the page, in the collapsed \"All models\" section.",
+      "still_listed": [
+        "gpt-5.5-pro (<272K context length)",
+        "gpt-5-pro",
+        "gpt-5.5 (<272K context length)",
+        "gpt-5",
+        "gpt-5.1",
+        "gpt-5-mini",
+        "gpt-5-nano",
+        "o1-pro"
+      ],
+      "no_longer_listed": [],
+      "price_changes_since_PS-2026-09-15": "None. Every one of the eight input and output rates in PS-2026-09-15 still matches the page. What PS-2026-09-15 got wrong was completeness, not the numbers: it omitted the cached-input column that was there all along.",
+      "material_consequence": "A run plan naming gpt-5 or gpt-5-mini is still priceable, but it is no longer pricing a current-generation model, and the C4 tier-adjacent pairs in METHODOLOGY section 8 were chosen against a lineup that has moved."
+    },
+    "F-2_anthropic_tokenizer_change": {
+      "summary": "Anthropic token counts are NOT comparable across Claude model generations.",
+      "quoted_evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Claude 4.7 and later models and Claude Mythos Preview use a newer tokenizer that contributes to their improved performance on a wide range of tasks. This tokenizer produces approximately 30% more tokens for the same text. The exact increase depends on the content and workload shape. Claude Sonnet 4.6 and earlier models use the previous tokenizer.\"",
+      "affected_models_in_this_snapshot": {
+        "new_tokenizer_4_7_and_later": [
+          "anthropic/claude-fable-5-1",
+          "anthropic/claude-opus-5",
+          "anthropic/claude-sonnet-5"
+        ],
+        "previous_tokenizer_4_6_and_earlier": [
+          "anthropic/claude-haiku-4-5"
+        ]
+      },
+      "material_consequence": "METHODOLOGY v1.1.0 section 5.1 'Comparability constraint' requires that the only permitted difference between a treatment attempt and its baseline attempt is the registered intervention. A C4 pair that puts Claude Haiku 4.5 (previous tokenizer) against Claude Opus 5 or Sonnet 5 (newer tokenizer) violates it for TOKEN counts: the same text yields ~30% more tokens on one side of the pair for reasons that have nothing to do with the intervention. Section 12 already forbids reporting cross-provider token deltas where accounting is not like-for-like; this finding extends that prohibition WITHIN Anthropic, across the 4.6/4.7 tokenizer boundary. Cost and cost-per-successful-task remain reportable; a token-count delta across that boundary is not."
+    },
+    "F-3_meter_assumes_cached_inside_input": {
+      "summary": "environment/harness/meter.py raises MeterError when cached_tokens > input_tokens, with the message \"the provider is not reporting these as disjoint\". That check encodes the OpenAI/DeepSeek convention, in which cached tokens are INSIDE input_tokens. It is wrong for Anthropic, where total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens and a cache-heavy call legitimately reports cache_read_input_tokens far larger than input_tokens.",
+      "material_consequence": "An Anthropic attempt with a large cached prefix would either raise MeterError or, if the adapter folds the fields together to avoid it, be mispriced. The per-model token_inclusion block in this snapshot records the difference; the meter must read it rather than assume one convention. Raised here as an evidence finding, not fixed -- the meter is not this seat's to change."
+    }
+  },
+  "models": {
+    "anthropic/claude-fable-5-1": {
+      "vendor_model_name": "Claude Fable 5.1",
+      "provenance": {
+        "source_url": "https://docs.claude.com/en/docs/about-claude/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://docs.claude.com/en/docs/build-with-claude/prompt-caching",
+          "https://docs.claude.com/en/docs/build-with-claude/extended-thinking"
+        ],
+        "quoted_source_row": "[https://docs.claude.com/en/docs/about-claude/pricing] model pricing table row, columns \"Model | Base input tokens | 5m cache writes | 1h cache writes | Cache hits and refreshes | Output tokens\": \"Claude Fable 5.1 | $10 / MTok | $12.5 / MTok | $20 / MTok | $0.25 / MTok | $50 / MTok\""
+      },
+      "plan": "Claude API (first-party) / standard service tier (not Batch API, not Fast mode) / inference_geo=global (default) / 5-minute prompt-cache TTL / full 1M context at standard pricing",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 10.0,
+        "output": 50.0,
+        "cache_read": 0.25,
+        "cache_write": 12.5
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Prompt caching uses the following pricing multipliers relative to base input token rates: | Cache operation | Multiplier | Duration | | 5-minute cache write | 1.25x base input price | Cache valid for 5 minutes | | 1-hour cache write | 2x base input price | Cache valid for 1 hour |\" -- the TTL tier is priced THROUGH the cache-write rate, not as a separate charge. This entry fixes one TTL tier in `plan` and carries that tier's write rate in rates.cache_write, so there is no residual TTL dimension to bill."
+        },
+        "other_fees": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Client-side tools are priced the same as any other Claude API request, although server-side tools can incur additional charges based on their specific usage.\" SCOPE: this entry prices Messages API text-token usage with client-side tools only, which is what Lab 001 workloads A-E use (workload D drives a locally hosted MCP toolset, tasks/TASK_SET_v1.0.0/corpora/mcp_toolset/server.py). Anthropic server-side tools ARE separately billed on the same page -- \"Web search is available on the Claude API for $10 per 1,000 searches\"; \"Additional usage beyond 1,550 hours is billed at $0.05 USD per hour, per container\" -- and an attempt that enables one is NOT priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "additional",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] \"The usage response includes three separate input token fields that together represent your total input: total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" and \"Important: input_tokens does NOT represent all input tokens - only the portion after your last cache breakpoint.\" Cached tokens are therefore ADDITIONAL to the reported input_tokens, not inside it."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/extended-thinking] \"To track what a budget actually costs you, monitor the usage.output_tokens_details.thinking_tokens field in the response, which reports how many of the billed output tokens were internal reasoning.\" Thinking tokens are a subset of the billed output_tokens, i.e. already included."
+        },
+        "reports_total": {
+          "value": "not_applicable",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] The FAQ entry \"How do I calculate total input tokens from the usage fields?\" answers with a formula the caller must apply -- \"total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" -- and every usage block published on https://docs.claude.com/en/docs/about-claude/pricing (e.g. {\"input_tokens\": 105, \"output_tokens\": 6039, \"cache_read_input_tokens\": 7123, \"cache_creation_input_tokens\": 7345}}) carries no total field. The Messages API does not report a total; the meter must sum the parts."
+        }
+      },
+      "plan_modifiers_not_priced_here": [
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"The Batch API allows asynchronous processing of large volumes of requests with a 50% discount on both input and output tokens.\" -- Batch is a different plan and is NOT priced by this entry.",
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"For Claude 4.6 and later models, specifying US-only inference through the inference_geo parameter incurs a 1.1x multiplier on all token pricing categories\" -- this entry is the global (default) routing price."
+      ]
+    },
+    "anthropic/claude-fable-5-1@1h-cache": {
+      "vendor_model_name": "Claude Fable 5.1",
+      "provenance": {
+        "source_url": "https://docs.claude.com/en/docs/about-claude/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://docs.claude.com/en/docs/build-with-claude/prompt-caching",
+          "https://docs.claude.com/en/docs/build-with-claude/extended-thinking"
+        ],
+        "quoted_source_row": "[https://docs.claude.com/en/docs/about-claude/pricing] model pricing table row, columns \"Model | Base input tokens | 5m cache writes | 1h cache writes | Cache hits and refreshes | Output tokens\": \"Claude Fable 5.1 | $10 / MTok | $12.5 / MTok | $20 / MTok | $0.25 / MTok | $50 / MTok\""
+      },
+      "plan": "Claude API (first-party) / standard service tier (not Batch API, not Fast mode) / inference_geo=global (default) / 1-hour prompt-cache TTL / full 1M context at standard pricing",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 10.0,
+        "output": 50.0,
+        "cache_read": 0.25,
+        "cache_write": 20.0
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Prompt caching uses the following pricing multipliers relative to base input token rates: | Cache operation | Multiplier | Duration | | 5-minute cache write | 1.25x base input price | Cache valid for 5 minutes | | 1-hour cache write | 2x base input price | Cache valid for 1 hour |\" -- the TTL tier is priced THROUGH the cache-write rate, not as a separate charge. This entry fixes one TTL tier in `plan` and carries that tier's write rate in rates.cache_write, so there is no residual TTL dimension to bill."
+        },
+        "other_fees": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Client-side tools are priced the same as any other Claude API request, although server-side tools can incur additional charges based on their specific usage.\" SCOPE: this entry prices Messages API text-token usage with client-side tools only, which is what Lab 001 workloads A-E use (workload D drives a locally hosted MCP toolset, tasks/TASK_SET_v1.0.0/corpora/mcp_toolset/server.py). Anthropic server-side tools ARE separately billed on the same page -- \"Web search is available on the Claude API for $10 per 1,000 searches\"; \"Additional usage beyond 1,550 hours is billed at $0.05 USD per hour, per container\" -- and an attempt that enables one is NOT priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "additional",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] \"The usage response includes three separate input token fields that together represent your total input: total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" and \"Important: input_tokens does NOT represent all input tokens - only the portion after your last cache breakpoint.\" Cached tokens are therefore ADDITIONAL to the reported input_tokens, not inside it."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/extended-thinking] \"To track what a budget actually costs you, monitor the usage.output_tokens_details.thinking_tokens field in the response, which reports how many of the billed output tokens were internal reasoning.\" Thinking tokens are a subset of the billed output_tokens, i.e. already included."
+        },
+        "reports_total": {
+          "value": "not_applicable",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] The FAQ entry \"How do I calculate total input tokens from the usage fields?\" answers with a formula the caller must apply -- \"total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" -- and every usage block published on https://docs.claude.com/en/docs/about-claude/pricing (e.g. {\"input_tokens\": 105, \"output_tokens\": 6039, \"cache_read_input_tokens\": 7123, \"cache_creation_input_tokens\": 7345}}) carries no total field. The Messages API does not report a total; the meter must sum the parts."
+        }
+      },
+      "plan_modifiers_not_priced_here": [
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"The Batch API allows asynchronous processing of large volumes of requests with a 50% discount on both input and output tokens.\" -- Batch is a different plan and is NOT priced by this entry.",
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"For Claude 4.6 and later models, specifying US-only inference through the inference_geo parameter incurs a 1.1x multiplier on all token pricing categories\" -- this entry is the global (default) routing price."
+      ]
+    },
+    "anthropic/claude-opus-5": {
+      "vendor_model_name": "Claude Opus 5",
+      "provenance": {
+        "source_url": "https://docs.claude.com/en/docs/about-claude/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://docs.claude.com/en/docs/build-with-claude/prompt-caching",
+          "https://docs.claude.com/en/docs/build-with-claude/extended-thinking"
+        ],
+        "quoted_source_row": "[https://docs.claude.com/en/docs/about-claude/pricing] model pricing table row, columns \"Model | Base input tokens | 5m cache writes | 1h cache writes | Cache hits and refreshes | Output tokens\": \"Claude Opus 5 | $5 / MTok | $6.25 / MTok | $10 / MTok | $0.5 / MTok | $25 / MTok\""
+      },
+      "plan": "Claude API (first-party) / standard service tier (not Batch API, not Fast mode) / inference_geo=global (default) / 5-minute prompt-cache TTL / full 1M context at standard pricing",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 5.0,
+        "output": 25.0,
+        "cache_read": 0.5,
+        "cache_write": 6.25
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Prompt caching uses the following pricing multipliers relative to base input token rates: | Cache operation | Multiplier | Duration | | 5-minute cache write | 1.25x base input price | Cache valid for 5 minutes | | 1-hour cache write | 2x base input price | Cache valid for 1 hour |\" -- the TTL tier is priced THROUGH the cache-write rate, not as a separate charge. This entry fixes one TTL tier in `plan` and carries that tier's write rate in rates.cache_write, so there is no residual TTL dimension to bill."
+        },
+        "other_fees": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Client-side tools are priced the same as any other Claude API request, although server-side tools can incur additional charges based on their specific usage.\" SCOPE: this entry prices Messages API text-token usage with client-side tools only, which is what Lab 001 workloads A-E use (workload D drives a locally hosted MCP toolset, tasks/TASK_SET_v1.0.0/corpora/mcp_toolset/server.py). Anthropic server-side tools ARE separately billed on the same page -- \"Web search is available on the Claude API for $10 per 1,000 searches\"; \"Additional usage beyond 1,550 hours is billed at $0.05 USD per hour, per container\" -- and an attempt that enables one is NOT priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "additional",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] \"The usage response includes three separate input token fields that together represent your total input: total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" and \"Important: input_tokens does NOT represent all input tokens - only the portion after your last cache breakpoint.\" Cached tokens are therefore ADDITIONAL to the reported input_tokens, not inside it."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/extended-thinking] \"To track what a budget actually costs you, monitor the usage.output_tokens_details.thinking_tokens field in the response, which reports how many of the billed output tokens were internal reasoning.\" Thinking tokens are a subset of the billed output_tokens, i.e. already included."
+        },
+        "reports_total": {
+          "value": "not_applicable",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] The FAQ entry \"How do I calculate total input tokens from the usage fields?\" answers with a formula the caller must apply -- \"total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" -- and every usage block published on https://docs.claude.com/en/docs/about-claude/pricing (e.g. {\"input_tokens\": 105, \"output_tokens\": 6039, \"cache_read_input_tokens\": 7123, \"cache_creation_input_tokens\": 7345}}) carries no total field. The Messages API does not report a total; the meter must sum the parts."
+        }
+      },
+      "plan_modifiers_not_priced_here": [
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"The Batch API allows asynchronous processing of large volumes of requests with a 50% discount on both input and output tokens.\" -- Batch is a different plan and is NOT priced by this entry.",
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"For Claude 4.6 and later models, specifying US-only inference through the inference_geo parameter incurs a 1.1x multiplier on all token pricing categories\" -- this entry is the global (default) routing price."
+      ]
+    },
+    "anthropic/claude-opus-5@1h-cache": {
+      "vendor_model_name": "Claude Opus 5",
+      "provenance": {
+        "source_url": "https://docs.claude.com/en/docs/about-claude/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://docs.claude.com/en/docs/build-with-claude/prompt-caching",
+          "https://docs.claude.com/en/docs/build-with-claude/extended-thinking"
+        ],
+        "quoted_source_row": "[https://docs.claude.com/en/docs/about-claude/pricing] model pricing table row, columns \"Model | Base input tokens | 5m cache writes | 1h cache writes | Cache hits and refreshes | Output tokens\": \"Claude Opus 5 | $5 / MTok | $6.25 / MTok | $10 / MTok | $0.5 / MTok | $25 / MTok\""
+      },
+      "plan": "Claude API (first-party) / standard service tier (not Batch API, not Fast mode) / inference_geo=global (default) / 1-hour prompt-cache TTL / full 1M context at standard pricing",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 5.0,
+        "output": 25.0,
+        "cache_read": 0.5,
+        "cache_write": 10.0
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Prompt caching uses the following pricing multipliers relative to base input token rates: | Cache operation | Multiplier | Duration | | 5-minute cache write | 1.25x base input price | Cache valid for 5 minutes | | 1-hour cache write | 2x base input price | Cache valid for 1 hour |\" -- the TTL tier is priced THROUGH the cache-write rate, not as a separate charge. This entry fixes one TTL tier in `plan` and carries that tier's write rate in rates.cache_write, so there is no residual TTL dimension to bill."
+        },
+        "other_fees": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Client-side tools are priced the same as any other Claude API request, although server-side tools can incur additional charges based on their specific usage.\" SCOPE: this entry prices Messages API text-token usage with client-side tools only, which is what Lab 001 workloads A-E use (workload D drives a locally hosted MCP toolset, tasks/TASK_SET_v1.0.0/corpora/mcp_toolset/server.py). Anthropic server-side tools ARE separately billed on the same page -- \"Web search is available on the Claude API for $10 per 1,000 searches\"; \"Additional usage beyond 1,550 hours is billed at $0.05 USD per hour, per container\" -- and an attempt that enables one is NOT priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "additional",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] \"The usage response includes three separate input token fields that together represent your total input: total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" and \"Important: input_tokens does NOT represent all input tokens - only the portion after your last cache breakpoint.\" Cached tokens are therefore ADDITIONAL to the reported input_tokens, not inside it."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/extended-thinking] \"To track what a budget actually costs you, monitor the usage.output_tokens_details.thinking_tokens field in the response, which reports how many of the billed output tokens were internal reasoning.\" Thinking tokens are a subset of the billed output_tokens, i.e. already included."
+        },
+        "reports_total": {
+          "value": "not_applicable",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] The FAQ entry \"How do I calculate total input tokens from the usage fields?\" answers with a formula the caller must apply -- \"total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" -- and every usage block published on https://docs.claude.com/en/docs/about-claude/pricing (e.g. {\"input_tokens\": 105, \"output_tokens\": 6039, \"cache_read_input_tokens\": 7123, \"cache_creation_input_tokens\": 7345}}) carries no total field. The Messages API does not report a total; the meter must sum the parts."
+        }
+      },
+      "plan_modifiers_not_priced_here": [
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"The Batch API allows asynchronous processing of large volumes of requests with a 50% discount on both input and output tokens.\" -- Batch is a different plan and is NOT priced by this entry.",
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"For Claude 4.6 and later models, specifying US-only inference through the inference_geo parameter incurs a 1.1x multiplier on all token pricing categories\" -- this entry is the global (default) routing price."
+      ]
+    },
+    "anthropic/claude-sonnet-5": {
+      "vendor_model_name": "Claude Sonnet 5",
+      "provenance": {
+        "source_url": "https://docs.claude.com/en/docs/about-claude/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://docs.claude.com/en/docs/build-with-claude/prompt-caching",
+          "https://docs.claude.com/en/docs/build-with-claude/extended-thinking"
+        ],
+        "quoted_source_row": "[https://docs.claude.com/en/docs/about-claude/pricing] model pricing table row, columns \"Model | Base input tokens | 5m cache writes | 1h cache writes | Cache hits and refreshes | Output tokens\": \"Claude Sonnet 5 | $2 / MTok | $2.5 / MTok | $4 / MTok | $0.2 / MTok | $10 / MTok\""
+      },
+      "plan": "Claude API (first-party) / standard service tier (not Batch API, not Fast mode) / inference_geo=global (default) / 5-minute prompt-cache TTL / full 1M context at standard pricing",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 2.0,
+        "output": 10.0,
+        "cache_read": 0.2,
+        "cache_write": 2.5
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Prompt caching uses the following pricing multipliers relative to base input token rates: | Cache operation | Multiplier | Duration | | 5-minute cache write | 1.25x base input price | Cache valid for 5 minutes | | 1-hour cache write | 2x base input price | Cache valid for 1 hour |\" -- the TTL tier is priced THROUGH the cache-write rate, not as a separate charge. This entry fixes one TTL tier in `plan` and carries that tier's write rate in rates.cache_write, so there is no residual TTL dimension to bill."
+        },
+        "other_fees": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Client-side tools are priced the same as any other Claude API request, although server-side tools can incur additional charges based on their specific usage.\" SCOPE: this entry prices Messages API text-token usage with client-side tools only, which is what Lab 001 workloads A-E use (workload D drives a locally hosted MCP toolset, tasks/TASK_SET_v1.0.0/corpora/mcp_toolset/server.py). Anthropic server-side tools ARE separately billed on the same page -- \"Web search is available on the Claude API for $10 per 1,000 searches\"; \"Additional usage beyond 1,550 hours is billed at $0.05 USD per hour, per container\" -- and an attempt that enables one is NOT priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "additional",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] \"The usage response includes three separate input token fields that together represent your total input: total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" and \"Important: input_tokens does NOT represent all input tokens - only the portion after your last cache breakpoint.\" Cached tokens are therefore ADDITIONAL to the reported input_tokens, not inside it."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/extended-thinking] \"To track what a budget actually costs you, monitor the usage.output_tokens_details.thinking_tokens field in the response, which reports how many of the billed output tokens were internal reasoning.\" Thinking tokens are a subset of the billed output_tokens, i.e. already included."
+        },
+        "reports_total": {
+          "value": "not_applicable",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] The FAQ entry \"How do I calculate total input tokens from the usage fields?\" answers with a formula the caller must apply -- \"total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" -- and every usage block published on https://docs.claude.com/en/docs/about-claude/pricing (e.g. {\"input_tokens\": 105, \"output_tokens\": 6039, \"cache_read_input_tokens\": 7123, \"cache_creation_input_tokens\": 7345}}) carries no total field. The Messages API does not report a total; the meter must sum the parts."
+        }
+      },
+      "plan_modifiers_not_priced_here": [
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"The Batch API allows asynchronous processing of large volumes of requests with a 50% discount on both input and output tokens.\" -- Batch is a different plan and is NOT priced by this entry.",
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"For Claude 4.6 and later models, specifying US-only inference through the inference_geo parameter incurs a 1.1x multiplier on all token pricing categories\" -- this entry is the global (default) routing price."
+      ]
+    },
+    "anthropic/claude-sonnet-5@1h-cache": {
+      "vendor_model_name": "Claude Sonnet 5",
+      "provenance": {
+        "source_url": "https://docs.claude.com/en/docs/about-claude/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://docs.claude.com/en/docs/build-with-claude/prompt-caching",
+          "https://docs.claude.com/en/docs/build-with-claude/extended-thinking"
+        ],
+        "quoted_source_row": "[https://docs.claude.com/en/docs/about-claude/pricing] model pricing table row, columns \"Model | Base input tokens | 5m cache writes | 1h cache writes | Cache hits and refreshes | Output tokens\": \"Claude Sonnet 5 | $2 / MTok | $2.5 / MTok | $4 / MTok | $0.2 / MTok | $10 / MTok\""
+      },
+      "plan": "Claude API (first-party) / standard service tier (not Batch API, not Fast mode) / inference_geo=global (default) / 1-hour prompt-cache TTL / full 1M context at standard pricing",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 2.0,
+        "output": 10.0,
+        "cache_read": 0.2,
+        "cache_write": 4.0
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Prompt caching uses the following pricing multipliers relative to base input token rates: | Cache operation | Multiplier | Duration | | 5-minute cache write | 1.25x base input price | Cache valid for 5 minutes | | 1-hour cache write | 2x base input price | Cache valid for 1 hour |\" -- the TTL tier is priced THROUGH the cache-write rate, not as a separate charge. This entry fixes one TTL tier in `plan` and carries that tier's write rate in rates.cache_write, so there is no residual TTL dimension to bill."
+        },
+        "other_fees": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Client-side tools are priced the same as any other Claude API request, although server-side tools can incur additional charges based on their specific usage.\" SCOPE: this entry prices Messages API text-token usage with client-side tools only, which is what Lab 001 workloads A-E use (workload D drives a locally hosted MCP toolset, tasks/TASK_SET_v1.0.0/corpora/mcp_toolset/server.py). Anthropic server-side tools ARE separately billed on the same page -- \"Web search is available on the Claude API for $10 per 1,000 searches\"; \"Additional usage beyond 1,550 hours is billed at $0.05 USD per hour, per container\" -- and an attempt that enables one is NOT priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "additional",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] \"The usage response includes three separate input token fields that together represent your total input: total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" and \"Important: input_tokens does NOT represent all input tokens - only the portion after your last cache breakpoint.\" Cached tokens are therefore ADDITIONAL to the reported input_tokens, not inside it."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/extended-thinking] \"To track what a budget actually costs you, monitor the usage.output_tokens_details.thinking_tokens field in the response, which reports how many of the billed output tokens were internal reasoning.\" Thinking tokens are a subset of the billed output_tokens, i.e. already included."
+        },
+        "reports_total": {
+          "value": "not_applicable",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] The FAQ entry \"How do I calculate total input tokens from the usage fields?\" answers with a formula the caller must apply -- \"total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" -- and every usage block published on https://docs.claude.com/en/docs/about-claude/pricing (e.g. {\"input_tokens\": 105, \"output_tokens\": 6039, \"cache_read_input_tokens\": 7123, \"cache_creation_input_tokens\": 7345}}) carries no total field. The Messages API does not report a total; the meter must sum the parts."
+        }
+      },
+      "plan_modifiers_not_priced_here": [
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"The Batch API allows asynchronous processing of large volumes of requests with a 50% discount on both input and output tokens.\" -- Batch is a different plan and is NOT priced by this entry.",
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"For Claude 4.6 and later models, specifying US-only inference through the inference_geo parameter incurs a 1.1x multiplier on all token pricing categories\" -- this entry is the global (default) routing price."
+      ]
+    },
+    "anthropic/claude-haiku-4-5": {
+      "vendor_model_name": "Claude Haiku 4.5",
+      "provenance": {
+        "source_url": "https://docs.claude.com/en/docs/about-claude/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://docs.claude.com/en/docs/build-with-claude/prompt-caching",
+          "https://docs.claude.com/en/docs/build-with-claude/extended-thinking"
+        ],
+        "quoted_source_row": "[https://docs.claude.com/en/docs/about-claude/pricing] model pricing table row, columns \"Model | Base input tokens | 5m cache writes | 1h cache writes | Cache hits and refreshes | Output tokens\": \"Claude Haiku 4.5 | $1 / MTok | $1.25 / MTok | $2 / MTok | $0.1 / MTok | $5 / MTok\""
+      },
+      "plan": "Claude API (first-party) / standard service tier (not Batch API, not Fast mode) / inference_geo=global (default) / 5-minute prompt-cache TTL / full 1M context at standard pricing",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 1.0,
+        "output": 5.0,
+        "cache_read": 0.1,
+        "cache_write": 1.25
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Prompt caching uses the following pricing multipliers relative to base input token rates: | Cache operation | Multiplier | Duration | | 5-minute cache write | 1.25x base input price | Cache valid for 5 minutes | | 1-hour cache write | 2x base input price | Cache valid for 1 hour |\" -- the TTL tier is priced THROUGH the cache-write rate, not as a separate charge. This entry fixes one TTL tier in `plan` and carries that tier's write rate in rates.cache_write, so there is no residual TTL dimension to bill."
+        },
+        "other_fees": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Client-side tools are priced the same as any other Claude API request, although server-side tools can incur additional charges based on their specific usage.\" SCOPE: this entry prices Messages API text-token usage with client-side tools only, which is what Lab 001 workloads A-E use (workload D drives a locally hosted MCP toolset, tasks/TASK_SET_v1.0.0/corpora/mcp_toolset/server.py). Anthropic server-side tools ARE separately billed on the same page -- \"Web search is available on the Claude API for $10 per 1,000 searches\"; \"Additional usage beyond 1,550 hours is billed at $0.05 USD per hour, per container\" -- and an attempt that enables one is NOT priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "additional",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] \"The usage response includes three separate input token fields that together represent your total input: total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" and \"Important: input_tokens does NOT represent all input tokens - only the portion after your last cache breakpoint.\" Cached tokens are therefore ADDITIONAL to the reported input_tokens, not inside it."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/extended-thinking] \"To track what a budget actually costs you, monitor the usage.output_tokens_details.thinking_tokens field in the response, which reports how many of the billed output tokens were internal reasoning.\" Thinking tokens are a subset of the billed output_tokens, i.e. already included."
+        },
+        "reports_total": {
+          "value": "not_applicable",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] The FAQ entry \"How do I calculate total input tokens from the usage fields?\" answers with a formula the caller must apply -- \"total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" -- and every usage block published on https://docs.claude.com/en/docs/about-claude/pricing (e.g. {\"input_tokens\": 105, \"output_tokens\": 6039, \"cache_read_input_tokens\": 7123, \"cache_creation_input_tokens\": 7345}}) carries no total field. The Messages API does not report a total; the meter must sum the parts."
+        }
+      },
+      "plan_modifiers_not_priced_here": [
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"The Batch API allows asynchronous processing of large volumes of requests with a 50% discount on both input and output tokens.\" -- Batch is a different plan and is NOT priced by this entry.",
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"For Claude 4.6 and later models, specifying US-only inference through the inference_geo parameter incurs a 1.1x multiplier on all token pricing categories\" -- this entry is the global (default) routing price."
+      ]
+    },
+    "anthropic/claude-haiku-4-5@1h-cache": {
+      "vendor_model_name": "Claude Haiku 4.5",
+      "provenance": {
+        "source_url": "https://docs.claude.com/en/docs/about-claude/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://docs.claude.com/en/docs/build-with-claude/prompt-caching",
+          "https://docs.claude.com/en/docs/build-with-claude/extended-thinking"
+        ],
+        "quoted_source_row": "[https://docs.claude.com/en/docs/about-claude/pricing] model pricing table row, columns \"Model | Base input tokens | 5m cache writes | 1h cache writes | Cache hits and refreshes | Output tokens\": \"Claude Haiku 4.5 | $1 / MTok | $1.25 / MTok | $2 / MTok | $0.1 / MTok | $5 / MTok\""
+      },
+      "plan": "Claude API (first-party) / standard service tier (not Batch API, not Fast mode) / inference_geo=global (default) / 1-hour prompt-cache TTL / full 1M context at standard pricing",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 1.0,
+        "output": 5.0,
+        "cache_read": 0.1,
+        "cache_write": 2.0
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Prompt caching uses the following pricing multipliers relative to base input token rates: | Cache operation | Multiplier | Duration | | 5-minute cache write | 1.25x base input price | Cache valid for 5 minutes | | 1-hour cache write | 2x base input price | Cache valid for 1 hour |\" -- the TTL tier is priced THROUGH the cache-write rate, not as a separate charge. This entry fixes one TTL tier in `plan` and carries that tier's write rate in rates.cache_write, so there is no residual TTL dimension to bill."
+        },
+        "other_fees": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Client-side tools are priced the same as any other Claude API request, although server-side tools can incur additional charges based on their specific usage.\" SCOPE: this entry prices Messages API text-token usage with client-side tools only, which is what Lab 001 workloads A-E use (workload D drives a locally hosted MCP toolset, tasks/TASK_SET_v1.0.0/corpora/mcp_toolset/server.py). Anthropic server-side tools ARE separately billed on the same page -- \"Web search is available on the Claude API for $10 per 1,000 searches\"; \"Additional usage beyond 1,550 hours is billed at $0.05 USD per hour, per container\" -- and an attempt that enables one is NOT priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "additional",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] \"The usage response includes three separate input token fields that together represent your total input: total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" and \"Important: input_tokens does NOT represent all input tokens - only the portion after your last cache breakpoint.\" Cached tokens are therefore ADDITIONAL to the reported input_tokens, not inside it."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/extended-thinking] \"To track what a budget actually costs you, monitor the usage.output_tokens_details.thinking_tokens field in the response, which reports how many of the billed output tokens were internal reasoning.\" Thinking tokens are a subset of the billed output_tokens, i.e. already included."
+        },
+        "reports_total": {
+          "value": "not_applicable",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] The FAQ entry \"How do I calculate total input tokens from the usage fields?\" answers with a formula the caller must apply -- \"total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" -- and every usage block published on https://docs.claude.com/en/docs/about-claude/pricing (e.g. {\"input_tokens\": 105, \"output_tokens\": 6039, \"cache_read_input_tokens\": 7123, \"cache_creation_input_tokens\": 7345}}) carries no total field. The Messages API does not report a total; the meter must sum the parts."
+        }
+      },
+      "plan_modifiers_not_priced_here": [
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"The Batch API allows asynchronous processing of large volumes of requests with a 50% discount on both input and output tokens.\" -- Batch is a different plan and is NOT priced by this entry.",
+        "[https://docs.claude.com/en/docs/about-claude/pricing] \"For Claude 4.6 and later models, specifying US-only inference through the inference_geo parameter incurs a 1.1x multiplier on all token pricing categories\" -- this entry is the global (default) routing price."
+      ]
+    },
+    "anthropic/claude-opus-5@fast-mode": {
+      "vendor_model_name": "Claude Opus 5",
+      "provenance": {
+        "source_url": "https://docs.claude.com/en/docs/about-claude/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://docs.claude.com/en/docs/build-with-claude/prompt-caching",
+          "https://docs.claude.com/en/docs/build-with-claude/extended-thinking"
+        ],
+        "quoted_source_row": "[https://docs.claude.com/en/docs/about-claude/pricing] Fast mode pricing table, columns \"Model | Input | Output\": \"Claude Opus 5 / Claude Opus 4.8 | $10 / MTok | $50 / MTok\""
+      },
+      "plan": "Claude API (first-party) / Fast mode (research preview, speed=\"fast\") / inference_geo=global / 5-minute prompt-cache TTL",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 10.0,
+        "output": 50.0,
+        "cache_read": 1.0,
+        "cache_write": 12.5
+      },
+      "derived_rate_note": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Fast mode pricing stacks with other pricing modifiers: Prompt caching multipliers apply on top of fast mode pricing\" and \"Cache read (hit) | 0.1x base input price (0.025x on Claude Fable 5.1 and Claude Mythos 5.1)\" / \"5-minute cache write | 1.25x base input price\". cache_read = 0.1 x $10 = $1.00; cache_write(5m) = 1.25 x $10 = $12.50. These two numbers are APPLIED MULTIPLIERS from the page, not cells read verbatim from a fast-mode table -- the page publishes only input and output for fast mode. Treat as lower confidence than the standard-tier rows.",
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Prompt caching uses the following pricing multipliers relative to base input token rates: | Cache operation | Multiplier | Duration | | 5-minute cache write | 1.25x base input price | Cache valid for 5 minutes | | 1-hour cache write | 2x base input price | Cache valid for 1 hour |\" -- the TTL tier is priced THROUGH the cache-write rate, not as a separate charge. This entry fixes one TTL tier in `plan` and carries that tier's write rate in rates.cache_write, so there is no residual TTL dimension to bill."
+        },
+        "other_fees": {
+          "evidence": "[https://docs.claude.com/en/docs/about-claude/pricing] \"Client-side tools are priced the same as any other Claude API request, although server-side tools can incur additional charges based on their specific usage.\" SCOPE: this entry prices Messages API text-token usage with client-side tools only, which is what Lab 001 workloads A-E use (workload D drives a locally hosted MCP toolset, tasks/TASK_SET_v1.0.0/corpora/mcp_toolset/server.py). Anthropic server-side tools ARE separately billed on the same page -- \"Web search is available on the Claude API for $10 per 1,000 searches\"; \"Additional usage beyond 1,550 hours is billed at $0.05 USD per hour, per container\" -- and an attempt that enables one is NOT priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "additional",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] \"The usage response includes three separate input token fields that together represent your total input: total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" and \"Important: input_tokens does NOT represent all input tokens - only the portion after your last cache breakpoint.\" Cached tokens are therefore ADDITIONAL to the reported input_tokens, not inside it."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/extended-thinking] \"To track what a budget actually costs you, monitor the usage.output_tokens_details.thinking_tokens field in the response, which reports how many of the billed output tokens were internal reasoning.\" Thinking tokens are a subset of the billed output_tokens, i.e. already included."
+        },
+        "reports_total": {
+          "value": "not_applicable",
+          "evidence": "[https://docs.claude.com/en/docs/build-with-claude/prompt-caching] The FAQ entry \"How do I calculate total input tokens from the usage fields?\" answers with a formula the caller must apply -- \"total_input_tokens = cache_read_input_tokens + cache_creation_input_tokens + input_tokens\" -- and every usage block published on https://docs.claude.com/en/docs/about-claude/pricing (e.g. {\"input_tokens\": 105, \"output_tokens\": 6039, \"cache_read_input_tokens\": 7123, \"cache_creation_input_tokens\": 7345}}) carries no total field. The Messages API does not report a total; the meter must sum the parts."
+        }
+      }
+    },
+    "openai/gpt-6-astra": {
+      "vendor_model_name": "gpt-6-astra",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the server-rendered flagship pricing table on the page (Standard service tier), columns \"Model | Input | Cached input | Cache writes | Output\" under the \"Short context\" / \"Long context\" column groups. Row: \"gpt-6-astra | $10.00 | $1.00 | $12.50 | $50.00 | $20.00 | $2.00 | $25.00 | $75.00\" (first four cells = Short context, last four = Long context)."
+      },
+      "plan": "standard service tier / short context",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 10.0,
+        "output": 50.0,
+        "cache_read": 1.0,
+        "cache_write": 12.5
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      }
+    },
+    "openai/gpt-6-astra@long-context": {
+      "vendor_model_name": "gpt-6-astra",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the server-rendered flagship pricing table on the page (Standard service tier), columns \"Model | Input | Cached input | Cache writes | Output\" under the \"Short context\" / \"Long context\" column groups. Row: \"gpt-6-astra | $10.00 | $1.00 | $12.50 | $50.00 | $20.00 | $2.00 | $25.00 | $75.00\" (first four cells = Short context, last four = Long context)."
+      },
+      "plan": "standard service tier / long context",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 20.0,
+        "output": 75.0,
+        "cache_read": 2.0,
+        "cache_write": 25.0
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      },
+      "notes": [
+        "The page groups columns as \"Short context\" / \"Long context\" but the numeric token threshold between them is delivered only in a JS tooltip that is not server-rendered; it could not be read. See LIMITATIONS L-1."
+      ]
+    },
+    "openai/gpt-5.6-sol": {
+      "vendor_model_name": "gpt-5.6-sol",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the server-rendered flagship pricing table on the page (Standard service tier), columns \"Model | Input | Cached input | Cache writes | Output\" under the \"Short context\" / \"Long context\" column groups. Row: \"gpt-5.6-sol | $4.00 | $0.40 | $5.00 | $20.00 | $8.00 | $0.80 | $10.00 | $30.00\" (first four cells = Short context, last four = Long context)."
+      },
+      "plan": "standard service tier / short context",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 4.0,
+        "output": 20.0,
+        "cache_read": 0.4,
+        "cache_write": 5.0
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      }
+    },
+    "openai/gpt-5.6-sol@long-context": {
+      "vendor_model_name": "gpt-5.6-sol",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the server-rendered flagship pricing table on the page (Standard service tier), columns \"Model | Input | Cached input | Cache writes | Output\" under the \"Short context\" / \"Long context\" column groups. Row: \"gpt-5.6-sol | $4.00 | $0.40 | $5.00 | $20.00 | $8.00 | $0.80 | $10.00 | $30.00\" (first four cells = Short context, last four = Long context)."
+      },
+      "plan": "standard service tier / long context",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 8.0,
+        "output": 30.0,
+        "cache_read": 0.8,
+        "cache_write": 10.0
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      },
+      "notes": [
+        "The page groups columns as \"Short context\" / \"Long context\" but the numeric token threshold between them is delivered only in a JS tooltip that is not server-rendered; it could not be read. See LIMITATIONS L-1."
+      ]
+    },
+    "openai/gpt-5.6-terra": {
+      "vendor_model_name": "gpt-5.6-terra",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the server-rendered flagship pricing table on the page (Standard service tier), columns \"Model | Input | Cached input | Cache writes | Output\" under the \"Short context\" / \"Long context\" column groups. Row: \"gpt-5.6-terra | $2.00 | $0.20 | $2.50 | $12.00 | $4.00 | $0.40 | $5.00 | $18.00\" (first four cells = Short context, last four = Long context)."
+      },
+      "plan": "standard service tier / short context",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 2.0,
+        "output": 12.0,
+        "cache_read": 0.2,
+        "cache_write": 2.5
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      }
+    },
+    "openai/gpt-5.6-terra@long-context": {
+      "vendor_model_name": "gpt-5.6-terra",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the server-rendered flagship pricing table on the page (Standard service tier), columns \"Model | Input | Cached input | Cache writes | Output\" under the \"Short context\" / \"Long context\" column groups. Row: \"gpt-5.6-terra | $2.00 | $0.20 | $2.50 | $12.00 | $4.00 | $0.40 | $5.00 | $18.00\" (first four cells = Short context, last four = Long context)."
+      },
+      "plan": "standard service tier / long context",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 4.0,
+        "output": 18.0,
+        "cache_read": 0.4,
+        "cache_write": 5.0
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      },
+      "notes": [
+        "The page groups columns as \"Short context\" / \"Long context\" but the numeric token threshold between them is delivered only in a JS tooltip that is not server-rendered; it could not be read. See LIMITATIONS L-1."
+      ]
+    },
+    "openai/gpt-5.6-luna": {
+      "vendor_model_name": "gpt-5.6-luna",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the server-rendered flagship pricing table on the page (Standard service tier), columns \"Model | Input | Cached input | Cache writes | Output\" under the \"Short context\" / \"Long context\" column groups. Row: \"gpt-5.6-luna | $0.20 | $0.02 | $0.25 | $1.20 | $0.40 | $0.04 | $0.50 | $1.80\" (first four cells = Short context, last four = Long context)."
+      },
+      "plan": "standard service tier / short context",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 0.2,
+        "output": 1.2,
+        "cache_read": 0.02,
+        "cache_write": 0.25
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      }
+    },
+    "openai/gpt-5.6-luna@long-context": {
+      "vendor_model_name": "gpt-5.6-luna",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the server-rendered flagship pricing table on the page (Standard service tier), columns \"Model | Input | Cached input | Cache writes | Output\" under the \"Short context\" / \"Long context\" column groups. Row: \"gpt-5.6-luna | $0.20 | $0.02 | $0.25 | $1.20 | $0.40 | $0.04 | $0.50 | $1.80\" (first four cells = Short context, last four = Long context)."
+      },
+      "plan": "standard service tier / long context",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read",
+        "cache_write"
+      ],
+      "rates": {
+        "input": 0.4,
+        "output": 1.8,
+        "cache_read": 0.04,
+        "cache_write": 0.5
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      },
+      "notes": [
+        "The page groups columns as \"Short context\" / \"Long context\" but the numeric token threshold between them is delivered only in a JS tooltip that is not server-rendered; it could not be read. See LIMITATIONS L-1."
+      ]
+    },
+    "openai/gpt-5.5": {
+      "vendor_model_name": "gpt-5.5 (<272K context length)",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the page's own \"All models\" pricing data for the Standard service tier. These rows are collapsed behind the \"All models\" control and are NOT server-rendered as table cells; the numbers here are the literal values the page ships for those rows, which for the four flagship models match the rendered SHORT-CONTEXT cells exactly (e.g. gpt-6-astra 10 / 1 / 12.5 / 50). They are therefore recorded as SHORT-CONTEXT standard-tier rates. The long-context cells for these legacy rows are computed client-side by /_astro/pricing.BUoGAsc4.js, which the egress proxy returns 403 for, so the long-context rates for these models were NOT read and are not recorded here. Row as the page ships it: [\"gpt-5.5 (<272K context length)\", 5.0, 0.5, 30.0] against columns Input | Cached input | Output."
+      },
+      "plan": "standard service tier / short context (legacy 'All models' listing)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 5.0,
+        "output": 30.0,
+        "cache_read": 0.5
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        },
+        "cache_write": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Summary of model differences\" table, columns \"Behavior | GPT-5.6 and later | GPT-5.5 and GPT-5.5 Pro | Other earlier models\": \"Cache write charge | 1.25x the uncached input-token rate | No additional cache-write charge | No additional cache-write charge\". This model is not a GPT-5.6-or-later model, so no cache-write charge applies."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      }
+    },
+    "openai/gpt-5.5-pro": {
+      "vendor_model_name": "gpt-5.5-pro (<272K context length)",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the page's own \"All models\" pricing data for the Standard service tier. These rows are collapsed behind the \"All models\" control and are NOT server-rendered as table cells; the numbers here are the literal values the page ships for those rows, which for the four flagship models match the rendered SHORT-CONTEXT cells exactly (e.g. gpt-6-astra 10 / 1 / 12.5 / 50). They are therefore recorded as SHORT-CONTEXT standard-tier rates. The long-context cells for these legacy rows are computed client-side by /_astro/pricing.BUoGAsc4.js, which the egress proxy returns 403 for, so the long-context rates for these models were NOT read and are not recorded here. Row as the page ships it: [\"gpt-5.5-pro (<272K context length)\", 30.0, null, 180.0] against columns Input | Cached input | Output."
+      },
+      "plan": "standard service tier / short context (legacy 'All models' listing)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 30.0,
+        "output": 180.0,
+        "cache_read": "BLOCKED"
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        },
+        "cache_write": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Summary of model differences\" table, columns \"Behavior | GPT-5.6 and later | GPT-5.5 and GPT-5.5 Pro | Other earlier models\": \"Cache write charge | 1.25x the uncached input-token rate | No additional cache-write charge | No additional cache-write charge\". This model is not a GPT-5.6-or-later model, so no cache-write charge applies."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      },
+      "notes": [
+        "BLOCKED cache_read: the page ships no cached-input value for this row (the cell is empty / '-'), and no OpenAI page read on 2026-09-16 states that prompt caching is unavailable or unbilled for this model. An empty cell is not a price and not a statement of non-applicability, so this is recorded BLOCKED rather than not_applicable or 0. UNBLOCKED BY: a cached-input rate for this model published on https://platform.openai.com/docs/pricing, or a vendor sentence stating that prompt caching does not apply to it."
+      ]
+    },
+    "openai/gpt-5.1": {
+      "vendor_model_name": "gpt-5.1",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the page's own \"All models\" pricing data for the Standard service tier. These rows are collapsed behind the \"All models\" control and are NOT server-rendered as table cells; the numbers here are the literal values the page ships for those rows, which for the four flagship models match the rendered SHORT-CONTEXT cells exactly (e.g. gpt-6-astra 10 / 1 / 12.5 / 50). They are therefore recorded as SHORT-CONTEXT standard-tier rates. The long-context cells for these legacy rows are computed client-side by /_astro/pricing.BUoGAsc4.js, which the egress proxy returns 403 for, so the long-context rates for these models were NOT read and are not recorded here. Row as the page ships it: [\"gpt-5.1\", 1.25, 0.125, 10.0] against columns Input | Cached input | Output."
+      },
+      "plan": "standard service tier / short context (legacy 'All models' listing)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 1.25,
+        "output": 10.0,
+        "cache_read": 0.125
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        },
+        "cache_write": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Summary of model differences\" table, columns \"Behavior | GPT-5.6 and later | GPT-5.5 and GPT-5.5 Pro | Other earlier models\": \"Cache write charge | 1.25x the uncached input-token rate | No additional cache-write charge | No additional cache-write charge\". This model is not a GPT-5.6-or-later model, so no cache-write charge applies."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      }
+    },
+    "openai/gpt-5": {
+      "vendor_model_name": "gpt-5",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the page's own \"All models\" pricing data for the Standard service tier. These rows are collapsed behind the \"All models\" control and are NOT server-rendered as table cells; the numbers here are the literal values the page ships for those rows, which for the four flagship models match the rendered SHORT-CONTEXT cells exactly (e.g. gpt-6-astra 10 / 1 / 12.5 / 50). They are therefore recorded as SHORT-CONTEXT standard-tier rates. The long-context cells for these legacy rows are computed client-side by /_astro/pricing.BUoGAsc4.js, which the egress proxy returns 403 for, so the long-context rates for these models were NOT read and are not recorded here. Row as the page ships it: [\"gpt-5\", 1.25, 0.125, 10.0] against columns Input | Cached input | Output."
+      },
+      "plan": "standard service tier / short context (legacy 'All models' listing)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 1.25,
+        "output": 10.0,
+        "cache_read": 0.125
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        },
+        "cache_write": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Summary of model differences\" table, columns \"Behavior | GPT-5.6 and later | GPT-5.5 and GPT-5.5 Pro | Other earlier models\": \"Cache write charge | 1.25x the uncached input-token rate | No additional cache-write charge | No additional cache-write charge\". This model is not a GPT-5.6-or-later model, so no cache-write charge applies."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      }
+    },
+    "openai/gpt-5-mini": {
+      "vendor_model_name": "gpt-5-mini",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the page's own \"All models\" pricing data for the Standard service tier. These rows are collapsed behind the \"All models\" control and are NOT server-rendered as table cells; the numbers here are the literal values the page ships for those rows, which for the four flagship models match the rendered SHORT-CONTEXT cells exactly (e.g. gpt-6-astra 10 / 1 / 12.5 / 50). They are therefore recorded as SHORT-CONTEXT standard-tier rates. The long-context cells for these legacy rows are computed client-side by /_astro/pricing.BUoGAsc4.js, which the egress proxy returns 403 for, so the long-context rates for these models were NOT read and are not recorded here. Row as the page ships it: [\"gpt-5-mini\", 0.25, 0.025, 2.0] against columns Input | Cached input | Output."
+      },
+      "plan": "standard service tier / short context (legacy 'All models' listing)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 0.25,
+        "output": 2.0,
+        "cache_read": 0.025
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        },
+        "cache_write": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Summary of model differences\" table, columns \"Behavior | GPT-5.6 and later | GPT-5.5 and GPT-5.5 Pro | Other earlier models\": \"Cache write charge | 1.25x the uncached input-token rate | No additional cache-write charge | No additional cache-write charge\". This model is not a GPT-5.6-or-later model, so no cache-write charge applies."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      }
+    },
+    "openai/gpt-5-nano": {
+      "vendor_model_name": "gpt-5-nano",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the page's own \"All models\" pricing data for the Standard service tier. These rows are collapsed behind the \"All models\" control and are NOT server-rendered as table cells; the numbers here are the literal values the page ships for those rows, which for the four flagship models match the rendered SHORT-CONTEXT cells exactly (e.g. gpt-6-astra 10 / 1 / 12.5 / 50). They are therefore recorded as SHORT-CONTEXT standard-tier rates. The long-context cells for these legacy rows are computed client-side by /_astro/pricing.BUoGAsc4.js, which the egress proxy returns 403 for, so the long-context rates for these models were NOT read and are not recorded here. Row as the page ships it: [\"gpt-5-nano\", 0.05, 0.005, 0.4] against columns Input | Cached input | Output."
+      },
+      "plan": "standard service tier / short context (legacy 'All models' listing)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 0.05,
+        "output": 0.4,
+        "cache_read": 0.005
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        },
+        "cache_write": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Summary of model differences\" table, columns \"Behavior | GPT-5.6 and later | GPT-5.5 and GPT-5.5 Pro | Other earlier models\": \"Cache write charge | 1.25x the uncached input-token rate | No additional cache-write charge | No additional cache-write charge\". This model is not a GPT-5.6-or-later model, so no cache-write charge applies."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      }
+    },
+    "openai/gpt-5-pro": {
+      "vendor_model_name": "gpt-5-pro",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the page's own \"All models\" pricing data for the Standard service tier. These rows are collapsed behind the \"All models\" control and are NOT server-rendered as table cells; the numbers here are the literal values the page ships for those rows, which for the four flagship models match the rendered SHORT-CONTEXT cells exactly (e.g. gpt-6-astra 10 / 1 / 12.5 / 50). They are therefore recorded as SHORT-CONTEXT standard-tier rates. The long-context cells for these legacy rows are computed client-side by /_astro/pricing.BUoGAsc4.js, which the egress proxy returns 403 for, so the long-context rates for these models were NOT read and are not recorded here. Row as the page ships it: [\"gpt-5-pro\", 15.0, null, 120.0] against columns Input | Cached input | Output."
+      },
+      "plan": "standard service tier / short context (legacy 'All models' listing)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 15.0,
+        "output": 120.0,
+        "cache_read": "BLOCKED"
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        },
+        "cache_write": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Summary of model differences\" table, columns \"Behavior | GPT-5.6 and later | GPT-5.5 and GPT-5.5 Pro | Other earlier models\": \"Cache write charge | 1.25x the uncached input-token rate | No additional cache-write charge | No additional cache-write charge\". This model is not a GPT-5.6-or-later model, so no cache-write charge applies."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      },
+      "notes": [
+        "BLOCKED cache_read: the page ships no cached-input value for this row (the cell is empty / '-'), and no OpenAI page read on 2026-09-16 states that prompt caching is unavailable or unbilled for this model. An empty cell is not a price and not a statement of non-applicability, so this is recorded BLOCKED rather than not_applicable or 0. UNBLOCKED BY: a cached-input rate for this model published on https://platform.openai.com/docs/pricing, or a vendor sentence stating that prompt caching does not apply to it."
+      ]
+    },
+    "openai/o1-pro": {
+      "vendor_model_name": "o1-pro",
+      "provenance": {
+        "source_url": "https://platform.openai.com/docs/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://platform.openai.com/docs/guides/prompt-caching",
+          "https://platform.openai.com/docs/guides/reasoning"
+        ],
+        "quoted_source_row": "Read from the page's own \"All models\" pricing data for the Standard service tier. These rows are collapsed behind the \"All models\" control and are NOT server-rendered as table cells; the numbers here are the literal values the page ships for those rows, which for the four flagship models match the rendered SHORT-CONTEXT cells exactly (e.g. gpt-6-astra 10 / 1 / 12.5 / 50). They are therefore recorded as SHORT-CONTEXT standard-tier rates. The long-context cells for these legacy rows are computed client-side by /_astro/pricing.BUoGAsc4.js, which the egress proxy returns 403 for, so the long-context rates for these models were NOT read and are not recorded here. Row as the page ships it: [\"o1-pro\", 150.0, null, 600.0] against columns Input | Cached input | Output."
+      },
+      "plan": "standard service tier / short context (legacy 'All models' listing)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 150.0,
+        "output": 600.0,
+        "cache_read": "BLOCKED"
+      },
+      "not_applicable": {
+        "cache_ttl": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Prompt caching pricing varies by model. See API pricing for current cached-input and cache-write rates. Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" The only cache-related rates OpenAI publishes are cached-input and cache-write; no retention/TTL tier carries a price. Also \"reusing the prefix refreshes its lifetime without another cache-write charge\" and, for GPT-5.6 and later, \"The only supported value, 30m, is also the default.\""
+        },
+        "other_fees": {
+          "evidence": "[https://platform.openai.com/docs/pricing] \"Responses API, Chat Completions API, Realtime API, Batch API, and Assistants API are not priced separately. Tokens are billed at the chosen model's input and output rates.\" SCOPE: this entry prices text-token usage with NO OpenAI built-in/server-side tools. Built-in tools are separately billed on the same page (\"Web search | Web search (all models) | $10.00 / 1k calls + Search content tokens billed at model rates.\", \"Containers | Hosted Shell and Code Interpreter | 1 GB $0.03 ... per 20-minute session per container.\"). An attempt that enables one is not priced by this entry and is unpriceable under METHODOLOGY v1.1.0 section 11.4."
+        },
+        "cache_write": {
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Summary of model differences\" table, columns \"Behavior | GPT-5.6 and later | GPT-5.5 and GPT-5.5 Pro | Other earlier models\": \"Cache write charge | 1.25x the uncached input-token rate | No additional cache-write charge | No additional cache-write charge\". This model is not a GPT-5.6-or-later model, so no cache-write charge applies."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/prompt-caching] \"Cache-write pricing is not an additive fee: input tokens use the uncached-input, cached-input, or cache-write rate.\" and the vendor's own cost formula \"ordinary_input_tokens = input_tokens - cached_tokens - cache_write_tokens\". Cached and cache-write tokens are INSIDE the reported input_tokens; pricing all of input_tokens at the uncached rate and then adding cached_tokens again would double-count."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] \"While reasoning tokens are not visible via the API, they still occupy space in the model's context window and are billed as output tokens.\" The published usage block shows \"output_tokens\": 1186 with \"output_tokens_details\": {\"reasoning_tokens\": 1024}, i.e. reasoning tokens are a subset of output_tokens."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://platform.openai.com/docs/guides/reasoning] The published usage object carries a total: {\"input_tokens\": 75, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 1186, \"output_tokens_details\": {\"reasoning_tokens\": 1024}, \"total_tokens\": 1261}} -- and 75 + 1186 = 1261, so total_tokens is input_tokens + output_tokens and includes both the cached and the reasoning portions."
+        }
+      },
+      "notes": [
+        "BLOCKED cache_read: the page ships no cached-input value for this row (the cell is empty / '-'), and no OpenAI page read on 2026-09-16 states that prompt caching is unavailable or unbilled for this model. An empty cell is not a price and not a statement of non-applicability, so this is recorded BLOCKED rather than not_applicable or 0. UNBLOCKED BY: a cached-input rate for this model published on https://platform.openai.com/docs/pricing, or a vendor sentence stating that prompt caching does not apply to it."
+      ]
+    },
+    "deepseek/deepseek-v4-pro": {
+      "vendor_model_name": "deepseek-v4-pro",
+      "vendor_model_version": "DeepSeek-V4-Pro-0813",
+      "provenance": {
+        "source_url": "https://api-docs.deepseek.com/quick_start/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://api-docs.deepseek.com/guides/kv_cache",
+          "https://api-docs.deepseek.com/api/create-chat-completion"
+        ],
+        "quoted_source_row": "[https://api-docs.deepseek.com/quick_start/pricing] \"Models & Pricing\" table, column \"deepseek-v4-pro\" (MODEL VERSION DeepSeek-V4-Pro-0813): PRICING | 1M INPUT TOKENS (CACHE HIT) | OFF-PEAK $0.022 | PEAK $0.044 ; 1M INPUT TOKENS (CACHE MISS) | OFF-PEAK $0.66 | PEAK $1.32 ; 1M OUTPUT TOKENS | OFF-PEAK $1.98 | PEAK $3.96. Footnote (3): \"Off-peak rates are half of the peak rates. Peak hours are 01:00 - 04:00 and 06:00 - 10:00 UTC, Monday through Friday (all other hours are off-peak).\""
+      },
+      "plan": "DeepSeek API standard billing / off-peak window (peak = 01:00-04:00 and 06:00-10:00 UTC Mon-Fri; all other hours off-peak)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 0.66,
+        "output": 1.98,
+        "cache_read": 0.022
+      },
+      "not_applicable": {
+        "cache_write": {
+          "evidence": "[https://api-docs.deepseek.com/quick_start/pricing] \"We will bill based on the total number of input and output tokens by the model.\" and \"Deduction Rules: The expense = number of tokens x price.\" The published price list for each model enumerates exactly three billable token dimensions -- \"1M INPUT TOKENS (CACHE HIT)\", \"1M INPUT TOKENS (CACHE MISS)\", \"1M OUTPUT TOKENS\" -- and no fourth. [https://api-docs.deepseek.com/api/create-chat-completion] \"prompt_tokens ... It equals prompt_cache_hit_tokens + prompt_cache_miss_tokens.\" Every input token is billed exactly once, as a hit or as a miss, so the tokens that populate the cache are billed at the cache-miss input rate and there is no separate cache-write charge to record. [https://api-docs.deepseek.com/guides/kv_cache] \"The DeepSeek API Context Caching on Disk Technology is enabled by default for all users, allowing them to benefit without needing to modify their code.\""
+        },
+        "cache_ttl": {
+          "evidence": "[https://api-docs.deepseek.com/guides/kv_cache] \"Cache construction takes seconds. Once the cache is no longer in use, it will be automatically cleared, usually within a few hours to a few days.\" There is no caller-selectable TTL tier and no TTL row in the price table, whose PRICING block lists only cache-hit input, cache-miss input and output. [https://api-docs.deepseek.com/quick_start/pricing] \"We will bill based on the total number of input and output tokens by the model.\""
+        },
+        "other_fees": {
+          "evidence": "[https://api-docs.deepseek.com/quick_start/pricing] \"Deduction Rules: The expense = number of tokens x price. The corresponding fees will be directly deducted from your topped-up balance or granted balance\" -- the whole expense is tokens x price; no per-request or platform fee is published."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://api-docs.deepseek.com/api/create-chat-completion] \"prompt_tokens integer required Number of tokens in the prompt. It equals prompt_cache_hit_tokens + prompt_cache_miss_tokens.\" Cache-hit tokens are INSIDE prompt_tokens."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "BLOCKED",
+          "evidence": "BLOCKED. DeepSeek publishes reasoning_tokens under completion_tokens_details ([https://api-docs.deepseek.com/api/create-chat-completion] \"reasoning_tokens integer Tokens generated by the model for reasoning.\", nested under \"completion_tokens_details\") but states nowhere that was read on 2026-09-16 whether those tokens are counted inside completion_tokens or are additional to it, nor how they are billed. The Thinking Mode guide (https://api-docs.deepseek.com/guides/thinking_mode) describes reasoning_content behaviour and says nothing about billing. The field nesting SUGGESTS inclusion; that is an inference, not a vendor statement, so it is not recorded as fact. UNBLOCKED BY: a DeepSeek sentence stating whether reasoning tokens are included in completion_tokens and at what rate they are billed."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://api-docs.deepseek.com/api/create-chat-completion] \"total_tokens integer required Total number of tokens used in the request (prompt + completion).\""
+        }
+      },
+      "notes": [
+        "rates.input is DeepSeek's CACHE MISS input price: DeepSeek splits every input token into a hit or a miss, so the miss price is the uncached input price.",
+        "An attempt that crosses the peak/off-peak boundary is priced wrong by a single entry and must be split, or recorded as crossing the boundary (METHODOLOGY v1.1.0 section 11.4)."
+      ]
+    },
+    "deepseek/deepseek-v4-pro@peak": {
+      "vendor_model_name": "deepseek-v4-pro",
+      "vendor_model_version": "DeepSeek-V4-Pro-0813",
+      "provenance": {
+        "source_url": "https://api-docs.deepseek.com/quick_start/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://api-docs.deepseek.com/guides/kv_cache",
+          "https://api-docs.deepseek.com/api/create-chat-completion"
+        ],
+        "quoted_source_row": "[https://api-docs.deepseek.com/quick_start/pricing] \"Models & Pricing\" table, column \"deepseek-v4-pro\" (MODEL VERSION DeepSeek-V4-Pro-0813): PRICING | 1M INPUT TOKENS (CACHE HIT) | OFF-PEAK $0.022 | PEAK $0.044 ; 1M INPUT TOKENS (CACHE MISS) | OFF-PEAK $0.66 | PEAK $1.32 ; 1M OUTPUT TOKENS | OFF-PEAK $1.98 | PEAK $3.96. Footnote (3): \"Off-peak rates are half of the peak rates. Peak hours are 01:00 - 04:00 and 06:00 - 10:00 UTC, Monday through Friday (all other hours are off-peak).\""
+      },
+      "plan": "DeepSeek API standard billing / peak window (peak = 01:00-04:00 and 06:00-10:00 UTC Mon-Fri; all other hours off-peak)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 1.32,
+        "output": 3.96,
+        "cache_read": 0.044
+      },
+      "not_applicable": {
+        "cache_write": {
+          "evidence": "[https://api-docs.deepseek.com/quick_start/pricing] \"We will bill based on the total number of input and output tokens by the model.\" and \"Deduction Rules: The expense = number of tokens x price.\" The published price list for each model enumerates exactly three billable token dimensions -- \"1M INPUT TOKENS (CACHE HIT)\", \"1M INPUT TOKENS (CACHE MISS)\", \"1M OUTPUT TOKENS\" -- and no fourth. [https://api-docs.deepseek.com/api/create-chat-completion] \"prompt_tokens ... It equals prompt_cache_hit_tokens + prompt_cache_miss_tokens.\" Every input token is billed exactly once, as a hit or as a miss, so the tokens that populate the cache are billed at the cache-miss input rate and there is no separate cache-write charge to record. [https://api-docs.deepseek.com/guides/kv_cache] \"The DeepSeek API Context Caching on Disk Technology is enabled by default for all users, allowing them to benefit without needing to modify their code.\""
+        },
+        "cache_ttl": {
+          "evidence": "[https://api-docs.deepseek.com/guides/kv_cache] \"Cache construction takes seconds. Once the cache is no longer in use, it will be automatically cleared, usually within a few hours to a few days.\" There is no caller-selectable TTL tier and no TTL row in the price table, whose PRICING block lists only cache-hit input, cache-miss input and output. [https://api-docs.deepseek.com/quick_start/pricing] \"We will bill based on the total number of input and output tokens by the model.\""
+        },
+        "other_fees": {
+          "evidence": "[https://api-docs.deepseek.com/quick_start/pricing] \"Deduction Rules: The expense = number of tokens x price. The corresponding fees will be directly deducted from your topped-up balance or granted balance\" -- the whole expense is tokens x price; no per-request or platform fee is published."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://api-docs.deepseek.com/api/create-chat-completion] \"prompt_tokens integer required Number of tokens in the prompt. It equals prompt_cache_hit_tokens + prompt_cache_miss_tokens.\" Cache-hit tokens are INSIDE prompt_tokens."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "BLOCKED",
+          "evidence": "BLOCKED. DeepSeek publishes reasoning_tokens under completion_tokens_details ([https://api-docs.deepseek.com/api/create-chat-completion] \"reasoning_tokens integer Tokens generated by the model for reasoning.\", nested under \"completion_tokens_details\") but states nowhere that was read on 2026-09-16 whether those tokens are counted inside completion_tokens or are additional to it, nor how they are billed. The Thinking Mode guide (https://api-docs.deepseek.com/guides/thinking_mode) describes reasoning_content behaviour and says nothing about billing. The field nesting SUGGESTS inclusion; that is an inference, not a vendor statement, so it is not recorded as fact. UNBLOCKED BY: a DeepSeek sentence stating whether reasoning tokens are included in completion_tokens and at what rate they are billed."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://api-docs.deepseek.com/api/create-chat-completion] \"total_tokens integer required Total number of tokens used in the request (prompt + completion).\""
+        }
+      },
+      "notes": [
+        "rates.input is DeepSeek's CACHE MISS input price: DeepSeek splits every input token into a hit or a miss, so the miss price is the uncached input price.",
+        "An attempt that crosses the peak/off-peak boundary is priced wrong by a single entry and must be split, or recorded as crossing the boundary (METHODOLOGY v1.1.0 section 11.4)."
+      ]
+    },
+    "deepseek/deepseek-flash": {
+      "vendor_model_name": "deepseek-flash",
+      "vendor_model_version": "DeepSeek-V4.1-Flash",
+      "provenance": {
+        "source_url": "https://api-docs.deepseek.com/quick_start/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://api-docs.deepseek.com/guides/kv_cache",
+          "https://api-docs.deepseek.com/api/create-chat-completion"
+        ],
+        "quoted_source_row": "[https://api-docs.deepseek.com/quick_start/pricing] \"Models & Pricing\" table, column \"deepseek-flash\" (MODEL VERSION DeepSeek-V4.1-Flash): PRICING | 1M INPUT TOKENS (CACHE HIT) | OFF-PEAK $0.003 | PEAK $0.006 ; 1M INPUT TOKENS (CACHE MISS) | OFF-PEAK $0.15 | PEAK $0.3 ; 1M OUTPUT TOKENS | OFF-PEAK $0.6 | PEAK $1.2. Footnote (3): \"Off-peak rates are half of the peak rates. Peak hours are 01:00 - 04:00 and 06:00 - 10:00 UTC, Monday through Friday (all other hours are off-peak).\""
+      },
+      "plan": "DeepSeek API standard billing / off-peak window (peak = 01:00-04:00 and 06:00-10:00 UTC Mon-Fri; all other hours off-peak)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 0.15,
+        "output": 0.6,
+        "cache_read": 0.003
+      },
+      "not_applicable": {
+        "cache_write": {
+          "evidence": "[https://api-docs.deepseek.com/quick_start/pricing] \"We will bill based on the total number of input and output tokens by the model.\" and \"Deduction Rules: The expense = number of tokens x price.\" The published price list for each model enumerates exactly three billable token dimensions -- \"1M INPUT TOKENS (CACHE HIT)\", \"1M INPUT TOKENS (CACHE MISS)\", \"1M OUTPUT TOKENS\" -- and no fourth. [https://api-docs.deepseek.com/api/create-chat-completion] \"prompt_tokens ... It equals prompt_cache_hit_tokens + prompt_cache_miss_tokens.\" Every input token is billed exactly once, as a hit or as a miss, so the tokens that populate the cache are billed at the cache-miss input rate and there is no separate cache-write charge to record. [https://api-docs.deepseek.com/guides/kv_cache] \"The DeepSeek API Context Caching on Disk Technology is enabled by default for all users, allowing them to benefit without needing to modify their code.\""
+        },
+        "cache_ttl": {
+          "evidence": "[https://api-docs.deepseek.com/guides/kv_cache] \"Cache construction takes seconds. Once the cache is no longer in use, it will be automatically cleared, usually within a few hours to a few days.\" There is no caller-selectable TTL tier and no TTL row in the price table, whose PRICING block lists only cache-hit input, cache-miss input and output. [https://api-docs.deepseek.com/quick_start/pricing] \"We will bill based on the total number of input and output tokens by the model.\""
+        },
+        "other_fees": {
+          "evidence": "[https://api-docs.deepseek.com/quick_start/pricing] \"Deduction Rules: The expense = number of tokens x price. The corresponding fees will be directly deducted from your topped-up balance or granted balance\" -- the whole expense is tokens x price; no per-request or platform fee is published."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://api-docs.deepseek.com/api/create-chat-completion] \"prompt_tokens integer required Number of tokens in the prompt. It equals prompt_cache_hit_tokens + prompt_cache_miss_tokens.\" Cache-hit tokens are INSIDE prompt_tokens."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "BLOCKED",
+          "evidence": "BLOCKED. DeepSeek publishes reasoning_tokens under completion_tokens_details ([https://api-docs.deepseek.com/api/create-chat-completion] \"reasoning_tokens integer Tokens generated by the model for reasoning.\", nested under \"completion_tokens_details\") but states nowhere that was read on 2026-09-16 whether those tokens are counted inside completion_tokens or are additional to it, nor how they are billed. The Thinking Mode guide (https://api-docs.deepseek.com/guides/thinking_mode) describes reasoning_content behaviour and says nothing about billing. The field nesting SUGGESTS inclusion; that is an inference, not a vendor statement, so it is not recorded as fact. UNBLOCKED BY: a DeepSeek sentence stating whether reasoning tokens are included in completion_tokens and at what rate they are billed."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://api-docs.deepseek.com/api/create-chat-completion] \"total_tokens integer required Total number of tokens used in the request (prompt + completion).\""
+        }
+      },
+      "notes": [
+        "rates.input is DeepSeek's CACHE MISS input price: DeepSeek splits every input token into a hit or a miss, so the miss price is the uncached input price.",
+        "An attempt that crosses the peak/off-peak boundary is priced wrong by a single entry and must be split, or recorded as crossing the boundary (METHODOLOGY v1.1.0 section 11.4)."
+      ]
+    },
+    "deepseek/deepseek-flash@peak": {
+      "vendor_model_name": "deepseek-flash",
+      "vendor_model_version": "DeepSeek-V4.1-Flash",
+      "provenance": {
+        "source_url": "https://api-docs.deepseek.com/quick_start/pricing",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "supporting_sources": [
+          "https://api-docs.deepseek.com/guides/kv_cache",
+          "https://api-docs.deepseek.com/api/create-chat-completion"
+        ],
+        "quoted_source_row": "[https://api-docs.deepseek.com/quick_start/pricing] \"Models & Pricing\" table, column \"deepseek-flash\" (MODEL VERSION DeepSeek-V4.1-Flash): PRICING | 1M INPUT TOKENS (CACHE HIT) | OFF-PEAK $0.003 | PEAK $0.006 ; 1M INPUT TOKENS (CACHE MISS) | OFF-PEAK $0.15 | PEAK $0.3 ; 1M OUTPUT TOKENS | OFF-PEAK $0.6 | PEAK $1.2. Footnote (3): \"Off-peak rates are half of the peak rates. Peak hours are 01:00 - 04:00 and 06:00 - 10:00 UTC, Monday through Friday (all other hours are off-peak).\""
+      },
+      "plan": "DeepSeek API standard billing / peak window (peak = 01:00-04:00 and 06:00-10:00 UTC Mon-Fri; all other hours off-peak)",
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 0.3,
+        "output": 1.2,
+        "cache_read": 0.006
+      },
+      "not_applicable": {
+        "cache_write": {
+          "evidence": "[https://api-docs.deepseek.com/quick_start/pricing] \"We will bill based on the total number of input and output tokens by the model.\" and \"Deduction Rules: The expense = number of tokens x price.\" The published price list for each model enumerates exactly three billable token dimensions -- \"1M INPUT TOKENS (CACHE HIT)\", \"1M INPUT TOKENS (CACHE MISS)\", \"1M OUTPUT TOKENS\" -- and no fourth. [https://api-docs.deepseek.com/api/create-chat-completion] \"prompt_tokens ... It equals prompt_cache_hit_tokens + prompt_cache_miss_tokens.\" Every input token is billed exactly once, as a hit or as a miss, so the tokens that populate the cache are billed at the cache-miss input rate and there is no separate cache-write charge to record. [https://api-docs.deepseek.com/guides/kv_cache] \"The DeepSeek API Context Caching on Disk Technology is enabled by default for all users, allowing them to benefit without needing to modify their code.\""
+        },
+        "cache_ttl": {
+          "evidence": "[https://api-docs.deepseek.com/guides/kv_cache] \"Cache construction takes seconds. Once the cache is no longer in use, it will be automatically cleared, usually within a few hours to a few days.\" There is no caller-selectable TTL tier and no TTL row in the price table, whose PRICING block lists only cache-hit input, cache-miss input and output. [https://api-docs.deepseek.com/quick_start/pricing] \"We will bill based on the total number of input and output tokens by the model.\""
+        },
+        "other_fees": {
+          "evidence": "[https://api-docs.deepseek.com/quick_start/pricing] \"Deduction Rules: The expense = number of tokens x price. The corresponding fees will be directly deducted from your topped-up balance or granted balance\" -- the whole expense is tokens x price; no per-request or platform fee is published."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[https://api-docs.deepseek.com/api/create-chat-completion] \"prompt_tokens integer required Number of tokens in the prompt. It equals prompt_cache_hit_tokens + prompt_cache_miss_tokens.\" Cache-hit tokens are INSIDE prompt_tokens."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "BLOCKED",
+          "evidence": "BLOCKED. DeepSeek publishes reasoning_tokens under completion_tokens_details ([https://api-docs.deepseek.com/api/create-chat-completion] \"reasoning_tokens integer Tokens generated by the model for reasoning.\", nested under \"completion_tokens_details\") but states nowhere that was read on 2026-09-16 whether those tokens are counted inside completion_tokens or are additional to it, nor how they are billed. The Thinking Mode guide (https://api-docs.deepseek.com/guides/thinking_mode) describes reasoning_content behaviour and says nothing about billing. The field nesting SUGGESTS inclusion; that is an inference, not a vendor statement, so it is not recorded as fact. UNBLOCKED BY: a DeepSeek sentence stating whether reasoning tokens are included in completion_tokens and at what rate they are billed."
+        },
+        "reports_total": {
+          "value": "included",
+          "evidence": "[https://api-docs.deepseek.com/api/create-chat-completion] \"total_tokens integer required Total number of tokens used in the request (prompt + completion).\""
+        }
+      },
+      "notes": [
+        "rates.input is DeepSeek's CACHE MISS input price: DeepSeek splits every input token into a hit or a miss, so the miss price is the uncached input price.",
+        "An attempt that crosses the peak/off-peak boundary is priced wrong by a single entry and must be split, or recorded as crossing the boundary (METHODOLOGY v1.1.0 section 11.4)."
+      ]
+    },
+    "lab/replay-synthetic": {
+      "vendor_model_name": "replay-synthetic",
+      "provenance": {
+        "source_url": "benchmarks/token-efficiency-lab-001/evidence/PRICING_SNAPSHOT_2026-09-15.json (lab-internal constant, carried forward unchanged; NOT a vendor rate)",
+        "retrieved_on": "2026-09-16",
+        "currency": "USD",
+        "billing_unit": "USD per 1,000,000 tokens",
+        "quoted_source_row": "[PS-2026-09-15] \"lab/replay-synthetic\": {\"input_per_mtok\": 1.00, \"output_per_mtok\": 5.00, \"cached_input_per_mtok\": 0.10} and \"lab/replay-synthetic is NOT a real model. It exists so that offline harness dry-runs price deterministically. Any figure produced under it is plumbing verification, never a benchmark result.\""
+      },
+      "plan": "lab-internal synthetic constant / not a purchasable plan / offline dry-run only",
+      "synthetic_not_a_vendor_rate": true,
+      "applicable_dimensions": [
+        "input",
+        "output",
+        "cache_read"
+      ],
+      "rates": {
+        "input": 1.0,
+        "output": 5.0,
+        "cache_read": 0.1
+      },
+      "not_applicable": {
+        "cache_write": {
+          "evidence": "[environment/harness/providers.py] ReplayProvider yields only input_tokens, output_tokens and cached_tokens from the fixture (\"usage = call[\\\"usage\\\"]\" ... \"cached_tokens=usage.get(\\\"cached_tokens\\\", 0)\"); no cache-creation quantity exists to bill."
+        },
+        "cache_ttl": {
+          "evidence": "[environment/harness/providers.py] \"ReplayProvider replays recorded provider responses from a fixture file. It is offline, deterministic, and it is NOT a model.\" There is no cache and therefore no TTL tier."
+        },
+        "other_fees": {
+          "evidence": "[PS-2026-09-15] \"lab/replay-synthetic is NOT a real model. It exists so that offline harness dry-runs price deterministically.\" No account is billed at all."
+        }
+      },
+      "token_inclusion": {
+        "cached_tokens_in_input": {
+          "value": "included",
+          "evidence": "[environment/harness/meter.py] CallUsage validation raises when \"cached_tokens ({self.cached_tokens}) exceeds input_tokens ({self.input_tokens}); the provider is not reporting these as disjoint\" -- the fixture format treats cached_tokens as a subset of input_tokens."
+        },
+        "reasoning_tokens_in_output": {
+          "value": "not_applicable",
+          "evidence": "[dryrun/FIXTURE.json] fixture usage blocks carry only input_tokens, output_tokens and cached_tokens; the replay provider emits no reasoning-token quantity."
+        },
+        "reports_total": {
+          "value": "not_applicable",
+          "evidence": "[dryrun/FIXTURE.json] fixture usage blocks carry only input_tokens, output_tokens and cached_tokens; no total field is replayed."
+        }
+      },
+      "notes": [
+        "Any figure produced under this key is plumbing verification, never a benchmark result."
+      ]
+    }
+  }
+}

@@ -33,12 +33,19 @@ def assert_snapshot_can_price(snapshot_path: pathlib.Path, emit_cached: bool) ->
 
     Failing here, loudly and before any run, beats producing 10 records that all error out.
     """
-    rates = json.loads(pathlib.Path(snapshot_path).read_text())["rates"]
+    data = json.loads(pathlib.Path(snapshot_path).read_text())
+    # Both snapshot shapes: v1.1.0's per-model entries, and v1.0.0's flat rate table.
+    if "models" in data:
+        rates = {k: v.get("rates", {}) for k, v in data["models"].items()}
+        cached_key = "cache_read"
+    else:
+        rates = data["rates"]
+        cached_key = "cached_input_per_mtok"
     for provider, model in (CHEAP, MID):
         key = f"{provider}/{model}"
         if key not in rates:
             raise SystemExit(f"{key} is not in the pricing snapshot; the fixture cannot be priced")
-        if emit_cached and rates[key].get("cached_input_per_mtok") is None:
+        if emit_cached and rates[key].get(cached_key) is None:
             raise SystemExit(
                 f"{key} has no cached input rate in the snapshot, but this fixture emits cached "
                 "tokens. Folding them in at the full input rate would overstate cost, so the "
@@ -61,6 +68,15 @@ def make_calls(task: dict, condition: str, salt: str, emit_cached: bool = True) 
     # invented. They are not predictions about how any real workload behaves.
     base_input = {"A": 24000, "B": 48000, "C": 18000, "D": 14000, "E": 11000}[workload]
     turns = {"A": 3, "B": 1, "C": 4, "D": 2, "E": 6}[workload]
+    if workload == "E":
+        # Workload E's violation classes are scored over EVERY reply, and the packet builder
+        # asserts len(turns) == turn_count. A fixture that emits its own turn count exercises
+        # only the fail-closed path; to test the scoring path it has to emit the declared number.
+        declared = task["input"].get("turn_count") or task.get("turn_count")
+        if not declared:
+            raise SystemExit(f"{task['task_id']} declares no turn_count; the fixture cannot "
+                             "know how many turns a complete transcript has")
+        turns = int(declared)
 
     provider, model = CHEAP
     calls = []
@@ -86,6 +102,10 @@ def make_calls(task: dict, condition: str, salt: str, emit_cached: bool = True) 
                 "cache_state": "warm" if turn > 0 else "cold",
                 "latency_ms": int(rng.uniform(400, 2500)),
                 "tool_calls": rng.randint(0, 4) if workload in ("A", "C", "D") else 0,
+                # Turn index so the runner can rebuild a transcript. Workload E's violation
+                # classes are scored "over every reply", so a fixture that emits only a final
+                # answer cannot exercise the chain at all (RT-13 / UG-28).
+                "turn": turn + 1,
                 "usage": {"input_tokens": inp, "output_tokens": out, "cached_tokens": cached},
                 "output_text": (
                     f"[SYNTHETIC DRY-RUN OUTPUT] task={task['task_id']} turn={turn}. "
@@ -108,6 +128,36 @@ def make_calls(task: dict, condition: str, salt: str, emit_cached: bool = True) 
     return calls
 
 
+def write_run_plan(plan: list, out: pathlib.Path) -> pathlib.Path:
+    """The run plan for THIS fixture: denominators and planned identities from one source.
+
+    R4-03. Never confuse it with RUN_PLAN_v1.1.0.json, whose 270 attempts are the real
+    experiment's denominators.
+    """
+    from collections import Counter
+    runs: dict = {}
+    for item in plan:
+        wl = item["task_id"].split("-")[0]
+        rep = item.get("repetition", 1)
+        rid = f"{wl}-{item['condition']}-r{rep}"
+        runs.setdefault(rid, {"run_id": rid, "workload": wl, "condition": item["condition"],
+                              "repetition": rep, "task_attempts": []})
+        runs[rid]["task_attempts"].append({"task_id": item["task_id"],
+                                           "attempt_id": item["attempt_id"],
+                                           "session": "independent"})
+    cells = Counter((i["task_id"][0], i["condition"]) for i in plan)
+    out.write_text(json.dumps({
+        "run_plan_version": "dry-run fixture, not the frozen v1.1.0 plan",
+        "methodology_version": "1.1.0",
+        "task_set_version": "1.1.0",
+        "status": "SYNTHETIC - this dry run only",
+        "cells": [{"workload": w, "condition": c, "planned_attempts": n}
+                  for (w, c), n in sorted(cells.items())],
+        "runs": [runs[k] for k in sorted(runs)],
+    }, indent=2) + "\n")
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--task-root", required=True)
@@ -119,7 +169,20 @@ def main() -> int:
     args = ap.parse_args()
 
     task_root = pathlib.Path(args.task_root)
-    plan = json.loads(pathlib.Path(args.plan).read_text())
+    plan_path = pathlib.Path(args.plan)
+    plan = json.loads(plan_path.read_text())
+
+    # R4-03: the committed dry-run plan carried no attempt_id, so the moment the runner began
+    # requiring one the documented path in RUNBOOK section 6 failed before executing anything -
+    # only the separately generated golden fixture still worked. Fail here, where it is
+    # obviously a plan problem, and emit the run plan the aggregate step now needs.
+    without = [i.get("task_id") for i in plan if not i.get("attempt_id")]
+    if without:
+        raise SystemExit(
+            f"{len(without)} plan item(s) carry no attempt_id, e.g. {without[:5]}. An attempt id "
+            "is issued by the plan; records written without one cannot be checked against it. "
+            "Add them to the plan file before generating a fixture.")
+
     emit_cached = not args.no_cached_tokens
     assert_snapshot_can_price(pathlib.Path(args.snapshot), emit_cached)
 
@@ -129,8 +192,46 @@ def main() -> int:
         task = json.loads((task_root / "tasks" / wl / f"{item['task_id']}.json").read_text())
         calls.extend(make_calls(task, item["condition"], args.salt, emit_cached))
 
+    # A synthetic tool audit, written the way the real server writes one. Workloads A and D
+    # score a zero-tolerance criterion from this file, so a dry run that omits it exercises only
+    # the fail-closed path and never the scoring path.
+    audit_lines = []
+    seq = 0
+    for item in plan:
+        wl = item["task_id"].split("-")[0]
+        if wl not in ("A", "D"):
+            continue
+        rid = f"dry_run-{item['task_id']}-{item['condition']}-r{item.get('repetition', 1)}"
+        task = json.loads((task_root / "tasks" / wl / f"{item['task_id']}.json").read_text())
+        corpus = task["input"].get("corpus_paths", []) or ["corpora/"]
+        for n in range(2):
+            seq += 1
+            audit_lines.append(json.dumps({
+                "seq": seq, "run_id": rid, "mode": "call",
+                "tool": "catalog.list_tools" if n == 0 else "catalog.describe_tool",
+                "family": "meta", "arguments": {},
+                "synthetic": True,
+            }, sort_keys=True))
+        # Corpus reads. A-001's only anti-shortcut guard is "the answer was produced without
+        # reading the corpus", and it is scored from this log. A fixture that logs no reads
+        # exercises only the fail-closed path - which it did, correctly, on the first attempt.
+        for cp in corpus[:2]:
+            seq += 1
+            audit_lines.append(json.dumps({
+                "seq": seq, "run_id": rid, "mode": "read",
+                "tool": "fs.read", "family": "corpus",
+                "arguments": {"path": cp}, "synthetic": True,
+            }, sort_keys=True))
+    audit_out = pathlib.Path(args.out).with_name("TOOL_AUDIT.jsonl")
+    audit_out.write_text("\n".join(audit_lines) + ("\n" if audit_lines else ""))
+
     fixture = {
-        "fixture_version": "1.0.0",
+        "fixture_version": "1.1.0",
+        # D-2: this used to be the ABSOLUTE path, which the runner hashed into raw.json, so
+        # two runs of identical inputs into different output directories produced different
+        # raw-evidence hashes. The evidence hash must depend on the evidence, not on where it
+        # was written. The name is enough: the runner is told the audit path on the command line.
+        "tool_audit": audit_out.name,
         "synthetic": True,
         "salt": args.salt,
         "purpose": "harness dry run - plumbing verification only",
@@ -146,6 +247,9 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(fixture, indent=2, ensure_ascii=False) + "\n")
     print(f"{len(calls)} calls across {len(plan)} planned runs -> {out}")
+    print(f"{len(audit_lines)} synthetic tool-audit entries -> {audit_out}")
+    rp = write_run_plan(plan, plan_path.parent / "RUN_PLAN.json")
+    print(f"run plan for this fixture -> {rp}")
     print("sha256:", hashlib.sha256(out.read_bytes()).hexdigest())
     return 0
 

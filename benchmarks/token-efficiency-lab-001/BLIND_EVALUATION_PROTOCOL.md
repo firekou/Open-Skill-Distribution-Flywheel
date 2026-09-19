@@ -125,3 +125,91 @@ Stated because a protocol whose limits are unstated gets over-trusted.
   oversight.
 - **It does not address the conflict of interest itself,** only one channel of it. A favourable
   result for `rtk` or `headroom` still requires independent reproduction before publication.
+
+---
+
+# Addendum v1.1.0 — salt custody, evidence contract, and what changed
+
+Added 2026-09-16 in the Prompt 3.5 repair round. The v1.0.0 protocol above stands; this addendum
+closes gaps that only appeared once the protocol met a real reproduction attempt.
+
+## 1. Salt custody
+
+The v1.0.0 protocol said the salt is "held by the Benchmark Runner" and stopped there. That is
+not a custody model: it does not say who may read it, where it lives, or how an independent
+Reproduction Agent replays a run without it. The Reproduction Agent hit this directly — the salt
+is not in the repository, only its hash, so the blind-mapping row of its comparison was **not
+independently executable**.
+
+| Question | Answer |
+|---|---|
+| **Who holds it** | The **Benchmark Runner** seat, and only that seat |
+| **Where it lives** | A secret store outside the repository. **Never** in the repository, never in a run record, never in an evidence bundle, never in a log line |
+| **What may be published** | `salt_sha256` only — enough to prove which salt a mapping used, not enough to reproduce a label |
+| **Who may never read it** | The **Quality Judge**, for as long as any packet in the batch is unscored. The salt is the mapping |
+| **The Reproduction Agent** | Is issued the salt by the Runner **after** scoring is complete for the batch it is reproducing, and records that it received it. Before that point it reproduces everything except the label and records the label row as `not independently executable` |
+| **Rotation** | One salt per batch. A salt is never reused across batches, because a reused salt makes labels comparable across batches, which is a slow way of un-blinding |
+| **Synthetic fixtures** | May use a clearly marked test salt (`lab001-dryrun-salt-…`). A test salt is **not** a blinding secret and must never be used for a scored run |
+
+**Never in the Judge's path:** `runner_only/BLIND_MAPPING.json`, the salt itself, any run record,
+any cost figure, any `egress_destinations` list.
+
+## 2. Labels are a property of (salt, condition), not of the batch
+
+Fixed this round and verified. Labels are assigned over the **canonical condition set**
+(`C0, C1, C2, C3, C4, C5, C2+C4, C3+C4, CALIB, CACHE`), never over whatever happens to be in the
+batch. Previously the same salt gave `C0 = Treatment B` in a 10-run plan and `C0 = Treatment A` in
+a 2-run subset — so an honest partial reproduction, which is exactly what the Reproduction seat
+does, would disagree on `blind_treatment_id` while being entirely correct.
+
+## 3. The evidence contract — what the judge is given, and who produced it
+
+`required_evidence` is now produced by a named seat, `harness-evidence-producer`
+(`environment/harness/evidence.py`), not scraped from a task file that never had the key.
+
+| Evidence | Produced from | Never from |
+|---|---|---|
+| `valid_symbols` | `ast` parse of the frozen corpus | the model's answer |
+| `catalog_part_ids`, `halberd_part_ids`, `shifts`, `roster` | the frozen CSVs | the model's answer |
+| `tool_calls` | the **server-written audit log**, filtered to this run id | the model's self-report |
+| `turns` | captured by the runner, asserted complete and in order | a reconstructed transcript |
+| `corpus_hashes` | hashed before and after the attempt | — |
+
+Four properties are enforced, each of them a hole that was open in v1.0.0:
+
+1. **Empty is not present.** `{}` and `[]` fail closed. An empty `shifts`/`roster` previously
+   passed every type check and silently disabled workload E's zero-tolerance criteria, so a run
+   assigning an ineligible person scored `task_success: true`.
+2. **Missing evidence is `INVALID`, not a pass and not a quality failure.** "It failed" and "we
+   could not measure it" are different findings.
+3. **Cross-run contamination is rejected.** Every audit entry must carry this run's id; a log left
+   over from a previous attempt would otherwise score this one.
+4. **Evidence is treatment-neutral, and that is machine-checked.** `required_evidence` reaches the
+   judge, so a candidate name, a routed model or a token count inside it defeats the blind as
+   surely as a metadata field. `assert_treatment_neutral` walks it recursively and raises.
+
+**The answer key is never mounted for the agent under test.** It reaches the Quality Judge only,
+inside the packet.
+
+## 4. Packet sufficiency is asserted before the judge sees anything
+
+`assert_evidence_sufficient` runs at packet-build time and **raises**. A judge that receives a
+packet has evidence; a packet that would have arrived empty never arrives. For workload E it also
+asserts `len(turns) == turn_count`, so a truncated transcript cannot hide every violation after
+the cut — previously a byte-perfect E-002 runbook with a violation at turn 8 scored 1.0 and passed
+when `turns` was omitted.
+
+## 5. Scores are written back — protocol step 4 now exists
+
+`harness/finalize.py` writes `quality_score`, `task_success` and `outcome` into the run record. It
+refuses a batch containing any unscored packet or any record without a score, and it refuses a
+score that declares no outcome rather than inferring one from `task_success` — inferring it would
+collapse `INVALID` into `FAIL_QUALITY`.
+
+## 6. Residual risks, restated
+
+The v1.0.0 limitations still hold: a distinctive output style can un-blind a treatment regardless
+of scrubbing; small batches leak through the labels; blinding controls for identity bias, not for
+a judge that is simply wrong; and none of this addresses the conflict of interest itself, only one
+channel of it. A favourable result for an ATK integration candidate still requires independent
+reproduction before publication.

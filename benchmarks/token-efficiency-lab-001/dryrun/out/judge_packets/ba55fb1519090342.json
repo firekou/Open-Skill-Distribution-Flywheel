@@ -1,10 +1,62 @@
 {
+  "methodology_version": "1.1.0",
   "packet_id": "ba55fb1519090342",
   "task_id": "D-001",
   "workload": "D",
   "blind_treatment_id": "Treatment C",
   "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=D-001 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=D-001 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
-  "required_evidence": [],
+  "required_evidence": {
+    "corpus_hashes_before": {
+      "corpora/mcp_toolset/tools.json": "d2246a92960f55e23e4153f7fcb260b11c0aace4d8f64115efb45c3706d1adb6",
+      "corpora/mcp_toolset/server.py": "5b6ae9fd0ed62bf272ab932eeaaf09ddaa8b0dd35ae07eb9703e70e1f4bed44f"
+    },
+    "corpus_hashes_after": {
+      "corpora/mcp_toolset/tools.json": "d2246a92960f55e23e4153f7fcb260b11c0aace4d8f64115efb45c3706d1adb6",
+      "corpora/mcp_toolset/server.py": "5b6ae9fd0ed62bf272ab932eeaaf09ddaa8b0dd35ae07eb9703e70e1f4bed44f"
+    },
+    "corpus_hashes": {
+      "corpora/mcp_toolset/tools.json": "d2246a92960f55e23e4153f7fcb260b11c0aace4d8f64115efb45c3706d1adb6",
+      "corpora/mcp_toolset/server.py": "5b6ae9fd0ed62bf272ab932eeaaf09ddaa8b0dd35ae07eb9703e70e1f4bed44f"
+    },
+    "tool_calls": [
+      {
+        "arguments": {},
+        "family": "meta",
+        "mode": "call",
+        "seq": 7,
+        "tool": "catalog.list_tools"
+      },
+      {
+        "arguments": {},
+        "family": "meta",
+        "mode": "call",
+        "seq": 8,
+        "tool": "catalog.describe_tool"
+      },
+      {
+        "arguments": {
+          "path": "corpora/mcp_toolset/tools.json"
+        },
+        "family": "corpus",
+        "mode": "read",
+        "seq": 9,
+        "tool": "fs.read"
+      },
+      {
+        "arguments": {
+          "path": "corpora/mcp_toolset/server.py"
+        },
+        "family": "corpus",
+        "mode": "read",
+        "seq": 10,
+        "tool": "fs.read"
+      }
+    ],
+    "corpus_access_log": [
+      "corpora/mcp_toolset/tools.json",
+      "corpora/mcp_toolset/server.py"
+    ]
+  },
   "answer_key": {
     "task_id": "D-001",
     "derived_by": "answer-key-builder",
@@ -56,6 +108,6 @@
       ]
     }
   },
-  "quality_metric": "Two components, both reported.\n(a) answer_correct: the emitted object is compared field by field against the answer key; strings compare case-sensitively after stripping surrounding whitespace, numbers compare numerically, booleans identically. answer_correct = true iff all 3 fields match.\n(b) tool_selection: the run's tool-call record (the JSONL written by the server when `LAB001_TOOL_AUDIT` is set) is read. `contested_families` for this task are [\"oncall-resolution\", \"person-resolution\"]. A WRONG-TOOL INVOCATION is any recorded call to a tool whose declared `family` is in contested_families and which is not in the required tool set named by the answer key. Calls to tools in the `meta` family are never wrong-tool invocations. Calls to tools in families outside contested_families are recorded as extraneous calls and do not affect the score.\nquality_score = 1.0 if answer_correct and wrong_tool_invocations == 0; 0.0 otherwise. task_success = (quality_score == 1.0).",
-  "failure_condition": "Outright failure if any of: (1) one or more wrong-tool invocations, as defined in quality_metric over contested_families [\"oncall-resolution\", \"person-resolution\"] - this is the frozen workload-D zero-tolerance criterion (methodology v1.0.0 section 6); (2) any answer field does not match the answer key; (3) the reply is not parseable as a single JSON object with exactly the required keys; (4) the run answers without calling any tool; (5) the run edits `corpora/mcp_toolset/`; (6) the run reads any file under `corpora/mcp_toolset/fixtures/`, which makes the tool-selection measurement meaningless."
+  "quality_metric": "Two components, both reported.\n(a) answer_correct: the emitted object is compared field by field against the answer key; strings compare case-sensitively after stripping surrounding whitespace, numbers compare numerically, booleans identically. answer_correct = true iff all 3 fields match.\n(b) tool_selection: The tool-call record is `required_evidence.tool_calls`, the JSONL the server writes when `LAB001_TOOL_AUDIT` is set, parsed into a list of objects each carrying `tool` and `family`. If it is absent or empty the criterion is unevaluable and the task fails closed with `required_evidence_missing:tool_calls`; an empty record is never read as \"no wrong tools were called\", because it is indistinguishable from a run that called none at all. `contested_families` for this task are [\"oncall-resolution\", \"person-resolution\"]. A WRONG-TOOL INVOCATION is any recorded call to a tool whose declared `family` is in contested_families and whose name is not in the required tool set named by the answer key. The REQUIRED TOOL SET is the answer key's `required_tools` array, a list of tool names (closes UG-17). It is a PERMISSION list, not a checklist: a run is not obliged to call every tool in it, and a run that reaches the correct answer using a subset is not penalised. Its only role is to say which contested-family calls are permitted. A recorded call to a tool whose declared `family` is in `contested_families` and whose name is not in `required_tools` is a wrong-tool invocation, however many such calls there are and whatever the run did afterwards. (This is the minimal-and-permitted reading; the exhaustive-and-mandatory reading is explicitly not the rule.) Calls to tools in the `meta` family are never wrong-tool invocations. Calls to tools in families outside contested_families are recorded as extraneous calls and do not affect the score.\nquality_score = 1.0 if answer_correct and wrong_tool_invocations == 0; 0.0 otherwise. task_success = (quality_score == 1.0).\nKeys emitted beyond the required set are ignored - they neither match nor mismatch - and are listed in `detail.extra_fields`. RULING (closes UG-19): v1.0.0's scoring spec made an extra key an outright failure, and this task set disagrees. Workload D measures tool selection; discarding a correct D answer because the reply also carried a `\"confidence\"` key destroys a D observation for a reason that has nothing to do with tool selection, and output verbosity is a plausible treatment-correlated artefact, so the strict rule risks confounding the very comparison D exists to make. A MISSING required key remains an outright failure. This matches workload B's rule for extra keys (UG-07).\nBefore any comparison, every string on both sides has leading and trailing whitespace stripped. (Closes UG-30.)",
+  "failure_condition": "Outright failure if any of: (1) one or more wrong-tool invocations, as defined in quality_metric over contested_families [\"oncall-resolution\", \"person-resolution\"] - this is the frozen workload-D zero-tolerance criterion (methodology v1.0.0 section 6); (2) any answer field does not match the answer key; (3) the reply is not parseable as a single JSON object, or one of the required keys is missing from it (a key beyond the required set is not a failure - see quality_metric); (4) the run answers without calling any tool; (5) the run edits `corpora/mcp_toolset/`; (6) the run reads any file under `corpora/mcp_toolset/fixtures/`, which makes the tool-selection measurement meaningless.\n\nCorpus integrity is established from `required_evidence.corpus_hashes_before` and `required_evidence.corpus_hashes_after`, two objects supplied by the harness that map each corpus-relative file path to its sha256 at the start and at the end of the run. \"The run edits `corpora/mcp_toolset/`\" holds when any path under that directory is present in both objects with different hashes, or is present in `corpus_hashes_before` and absent from `corpus_hashes_after`. \"The run reads a file under `corpora/mcp_toolset/fixtures/`\" holds when `required_evidence.corpus_access_log` - a list supplied by the harness of the file paths the run opened - contains any path resolving inside that directory. If either hash object, or `corpus_access_log`, is absent or empty, the corresponding condition is unevaluable and the task fails closed with `required_evidence_missing:corpus_hashes` or `required_evidence_missing:corpus_access_log`. (Closes RT-08.)"
 }

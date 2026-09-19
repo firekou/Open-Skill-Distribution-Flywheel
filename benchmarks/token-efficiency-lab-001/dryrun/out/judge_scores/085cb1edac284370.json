@@ -1,14 +1,18 @@
 {
   "blind_treatment_id": "Treatment H",
   "detail": {
+    "corpus_integrity_basis": "corpus_hashes_before_after",
+    "corpus_integrity_evaluated": true,
     "format_strict": false,
     "ignored_packet_keys": [],
-    "methodology_version": "1.0.0",
+    "level": "attempt",
+    "methodology_version": "1.1.0",
     "parse_mode": "unparseable",
-    "spec_version": "1.0.0",
+    "spec_version": "1.1.0",
     "truncation_suspected": false
   },
   "failure_reason": "unparseable_output",
+  "outcome": "FAIL_QUALITY",
   "packet_id": "085cb1edac284370",
   "quality_score": 0.0,
   "task_id": "A-003",

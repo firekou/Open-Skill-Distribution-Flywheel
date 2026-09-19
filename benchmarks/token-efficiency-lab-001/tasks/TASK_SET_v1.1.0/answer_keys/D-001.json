@@ -1,0 +1,51 @@
+{
+  "task_id": "D-001",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Called rota.get_effective_oncall (the override-resolving sibling, not the template tools) for kestrel-billing at the incident instant, then resolved the handle it returned with directory.get_person_by_handle (the live single-record lookup, not the fuzzy search or the lagging sync). Script: scripts/derive_D.py",
+  "derivation_script": "scripts/derive_D.py",
+  "contested_families": [
+    "oncall-resolution",
+    "person-resolution"
+  ],
+  "required_tools": [
+    "rota.get_effective_oncall",
+    "directory.get_person_by_handle"
+  ],
+  "tool_calls_made_by_this_derivation": [
+    {
+      "tool": "rota.get_effective_oncall",
+      "family": "oncall-resolution",
+      "args": {
+        "service": "kestrel-billing",
+        "at_utc": "2032-03-14T02:40:00Z"
+      }
+    },
+    {
+      "tool": "directory.get_person_by_handle",
+      "family": "person-resolution",
+      "args": {
+        "handle": "m.okonjo"
+      }
+    }
+  ],
+  "answer": {
+    "engineer_full_name": "Adaeze M. Okonjo",
+    "team": "Billing Platform",
+    "escalation_tier": 2
+  },
+  "derivation_diagnostics": {
+    "template_handle_before_overrides": "t.ferreira",
+    "override_chain": [
+      {
+        "approved_at_utc": "2032-03-11T16:02:00Z",
+        "approved_by": "s.varga",
+        "override_id": "OVR-2032-0119",
+        "replaces_handle": "t.ferreira",
+        "type": "swap",
+        "window_end_utc": "2032-03-14T06:00:00Z",
+        "window_start_utc": "2032-03-13T18:00:00Z",
+        "with_handle": "m.okonjo"
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+vendor,status,region,last_audit,audit_result,payment_terms_days
+Halberd Manufacturing,active,EU-SW,2032-01-18,failed,45
+Calderon Metalworks,active,EU-SW,2032-01-22,passed,30
+Tessellate Supply,active,EU-NW,2031-11-09,passed,30
+Northwall Power,active,EU-NW,2031-12-02,passed,60
+Pellworm Optics,active,EU-N,2032-02-14,passed,30
+Ardent Networks,active,EU-C,2032-02-01,passed,45
+Stannary Storage,suspended,EU-W,2031-10-30,passed,30
+Meridian Services,active,EU-SW,2032-01-05,passed,15

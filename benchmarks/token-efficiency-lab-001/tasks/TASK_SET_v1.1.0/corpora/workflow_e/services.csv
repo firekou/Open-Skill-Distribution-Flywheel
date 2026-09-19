@@ -1,0 +1,11 @@
+service,tier,owner_team,depends_on,region
+kestrel-gateway,1,Edge Platform,kestrel-vault;kestrel-rota,EU-C
+kestrel-indexer,2,Search Platform,kestrel-vault,EU-C
+kestrel-billing,1,Billing Platform,kestrel-vault;kestrel-gateway,EU-SW
+kestrel-rota,2,Ops Tooling,,EU-NW
+kestrel-search,1,Search Platform,kestrel-indexer;kestrel-gateway,EU-C
+kestrel-mailer,3,Ops Tooling,kestrel-rota,EU-NW
+kestrel-vault,1,Security Platform,,EU-C
+kestrel-cdn,2,Edge Platform,kestrel-gateway,EU-N
+kestrel-ledger,2,Billing Platform,kestrel-billing;kestrel-vault,EU-SW
+kestrel-reports,3,Billing Platform,kestrel-ledger,EU-SW

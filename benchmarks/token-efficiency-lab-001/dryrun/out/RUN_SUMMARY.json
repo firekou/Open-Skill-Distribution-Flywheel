@@ -4,9 +4,10 @@
   "completed": 10,
   "failed": 0,
   "failures": [],
-  "task_set_hash": "7fbca09980cc74d252280674b6ae18c3b5f3b1addd3994c1716e8138cd4c1553",
-  "answer_key_hash": "03ea884c74bb866df824dd68151eb239c2f8fd57609f486fb230a4c5bb9564c7",
-  "pricing_snapshot_id": "PS-2026-09-15",
-  "container_digest": "sha256:5a302f2f24b817adb7f42343c8206132c8392d99bf534bebb375a327c876885c",
-  "ran_at": "2026-09-16T10:57:19.702225+00:00"
+  "task_set_hash": "eddd68f8f29f0aa215d31b3b2a399ad8c7aa00812303ec82ce7a8a2111ab2536",
+  "answer_key_hash": "ef02357796fdcd57008e59eed61f1b17577d471968e60b2750df43667a1c000f",
+  "scorer_hash": "899621d29269ee74d87e2bb9682143405b2e3182268b5fbc8de49ba0942c9c87",
+  "pricing_snapshot_id": "PS-2026-09-16",
+  "container_digest": "sha256:pending-final",
+  "ran_at": "2026-09-16T18:03:50.135945+00:00"
 }

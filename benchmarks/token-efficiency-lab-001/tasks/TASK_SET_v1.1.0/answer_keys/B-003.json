@@ -1,0 +1,164 @@
+{
+  "task_id": "B-003",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Parsed every '**SDX-REQ-nnnn** An implementation ...' line of SDX7_PROTOCOL_SPEC_v3.1.md, taking the section from the enclosing '## n.' heading, the constrained field from the backticked identifier and the level from the modal verb (longest match first, so 'must not' never reads as 'must'), then applied section 10: withdrawn entries are dropped, relevel entries replace the level and set level_source=errata, clarified entries leave the body level and level_source=body. Kept only level MUST. Script: scripts/derive_B.py",
+  "derivation_script": "scripts/derive_B.py",
+  "derivation_diagnostics": {
+    "total_requirements_in_body": 96,
+    "errata_entries": {
+      "SDX-REQ-0022": "clarified",
+      "SDX-REQ-0008": "relevel:SHOULD",
+      "SDX-REQ-0077": "relevel:MAY",
+      "SDX-REQ-0037": "withdrawn",
+      "SDX-REQ-0002": "withdrawn",
+      "SDX-REQ-0044": "relevel:MAY",
+      "SDX-REQ-0074": "clarified",
+      "SDX-REQ-0010": "relevel:MUST NOT",
+      "SDX-REQ-0001": "relevel:MAY",
+      "SDX-REQ-0070": "relevel:MUST",
+      "SDX-REQ-0082": "relevel:MAY",
+      "SDX-REQ-0029": "clarified",
+      "SDX-REQ-0042": "clarified",
+      "SDX-REQ-0072": "withdrawn",
+      "SDX-REQ-0073": "relevel:MUST",
+      "SDX-REQ-0019": "relevel:SHOULD NOT",
+      "SDX-REQ-0040": "relevel:MUST"
+    },
+    "body_must_count_ignoring_errata": 22
+  },
+  "requirements": [
+    {
+      "req_id": "SDX-REQ-0004",
+      "section": 2,
+      "constrained_field": "sequence_id",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0014",
+      "section": 3,
+      "constrained_field": "clock_skew_ms",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0021",
+      "section": 3,
+      "constrained_field": "ack_window",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0033",
+      "section": 4,
+      "constrained_field": "priority_class",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0040",
+      "section": 5,
+      "constrained_field": "fragment_index",
+      "level_source": "errata"
+    },
+    {
+      "req_id": "SDX-REQ-0041",
+      "section": 5,
+      "constrained_field": "session_token",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0046",
+      "section": 5,
+      "constrained_field": "clock_skew_ms",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0047",
+      "section": 5,
+      "constrained_field": "cipher_suite",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0050",
+      "section": 6,
+      "constrained_field": "replay_nonce",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0052",
+      "section": 6,
+      "constrained_field": "route_hint",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0054",
+      "section": 6,
+      "constrained_field": "auth_scheme",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0056",
+      "section": 6,
+      "constrained_field": "max_inflight",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0062",
+      "section": 7,
+      "constrained_field": "trace_id",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0066",
+      "section": 7,
+      "constrained_field": "priority_class",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0070",
+      "section": 7,
+      "constrained_field": "replay_nonce",
+      "level_source": "errata"
+    },
+    {
+      "req_id": "SDX-REQ-0073",
+      "section": 8,
+      "constrained_field": "frame_type",
+      "level_source": "errata"
+    },
+    {
+      "req_id": "SDX-REQ-0078",
+      "section": 8,
+      "constrained_field": "tenant_id",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0080",
+      "section": 8,
+      "constrained_field": "payload_len",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0081",
+      "section": 8,
+      "constrained_field": "trace_id",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0086",
+      "section": 9,
+      "constrained_field": "priority_class",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0091",
+      "section": 9,
+      "constrained_field": "priority_class",
+      "level_source": "body"
+    },
+    {
+      "req_id": "SDX-REQ-0092",
+      "section": 9,
+      "constrained_field": "trace_id",
+      "level_source": "body"
+    }
+  ],
+  "count": 22
+}
