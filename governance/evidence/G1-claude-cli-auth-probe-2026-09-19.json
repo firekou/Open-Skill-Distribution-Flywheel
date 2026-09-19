@@ -1,0 +1,31 @@
+{
+  "_what": "G1 能力查證：在一個乾淨容器內，從 executor session 內部以 subprocess 呼叫 claude CLI",
+  "_command": "timeout 60 claude -p --output-format json \"Reply with exactly: PONG\"",
+  "_when": "2026-09-19 UTC",
+  "_why": "PR#6 的 ACTIVATION.md 宣稱『唯一真正缺的是模型認證』。本次直接測這一件事，而不是引用它。",
+  "cli_version": "2.1.278 (Claude Code)",
+  "env_model_api_key_variable": "UNSET（只檢查有無，未檢視值）",
+  "home_credentials_file": "ABSENT",
+  "process_exit_code": 0,
+  "is_error": false,
+  "subtype": "success",
+  "result_text": "PONG",
+  "num_turns": 1,
+  "duration_ms": 3806,
+  "total_cost_usd": 0.0415356,
+  "usage_input_tokens": 2,
+  "usage_output_tokens": 5,
+  "usage_cache_read_input_tokens": 31908,
+  "session_id_equals_parent_session_id": true,
+  "session_id_recorded": "不記錄實際值；只記『與父 session 相同』這個事實",
+  "_conclusions": [
+    "在本容器內，subprocess 形式的 claude CLI 可以認證，而且沒有模型 API 環境變數、沒有家目錄憑證檔。認證由 session 環境提供，不是由檔案提供。",
+    "CLI 自己回報 total_cost_usd 大於 0。『跑在訂閱上所以沒有單次價格』與這個觀測不符。",
+    "回傳的 session_id 與父 session 相同，且讀了 31,908 個 cache token：這不是一個乾淨、獨立的 run，不能當成 executor 與 reviewer 的隔離證明。"
+  ],
+  "_limits": [
+    "n=1，單一容器、單一時間點。不可外推為『所有環境都能認證』——那正是本次要修掉的那種說法。",
+    "沒有測 runners.SubprocessRunner 本身；測的是它指向的那個 CLI。",
+    "本次未執行 controller.py／tick.py，未啟動任何 live dispatch。"
+  ]
+}
