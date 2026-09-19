@@ -115,3 +115,9 @@ Reviewer 從 GitHub 精確 SHA 另取工作區，不修改受審實作；重跑�
 ## Planner 本版自查
 已核對：入口指向本檔；四項 finding 分別對應 G1/G2；執行依賴與獨立驗收分開；次數、時間與新增費用分開；持久觸發與既有 session 分開；停止派工與取消程序分開；有缺存取時仍有可交付項；G5/G6 不由 review 自動推導授權。
 這是規劃自查，不是對自己計畫的獨立批准，也不宣告 PR6 程式通過。
+
+## 新交付送審與後續規劃更新
+每次送審提供 repo、PR、完整 head、executor response 路徑、本輪 G 編號及 finding 對應。這些資料寫入既有 response，由 reviewer 直接讀取，不要求負責人搬運全文。
+Reviewer 先查 live head；同 SHA 且無新證據時只記錄查核，不冒稱新一輪修復通過。若新成果在其他 repo 或分支，先定位並讀其現行指示，再判斷依賴，不把另一個 worker 的成功當成本 controller ACTIVE。
+程式變更按差異及既有未完成驗收進行獨立測試；只有文件更新則核對主張與所引用原始證據。完成後將結果綁定精確 SHA，更新 state 與本入口的下一個 G 工作，不自動擴大。
+最近一次交付定位查核：reviews/GOVERNANCE_SUBMISSION_CHECK_c04ef465.md。該次仍取得舊 head，未取得新的治理送審版本；此紀錄不表示 executor 在其他環境沒有工作。
