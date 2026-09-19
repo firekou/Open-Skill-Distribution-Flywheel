@@ -2,9 +2,38 @@
 
 # ATK Token Intelligence Magazine / Open Skill Distribution Flywheel
 
-> **Current goal:** A practical collection of verified tools and skills that external agents can discover, understand and adopt to solve real tasks, with transparent and optional ATK integration.
+> **What this is:** helping agents and their developers find, install and actually use practical AI
+> tools — each verified entry carrying licence, cost and permission information and a traceable
+> record of someone running it, with optional ATK Router/API/MCP integration.
 >
-> We continuously discover useful tools, verify their practical use, prepare usable assets, and distribute them through accessible entry points. External discovery and adoption remain goals to prove, not outcomes implied by publishing this repository.
+> **Read the scope carefully.** The registry below lists 188 candidate tools; **one** of them has
+> been installed, run and written up to that standard so far. The rest are scored candidates, not
+> verified assets. External discovery and adoption are goals to prove, not outcomes implied by
+> publishing this repository — as of 2026-09-18 there is **no record of any third party using
+> anything here**.
+
+## Verified assets you can use today
+
+| Asset | Problem it solves | Verified | Status |
+|---|---|---|---|
+| **[headroom + ATK](integrations/headroom-atk/README.md)** — compress a large log before it reaches the model | An agent reads a 1,200-line deploy log; you pay for every token and one line matters. Cuts what gets sent, with a one-command offline check that the line you need survives | 2026-09-18 · headroom `0.37.0` · Apache-2.0 · installs and runs with **no API key** | On branch `claude/atk-headroom-adoption` ([PR #5](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/5), **Draft — not merged to `main`**) |
+
+**Will it help you?** It depends entirely on how repetitive your payload is — for some shapes the
+saving is zero. Check yours before adopting, offline and free:
+
+```bash
+git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel
+cd Open-Skill-Distribution-Flywheel && git checkout claude/atk-headroom-adoption
+python3 -m venv .venv && . .venv/bin/activate && pip install "headroom-ai[proxy]==0.37.0"
+cd integrations/headroom-atk
+python3 local_check.py --log /path/to/your.log --needle "the line that must survive"
+```
+
+Machine-readable index: [`registry/materials.json`](registry/materials.json) — the verified entries
+are the ones carrying an `_adoption` block (currently: `headroom`), which records the version,
+licence, install command, inputs and outputs, ATK configuration, an alternative provider, cost and
+permissions, the verification date with evidence paths, known failures, and where to report
+problems.
 
 以下雜誌、Lab 與組織文件保留為歷史與參考；目前任務以頁首最新目標及 reviews/STATUS.md 為準。
 

@@ -1,0 +1,31 @@
+# P5-01 / P5-02 controls.  python 3.11.15  2026-09-18
+# Synthetic secret only: sk-SYNTHETIC0000NOTAREALKEY0000000000000ZZ. No real credential was used.
+
+## A. The reviewer's own script, unmodified, against the fixed head
+$ cp reviews/evidence/pr5-r1/reviewer_checks.py integrations/headroom-atk/ && python3 reviewer_checks.py
+{"case": "shrunk", "exit": 0, "output": "log        : /tmp/tmphyey7k66/sample.log \u2014 1 lines, 205 bytes\ndirect     : 300 chars reached the upstream\nvia proxy  : 4 chars reached the upstream  (98.7% fewer)\nneedle 'KEEP': present after the proxy\nPASS: 296 fewer characters (98.7%) and every needle survived\n"}
+{"case": "unchanged", "exit": 3, "output": "log        : /tmp/tmphyey7k66/sample.log \u2014 1 lines, 205 bytes\ndirect     : 300 chars reached the upstream\nvia proxy  : 300 chars reached the upstream  (identical size)\nneedle 'KEEP': present after the proxy\nNO BENEFIT: the proxy returned the payload unchanged, byte for byte. headroom saves by factoring out text repeated across lines; this payload has no such redundancy to factor out. Nothing was lost and nothing was gained.\n"}
+{"case": "expanded", "exit": 3, "output": "log        : /tmp/tmphyey7k66/sample.log \u2014 1 lines, 205 bytes\ndirect     : 300 chars reached the upstream\nvia proxy  : 800 chars reached the upstream  (166.7% MORE)\nneedle 'KEEP': present after the proxy\nNO BENEFIT: the payload GREW by 500 characters (166.7% larger). Sending this through the proxy would cost you more, not less.\n"}
+{"case": "same_length_changed", "exit": 3, "output": "log        : /tmp/tmphyey7k66/sample.log \u2014 1 lines, 205 bytes\ndirect     : 300 chars reached the upstream\nvia proxy  : 300 chars reached the upstream  (identical size)\nneedle 'KEEP': present after the proxy\nNO BENEFIT: the payload was REWRITTEN but came back exactly the same length. Not a byte-for-byte pass-through \u2014 the content changed \u2014 so verify the rewrite is acceptable to you before using this path. There is no size benefit either way.\n"}
+{"case": "lost", "exit": 1, "output": "log        : /tmp/tmphyey7k66/sample.log \u2014 1 lines, 205 bytes\ndirect     : 300 chars reached the upstream\nvia proxy  : 4 chars reached the upstream  (98.7% fewer)\nneedle 'KEEP': LOST after the proxy\nFAIL: the proxy dropped a needle. Do not adopt for this payload.\n"}
+{"case": "http_error_secret_echo", "synthetic_key_visible": false}
+
+## B. New regression tests against the FIXED head (expect 17/17)
+$ python3 test_local_check.py
+----------------------------------------------------------------------
+Ran 17 tests in 0.046s
+
+OK
+
+## C. NEGATIVE CONTROL - the same tests against the OLD head 03dc57b (expect failures)
+$ (03dc57b local_check.py + ab_test.py) python3 test_local_check.py
+Ran 17 tests in 0.042s
+
+FAILED (failures=5, errors=6)
+
+## D. P5-01 before/after on the actual leak, not just an AttributeError
+head         | case                             | full key / any 8-char fragment visible
+OLD 03dc57b  | key echoed in body               | full=True  fragment=True
+OLD 03dc57b  | key straddling the 400-char cut  | full=False fragment=True
+FIXED        | key echoed in body               | full=False fragment=False
+FIXED        | key straddling the 400-char cut  | full=False fragment=False

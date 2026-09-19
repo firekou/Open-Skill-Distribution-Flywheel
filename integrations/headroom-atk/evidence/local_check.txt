@@ -1,0 +1,23 @@
+# Offline reproducible check — no credential, no cost, no model call.
+# headroom 0.37.0  python 3.11.15  date 2026-09-19
+# deploy.log md5: 0ad9194a489136baa931881b78374cf7
+# Needles are reported by position and length, never by content (--show-needles opts in).
+
+$ python3 make_log.py > deploy.log && python3 local_check.py
+log        : deploy.log — 1200 lines, 111262 bytes
+direct     : 111357 chars reached the upstream
+via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+needle #1 (18 chars): present after the proxy
+needle #2 (5 chars): present after the proxy
+PASS: 16779 fewer characters (15.1%) and every needle survived
+exit=0
+
+--- negative control: the same records as JSON lines, where there is no cross-line redundancy ---
+$ python3 local_check.py --log app.jsonl --needle 0042_add_tenant_id --needle 42701
+log        : app.jsonl — 1200 lines, 172540 bytes
+direct     : 172635 chars reached the upstream
+via proxy  : 172635 chars reached the upstream  (identical size)
+needle #1 (18 chars): present after the proxy
+needle #2 (5 chars): present after the proxy
+NO BENEFIT: the proxy returned the payload unchanged, byte for byte. headroom saves by factoring out text repeated across lines; this payload has no such redundancy to factor out. Nothing was lost and nothing was gained.
+exit=3 (NO BENEFIT — returned unchanged)

@@ -1,0 +1,38 @@
+{"check": "P5-01", "body": "a_full_key", "env": "unset", "full_key_visible": false, "leaked_8char_offsets": [], "body_echoed": false, "status_shown": true}
+{"check": "P5-01", "body": "a_full_key", "env": "ATK_INCLUDE_ERROR_BODY=1", "full_key_visible": false, "leaked_8char_offsets": [], "body_echoed": false, "status_shown": true}
+{"check": "P5-01", "body": "b_fragment", "env": "unset", "full_key_visible": false, "leaked_8char_offsets": [], "body_echoed": false, "status_shown": true}
+{"check": "P5-01", "body": "b_fragment", "env": "ATK_INCLUDE_ERROR_BODY=1", "full_key_visible": false, "leaked_8char_offsets": [], "body_echoed": false, "status_shown": true}
+{"check": "P5-01", "body": "c_spaced_echo", "env": "unset", "full_key_visible": false, "leaked_8char_offsets": [], "body_echoed": false, "status_shown": true}
+{"check": "P5-01", "body": "c_spaced_echo", "env": "ATK_INCLUDE_ERROR_BODY=1", "full_key_visible": false, "leaked_8char_offsets": [], "body_echoed": false, "status_shown": true}
+{"check": "P5-01", "body": "c2_reversed", "env": "unset", "full_key_visible": false, "leaked_8char_offsets": [], "body_echoed": false, "status_shown": true}
+{"check": "P5-01", "body": "c2_reversed", "env": "ATK_INCLUDE_ERROR_BODY=1", "full_key_visible": false, "leaked_8char_offsets": [], "body_echoed": false, "status_shown": true}
+{"check": "P5-01", "body": "d_past_400", "env": "unset", "full_key_visible": false, "leaked_8char_offsets": [], "body_echoed": false, "status_shown": true}
+{"check": "P5-01", "body": "d_past_400", "env": "ATK_INCLUDE_ERROR_BODY=1", "full_key_visible": false, "leaked_8char_offsets": [], "body_echoed": false, "status_shown": true}
+{"check": "P5-01", "case": "switch_really_gone", "INCLUDE_BODY_ENV_attr": false, "env_reads": ["HEADROOM_PROXY", "ATK_MODEL", "ATK_API_KEY"], "reads_error_body": false, "truncation_slices": []}
+{"check": "P5-R2-01", "case": "success", "exit": 0, "needle_visible": false, "first_line": "log        : sample.log — 1 lines, 229 bytes"}
+{"check": "P5-R2-01", "case": "needle_LOST", "exit": 1, "needle_visible": false, "first_line": "log        : sample.log — 1 lines, 229 bytes"}
+{"check": "P5-R2-01", "case": "needle_not_in_src", "exit": 2, "needle_visible": false, "first_line": "needle #1 is not in the log to begin with — nothing to preserve. Check the string. (Re-run with --show-needles"}
+{"check": "P5-R2-01", "case": "empty_needle", "exit": 2, "needle_visible": false, "first_line": "an empty --needle is satisfied by any output and checks nothing. Give the text that must survive."}
+{"check": "P5-R2-01", "case": "exit3_unchanged", "exit": 3, "needle_visible": false, "first_line": "log        : sample.log — 1 lines, 229 bytes"}
+{"check": "P5-R2-01", "case": "exit3_inflated", "exit": 3, "needle_visible": false, "first_line": "log        : sample.log — 1 lines, 229 bytes"}
+{"check": "P5-R2-01", "case": "duplicate_needles", "exit": 0, "needle_visible": false, "first_line": "log        : sample.log — 1 lines, 229 bytes"}
+{"check": "P5-R2-01", "case": "regex_metachars", "exit": 0, "needle_visible": false, "first_line": "log        : sample.log — 1 lines, 329 bytes"}
+{"check": "P5-R2-01", "case": "show_needles_optin", "exit": 0, "needle_visible": true, "first_line": "log        : /tmp/tmpbd0a0s4y/sample.log — 1 lines, 229 bytes"}
+{"check": "P5-R2-01", "case": "cli_missing_log", "exit": 2, "needle_visible": false, "FULL_PATH_visible": true, "out": "/tmp/tmpqquv6hxf/absent.log does not exist"}
+{"check": "P5-R2-01", "case": "cli_log_is_a_directory", "exit": 1, "needle_visible": false, "uncaught_traceback": true, "out": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nIsADirectoryError: [Errno 21] Is a directory: '/tmp/tmpqquv6hxf/adir'"}
+{"check": "P5-R2-01", "case": "cli_log_without_needle", "exit": 2, "needle_visible": false, "FULL_PATH_visible": false}
+{"check": "P5-R2-01", "case": "cli_argparse_typo", "exit": 2, "needle_visible": true, "out": "needles]\nlocal_check.py: error: unrecognized arguments: --needlez SYNTHETIC_PRIVATE_CUSTOMER_42"}
+{"check": "P5-R2-02", "case": "headroom_available", "importable": true, "origin": "/usr/local/lib/python3.11/dist-packages/headroom/__init__.py"}
+{"check": "P5-R2-02", "case": "source_of_claim", "file": "/usr/local/lib/python3.11/dist-packages/headroom/proxy/helpers.py", "def_line": 1552, "attaches_RotatingFileHandler": true, "target_logger": "headroom", "sets_propagate_False": true, "path_is_logs_proxy_log": true}
+{"check": "P5-R2-02", "case": "end_to_end_reproduction", "on_stderr": false, "headroom_logger_propagate": false, "in_proxy_log": true, "VERDICT": "executor's new claim CONFIRMED: warning goes to proxy.log, not stderr"}
+{"check": "P5-R2-02", "case": "stdlib_control_no_handlers_anywhere", "propagate": true, "lastResort": "<_StderrHandler <stderr> (WARNING)>", "warning_on_stderr": true}
+{"check": "P5-R2-02", "case": "stdlib_control_propagate_False_no_handler", "propagate": false, "lastResort": "<_StderrHandler <stderr> (WARNING)>", "warning_on_stderr": true}
+{"check": "P5-04", "case": "test_count", "tests_that_actually_run": 23, "readme_says_17": 2, "readme_lines": [231, 323]}
+{"check": "P5-04", "case": "readme_sample_block_vs_committed_evidence", "readme_block_lines": ["log        : deploy.log — 1200 lines, 111262 bytes", "direct     : 111357 chars reached the upstream", "via proxy  :  94578 chars reached the upstream  (15.1% fewer)", "needle '0042_add_tenant_id': present after compression", "needle '42701': present after compression", "PASS"], "every_readme_line_in_evidence": false, "readme_block_prints_needle_text": true, "evidence_uses_new_format": true}
+{"check": "P5-04", "case": "wording_residue", "file": "README.md", "pattern": "raw (?:ATK )?response", "line_hits": [], "still_present": false}
+{"check": "P5-04", "case": "wording_residue", "file": "README.md", "pattern": "nothing lost, nothing gained", "line_hits": [], "still_present": false}
+{"check": "P5-04", "case": "wording_residue", "file": "README.md", "pattern": "cost you more", "line_hits": [], "still_present": false}
+{"check": "P5-04", "case": "wording_residue", "file": "README.md", "pattern": "error-body redaction", "line_hits": [323], "still_present": true}
+{"check": "P5-04", "case": "wording_residue", "file": "README.md", "pattern": "17 (?:offline )?unit tests", "line_hits": [231, 323], "still_present": true}
+{"check": "P5-04", "case": "wording_residue", "file": "DISTRIBUTION.md", "pattern": "prints only sizes and\\s+pass/fail", "line_hits": [100], "still_present": true}
+{"check": "P5-04", "case": "referenced_evidence_paths", "readme_lists_pr5_r2": true, "readme_lists_pr5_r3": false, "pr5_r3_exists": true}

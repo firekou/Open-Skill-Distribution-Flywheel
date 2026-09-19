@@ -258,3 +258,93 @@ ROUTING = [
  ("RelayPlane/proxy",202,33,5,"2026-02-03","routing","MIT",19,19,13,
   "Local-first proxy that meters what every agent run costs and kills runaways before they drain a budget. MIT."),
 ]
+
+
+# ── Adoption records ───────────────────────────────────────────────────────
+# A material earns an entry here only after someone installed it, ran it and
+# wrote down what happened. Keyed by the material id build_materials.py derives
+# from the repo name. An id here that matches no material is a build error, not
+# a silent no-op — see the assertion in build_materials.py.
+#
+# `verified_on` / `evidence` are claims about work actually done in this repo.
+# Do not add a record for a tool that has not been run.
+ADOPTION = {
+ "headroom": {
+   "problem_solved": "An agent that reads a large log, file or tool output pays for every token "
+                     "of it, and the one line that answers the question is a small fraction of "
+                     "that. headroom compresses the payload locally before it is sent.",
+   "entry_point": "integrations/headroom-atk/README.md",
+   "entry_point_ref": "branch claude/atk-headroom-adoption (PR #5, Draft). NOT on main — a "
+                      "default clone will not contain it.",
+   "issues_to": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/issues — report "
+                "problems with this record or the integration here. Bugs in headroom itself go "
+                "to https://github.com/headroomlabs-ai/headroom/issues.",
+   "version_verified": "0.37.0",
+   "license": "Apache-2.0",
+   "install": 'pip install "headroom-ai[proxy]==0.37.0"  (Python 3.11 verified)',
+   # P5-03: the previous example wrote deploy.log into the repo root while
+   # local_check.py resolves it next to the script, so the documented command
+   # could not work. The cd is part of the instruction, not decoration.
+   "example": "git checkout claude/atk-headroom-adoption  # PR #5, not on main yet\n"
+              "cd integrations/headroom-atk && python3 make_log.py > deploy.log && "
+              "python3 local_check.py",
+   "example_on_your_own_data": "cd integrations/headroom-atk && python3 local_check.py "
+                               "--log /path/to/your.log --needle 'the line that must survive'  "
+                               "# exit 0 shrank and survived, 3 no benefit, 1 needle lost",
+   "io": "in: an OpenAI-compatible /v1/chat/completions request on localhost. "
+         "out: the same request, prompt compressed, forwarded to the upstream you name; "
+         "the upstream's response is returned unchanged.",
+   "atk_config": "Two values, no code: run `headroom proxy --port 8787 --no-http2`, then send "
+                 "requests to it with header "
+                 "`x-headroom-base-url: https://api.aitokenking.com.tw/api` (no /v1 suffix) and "
+                 "`Authorization: Bearer $ATK_API_KEY`.",
+   "alternative_provider": "The same header names any OpenAI-compatible upstream per request "
+                           "(another provider, a gateway, a local server). Drop the header and "
+                           "headroom routes by its own provider resolution. Nothing else changes, "
+                           "so ATK is replaceable here without touching code.",
+   "cost_and_permissions": "headroom itself is free and runs locally; no content leaves the "
+                           "machine to compress it. Model calls through it cost whatever the "
+                           "upstream charges. Needs no credential of its own — it forwards the "
+                           "Authorization header it is given. Binds to 127.0.0.1 by default and "
+                           "refuses client-named upstreams that resolve to private/loopback space.",
+   "verified_on": "2026-09-18",
+   "evidence": [
+     "integrations/headroom-atk/evidence/ab_needle.json",
+     "integrations/headroom-atk/evidence/ab_summary.json",
+     "integrations/headroom-atk/evidence/local_check.txt",
+   ],
+   "measured": "Two separate things, not one. (1) HISTORICAL, one pair of calls on 2026-09-18 "
+               "against a live gateway: 40,589 -> 25,525 prompt tokens (37.1% fewer) on a needle "
+               "question, same answer both paths; counts are the response usage field; the input "
+               "file was NOT preserved so this is not re-runnable, not re-measured since, and not "
+               "a guarantee. (2) REPRODUCIBLE, offline, no key: 111,357 -> 94,578 characters "
+               "reaching the upstream (15.1% fewer), needle intact. Tokens and characters are "
+               "different units on different bytes. No currency figure is claimed.",
+   "does_not_apply_to": "Measured limit, not a guess: headroom saves by factoring text repeated "
+                        "across lines. The same 1,200 records as JSON lines compress by exactly "
+                        "0.0% (returned unmodified); flattened to plain text they compress "
+                        "27.3%. One JSON shape was tested, so treat this as 'check yours first', "
+                        "not as 'JSON never compresses'. It also does not apply to short prompts, "
+                        "to payloads where "
+                        "every token is load-bearing, or where you need a byte-exact record of "
+                        "what the model saw. Check yours first: "
+                        "`python3 local_check.py --log YOUR.log --needle 'the line that matters'` "
+                        "(exit 3 means no benefit).",
+   "known_failure": "On a 'summarise in five bullets' prompt the FATAL line was missed by BOTH "
+                    "the compressed and the direct path — the wrong instrument for finding one "
+                    "unique event, not a compression fault. Recorded because it is the result.",
+   "maintenance": "Active upstream at snapshot 2026-09-15: ~8,764 stars/month since 2026-01-07, "
+                  "643 open issues. Version pinned in this record is the one actually run.",
+   # Attribution travels with the machine-readable record, not only with the
+   # prose page, so a client that reads the index alone still carries it.
+   # `upstream_attribution` is required by the tool's own Apache-2.0 licence.
+   # `verified_by` is a credit we ask for, never a condition of use.
+   "upstream_attribution": "headroom, (c) headroomlabs-ai, Apache-2.0, "
+                           "https://github.com/headroomlabs-ai/headroom. No headroom code is "
+                           "redistributed here; install it from PyPI.",
+   "verified_by": "AI Token King (ATK), https://aitokenking.com.tw — measurement run through "
+                  "https://api.aitokenking.com.tw/api/v1. ATK is not required to use this tool; "
+                  "the same configuration names any OpenAI-compatible upstream.",
+   "status": "verified_working",
+ },
+}

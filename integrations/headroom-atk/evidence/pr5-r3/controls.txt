@@ -1,0 +1,42 @@
+# Controls for the round-2 review findings (this is the r3 evidence directory).  python 3.11.15  headroom 0.37.0  2026-09-19
+# Synthetic values only. No real credential, no paid call, no live model.
+
+## A. Regression tests on the new head (23, up from 17)
+$ python3 test_local_check.py
+Ran 23 tests in 0.067s
+
+OK
+
+## B. NEGATIVE CONTROL - the same tests against f41f8d9, the head R2 reviewed
+$ (f41f8d9 local_check.py + ab_test.py) python3 test_local_check.py
+Ran 23 tests in 0.067s
+
+FAILED (failures=7, errors=1)
+   The seven failures are exactly the R2 findings: partial-echo leak with the debug
+   switch on, the switch still existing, and five needle/path disclosures.
+
+## C. P5-01 - the reviewer's own reviewer_r2_checks.py no longer runs, by design
+$ python3 reviewer_r2_checks.py
+    with patch.dict(os.environ,{a.INCLUDE_BODY_ENV:include}),patch.object(a.urllib.request,'urlopen',side_effect=err):
+                                ^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ab_test' has no attribute 'INCLUDE_BODY_ENV'
+   It fails on ab_test.INCLUDE_BODY_ENV because that switch was DELETED rather than
+   defaulted off. Its three assertions are carried forward in test_local_check.py:
+   test_provider_echoing_only_PART_of_the_key_cannot_leak (with the old env var set),
+   test_no_env_var_can_turn_the_body_back_on, and the whole OutputPrivacy class.
+
+## D. P5-R2-02 - the logging root cause was WRONG. What is actually true:
+   reviewer's counter-example: no handlers at all -> warning on stderr: True
+   logging.lastResort = <_StderrHandler <stderr> (WARNING)>
+   => 'root has no handlers' does NOT explain a missing warning. Claim withdrawn.
+
+   Re-measured on a real proxy run that triggered the refusal:
+     proxy stdout/stderr        'ignoring unsafe': 0
+     --log-file <path>          'ignoring unsafe': 0
+     ~/.headroom/logs/proxy.log 'ignoring unsafe': 3   <- it was here all along
+     2026-09-19 06:45:04,348 - headroom.proxy - WARNING - ignoring unsafe x-headroom-base-url override: ...
+   Mechanism, read from the source (helpers.py _setup_file_logging ~1552): a
+   RotatingFileHandler is attached to the 'headroom' logger and propagate=False.
+   So lastResort never fires and the record never reaches root. Not a lost message -
+   a message in a third file. The README and the upstream draft both said 'silent';
+   both are corrected.
