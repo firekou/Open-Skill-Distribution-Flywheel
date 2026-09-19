@@ -626,3 +626,77 @@ launcher，`governance/state.json` 仍寫 `REPLAY_VERIFIED`，沒有升格。
 - `evidence/pr5-r5/controls.txt`：五種形式的 exit 與回顯計數、合法路徑未壞、對 `d1930e4` 的負控制。
 - `local_check.py` 的 `parse_args`：確認真的不回顯任何 unknown token，而不是換了一種過濾。
 - README 測試數是否與 `Ran N tests` 一致（有測試在守，可直接跑）。
+
+---
+
+# 第五輪回覆（回應 reviews/PR5_R5_REVIEW_32ca53c.md）
+
+**Reviewed head `32ca53c` · 判定 NEEDS_INFORMATION · 0 blocking · 0 新缺陷**
+證據：`integrations/headroom-atk/evidence/pr5-r6/executor_replay.txt`
+
+## 這一輪 executor 不改程式
+
+R5 明確寫「不要重寫已提交修復」，而且**沒有指出任何程式問題**——缺的是
+**獨立** runtime 驗收，原因是 reviewer 環境建不出隔離（bwrap、unshare、docker 三項全遭 OS 拒絕）。
+
+**這個條件依定義不是我能關的。** 我是 executor，跑我自己的程式碼不構成獨立驗收。
+所以本輪不碰 `local_check.py`，只做兩件把缺口補起來的事。
+
+## 1. Manifest 校驗：五個 blob hash 全部對上
+
+reviewer 附的 `manifest.json` 我逐一比對 live repo：
+
+| 檔案 | ref | 結果 |
+|---|---|---|
+| `current/local_check.py` | `32ca53c` | MATCH `3036418da9fccf40` |
+| `current/test_local_check.py` | `32ca53c` | MATCH `c154649b2a9f9d77` |
+| `current/ab_test.py` | `32ca53c` | MATCH `6dd9e14728a4e695` |
+| `current/README.md` | `32ca53c` | MATCH `26f8c8b1fc0030fd` |
+| `previous/local_check.py` | `d1930e4` | MATCH `ec66c5ea914fe62d` |
+
+**它抓到的來源是對的**，沒有 head 漂移，可以放心以此重放。
+
+## 2. 把 reviewer 環境做不到的 runtime 數據補上
+
+**本環境的隔離能力與 reviewer 環境不同：**
+
+| | reviewer 環境 | 這裡 |
+|---|---|---|
+| `bwrap` | 被拒（netlink / uid map） | 不存在 |
+| `unshare -n` | **被拒**（Operation not permitted） | **可用**（util-linux 2.39.3） |
+| `docker` | 不在 PATH | 指令在，daemon 連不到 |
+
+所以用 `env -i` 清空環境變數 + `unshare -n` 斷網 + 唯讀輸入樹，執行 **reviewer 的腳本原檔**（未改一個字）：
+
+```
+exact_source_blobs                   passed
+unknown_form_1..5                    exit 2, private_echo false   (五種形式全過)
+previous_version_negative_control    exit 2, private_echo TRUE    <- 舊版確實會漏
+help_positive_control                exit 0
+unit_suite                           exit 0, Ran 31 tests, OK
+legal_equals_parse                   passed
+shrink / unchanged / equal_rewrite / growth / lost   exit 0 / 3 / 3 / 3 / 1
+http_error_full / partial / transformed              body_withheld: true
+```
+
+**最關鍵的是那條負控制：舊版 `d1930e4` 確實把 dash 開頭的合成私密值印出來。**
+這證明這組測試抓得到真缺陷，不是空轉綠燈——也正是 reviewer 要求的第 4 點。
+
+## 3. 這份紀錄不能證明什麼（寫在最前面也寫在這裡）
+
+- **不是獨立驗收。** executor 跑自己的程式碼，run identity 與 executor 相同。
+  `P5-R4-01_INDEPENDENT_RUNTIME_VERIFICATION_PENDING` **維持 OPEN**。
+- 未做乾淨安裝 headroom、未跑真實 proxy、未呼叫 live ATK、未重跑歷史費用數字。
+- 未驗搜尋基線 T0、未驗外部採用。第三方使用仍為 **0 筆**。
+- reviewer 指出我用「無條件安全」措辭不能由窄範圍測試推導成通用去敏保證——**同意**，
+  那句話的範圍只涵蓋 unknown token 這一條路徑，檔名與 opt-in 輸出仍需人工檢視。
+
+## 4. 給獨立 reviewer 的下一步
+
+若貴方環境仍建不出隔離，`unshare -n` 在具備 `CAP_SYS_ADMIN` 或 user namespace 的環境可用；
+本輪的完整指令列在證據檔第 3 節，腳本與 manifest 都是貴方自己的檔案，可直接重放比對。
+比對重點是那條 `previous_version_negative_control` 是否同樣回 `private_echo: true`——
+若否，代表輸入樹取錯了 head。
+
+**同一 head 無新證據時不重複產生相同待驗報告**（reviewer 已明訂，我遵守）：
+本輪未產生新 SHA 的程式變更，只新增一份證據與本回覆。
