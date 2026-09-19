@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/schemas/content-package.schema.json",
+  "title": "ATK Content Package v0.1.0",
+  "description": "The machine record of one human-readable article. The article prose and this record share claim_id, sources and evidence states; the machine record may not drop a limitation the prose carries.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "package_kind", "package_id", "schema_version", "version", "status",
+    "title", "desk", "format", "reader_decision",
+    "created_at", "valid_until",
+    "authorship", "claims", "sources", "applicability",
+    "limitations", "unknowns", "rights", "approvals", "lifecycle", "content_hash"
+  ],
+  "properties": {
+    "package_kind": {"const": "content"},
+    "package_id": {"type": "string", "pattern": "^atk\\.content\\.[a-z0-9]+(-[a-z0-9]+)*$"},
+    "schema_version": {"const": "0.1.0"},
+    "version": {"$ref": "common-defs.schema.json#/$defs/semver"},
+    "status": {
+      "description": "draft and review are working states. publishable asserts every gate in tools/validate_packages.py passed. retracted means do not use.",
+      "type": "string",
+      "enum": ["draft", "review", "publishable", "published", "retracted", "expired"]
+    },
+    "title": {"type": "string", "minLength": 1},
+    "desk": {
+      "type": "string",
+      "enum": ["token", "agent", "mcp", "a2a", "routing", "skill", "framework", "context-memory", "trust-security", "agent-economy"]
+    },
+    "format": {
+      "type": "string",
+      "enum": ["SIGNAL", "EXPLAINED", "ATK_VERIFY", "ATK_LAB", "TOP_PICKS", "BENCHMARK", "DEEP_DIVE", "BUILD"]
+    },
+    "reader_decision": {
+      "description": "The decision a reader is expected to make differently after reading. Content that changes no decision is not intelligence.",
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {"$ref": "common-defs.schema.json#/$defs/date"},
+    "published_at": {"oneOf": [{"$ref": "common-defs.schema.json#/$defs/date"}, {"type": "null"}]},
+    "valid_until": {
+      "description": "Null is allowed on a draft and refused on anything publishable. Content with no expiry silently becomes a permanent assertion.",
+      "oneOf": [{"$ref": "common-defs.schema.json#/$defs/date"}, {"type": "null"}]
+    },
+    "authorship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authored_by", "reviewed_by", "human_responsible"],
+      "properties": {
+        "authored_by": {"type": "array", "minItems": 1, "items": {"$ref": "common-defs.schema.json#/$defs/seat_id"}},
+        "reviewed_by": {"type": "array", "items": {"$ref": "common-defs.schema.json#/$defs/seat_id"}},
+        "human_responsible": {"type": ["string", "null"]},
+        "ai_authored": {"type": "boolean"}
+      }
+    },
+    "claims": {"type": "array", "minItems": 1, "items": {"$ref": "common-defs.schema.json#/$defs/claim"}},
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "common-defs.schema.json#/$defs/source"}},
+    "applicability": {"$ref": "common-defs.schema.json#/$defs/applicability"},
+    "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "unknowns": {
+      "description": "Required, and required to be non-empty on anything publishable. A research output with no stated unknown is claiming completeness it has not earned.",
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "rights": {"$ref": "common-defs.schema.json#/$defs/rights"},
+    "approvals": {"type": "array", "items": {"$ref": "common-defs.schema.json#/$defs/approval"}},
+    "lifecycle": {"$ref": "common-defs.schema.json#/$defs/lifecycle"},
+    "test_cases": {"type": "array", "items": {"$ref": "common-defs.schema.json#/$defs/test_case"}},
+    "machine_counterpart": {
+      "description": "package_id of the learning package built from this article, if one exists.",
+      "type": ["string", "null"]
+    },
+    "human_article_path": {"type": ["string", "null"]},
+    "content_hash": {"$ref": "common-defs.schema.json#/$defs/sha256"},
+    "disclosure": {"type": ["string", "null"]}
+  }
+}

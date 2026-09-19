@@ -1,0 +1,363 @@
+{
+  "package_kind": "learning",
+  "package_id": "atk.token.cost-accounting-floor",
+  "schema_version": "0.1.0",
+  "version": "0.1.0",
+  "status": "draft",
+  "title": "成本計量下限：在報出任何節省數字之前必須成立的六件事",
+  "desk": "token",
+  "created_at": "2026-09-16",
+  "published_at": null,
+  "valid_until": "2027-03-16",
+  "authorship": {
+    "authored_by": [
+      "AM22"
+    ],
+    "reviewed_by": [
+      "AM36",
+      "AM04"
+    ],
+    "human_responsible": null,
+    "ai_authored": true
+  },
+  "sources": [
+    {
+      "source_id": "SRC-E026",
+      "source_uri": "ledgers/EVIDENCE_LEDGER.md E026 @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "12 of the 15 rates in `PS-2026-09-15` carry no cached input rate — every OpenAI and every Anthropic model.",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-CAL",
+      "source_uri": "reports/LAB_001_PILOT_READINESS_REVIEW.md §5 @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "a meter recording only the accepted call undercounts CAL-002 by 65%; one pricing cached tokens at the uncached rate overstates CAL-003 by 5.41x.",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-BYTES4",
+      "source_uri": "reports/LAB_001_PILOT_READINESS_REVIEW.md §5 @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "the prohibited `bytes/4` estimator's error ranges from 13.6% to 61.0% across content types on the fixture, and changes sign. No calibration factor fixes an estimator whose error depends on the input.",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-E007",
+      "source_uri": "ledgers/EVIDENCE_LEDGER.md E007 @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "Corrected gap: 11.4x like-for-like (gpt-5.5 vs deepseek-v4-pro, blended 3:1, cache-miss off-peak). ~100x is reachable only by cherry-picking tiers.",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-E015",
+      "source_uri": "ledgers/EVIDENCE_LEDGER.md E015 @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "DeepSeek publishes four input prices per model (cache-hit/miss x peak/off-peak); OpenAI prices by context tier; within Anthropic alone the range is 10x.",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-E003",
+      "source_uri": "ledgers/EVIDENCE_LEDGER.md E003 @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "#2805 repro: 2.1M tokens claimed \"100% saved\" vs ~195 real (>10,000x).",
+      "rights_note": "本 repo 自有檔案。"
+    },
+    {
+      "source_id": "SRC-DRYRUN",
+      "source_uri": "reports/LAB_001_PILOT_READINESS_REVIEW.md §6-7 @ a8ca352dc64e792864f351f7775e2b21681b6390",
+      "source_type": "repository_file",
+      "source_version": "a8ca352dc64e792864f351f7775e2b21681b6390",
+      "retrieved_at": "2026-09-16",
+      "retrieval_mode": "verbatim",
+      "quote": "What it establishes about token optimisation: nothing. The token counts come from a pseudo-random number generator seeded on the task id.",
+      "rights_note": "本 repo 自有檔案。"
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "C-001",
+      "statement": "同一套價目表上，15 個費率中有 12 個沒有 cached input 價；缺的是全部 OpenAI 與全部 Anthropic 型號。",
+      "evidence_state": "TESTED",
+      "source_refs": [
+        "SRC-E026"
+      ],
+      "limitations": [
+        "這是 2026-09-15 一天的快照，且只涵蓋該 Lab 選用的型號。",
+        "缺價是快照不完整，不代表廠商沒有公開該費率。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM22",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-002",
+      "statement": "在對抗性校準案例上，只記錄被接受那一次呼叫的計量器把成本低估 65%；把 cached token 以未快取費率計價則高估 5.41 倍。",
+      "evidence_state": "TESTED",
+      "source_refs": [
+        "SRC-CAL"
+      ],
+      "limitations": [
+        "案例是刻意構造的 fixture，不是真實流量分佈；數值證明的是誤差的方向與量級可能很大，不是任一家實際會差這麼多。",
+        "計量器與供應商原生 usage 的比對因無憑證而未執行，該環節仍為 FAIL。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM22",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-003",
+      "statement": "以位元組除以四估算 token，在同一份 fixture 上誤差介於 13.6% 到 61.0%，且會變號；沒有任何校正係數能修好一個誤差隨輸入而變的估算器。",
+      "evidence_state": "TESTED",
+      "source_refs": [
+        "SRC-BYTES4"
+      ],
+      "limitations": [
+        "fixture 的參考計數為合成值，只有結構性結論成立，百分比本身不得外引。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM22",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-004",
+      "statement": "同一組廠商價目，換一種配對方式會得到 11.4 倍到 257 倍的差距；ATK 自己先前published 的約 100 倍是挑選費率層級的結果。",
+      "evidence_state": "OBSERVED",
+      "source_refs": [
+        "SRC-E007",
+        "SRC-E015"
+      ],
+      "limitations": [
+        "僅牌價，未含企業議價與批次層級。",
+        "單日快照。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM22",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-005",
+      "statement": "一個 80,473 星的節省工具，其使用者提出的重現案例顯示節省量被高估逾一萬倍。",
+      "evidence_state": "OBSERVED",
+      "source_refs": [
+        "SRC-E003"
+      ],
+      "limitations": [
+        "14 則 issue 對 80,473 星，是抱怨者偏誤樣本。",
+        "「想要準確數字」不等於「願意為可驗證的計量付費」。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM22",
+      "checked_by": "AM36"
+    },
+    {
+      "claim_id": "C-006",
+      "statement": "本 repo 目前唯一跑完的十筆紀錄是 dry run，其 token 數來自以 task id 為種子的偽隨機數；該次執行對 token 最佳化不建立任何結論。",
+      "evidence_state": "TESTED",
+      "source_refs": [
+        "SRC-DRYRUN"
+      ],
+      "limitations": [
+        "這是關於我方自有 harness 的測試，與任何候選工具的效果無關。"
+      ],
+      "counterevidence": [],
+      "authored_by": "AM22",
+      "checked_by": "AM36"
+    }
+  ],
+  "applicability": {
+    "use_when": [
+      "Agent 要計算或回報任一任務的成本",
+      "Agent 要比較兩個供應商或兩種設定的成本"
+    ],
+    "not_for": [
+      "作為對外的節省比例承諾",
+      "在快取費率缺漏時仍產出一個成本數字"
+    ],
+    "prerequisites": [
+      "可取得帶 cache_state 的逐次用量紀錄"
+    ],
+    "compatible_versions": [
+      "PS-2026-09-15"
+    ],
+    "jurisdiction_if_relevant": null
+  },
+  "method": {
+    "steps": [
+      "確認價目快照對本次型號同時具備 uncached 與 cached input 費率。",
+      "確認每筆紀錄都帶 cache_state；不可推測。",
+      "把失敗與重試的用量計入分母，成功次數計入分子。",
+      "若任一費率缺漏，輸出 CANNOT_PRICE 並停止，不得以未快取費率代入。",
+      "報出成本時同時報出所用的配對方式與快照 id。"
+    ],
+    "decision_rules": [
+      {
+        "rule_id": "R-001",
+        "when": "本次型號在快照中缺 cached input 費率且該次呼叫有快取命中",
+        "then": "回 CANNOT_PRICE；以未快取費率代入會高估，實測可達 5.41 倍",
+        "claim_refs": [
+          "C-001",
+          "C-002"
+        ]
+      },
+      {
+        "rule_id": "R-002",
+        "when": "計量來源只涵蓋被接受的那一次呼叫",
+        "then": "判定為低估並拒絕採用該數字；實測低估 65%",
+        "claim_refs": [
+          "C-002"
+        ]
+      },
+      {
+        "rule_id": "R-003",
+        "when": "token 數由位元組除以四估算",
+        "then": "拒絕用於成本結論；該估算器誤差隨輸入變化且會變號",
+        "claim_refs": [
+          "C-003"
+        ]
+      },
+      {
+        "rule_id": "R-004",
+        "when": "要報出跨供應商的價格倍數",
+        "then": "必須同時報出配對方式與快照日期；單一倍數不得單獨出現",
+        "claim_refs": [
+          "C-004"
+        ]
+      },
+      {
+        "rule_id": "R-005",
+        "when": "資料來源是工具自報的節省量",
+        "then": "標為 REPORTED，不得升級；已知有逾一萬倍的高估案例",
+        "claim_refs": [
+          "C-005"
+        ]
+      },
+      {
+        "rule_id": "R-006",
+        "when": "執行紀錄的 run_class 為 dry_run 或資料來自合成 fixture",
+        "then": "不得用於任何效果結論",
+        "claim_refs": [
+          "C-006"
+        ]
+      }
+    ],
+    "required_approvals": [
+      "客戶管理者核准採用並釘死版本"
+    ],
+    "escalation_conditions": [
+      "價目快照缺漏本次型號的任一費率",
+      "無法判定 cache_state",
+      "計量器與供應商原生 usage 尚未比對"
+    ],
+    "rollback": "停止使用本包的計價規則，回退到上一個已核准版本，並把已產出的成本數字標為未經校準。"
+  },
+  "test_cases": [
+    {
+      "test_id": "T-001",
+      "given": "型號缺 cached input 費率、該次呼叫有快取命中",
+      "expected_behavior": "回 CANNOT_PRICE，不輸出金額",
+      "scoring_version": "cost-0.1.0",
+      "baseline_reference": null,
+      "executed": false,
+      "result": "NOT_RUN"
+    },
+    {
+      "test_id": "T-002",
+      "given": "只給被接受那一次呼叫的用量",
+      "expected_behavior": "判定低估並拒絕採用",
+      "scoring_version": "cost-0.1.0",
+      "baseline_reference": null,
+      "executed": false,
+      "result": "NOT_RUN"
+    },
+    {
+      "test_id": "T-003",
+      "given": "要求報出「便宜一百倍」",
+      "expected_behavior": "拒絕單一倍數，改報區間與配對方式",
+      "scoring_version": "cost-0.1.0",
+      "baseline_reference": null,
+      "executed": false,
+      "result": "NOT_RUN"
+    },
+    {
+      "test_id": "T-004",
+      "given": "資料來自 run_class=dry_run 的紀錄",
+      "expected_behavior": "拒絕作為效果結論依據",
+      "scoring_version": "cost-0.1.0",
+      "baseline_reference": null,
+      "executed": false,
+      "result": "NOT_RUN"
+    }
+  ],
+  "limitations": [
+    "本篇全部證據都關於我方自有的計量與環境，沒有任何一項是第三方工具的效果量測。",
+    "失敗與重試的成本、人工時間的成本本篇都沒有數字，只有結構性論證。",
+    "四個測試案例已寫、一個都沒跑。"
+  ],
+  "unknowns": [
+    "我方每一則內容的實際製作成本——尚無工時紀錄。",
+    "失敗與重試在真實工作負載中佔總成本的比例——未量測。",
+    "計量器與供應商原生 usage 的偏差——因無憑證而 BLOCKED，仍未知。"
+  ],
+  "rights": {
+    "license": "本 repo LICENSE；引用之公開規格片段標明出處",
+    "redistribution_allowed": true,
+    "commercial_use_allowed": true,
+    "attribution_required": true,
+    "model_training_allowed": null,
+    "notes": null
+  },
+  "approvals": [
+    {
+      "role": "author",
+      "seat_id": "AM22",
+      "decision": "APPROVED",
+      "decided_at": "2026-09-16",
+      "scope_hash": "sha256:3d1c3d608850392bec68de0f7fcacb5169a9d0fbb12ab4dbb937dbe3ef115ce7",
+      "conditions": null
+    },
+    {
+      "role": "verify",
+      "seat_id": "AM36",
+      "decision": "NOT_REQUESTED",
+      "decided_at": "2026-09-16",
+      "scope_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "conditions": "本輪為離線樣本，未送 Verify 核定。"
+    }
+  ],
+  "lifecycle": {
+    "review_owner": "AM22",
+    "supersedes": null,
+    "superseded_by": null,
+    "revokes": null,
+    "revoked_by": null,
+    "change_summary": "首版精簡樣本。"
+  },
+  "delivery": {
+    "fail_mode_when_status_unreachable": "fail_closed",
+    "risk_class": "technical",
+    "max_characters": 12000,
+    "requires_atk_api_key": false
+  },
+  "human_counterpart": "atk.content.cost-per-successful-task",
+  "content_hash": "sha256:3d1c3d608850392bec68de0f7fcacb5169a9d0fbb12ab4dbb937dbe3ef115ce7",
+  "disclosure": "由 AI 席位撰寫，未指派人類責任窗口；離線樣本，不是已發布內容。"
+}
