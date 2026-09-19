@@ -76,3 +76,7 @@ D ACTIVE：持久觸發器已安裝，至少一個真實 executor → 獨立 rev
 
 state.json 的 automation.status 只有 runtime 實測後才能升格。preflight.py 是離線 guard，不是 scheduler、獨立 reviewer 或權限強制系統。
 產品 PR 狀態以 live head 與對應 review 為準，不在政策檔固定過期 SHA。治理導入不替代產品驗收，也不以產品 PR 必須合併為前提。
+
+## 全專案實驗方法補充
+
+依 EXP-GUIDELINE-001，所有後續實驗使用 [共用準則](../EXPERIMENT_GUIDELINE.md)、[專案接合](../EXPERIMENT_APPLICATION.md) 及 [工作單](../EXPERIMENT_TEMPLATE.md)。優先縮短有效外部回饋時間，探索與独立確認分離，成功後尋找反例並保存適用範圍。本次為文件採用，不改現行 task／修補／支出限制，不恢復舊 benchmark，不啟動 runner。大量實驗數量不等於單一 finding 的重試授權。
