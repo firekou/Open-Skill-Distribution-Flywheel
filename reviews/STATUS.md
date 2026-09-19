@@ -2,22 +2,23 @@
 唯一規則入口：[治理入口](../governance/OPERATING_RULES.md)。決策看 decisions.json；啟動查 live PR head，不沿用歷史快照當批准。
 
 ## 2026-09-19：PR5 最新獨立複核
-- 精確 head `32ca53cd703efeb647ddb2d65168ba69f1e414d6`，Draft、未合併。
-- [GPT R5 review](PR5_R5_REVIEW_32ca53c.md)：**NEEDS_INFORMATION**。diff 靜態符合最後一項修復方向，但本輪隔離能力探測失敗，沒有執行 PR code，不能批准。
-- P5-R4-01：IMPLEMENTED_PENDING_INDEPENDENT_VERIFICATION。executor 自報31/31及正負控制；不當作 reviewer 實跑。
-- 下一步只需獨立 reviewer 在無秘密隔離環境執行 [重放包](evidence/pr5-r5/README.md)，寫前重查 head；通過後收輪。不要求 Claude 重做修復，不需新方向決策。
-- 上次 [R4](PR5_R4_REVIEW_d1930e4.md) 的條件未被本輪關閉；governance/state.json 的 PR5 欄位仍是歷史快照，不得用它批准新 head。
-- 同一 head 無新證據不重複 review、不寫空提交。此待驗結論不禁止後續獨立補證。
-- 第三方採用0、搜尋T0未執行仍為既有記錄；本輪未重測。1A／2A／3A有效，上游仍未批准送出。
+- 精確 live head `933446ab230e6fb8b41d79b596ef3c19b721fb7a`，Draft、未合併。
+- [GPT R6 review](PR5_R6_REVIEW_933446ab.md)：**NEEDS_INFORMATION**。新提交只含 executor 重放紀錄與回覆，0 產品程式變更，範圍不變。
+- VERIFIED：R5 manifest 的五個 Git blob SHA 已由 reviewer 對 GitHub 精確 refs 交叉核對，全數一致。
+- TESTED：executor 自報在 env-i、unshare-n 與唯讀輸入下通過 31 tests、五個 unknown controls、舊版負控制及既有控制；這不是獨立驗收，不能自行關閉 P5-R4-01。
+- VERIFIED probe：本 reviewer 環境的 bwrap、unshare、user namespace 均被 OS 拒絕，Docker 不存在；依安全門檻未執行 PR code。見 [R6 隔離探測](evidence/pr5-r6/isolation_probe.json)。
+- 下一步只需另一個可提供無秘密、無外網、唯讀來源、無寫入 token 的獨立 reviewer 重放既有 [R5 證據包](evidence/pr5-r5/README.md)。Claude 不需重寫修復或再補同類自跑證據。
+- P5-R4-01 維持 `INDEPENDENT_RUNTIME_VERIFICATION_PENDING`。同一 head 無新獨立證據不重複 review、不寫空提交。
+- 第三方採用 0、搜尋 T0 未執行仍為既有記錄；本輪未重測。1A／2A／3A 有效，上游仍未批准送出。
 - PR6／GOV-BOOTSTRAP 不在本任務範圍，不更動其狀態。
 
 ## 持續檢查
-- 已註冊「ATK PR5 提交複核」，PR #5新commit事件喚醒GPT reviewer；沒有5/10分鐘輪詢，也沒有每小時替代排程。
-- 本輪 PR5 提交事件已抵達 reviewer 並完成 live head／diff 檢核；隔離運行驗收仍待補。沒有觸發延遲保證，也未驗證完整停止／去重控制。只接reviewer，本任務不能啟動遠端Claude；整套治理仍非ACTIVE。
-- 既有每小時「ATK 治理續作」監看的是另一repo virtual-strategy-lab，本輪未更動。
-- 報告／狀態寫main，不用被審分支記帳commit撞掉review。
-- GOV-BOOTSTRAP仍須驗證持久控制、實際runtime與停止／去重；不要再建重複PR5 reviewer排程，也不要把註冊成功當完整閉環驗收。見[原導入交辦](../governance/IMPLEMENTATION_PROMPT.md)。
+- 已註冊「ATK PR5 提交複核」，PR #5 新 commit 事件可喚醒 GPT reviewer；沒有 5／10 分鐘輪詢，也沒有每小時替代排程。
+- 本輪 webhook 已成功取得事件、查 live head、去重並形成綁定完整 SHA 的 review，表示 reviewer 事件路徑已有一次實際紀錄；不等於 executor 已接通或整套治理 ACTIVE。
+- 報告／狀態寫 main，不用被審分支記帳 commit 撞掉 review。
+- GOV-BOOTSTRAP 仍須驗證持久控制、實際 runtime 與停止／去重；不要再建重複 PR5 reviewer 排程，也不要把 reviewer 事件成功當完整閉環驗收。見[原導入交辦](../governance/IMPLEMENTATION_PROMPT.md)。
 
 ## 歷史
-PR #4 的829c7e9已完成約定review，見 [R3及追加結案](PR4_R3_REVIEW_328a33b.md)。
-PR #1 benchmark維持暫停，歷史findings OPEN。舊STATUS排程保留在Git歷史。
+- [R5](PR5_R5_REVIEW_32ca53c.md) 對 `32ca53cd703efeb647ddb2d65168ba69f1e414d6` 的結論為 NEEDS_INFORMATION，原因是獨立隔離 runtime 不可用；R6 新增 executor 證據後結論未變。
+- PR #4 的 829c7e9 已完成約定 review，見 [R3 及追加結案](PR4_R3_REVIEW_328a33b.md)。
+- PR #1 benchmark 維持暫停，歷史 findings OPEN。
