@@ -1,0 +1,27 @@
+# Mutation testing: break the thing, confirm a test notices.
+# A mutation that survives means the suite is not guarding that behaviour.
+
+baseline (nothing broken)                       -> OK
+
+  CAS never detects a lost race                -> FAILED (failures=1)
+  lease held by another worker ignored         -> FAILED (failures=1)
+  guard verdict ignored on dispatch            -> FAILED (failures=1, errors=1)
+  conditional approval treated as complete     -> FAILED (failures=1, errors=3)
+  seen-event ledger not passed to the guard    -> FAILED (failures=1)
+  stop switch never reported                   -> FAILED (failures=1)
+  live head faked from the stored head         -> FAILED (failures=1)
+  live runner starts while disabled            -> FAILED (failures=1)
+  guard allows self-review                     -> FAILED (errors=1)
+  guard ignores budget/timeout/attempts        -> FAILED (failures=1)
+
+restored                                       -> OK
+
+# All 10 mutations were caught. The one printed as PATTERN NOT FOUND above was a
+# wrong search string in the harness, not a surviving mutant; re-run with the correct
+# line (preflight.py:52 self_review) gave FAILED (errors=1), restored gave OK.
+
+# Note recorded rather than hidden: an earlier run showed that deleting the CONTROLLER's
+# own duplicate-event check changed nothing, because dedup is enforced by the trusted
+# guard and the controller check is only a fast path. Two tests were added to pin the
+# layer that actually carries it (the guard's own NOOP, and that _order always hands
+# the guard the seen-event ledger). The second of those now fails under mutation, above.

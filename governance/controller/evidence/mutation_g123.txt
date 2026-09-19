@@ -1,0 +1,32 @@
+G1-G3 mutation run — 2026-09-19T20:00:40Z
+
+Each entry deletes one guarantee this round added. The suite must go red for
+every one. A hang is reported separately and never counted as a catch.
+
+baseline: OK
+
+  [caught  ] runner inherits the whole parent env                 -> FAILED (failures=6, errors=1)
+  [caught  ] an unknown role silently defaults                    -> FAILED (failures=1)
+  [caught  ] reviewer / pr_tests receive the write token          -> FAILED (failures=2)
+  [caught  ] a review with no evidence is accepted                -> FAILED (failures=1)
+  [caught  ] a malformed new_head is accepted                     -> FAILED (failures=5)
+  [caught  ] a phantom head is never verified                     -> FAILED (failures=1)
+  [caught  ] the work order drops the policy sha                  -> FAILED (failures=1, errors=1)
+  [caught  ] missing auth falls through instead of BLOCKED_ACCESS -> FAILED (errors=2)
+  [caught  ] an expired holder can still renew                    -> FAILED (failures=1)
+  [caught  ] drive renumbers steps from zero on every firing      -> FAILED (failures=1)
+  [caught  ] tick invents an event id from the state revision     -> FAILED (failures=1)
+  [caught  ] step accepts an event id nothing stable produced     -> FAILED (failures=1)
+  [caught  ] the replay verifier says yes to anything             -> FAILED (failures=2)
+  [caught  ] replay.py loses its commit verifier                  -> FAILED (failures=1)
+  [caught  ] tick replay mode loses its commit verifier           -> FAILED (errors=1)
+  [caught  ] every writer shares one temp file name               -> FAILED (failures=1)
+  [caught  ] the compare-and-swap is not held under a lock        -> FAILED (failures=1)
+  [caught  ] the lock outlives a failed commit                    -> FAILED (failures=2)
+  [caught  ] the runner is not started in its own process group   -> FAILED (failures=1, errors=1)
+  [caught  ] terminate only signals, never confirms               -> FAILED (failures=1)
+  [caught  ] cancelling one task is treated as stopping everything -> FAILED (failures=3)
+  [caught  ] the per-task cancel checkpoint is skipped            -> FAILED (failures=2)
+  [caught  ] anyone can renew anyone's lease                      -> FAILED (failures=1)
+
+23/23 mutants caught
