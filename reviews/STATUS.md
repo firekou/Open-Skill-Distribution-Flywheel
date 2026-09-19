@@ -1,3 +1,5 @@
+> **最新第二輪 review：[f41f8d9](PR5_R2_REVIEW_f41f8d9.md)，BLOCKED。** Reviewer 重跑 17 tests 通過，P5-02 CLOSED；P5-01 debug 仍可洩漏 provider 原生 key 片段。另修輸出可安心分享承諾、上游 logging 根因與殘留用語。1A／2A／3A 不重問，當前無新增負責人決策。下一步見完整 review，提交新 SHA 供 PR5_R3 複核。
+
 > **負責人已決策 1A／2A／3A（2026-09-18）：** 集中 headroom 修復、乾淨安裝與入口；先免費品牌分發及可選 ATK 接入；上游三項心得只備稿待核准。執行最新版 [Claude Prompt](CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md)。PR #5 仍 BLOCKED，需新 SHA 獨立複核；付費樣本暫存，不需重問這三項選擇。下方歷史「待決」已被本決策取代。
 
 > **最新 PR #5 review：[03dc57b 第一輪](PR5_R1_REVIEW_03dc57b.md)，BLOCKED。** 獨立重現 API 錯誤回顯合成秘密、離線檢查膨脹仍 PASS。Claude 先修 P5-01／02，同步 P5-03／04 的入口與主張，回覆既有 ATK_AGENT_DISCOVERY_EXECUTOR_RESPONSE.md。商業下一步待負責人本輪決策；技術修復不需重問。PR 保持 Draft、未合併，未恢復 benchmark。
