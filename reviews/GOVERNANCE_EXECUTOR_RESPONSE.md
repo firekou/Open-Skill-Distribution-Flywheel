@@ -1,0 +1,218 @@
+# Governance Executor Response — 最小自動交接實作
+
+**Branch** `claude/atk-governance-controller` · **Base** `204a7fe8d43a39962bb4beb313b7538484d433cb` (main)
+**Draft PR，未合併。** 本檔由 executor 撰寫，**不自我核准**；驗收由獨立 reviewer 作出。
+產品修復（PR #5）未混入本分支。
+
+## 五行目標對齊
+
+| | |
+|---|---|
+| **目標來源** | `governance/IMPLEMENTATION_PROMPT.md`、GOV-01（已批准，不重問）、`OPERATING_RULES.md` |
+| **本輪交付** | 一個 controller：一次啟動就跑完「執行 → 獨立 review → 要求修復 → 新 SHA → 再 review → 結案」，全程照可信 guard 裁決，並留可重放紀錄 |
+| **主線連結** | 負責人不再需要在兩個 AI 之間搬檔案；省下的時間回到工具分發與外部採用主線 |
+| **必要驗證與停止點** | 重複事件、過期 SHA、自審、並行、重啟、逾時、預算、停止開關都要有負控制。做完送審即停 |
+| **範圍差異** | 未擴到 50～100 席、未建治理平台、未安裝觸發器、未新增支出、未啟用 live dispatch |
+
+---
+
+## 1. 治理基礎驗證：發現三個矛盾，全部明列
+
+`python3 -m unittest discover -s governance -p 'test_*.py'` → `Ran 5 tests … OK`。
+但**測試通過不等於基礎一致**。逐項核對入口、決策與狀態後：
+
+### C1 — main 的 `state.json` 落後三輪，而且原因是結構性的
+
+main `204a7fe` 寫著 `PR5 status=REVIEW_PENDING · observed_head=d55911e`。
+實際上 PR #5 早已完成 R3 review 與確認 review、條件清除、修復輪結束，live head 為 `d1930e4`。
+
+**不是忘記更新。** 更新後的 state 寫在 PR #5 的工作分支上，而規範要求
+「controller 只讀可信 main 的規則」。**任務狀態放在待審分支裡 → main 永遠看不到 →
+controller 讀到的是三輪前的世界。**
+
+### C2 — `observed_head` 在寫下它的那個 commit 裡永遠不可能正確
+
+SHA 要等 commit 存在才知道，只能先寫佔位符再補一次；而補那一次會讓 live head 前進，
+`preflight.py` 立即把**進行中**的 review 判為過期。這在 PR #5 實際發生過：
+
+```
+reviewed head : 95215b0
+live head now : 7040ba1
+guard         : {"action": "REJECT", "reason": "stale_head"}
+兩個 head 的差異：governance/state.json，1 行
+```
+
+規範本來就寫「啟動時必須查 live PR head；不能相信快照永遠最新」——**存它就是違反自己的規則。**
+
+### C3 — 契約與狀態檔的型別不相容
+
+guard 要求 `head`／`live_head` 是 40 字元十六進位，state.json 卻會出現 `PENDING_PUSH`。
+兩者相遇時 guard 回 `bad_sha`，而不是「這筆狀態尚未定案」的可辨識訊號。
+
+### 處置
+
+- C1／C2：本輪把 main 的 state 補正到真實狀況，並**移除儲存的 head**，改為
+  `head_source: "read live at start-up … DO NOT STORE"`。controller 的
+  `live_head()` 每次都問 remote，不讀快照。
+- C3：controller 組裝工作單時不產生佔位符 SHA；狀態未定案的任務不派工（規範：「未知狀態不派工」）。
+- **`preflight.py` 一個字都沒改。** 它全程行為正確，且屬 main 的可信政策，改它需要獨立批准流程。
+
+---
+
+## 2. 可用執行能力（只記錄有無，不輸出任何秘密）
+
+| 能力 | 實測 | 對啟動的意義 |
+|---|---|---|
+| `claude` CLI 非互動模式（`-p --output-format json`） | **有**，2.1.278 | 真實 runner 有真的目標；`runners.SubprocessRunner` 就是對準它寫的 |
+| 模型憑證（`ANTHROPIC_API_KEY` / OAuth） | **沒有**，也沒有 `~/.claude/.credentials.json` | runner 寫得出來，但**在這個容器裡無法認證** |
+| `GITHUB_TOKEN` / `GH_TOKEN` | 有；`git ls-remote` 可用 | 分支推送與 PR 讀取可達 |
+| `gh` CLI | 沒有 | GitHub 走 git 與 session 的 MCP 工具 |
+| `docker` | 有 | 第三方程式可隔離 |
+| `git worktree` | 可用 | 每個 run 各自的隔離工作區 |
+| `crontab` | 沒有 | — |
+| `systemctl` | 有，但**容器閒置後會被回收** | **容器內的排程會跟著死**，觸發器必須在外部 |
+
+**明確寫下不成立的假設：** 聊天視窗（Claude 或 ChatGPT）**不能被程式喚醒**。
+本 session 能排程是 harness 的能力，**不是這個 repository 的能力**——一個獨立的 controller
+行程呼叫不到它，也交不了手。所以它不能充當觸發器。
+
+---
+
+## 3. 最小自動交接：已完成，可重放
+
+```
+governance/controller/
+  store.py         持久狀態：CAS、租約、事件去重、append-only 事件日誌，temp+os.replace 原子寫入
+  controller.py    狀態機；每一步都問可信 guard，obeys 裁決
+  runners.py       Runner 介面 + 不呼叫模型的測試替身 + 真實 subprocess adapter（預設停用）
+  replay.py        一個指令跑完整圈，輸出 evidence/replay.txt
+  test_controller.py  26 條正負控制
+  config.replay.json / config.live.example.json
+  ACTIVATION.md    真實啟動與停用步驟、缺口
+```
+
+### 一次啟動，中間沒有人
+
+```
+$ python3 governance/controller/replay.py
+
+  {"action": "REVIEW_PENDING", "head": "1111…"}
+  {"action": "FIX_PENDING", "attempt": 1}
+  {"action": "REVIEW_PENDING", "head": "2222…"}
+  {"action": "COMPLETE", "head": "2222…"}
+
+  status: COMPLETE   fix rounds: 1   spend: 0.0   human steps: 0
+```
+
+每一步的 guard 裁決都留在事件日誌：
+
+```
+execute        head=000000000000 run=fake-executor-1  -> DISPATCH_ALLOWED
+review         head=111111111111 run=fake-reviewer-1  -> DISPATCH_ALLOWED
+accept_review  head=111111111111 run=fake-reviewer-1  -> FIX_PENDING
+execute        head=111111111111 run=fake-executor-1  -> DISPATCH_ALLOWED
+review         head=222222222222 run=fake-reviewer-1  -> DISPATCH_ALLOWED
+accept_review  head=222222222222 run=fake-reviewer-1  -> COMPLETE
+```
+
+完整輸出：`governance/controller/evidence/replay.txt`
+
+### 負控制（28 條，`evidence/tests.txt`）
+
+| 要防的事 | 測試證明的行為 |
+|---|---|
+| Webhook 重送 | 同一 `event_id` 第二次回 `NOOP/duplicate`，executor **沒有**被叫第二次 |
+| 兩個 worker 搶同一 task | 租約擋下，第二個回 `NOOP/leased_elsewhere`，executor 未執行 |
+| 寫入競爭 | CAS 輸掉的那一方 `ConcurrencyError`，**不覆蓋**贏家 |
+| worker 崩潰後卡住租約 | 租約過期後可被接手 |
+| 中途換 head | 舊 head 的 review 被 `stale_head` 拒絕，reviewer **沒有**被啟動 |
+| 自審 | run identity 等於 executor 時 `self_review` 拒絕 |
+| reviewer 謊報 head | `review_binding` 拒絕，任務**不會**變 COMPLETE |
+| review 沒附證據 | `missing_evidence` 拒絕 |
+| 自創結論字（"LGTM"） | `unknown_review_decision` 拒絕 |
+| 條件批准當成通過 | → `CONDITIONS_PENDING`，**不是** COMPLETE |
+| 無限修復迴圈 | 超過 `max_attempts` → `STOP/limit` |
+| 超出預算 | `cost > budget` → `STOP/limit` |
+| 停止開關 | 在**任何 runner 啟動之前**回 `STOP/operator_stop` |
+| 越權 phase | `outside_authority` 拒絕 |
+| merge／部署 | guard 不認得的動作名 → `unknown_or_external_action` 拒絕 |
+| 行程重啟 | 同一事件重送 → `NOOP/duplicate`，已完成的寫入**不重做** |
+| 寫入途中崩潰 | 前一版狀態完整，檔案未被截斷 |
+| runner 失敗 | 記 `FAILED` + `recovery_point`，不假裝成功 |
+| **PR 內竄改規範** | guard 由**可信 checkout 的路徑**載入；PR 改寫 `preflight.py` 不影響 controller 行為 |
+| runner 自帶工作單 | 工作單一律由 controller 從可信輸入組裝 |
+| 範本預設值 | `config.live.example.json` 兩個 runner 都 `enabled: false`、`budget: 0` |
+
+**`exit 0` 不是 review。** runner 輸出無法解析時視為失敗，不是通過。
+
+### 變異測試：測試本身會不會抓到？（`evidence/mutation.txt`）
+
+綠燈不代表測試有在守東西。刻意把 10 個地方弄壞，看有沒有人叫：
+
+| 弄壞什麼 | 結果 |
+|---|---|
+| CAS 不再偵測競爭失敗 | FAILED |
+| 忽略別人持有的租約 | FAILED |
+| 派工時忽略 guard 裁決 | FAILED |
+| 條件批准當成 COMPLETE | FAILED |
+| 不把已處理事件清單交給 guard | FAILED |
+| 停止開關永遠回報 False | FAILED |
+| 用儲存的 head 假冒 live head | FAILED |
+| 停用中的 live runner 照樣啟動 | FAILED |
+| guard 允許自審 | FAILED |
+| guard 忽略預算／逾時／次數 | FAILED |
+
+**10 個全部被抓到。** 但過程中先抓到一個我自己的問題，如實記錄：
+
+**刪掉 controller 自己的「重複事件」檢查，28 條測試全過。** 原因是去重其實由**可信 guard**
+執行，controller 那一段只是快速路徑。分層是對的，但我的測試分不出是哪一層在守。
+已補兩條：直接驗 guard 對重複事件回 `NOOP`，以及驗 `_order` **一定**把已處理事件清單交給
+guard——後者才是真正會無聲失效的單點，它現在會被變異測試抓到。
+
+---
+
+## 4. 真實啟動方案
+
+`governance/controller/ACTIVATION.md`：憑證與預算前置、開啟順序（先手動跑一輪拿
+`MANUAL_RUN_VERIFIED`，再裝觸發器才談 `ACTIVE`）、四種停用方式、以及尚未涵蓋的部分。
+
+`config.live.example.json` 是可直接複製的範本，**兩個 runner 預設停用、預算 0**，
+且 `controller.py` 在本版**拒絕 `mode != replay`**——啟用 live dispatch 必須是有人刻意
+在 review 中做的一次修改，不是一個早就開著的旗標。
+
+**觸發器是唯一無法在這個 repository 內解決的東西。** 三個選項與各自代價列在 ACTIVATION.md；
+建議 GitHub Actions（`workflow_dispatch` + `schedule`），因為觸發、隔離與稽核 GitHub 已經在做。
+
+---
+
+## 5. 已接通 / 未接通
+
+| | |
+|---|---|
+| **已接通** | 狀態持久化、CAS、租約、事件去重、稽核日誌、guard 整合、狀態機全流程、逾時／預算／次數／停止開關、崩潰重啟、可信邊界、真實 runner adapter（程式面） |
+| **未接通** | 模型憑證（容器內沒有）、預算（0）、持久觸發器（容器會被回收，必須外部）、**真實 AI 執行與 review（一次都沒跑過）** |
+
+**分類：`REPLAY_VERIFIED`。** `state.json` 的 `automation.status` 照此寫，**沒有寫 ACTIVE**。
+測試替身通過只證明 controller 正確，**不證明任何 AI 做過真實工作**。
+
+---
+
+## 6. 下一位 reviewer 需要核對
+
+- `evidence/replay.txt`：整圈是否真的一次啟動走完、guard 是否每步都被詢問。
+- `evidence/tests.txt` 與 `test_controller.py`：26 條是否真的會失敗（建議刻意破壞 `store.py`
+  的 CAS 或 `controller.py` 的 `_ask`，確認測試會抓到，而不是空轉綠燈）。
+- `runners.SubprocessRunner` 是否真的無法在停用狀態啟動；`config.live.example.json` 的預設值。
+- **可信邊界**：controller 是否真的只從 config 路徑載入 guard，PR 內容能否影響它。
+- C1／C2／C3 的處置是否足夠，特別是 main 的 state 補正有沒有把 PR #5 寫成已通過
+  （**沒有**：它寫的是 `REPAIR_ROUND_COMPLETE_PENDING_OWNER`，merge 仍未授權）。
+- `ACTIVATION.md` 的缺口是否誠實、是否可據以決定要不要開預算。
+
+## 7. 真正需要負責人處理的事項
+
+1. **要不要開預算讓它真的跑**，以及用哪個模型。今天 `budget: 0`，guard 會在第一步就停。
+2. **憑證放哪裡**（建議 GitHub repository secret），並確認**不得**暴露給 PR checkout。
+3. **選觸發器**：GitHub Actions／常駐主機／暫不啟動。
+4. PR #5 的 merge、About／topics 套用、上游備稿送出、金鑰輪替——**與本輪無關，維持原狀**。
+
+其餘工程工作不需要負責人再決定方向；1A／2A／3A 與 GOV-01 已批准，本輪未重問。

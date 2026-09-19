@@ -1,0 +1,51 @@
+{
+  "_README": [
+    "Template for real executor/reviewer runs. Copy it, fill it in OUTSIDE the repository,",
+    "and never commit the copy. Nothing here contains or should contain a secret.",
+    "",
+    "Live dispatch stays OFF until every one of these is true:",
+    "  1. runners[*].enabled = true AND a non-zero budget is set by the owner",
+    "  2. the credentials below exist in the operator's trusted environment",
+    "  3. the stop file path is writable by whoever must be able to stop this",
+    "  4. a persistent trigger exists to call the controller (see docs/ACTIVATION.md)",
+    "controller.py refuses mode != replay in this build, on purpose."
+  ],
+  "mode": "live",
+  "controller_identity": "controller-1",
+  "repo_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel",
+  "branch": "claude/atk-headroom-adoption",
+  "prompt_file": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
+  "guard_path": "governance/preflight.py",
+  "state_dir": "/var/lib/atk-controller",
+  "stop_file": "/var/lib/atk-controller/STOP",
+  "authorized_phases": ["execute", "review", "accept_review"],
+  "max_attempts": 2,
+  "budget": 0,
+  "timeout_seconds": 2700,
+  "lease_seconds": 900,
+  "workspace_root": "/var/tmp/atk-runners",
+  "runners": {
+    "executor": {
+      "enabled": false,
+      "identity_suffix": "exec-a",
+      "command": ["claude", "-p", "--output-format", "json",
+                  "--permission-mode", "acceptEdits",
+                  "--append-system-prompt", "You are the EXECUTOR. Read {prompt_file}. Work at {head}. Emit JSON: {\"new_head\": \"<sha>\", \"cost\": <usd>}."],
+      "timeout_seconds": 1800,
+      "clone_timeout": 300
+    },
+    "reviewer": {
+      "enabled": false,
+      "identity_suffix": "rev-b",
+      "command": ["claude", "-p", "--output-format", "json",
+                  "--permission-mode", "plan",
+                  "--append-system-prompt", "You are the INDEPENDENT REVIEWER. You did not write this. Review {head} from a fresh clone. Emit JSON: {\"review\": {\"head\": \"...\", \"reviewer\": \"...\", \"decision\": \"APPROVED|APPROVED_WITH_CONDITIONS|BLOCKED|NEEDS_INFORMATION\", \"evidence\": [\"...\"]}, \"cost\": <usd>}."],
+      "timeout_seconds": 1800,
+      "clone_timeout": 300
+    }
+  },
+  "credentials_expected_in_env": [
+    "ANTHROPIC_API_KEY or a Claude Code OAuth token — for the runners",
+    "GITHUB_TOKEN — push to the work branch only; must NOT be exposed to a PR checkout"
+  ]
+}

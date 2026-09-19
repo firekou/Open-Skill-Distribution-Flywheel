@@ -1,0 +1,22 @@
+{
+  "mode": "replay",
+  "controller_identity": "controller-replay-1",
+  "repo_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel",
+  "branch": "claude/atk-governance-controller",
+  "prompt_file": "governance/IMPLEMENTATION_PROMPT.md",
+  "guard_path": "governance/preflight.py",
+  "state_dir": "/tmp/atk-controller-replay",
+  "stop_file": "/tmp/atk-controller-replay/STOP",
+  "authorized_phases": ["execute", "review", "accept_review"],
+  "max_attempts": 2,
+  "budget": 0,
+  "timeout_seconds": 2700,
+  "lease_seconds": 600,
+  "replay": {
+    "executor_heads": [
+      "1111111111111111111111111111111111111111",
+      "2222222222222222222222222222222222222222"
+    ],
+    "reviewer_decisions": ["BLOCKED", "APPROVED"]
+  }
+}

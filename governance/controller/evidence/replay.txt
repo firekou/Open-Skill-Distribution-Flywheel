@@ -1,0 +1,30 @@
+# Replay: execute -> review -> fix -> review -> close, from one start
+# guard: /home/user/Open-Skill-Distribution-Flywheel/governance/preflight.py
+# runners: scripted test doubles, no model call, no network. spend cap 0
+
+## steps
+  {"action": "REVIEW_PENDING", "head": "1111111111111111111111111111111111111111"}
+  {"action": "FIX_PENDING", "attempt": 1}
+  {"action": "REVIEW_PENDING", "head": "2222222222222222222222222222222222222222"}
+  {"action": "COMPLETE", "head": "2222222222222222222222222222222222222222"}
+
+## outcome
+  status        : COMPLETE
+  reviewed head : 222222222222
+  fix rounds    : 1
+  spend         : 0.0
+  human steps   : 0
+
+## every guard decision, in order
+  execute        head=000000000000 run=fake-executor-1  -> DISPATCH_ALLOWED (guard_only_no_dispatch_performed)
+  executed       {"task": "GOVDEMO", "new_head": "111111111111", "executor": "fake-executor-1"}
+  review         head=111111111111 run=fake-reviewer-1  -> DISPATCH_ALLOWED (guard_only_no_dispatch_performed)
+  accept_review  head=111111111111 run=fake-reviewer-1  -> FIX_PENDING (review_record_validated_not_truth_verified)
+  execute        head=111111111111 run=fake-executor-1  -> DISPATCH_ALLOWED (guard_only_no_dispatch_performed)
+  executed       {"task": "GOVDEMO", "new_head": "222222222222", "executor": "fake-executor-1"}
+  review         head=222222222222 run=fake-reviewer-1  -> DISPATCH_ALLOWED (guard_only_no_dispatch_performed)
+  accept_review  head=222222222222 run=fake-reviewer-1  -> COMPLETE (review_record_validated_not_truth_verified)
+
+## label
+  REPLAY_VERIFIED — the controller works. No AI ran, no trigger is installed,
+  no budget was spent. This is NOT ACTIVE and must not be recorded as such.
