@@ -84,7 +84,7 @@ short version:
 |---|---|---|
 | 1 | event source | exists on the GPT side; **this repository has never received an event from it** |
 | 2 | receiving service | **none.** `tick.py` is a callee; nothing here listens |
-| 3 | persistent launcher | **none.** The account holds three routines, none referencing this repository or `tick.py`. Two cron jobs created during this work are both gone — they were session-scoped and did not survive |
+| 3 | persistent launcher | **none for `tick.py`.** Two cron jobs created during this work are gone (session-scoped, did not survive). An account Routine now watches for incoming reviews and *is* listed, but it wakes a session to look — it does not dispatch — and it has not fired yet |
 | 4 | execution host | this container, which is reclaimed after inactivity |
 | 5 | model credential | absent here (`claude` 2.1.278 is installed and cannot authenticate) |
 | 6 | reviewer identity | enforced; independent *judgement* still unproven |

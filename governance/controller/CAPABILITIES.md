@@ -26,7 +26,7 @@ Evidence ladder, as used throughout this repository:
 |---|---|---|---|---|---|---|---|
 | 1 | **Event source** — what says "there is work" | GPT side, outside this repository | unknown to this repository | `REPORTED` | — | — | This repository has never received an event from it. No event ID, no timestamp, no delivery has been observed here. |
 | 2 | **Receiving service** — something listening for that event | none | — | `NOT BUILT` | — | — | Nothing here listens. `tick.py` is a **callee**: it must be invoked. A caller that never calls is indistinguishable from no caller. |
-| 3 | **Persistent launcher** — what invokes the callee on a schedule | none | — | `NOT BUILT` | see below | — | **Measured, not assumed:** the account's routine list holds three routines, none of which references this repository, this branch or `tick.py`. Two session-scoped cron jobs created during this work (`ee341b02`, `46edd712`) are both gone. They did not survive. |
+| 3 | **Persistent launcher** — what invokes the callee on a schedule | none for `tick.py`; one account Routine watches for reviews | Routine is stored account-side but bound to one session | `NOT BUILT` for the controller; `OBSERVED` for review-watching | routine `trig_01K4VfPCvDp4XEEddbFLUHqn` | fires hourly | **Measured, not assumed:** two session-scoped cron jobs created during this work (`ee341b02`, `46edd712`) are both gone — they did not survive. A real account Routine has since been created and *is* listed, which the vanished ones never were. **It still does not close this row:** it wakes a session to look for reviews, it does not invoke `tick.py`, and it is bound to this session, so it is unproven against that session ending. It has not yet fired once. |
 | 4 | **Execution host** — where the controller process runs | this ephemeral container | reclaimed after inactivity | `OBSERVED` | — | disk and lifetime are per session | No persistent host has been chosen. State written here dies with the container, so #8 cannot be satisfied from here. |
 | 5 | **Model authentication** — how a runner reaches a model | Claude / ChatGPT subscriptions | per host | `NOT AVAILABLE HERE` | — | runs and wall clock, not currency | This container has no `ANTHROPIC_API_KEY` and no `~/.claude/.credentials.json`. `claude` 2.1.278 is installed and cannot authenticate. Which auth path a future host uses, and whether that path bills, is **unverified** — `run_budget` does not answer it (GOV-R1-04). |
 | 6 | **Reviewer identity** — that the reviewer is not the author | controller config + runner identity | per run | `VERIFIED` | `evidence/mutation_g123.txt`, `test_controller.py` | guard refuses `self_review` | Distinct **identity** is enforced. Distinct **judgement** is not: two runs of the same model family are not two independent sources. Only a genuinely separate reviewer settles that, and none has run. |
@@ -54,9 +54,12 @@ ones carrying real evidence.
 A row moves only on evidence of the kind its level names, and only for the
 capability in that row:
 
-- **Row 3** becomes `OBSERVED` when a launcher outside this session invokes
-  `tick.py` once and the event ID, time, task, run ID and head are recorded.
-  It becomes `TESTED` when that survives a restart of the launcher's host.
+- **Row 3** becomes `OBSERVED` for the controller when a launcher outside this
+  session invokes **`tick.py`** once and the event ID, time, task, run ID and
+  head are recorded. The review-watching Routine does not count: watching for
+  work is not dispatching it. Row 3 becomes `TESTED` when a launcher still
+  fires after the session it was created from has ended — which is the only
+  thing that distinguishes a launcher from a long-running session.
 - **Row 5** becomes `OBSERVED` when a runner authenticates somewhere, recording
   only *which* path and *whether* a quota exists — never a key, never a price
   invented for the record.
