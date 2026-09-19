@@ -1,0 +1,63 @@
+# 範本：把「GPT review 落地」翻成 Claude Routine 的觸發事件。
+# 放進 .github/workflows/ 才會生效；本檔在 templates/ 只是範本（GOV-PLAN-02：不立即掛 live webhook）。
+# 觸發：PR review 送出，或 PR 留言（Codex cloud 的回覆屬 issue_comment）。
+# 判定只靠一行固定字串 "VERDICT: <詞>"，不做語意判讀。
+name: bridge-review-to-claude
+on:
+  pull_request_review:
+    types: [submitted]
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: bridge-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: false
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  route:
+    if: github.event.pull_request != null || github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read verdict line
+        id: v
+        env:
+          BODY: ${{ github.event.review.body || github.event.comment.body }}
+        run: |
+          verdict=$(printf '%s' "$BODY" | grep -oE '^VERDICT: *[A-Z_]+' | head -1 | sed 's/VERDICT: *//')
+          echo "verdict=${verdict:-NONE}" >> "$GITHUB_OUTPUT"
+          echo "pr=${{ github.event.pull_request.number || github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+
+      # 輸出 A（推薦）：貼 label，讓 Routine 的 GitHub 觸發（pull_request.labeled）接手。零秘密。
+      - name: Label for Claude
+        if: steps.v.outputs.verdict == 'BLOCKED' || steps.v.outputs.verdict == 'FIX_PENDING'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit "${{ steps.v.outputs.pr }}" --repo "${{ github.repository }}" \
+            --remove-label review:pending --add-label claude:fix-pending
+
+      - name: Label approved
+        if: steps.v.outputs.verdict == 'APPROVED'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit "${{ steps.v.outputs.pr }}" --repo "${{ github.repository }}" \
+            --remove-label review:pending --remove-label claude:fix-pending --add-label review:approved
+
+      # 輸出 B（備用）：直接打 Routine 的 /fire。需要兩個 secrets；Actions 重跑會重開 session。
+      # - name: Fire Claude routine
+      #   if: steps.v.outputs.verdict == 'BLOCKED'
+      #   env:
+      #     ROUTINE_FIRE_URL: ${{ secrets.ROUTINE_FIRE_URL }}
+      #     ROUTINE_FIRE_TOKEN: ${{ secrets.ROUTINE_FIRE_TOKEN }}
+      #   run: |
+      #     curl -fsS -X POST "$ROUTINE_FIRE_URL" \
+      #       -H "Authorization: Bearer $ROUTINE_FIRE_TOKEN" \
+      #       -H "anthropic-version: 2023-06-01" \
+      #       -H "anthropic-beta: experimental-cc-routine-2026-04-01" \
+      #       -H "Content-Type: application/json" \
+      #       -d "{\"text\": \"pr=${{ steps.v.outputs.pr }} head=${{ github.event.pull_request.head.sha }} verdict=${{ steps.v.outputs.verdict }}\"}"
