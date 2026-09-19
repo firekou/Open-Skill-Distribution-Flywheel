@@ -36,6 +36,7 @@ pass without reproducing anything. The tests read /proc/<pid>/stat instead.
 == Tests covering the ladder ==
   test_a_runner_that_ignores_sigterm_is_still_killed (test_controller.CancelIsFourDifferentThings.test_a_runner_that_ignores_sigterm_is_still_killed)
   test_cancelling_one_task_does_not_stop_the_others (test_controller.CancelIsFourDifferentThings.test_cancelling_one_task_does_not_stop_the_others) ... ok
+  test_it_refuses_to_signal_its_own_process_group (test_controller.CancelIsFourDifferentThings.test_it_refuses_to_signal_its_own_process_group)
   test_neither_file_switch_claims_to_reach_a_running_runner (test_controller.CancelIsFourDifferentThings.test_neither_file_switch_claims_to_reach_a_running_runner)
   test_revoking_a_credential_is_not_claimed_to_be_implemented (test_controller.CancelIsFourDifferentThings.test_revoking_a_credential_is_not_claimed_to_be_implemented)
   test_stop_dispatch_and_cancel_task_are_not_the_same_switch (test_controller.CancelIsFourDifferentThings.test_stop_dispatch_and_cancel_task_are_not_the_same_switch) ... ok
@@ -46,5 +47,5 @@ pass without reproducing anything. The tests read /proc/<pid>/stat instead.
   test_a_runner_that_hangs_is_timed_out_with_its_children (test_controller.TheRealRunAdapterIsDrivenEndToEnd.test_a_runner_that_hangs_is_timed_out_with_its_children) ... ok
   test_a_stub_runner_runs_and_its_verdict_is_parsed (test_controller.TheRealRunAdapterIsDrivenEndToEnd.test_a_stub_runner_runs_and_its_verdict_is_parsed) ... ok
   test_the_timeout_message_never_quotes_the_runners_output (test_controller.TheRealRunAdapterIsDrivenEndToEnd.test_the_timeout_message_never_quotes_the_runners_output) ... ok
-  Ran 12 tests in 6.684s
+  Ran 13 tests in 6.557s
   OK

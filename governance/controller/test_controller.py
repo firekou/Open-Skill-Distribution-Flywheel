@@ -18,6 +18,7 @@ import inspect
 import os
 import pathlib
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -408,12 +409,41 @@ class CancelIsFourDifferentThings(unittest.TestCase):
                 time.sleep(0.05)
             worker = int(pidfile.read_text().strip())
             self.assertTrue(still_running(worker))
+            pgid = os.getpgid(proc.pid)
 
-            outcome = terminate_process_group(proc, grace_seconds=1)
-            self.assertEqual(outcome, "killed", "SIGTERM was treated as sufficient")
-            time.sleep(0.4)
-            self.assertFalse(still_running(worker),
-                             "a runner that ignores SIGTERM survived the cancel")
+            try:
+                outcome = terminate_process_group(proc, grace_seconds=1)
+                self.assertEqual(outcome, "killed", "SIGTERM was treated as sufficient")
+                time.sleep(0.4)
+                self.assertFalse(still_running(worker),
+                                 "a runner that ignores SIGTERM survived the cancel")
+            finally:
+                # These children ignore SIGTERM by design. If the code under test
+                # fails to SIGKILL them they live forever, and because they
+                # inherit this process's pipes, anything reading those pipes —
+                # a test runner, a shell, the mutation harness — blocks forever
+                # too. A failing assertion must stay a failing assertion rather
+                # than becoming a hang, so the cleanup is unconditional.
+                with contextlib.suppress(ProcessLookupError, PermissionError):
+                    os.killpg(pgid, signal.SIGKILL)
+                with contextlib.suppress(subprocess.TimeoutExpired):
+                    proc.wait(timeout=5)
+
+    def test_it_refuses_to_signal_its_own_process_group(self):
+        """The self-kill. Without start_new_session the child shares the
+        caller's process group, so a group kill takes the controller down with
+        it. Mutation testing surfaced this as the suite dying of SIGTERM rather
+        than reporting anything — a whole class of results silently lost."""
+        proc = subprocess.Popen([sys.executable, "-c",
+                                 "import time; time.sleep(30)"])   # no new session
+        try:
+            with self.assertRaises(RunnerError) as cm:
+                terminate_process_group(proc, grace_seconds=2)
+            self.assertIn("own process group", str(cm.exception))
+            self.assertIsNone(proc.poll(), "it signalled the group anyway")
+        finally:
+            proc.kill()
+            proc.wait(timeout=10)
 
     def test_terminating_something_already_gone_is_not_an_error(self):
         proc = subprocess.Popen([sys.executable, "-c", "pass"], start_new_session=True)
@@ -493,7 +523,9 @@ class RealCrossProcessConcurrency(unittest.TestCase):
             script = pathlib.Path(td) / "worker.py"
             script.write_text(WORKER)
             start = time.time() + 1.0
-            deadline = 60
+            # Short on purpose: a healthy run finishes in about a second, so a
+            # long deadline only buys a long wait when something is wrong.
+            deadline = 20
             procs = [subprocess.Popen(
                 [sys.executable, str(script), str(HERE), str(root),
                  str(self.ROUNDS), str(start), str(deadline)],
@@ -503,7 +535,7 @@ class RealCrossProcessConcurrency(unittest.TestCase):
             try:
                 reported = 0
                 for proc in procs:
-                    out, err = proc.communicate(timeout=deadline + 30)
+                    out, err = proc.communicate(timeout=deadline + 15)
                     self.assertEqual(
                         proc.returncode, 0,
                         "a writer did not finish cleanly. A negative exit is the worker's "
@@ -1130,7 +1162,7 @@ class TheRealRunAdapterIsDrivenEndToEnd(unittest.TestCase):
             stub.write_text(SPAWNER)
             stub.chmod(0o755)
             runner = self._runner(tmp, ["sh", str(stub), str(pidfile)],
-                                  timeout_seconds=60, terminate_grace_seconds=2)
+                                  timeout_seconds=8, terminate_grace_seconds=2)
             self.assertEqual(runner.cancel_current(), "nothing_running")
 
             box = {}

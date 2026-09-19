@@ -181,6 +181,18 @@ def terminate_process_group(proc, grace_seconds: float = 10.0) -> str:
         pgid = os.getpgid(proc.pid)
     except ProcessLookupError:
         return "already_gone"
+
+    # If the child was NOT started with start_new_session=True it shares OUR
+    # process group, and killing that group kills the controller itself. Found
+    # by mutation testing: removing start_new_session made the test suite die
+    # of SIGTERM rather than report a failure, because this function turned
+    # around and signalled its own caller. Refuse loudly instead.
+    if pgid == os.getpgid(0):
+        raise RunnerError(
+            "refusing to signal my own process group: this child was not started "
+            "with start_new_session=True, so it has no group of its own and "
+            "killing it would kill the controller."
+        )
     try:
         os.killpg(pgid, signal.SIGTERM)
     except ProcessLookupError:

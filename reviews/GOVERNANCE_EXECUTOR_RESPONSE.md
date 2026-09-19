@@ -217,7 +217,7 @@ guard——後者才是真正會無聲失效的單點，它現在會被變異測
 ## 6. 下一位 reviewer 需要核對
 
 - `evidence/replay.txt`：整圈是否真的一次啟動走完、guard 是否每步都被詢問。
-- `test_controller.py`（本輪 81 條）是否真的會失敗。不必自己想破壞點：
+- `test_controller.py`（本輪 82 條）是否真的會失敗。不必自己想破壞點：
   `evidence/mutate_g123.py` 就是那份破壞清單，`evidence/mutation_g123.txt` 是結果。
 - `runners.SubprocessRunner` 是否真的無法在停用狀態啟動；`config.live.example.json` 的預設值。
 - **可信邊界**：controller 是否真的只從 config 路徑載入 guard，PR 內容能否影響它。

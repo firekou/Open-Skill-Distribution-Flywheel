@@ -5,7 +5,7 @@ A test suite that stays green while the code is deliberately broken is not
 testing that code. Each entry below is a real defect this round fixed; the
 suite must catch every one.
 """
-import pathlib, shutil, subprocess, sys, tempfile
+import contextlib, os, pathlib, shutil, signal, subprocess, sys, tempfile
 
 SRC = pathlib.Path("/home/user/Open-Skill-Distribution-Flywheel/governance/controller")
 GOV = pathlib.Path("/home/user/Open-Skill-Distribution-Flywheel/governance")
@@ -47,14 +47,74 @@ MUTANTS = [
     ("step accepts an event id nothing stable produced", "controller.py",
      'if not isinstance(event_id, str) or not event_id.strip():\n            raise ValueError(\n',
      'if False:\n            raise ValueError(\n'),
+    ("the replay verifier says yes to anything", "controller.py",
+     "return sha in allowed",
+     "return True"),
+    ("replay.py loses its commit verifier", "replay.py",
+     "commit_verifier=scripted_commit_verifier(",
+     "commit_verifier_unused=scripted_commit_verifier("),
+    ("tick replay mode loses its commit verifier", "tick.py",
+     "commit_verifier=scripted_commit_verifier(",
+     "commit_verifier_unused=scripted_commit_verifier("),
+    ("every writer shares one temp file name", "store.py",
+     'tmp = self.state_path.with_name(f"state.{os.getpid()}.{uuid.uuid4().hex}.tmp")',
+     'tmp = self.state_path.with_suffix(".tmp")'),
+    ("the compare-and-swap is not held under a lock", "store.py",
+     "        with self._exclusive():\n            state = self.read()",
+     "        if True:\n            state = self.read()"),
+    ("the lock outlives a failed commit", "store.py",
+     """        with open(self.lock_path, "a+b") as handle:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)""",
+     """        handle = open(self.lock_path, "a+b")
+        self._leaked = getattr(self, "_leaked", []) + [handle]
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        yield
+        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)"""),
+    ("the runner is not started in its own process group", "runners.py",
+     "text=True, env=env, start_new_session=True)",
+     "text=True, env=env)"),
+    ("terminate only signals, never confirms", "runners.py",
+     "        os.killpg(pgid, signal.SIGKILL)",
+     "        os.killpg(pgid, 0)"),
+    ("cancelling one task is treated as stopping everything", "controller.py",
+     'return pathlib.Path(self.config["stop_file"]).with_name(f"CANCEL-{task_id}")',
+     'return pathlib.Path(self.config["stop_file"])'),
+    ("the per-task cancel checkpoint is skipped", "controller.py",
+     "            if self._cancelled(task_id):",
+     "            if False:"),
     ("anyone can renew anyone's lease", "store.py",
      'if not lease or lease["owner"] != owner:\n            raise ConcurrencyError(f"task {task_id} is not leased by {owner}")\n        if lease["expires_at"] <= now:',
      'if lease["expires_at"] <= now:'),
 ]
 
+SUITE_TIMEOUT = 150       # a healthy suite is ~8s; a mutant that exceeds this hung
+
+
 def run(workdir):
-    return subprocess.run([sys.executable, "-m", "unittest", "test_controller"],
-                          cwd=workdir, capture_output=True, text=True)
+    """Run the suite under a deadline, in its own process group.
+
+    A mutant is allowed to make the suite fail; it is not allowed to make the
+    harness wait forever. Anything that hangs is reported as a hang, and the
+    whole group is killed so nothing is left blocked on a lock afterwards.
+    """
+    proc = subprocess.Popen([sys.executable, "-m", "unittest", "test_controller"],
+                            cwd=workdir, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, text=True,
+                            start_new_session=True)
+    try:
+        out, err = proc.communicate(timeout=SUITE_TIMEOUT)
+        return subprocess.CompletedProcess(proc.args, proc.returncode, out, err)
+    except subprocess.TimeoutExpired:
+        with contextlib.suppress(ProcessLookupError):
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        with contextlib.suppress(subprocess.TimeoutExpired):
+            proc.communicate(timeout=10)
+        return subprocess.CompletedProcess(proc.args, -1, "",
+                                           f"HUNG: no result in {SUITE_TIMEOUT}s")
 
 def stage(tmp):
     work = pathlib.Path(tmp) / "governance" / "controller"
@@ -80,13 +140,21 @@ for label, fname, old, new in MUTANTS:
             results.append((label, "NOT APPLIED — anchor missing")); continue
         f.write_text(text.replace(old, new, 1))
         r = run(work)
-        tail = [l for l in r.stderr.strip().splitlines() if l.startswith(("OK", "FAILED"))]
+        tail = [l for l in r.stderr.strip().splitlines() if l.startswith(("OK", "FAILED", "HUNG"))]
         results.append((label, tail[-1] if tail else f"exit {r.returncode}"))
 
 print()
-caught = 0
+caught = hung = 0
 for label, outcome in results:
-    mark = "caught " if outcome.startswith("FAILED") else "SURVIVED"
-    caught += outcome.startswith("FAILED")
+    # A hang is NOT a catch. The suite going red is the result being demanded;
+    # a mutant that makes it wait forever tells us about the harness, not about
+    # the guarantee, so it is reported on its own rather than counted as a pass.
+    if outcome.startswith("FAILED"):
+        mark, caught = "caught  ", caught + 1
+    elif outcome.startswith("HUNG"):
+        mark, hung = "HUNG    ", hung + 1
+    else:
+        mark = "SURVIVED"
     print(f"  [{mark}] {label:52s} -> {outcome}")
-print(f"\n{caught}/{len(MUTANTS)} mutants caught")
+print(f"\n{caught}/{len(MUTANTS)} mutants caught"
+      + (f", {hung} HUNG (harness deadline, not a result)" if hung else ""))
