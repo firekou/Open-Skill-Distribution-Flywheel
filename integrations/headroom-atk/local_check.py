@@ -163,13 +163,20 @@ def parse_args(argv=None) -> argparse.Namespace:
              "is usually a real line out of a real log and this output is meant to be safe "
              "to paste into a bug report.",
     )
-    # P5-R3-05: argparse's own error for an unknown flag echoes the VALUE next to
-    # it — which for a typo'd --needle is the very text this tool exists to keep
-    # out of shareable output. Handle unknown flags ourselves, naming only the flag.
+    # P5-R3-05 / P5-R4-01. argparse's own error echoes the VALUE next to an
+    # unknown flag, which for a typo'd --needle is the exact text this tool
+    # exists to keep out of shareable output. The first fix echoed back only
+    # tokens starting with "-", assuming those were flags — but a needle is a
+    # line out of a real log and may well start with a dash, so
+    # `--needlez -SECRET` leaked it again. There is no reliable way to tell a
+    # mistyped flag from a value, so nothing unrecognised is echoed at all.
     args, unknown = ap.parse_known_args(argv)
     if unknown:
-        flags = sorted({u.split("=", 1)[0] for u in unknown if u.startswith("-")})
-        ap.error("unrecognized option(s): " + (", ".join(flags) or "<value without a flag>"))
+        ap.error(
+            f"{len(unknown)} unrecognized argument(s). They are not shown, because an "
+            "unrecognised token can be a value rather than a flag and this output is "
+            "meant to be safe to paste. Run with --help for the accepted options."
+        )
     return args
 
 

@@ -224,13 +224,46 @@ class MisuseIsExitTwoAndStillPrivate(unittest.TestCase):
         self.assertIn("absent.log", out)
         self.assertNotIn(td, out)
 
-    def test_a_mistyped_flag_does_not_echo_its_value(self):
+    def test_no_unrecognised_token_is_echoed_in_any_form(self):
+        """P5-R4-01, found by the round-4 reviewer.
+
+        The first fix echoed back only tokens starting with "-", on the
+        assumption that those were flags. But a needle is a line lifted out of a
+        real log and may itself start with a dash, so `--needlez -SECRET` leaked
+        it again. There is no reliable way to tell a mistyped flag from a value,
+        so nothing unrecognised is echoed at all — not even the flag name.
+        """
+        dash_secret = f"-{self.SECRET}"
+        cases = [
+            ["--needlez", self.SECRET],            # value without a dash
+            ["--needlez", dash_secret],            # the leak the reviewer found
+            [f"--needlez={dash_secret}"],          # equals form
+            [dash_secret],                         # a bare dash-leading value
+            ["--needlez"],                         # the flag alone
+        ]
+        for extra in cases:
+            with self.subTest(args=extra), tempfile.TemporaryDirectory() as td:
+                missing = pathlib.Path(td) / "absent.log"
+                code, out = self._run(["--log", str(missing)] + extra)
+                self.assertEqual(code, 2)
+                self.assertNotIn(self.SECRET, out)
+                self.assertNotIn("needlez", out)
+                self.assertIn("--help", out)
+
+    def test_the_legal_equals_form_still_parses(self):
+        """Refusing to echo unknown tokens must not break a valid --needle=..."""
         with tempfile.TemporaryDirectory() as td:
-            missing = pathlib.Path(td) / "absent.log"
-            code, out = self._run(["--log", str(missing), "--needlez", self.SECRET])
-        self.assertEqual(code, 2)
-        self.assertNotIn(self.SECRET, out)
-        self.assertIn("--needlez", out)
+            log = pathlib.Path(td) / "sample.log"
+            log.write_text("KEEP " + "x" * 200)
+            args = local_check.parse_args(["--log", str(log), "--needle=KEEP"])
+        self.assertEqual(args.needle, ["KEEP"])
+
+    def test_help_still_works(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), self.assertRaises(SystemExit) as cm:
+            local_check.parse_args(["--help"])
+        self.assertEqual(cm.exception.code, 0)
+        self.assertIn("--needle", out.getvalue())
 
     def test_the_reported_needle_number_is_its_position(self):
         """The round-3 reviewer flagged `needles.index(needle)` as able to
