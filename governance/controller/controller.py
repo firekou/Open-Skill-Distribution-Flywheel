@@ -27,7 +27,7 @@ import subprocess
 import sys
 import time
 
-from runners import RunnerError
+from runners import AuthUnavailable, RunnerError
 from store import ConcurrencyError, Store
 
 TERMINAL = {"COMPLETE", "STOPPED", "FAILED", "TIMEOUT", "CONDITIONS_PENDING",
@@ -52,9 +52,73 @@ def live_head(repo_url: str, branch: str) -> str:
     return out.split()[0]
 
 
+def policy_sha(policy_repo: pathlib.Path) -> str:
+    """The commit the trusted policy was read from.
+
+    G2. The guard and the rules are loaded from the operator's checkout, but
+    "which version" was never recorded, so a review could not be tied to the
+    policy in force when it was dispatched. Pinning it also makes it checkable
+    that nothing under the pull request supplied the policy.
+    """
+    return subprocess.run(["git", "rev-parse", "HEAD"], cwd=policy_repo,
+                          capture_output=True, text=True, check=True,
+                          timeout=30).stdout.strip()
+
+
+def commit_is_on_branch(repo_url: str, branch: str, sha: str, workdir: pathlib.Path) -> bool:
+    """Does this commit actually exist, and is it reachable from that branch?
+
+    G2. The controller used to take the runner's word for `new_head`. A runner
+    that reports a sha it never pushed — through a bug, a failed push, or
+    otherwise — would have had the whole state machine advance on a commit that
+    does not exist. Checked against the remote, not against the runner.
+    """
+    workdir = pathlib.Path(workdir)
+    workdir.mkdir(parents=True, exist_ok=True)
+    if not (workdir / ".git").exists():
+        subprocess.run(["git", "init", "--quiet", "--bare" if False else "--", "."],
+                       cwd=workdir, check=True, timeout=60)
+    try:
+        subprocess.run(["git", "fetch", "--quiet", "--depth", "50", repo_url,
+                        f"refs/heads/{branch}"],
+                       cwd=workdir, check=True, timeout=180,
+                       capture_output=True)
+    except subprocess.CalledProcessError:
+        return False
+    found = subprocess.run(["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+                           cwd=workdir, capture_output=True, timeout=30)
+    if found.returncode != 0:
+        return False
+    reachable = subprocess.run(["git", "merge-base", "--is-ancestor", sha, "FETCH_HEAD"],
+                               cwd=workdir, capture_output=True, timeout=60)
+    return reachable.returncode == 0
+
+
+def scripted_commit_verifier(allowed_heads):
+    """The commit verifier for replay, where there is no remote to ask.
+
+    Returning True for everything would delete the control G2 exists for: the
+    whole point of checking a reported head is that an invented one is refused.
+    The replay's heads are invented on purpose, so this accepts exactly the ones
+    the fixture scripted and refuses everything else — including a head the
+    executor made up beyond its script.
+
+    Found by running replay.py after the verification landed: the fixture went
+    straight to FAILED / reported_head_not_on_branch, because the new check was
+    wired into Controller but into neither replay entry point.
+    """
+    allowed = frozenset(allowed_heads)
+
+    def verify(_repo, _branch, sha):
+        return sha in allowed
+
+    return verify
+
+
 class Controller:
     def __init__(self, config: dict, store: Store, guard, executor, reviewer,
-                 clock=time.time, head_resolver=live_head):
+                 clock=time.time, head_resolver=live_head, commit_verifier=None,
+                 policy_sha_value=None):
         self.config = config
         self.store = store
         self.guard = guard
@@ -62,6 +126,12 @@ class Controller:
         self.reviewer = reviewer
         self._clock = clock
         self._head_of = head_resolver
+        # G2: a runner's self-reported new_head is a claim, not a fact. Replay
+        # overrides this with a stub; live runs check the remote.
+        self._commit_is_on_branch = commit_verifier or (
+            lambda repo, branch, sha: commit_is_on_branch(
+                repo, branch, sha, pathlib.Path(config["state_dir"]) / "verify"))
+        self.policy_sha = policy_sha_value or config.get("policy_sha") or "unrecorded"
         self.owner = config["controller_identity"]
 
     # ---------- helpers ----------
@@ -107,6 +177,18 @@ class Controller:
             "repo_url": self.config["repo_url"],
             "branch": self.config["branch"],
             "prompt_file": self.config["prompt_file"],
+            # G3: the work-order contract. policy_sha ties the order to the
+            # version of the rules in force; scope_paths and acceptance make the
+            # order self-describing rather than implied by whoever wrote it.
+            "policy_sha": self.policy_sha,
+            "goal": self.config.get("goal", ""),
+            "scope_paths": self.config.get("scope_paths", []),
+            "acceptance": self.config.get("acceptance", ""),
+            "decision_ids": self.config.get("decision_ids", []),
+            "run_id": f"{run_identity}:{event_id}",
+            "command_allowlist": self.config.get("command_allowlist", []),
+            "deadline": self.config.get("timeout_seconds"),
+            "evidence": [],
         }
         if review is not None:
             order["review"] = review
@@ -122,7 +204,21 @@ class Controller:
     # ---------- one step ----------
 
     def step(self, task_id: str, event_id: str) -> dict:
-        """Advance the task by at most one phase. Idempotent per event_id."""
+        """Advance the task by at most one phase. Idempotent per event_id.
+
+        `event_id` must be stable at the SOURCE: the same trigger firing,
+        delivered twice, must present the same id both times, and two distinct
+        firings must never share one. The controller cannot derive that — only
+        the thing that fired knows its own identity — so it refuses to invent
+        one rather than accept an id that merely looks unique.
+        """
+        if not isinstance(event_id, str) or not event_id.strip():
+            raise ValueError(
+                "step needs a source-stable event id. Anything derived here "
+                "from mutable state (a state revision, a counter, a timestamp) "
+                "changes between two deliveries of one event, so the "
+                "processed-event ledger would never deduplicate anything."
+            )
         started = self._clock()
 
         if event_id in self.store.seen_events():
@@ -167,6 +263,13 @@ class Controller:
 
         try:
             result = self.executor.run(order)
+        except AuthUnavailable as exc:
+            # G2: no credential is BLOCKED_ACCESS, never an unverified pass.
+            self.store.mark_processed(event_id)
+            self.store.set_task(task_id, status="BLOCKED_ACCESS", failure=str(exc),
+                                recovery_point=f"head={head}")
+            self.store.log(kind="blocked_access", task=task_id, role="executor")
+            return {"action": "BLOCKED_ACCESS", "reason": "no_credential"}
         except RunnerError as exc:
             self.store.mark_processed(event_id)
             self.store.set_task(task_id, status="FAILED", failure=str(exc),
@@ -175,17 +278,30 @@ class Controller:
             return {"action": "FAILED", "reason": str(exc)}
 
         self.store.add_spend(1)          # one executor run
+
+        # G2: do not advance on a sha the runner merely claims to have pushed.
+        new_head = result["new_head"]
+        if not self._commit_is_on_branch(
+                self.config["repo_url"], self.config["branch"], new_head):
+            self.store.mark_processed(event_id)
+            self.store.set_task(task_id, status="FAILED",
+                                failure=f"executor reported {new_head[:12]} but it is not "
+                                        f"on {self.config['branch']}",
+                                recovery_point=f"head={head}")
+            self.store.log(kind="phantom_head", task=task_id, claimed=new_head[:12])
+            return {"action": "FAILED", "reason": "reported_head_not_on_branch"}
+
         # The event is marked processed and the state advanced in that order, so a
         # crash between them re-runs a step that produced no state change, rather
         # than skipping one that did.
         self.store.mark_processed(event_id)
         self.store.set_task(task_id, status="REVIEW_PENDING",
-                            last_head=result["new_head"],
+                            last_head=new_head,
                             executor_identity=self.executor.identity(),
                             attempt=attempt)
-        self.store.log(kind="executed", task=task_id, new_head=result["new_head"][:12],
+        self.store.log(kind="executed", task=task_id, new_head=new_head[:12],
                        executor=self.executor.identity())
-        return {"action": "REVIEW_PENDING", "head": result["new_head"]}
+        return {"action": "REVIEW_PENDING", "head": new_head}
 
     def _review(self, task_id, event_id, head, attempt, started):
         task = self.store.task(task_id)
@@ -201,6 +317,13 @@ class Controller:
 
         try:
             result = self.reviewer.run(order)
+        except AuthUnavailable as exc:
+            # G2: no credential is BLOCKED_ACCESS, never an unverified pass.
+            self.store.mark_processed(event_id)
+            self.store.set_task(task_id, status="BLOCKED_ACCESS", failure=str(exc),
+                                recovery_point=f"head={head}")
+            self.store.log(kind="blocked_access", task=task_id, role="reviewer")
+            return {"action": "BLOCKED_ACCESS", "reason": "no_credential"}
         except RunnerError as exc:
             self.store.mark_processed(event_id)
             self.store.set_task(task_id, status="FAILED", failure=str(exc),
@@ -243,14 +366,23 @@ class Controller:
 
     # ---------- driver ----------
 
-    def drive(self, task_id: str, max_steps: int = 12) -> list:
+    def drive(self, task_id: str, event_id: str, max_steps: int = 12) -> list:
         """Run steps until the task reaches a terminal state or runs out of steps.
 
         This is the whole point: one start, no human in between.
+
+        `event_id` identifies the CALLER's firing and every step is namespaced
+        under it. The previous version numbered steps `evt-<task>-<n>` from zero
+        on every call, so a second drive of the same task re-used `evt-T-0`,
+        found it in the processed-event ledger, and returned NOOP without doing
+        any work. A ledger keyed on something the caller does not control
+        deduplicates the wrong things in both directions.
         """
+        if not isinstance(event_id, str) or not event_id.strip():
+            raise ValueError("drive needs the caller's own event id; see step()")
         trail = []
         for n in range(max_steps):
-            result = self.step(task_id, f"evt-{task_id}-{n}")
+            result = self.step(task_id, f"{event_id}/{n}")
             trail.append(result)
             status = self.store.task(task_id).get("status")
             if status in TERMINAL or result["action"] in ("NOOP", "FAILED"):
@@ -263,6 +395,8 @@ def main(argv=None) -> int:
     ap.add_argument("--config", required=True, type=pathlib.Path)
     ap.add_argument("--task", required=True)
     ap.add_argument("--max-steps", type=int, default=12)
+    ap.add_argument("--event", required=True,
+                    help="the caller's own stable id for this firing")
     args = ap.parse_args(argv)
 
     config = json.loads(args.config.read_text(encoding="utf-8"))
@@ -276,7 +410,7 @@ def main(argv=None) -> int:
     ctl = Controller(config, store, guard,
                      FakeExecutor(config["replay"]["executor_heads"]),
                      FakeReviewer(config["replay"]["reviewer_decisions"]))
-    for line in ctl.drive(args.task, args.max_steps):
+    for line in ctl.drive(args.task, args.event, args.max_steps):
         print(json.dumps(line, ensure_ascii=False))
     return 0
 

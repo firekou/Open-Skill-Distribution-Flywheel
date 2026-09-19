@@ -24,7 +24,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 
-from controller import Controller, load_guard   # noqa: E402
+from controller import (Controller, load_guard,   # noqa: E402
+                        scripted_commit_verifier)
 from runners import FakeExecutor, FakeReviewer  # noqa: E402
 from store import Store                         # noqa: E402
 
@@ -48,7 +49,9 @@ def main() -> int:
     ctl = Controller(config, store, guard,
                      FakeExecutor(config["replay"]["executor_heads"]),
                      FakeReviewer(config["replay"]["reviewer_decisions"]),
-                     head_resolver=head_of)
+                     head_resolver=head_of,
+                     commit_verifier=scripted_commit_verifier(
+                         config["replay"]["executor_heads"]))
     store.set_task("GOVDEMO", status="READY", last_head=start)
 
     lines = []
@@ -62,7 +65,7 @@ def main() -> int:
     out(f"# runners: scripted test doubles, no model call, no network. run budget {config['run_budget']} runs")
     out()
     out("## steps")
-    for step in ctl.drive("GOVDEMO"):
+    for step in ctl.drive("GOVDEMO", "replay-fixture-1"):
         out("  " + json.dumps(step, ensure_ascii=False))
 
     task = store.task("GOVDEMO")

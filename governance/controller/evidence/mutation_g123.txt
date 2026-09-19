@@ -1,0 +1,20 @@
+G1-G3 mutation run — 2026-09-19T18:29:51Z
+Each entry deletes one guarantee this round added. The suite must go red for every one.
+
+baseline: OK
+
+  [caught ] runner inherits the whole parent env                 -> FAILED (failures=6, errors=1)
+  [caught ] an unknown role silently defaults                    -> FAILED (failures=1)
+  [caught ] reviewer / pr_tests receive the write token          -> FAILED (failures=2)
+  [caught ] a review with no evidence is accepted                -> FAILED (failures=1)
+  [caught ] a malformed new_head is accepted                     -> FAILED (failures=5)
+  [caught ] a phantom head is never verified                     -> FAILED (failures=1)
+  [caught ] the work order drops the policy sha                  -> FAILED (failures=1, errors=1)
+  [caught ] missing auth falls through instead of BLOCKED_ACCESS -> FAILED (errors=2)
+  [caught ] an expired holder can still renew                    -> FAILED (failures=1)
+  [caught ] drive renumbers steps from zero on every firing      -> FAILED (failures=1)
+  [caught ] tick invents an event id from the state revision     -> FAILED (failures=1)
+  [caught ] step accepts an event id nothing stable produced     -> FAILED (failures=1)
+  [caught ] anyone can renew anyone's lease                      -> FAILED (failures=1)
+
+13/13 mutants caught

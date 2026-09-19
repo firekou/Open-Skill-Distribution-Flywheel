@@ -6,8 +6,14 @@ this repository already decides when work should happen; this is the thing it
 calls. It advances one task by at most one phase and exits with a code the
 caller can branch on.
 
-    python3 governance/controller/tick.py --config <cfg.json> --task PR5
-    python3 governance/controller/tick.py --config <cfg.json> --task PR5 --drive
+    python3 governance/controller/tick.py --config <cfg.json> --task PR5 \
+            --event <the caller's own id for this firing>
+
+--event is required. It is how a redelivered firing is recognised as the same
+event and skipped. An earlier version defaulted it to a string built from the
+state revision, which changes on every write: two deliveries of one event got
+two different ids, so the processed-event ledger deduplicated nothing. A ledger
+keyed on something the source does not control is not a ledger.
 
 Exit codes, so a shell caller needs no JSON parser:
 
@@ -33,7 +39,8 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from controller import Controller, load_guard   # noqa: E402
+from controller import (Controller, load_guard,   # noqa: E402
+                        scripted_commit_verifier)
 from store import Store                         # noqa: E402
 
 EXIT = {
@@ -73,7 +80,9 @@ def build(config: dict, store: Store):
             return store.task_head_or(start)
 
         return Controller(config, store, guard, executor, reviewer,
-                          head_resolver=replay_head)
+                          head_resolver=replay_head,
+                          commit_verifier=scripted_commit_verifier(
+                              config["replay"]["executor_heads"]))
     elif mode == "live":
         from runners import SubprocessRunner
         root = pathlib.Path(config["workspace_root"])
@@ -103,7 +112,12 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Advance one governance task by one phase.")
     ap.add_argument("--config", required=True, type=pathlib.Path)
     ap.add_argument("--task", required=True)
-    ap.add_argument("--event", help="caller's event id; defaults to one derived from the attempt")
+    ap.add_argument("--event", required=True,
+                    help="YOUR stable id for this firing. The same firing "
+                         "redelivered must repeat it; two firings must not "
+                         "share one. A webhook delivery id, a CI run id or the "
+                         "commit sha that caused the firing all work. This is "
+                         "not optional and nothing here will invent it.")
     ap.add_argument("--drive", action="store_true",
                     help="keep stepping until terminal instead of one phase")
     ap.add_argument("--max-steps", type=int, default=12)
@@ -126,11 +140,9 @@ def main(argv=None) -> int:
         return EXIT["config"]
 
     if args.drive:
-        results = ctl.drive(args.task, args.max_steps)
+        results = ctl.drive(args.task, args.event, args.max_steps)
     else:
-        attempt = store.task(args.task).get("attempt", 0)
-        event = args.event or f"{args.task}-{store.read()['revision']}-{attempt}"
-        results = [ctl.step(args.task, event)]
+        results = [ctl.step(args.task, args.event)]
 
     for line in results:
         print(json.dumps(line, ensure_ascii=False))

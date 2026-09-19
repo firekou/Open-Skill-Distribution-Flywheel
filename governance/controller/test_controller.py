@@ -13,17 +13,26 @@ No network, no credentials, no model call.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
+import shutil
+import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
+from unittest.mock import patch
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from controller import Controller, load_guard          # noqa: E402
-from runners import FakeExecutor, FakeReviewer, Runner, RunnerError, SubprocessRunner  # noqa: E402
+import runners                                          # noqa: E402
+from controller import (Controller, load_guard,        # noqa: E402
+                        scripted_commit_verifier)
+from runners import (AuthUnavailable, BASE_ENV_ALLOWLIST, FakeExecutor,  # noqa: E402
+                     FakeReviewer, ROLE_CREDENTIALS, RunnerError, SubprocessRunner,
+                     build_env, has_credential, parse_verdict)
 from store import ConcurrencyError, Store              # noqa: E402
 
 GUARD = load_guard(HERE.parent / "preflight.py")
@@ -56,17 +65,25 @@ class Harness:
     """A controller wired to fakes, with the live head under test control."""
 
     def __init__(self, tmp, executor_heads=(H1, H2), decisions=("BLOCKED", "APPROVED"),
-                 pinned_head=None, **cfg_over):
+                 pinned_head=None, known_commits=None, **cfg_over):
         self.tmp = pathlib.Path(tmp)
         self.config = base_config(self.tmp, **cfg_over)
         self.store = Store(pathlib.Path(self.config["state_dir"]))
         self.executor = FakeExecutor(list(executor_heads))
         self.reviewer = FakeReviewer(list(decisions))
         self.pinned_head = pinned_head
+        # Stub for the remote check, so the suite never touches the network.
+        # None means "every sha the executor reports really is on the branch".
+        self.known_commits = known_commits
         self.ctl = Controller(self.config, self.store, GUARD,
                               self.executor, self.reviewer,
-                              head_resolver=self._head)
+                              head_resolver=self._head,
+                              commit_verifier=self._commit_on_branch,
+                              policy_sha_value="policy" + "0" * 35)
         self.store.set_task("T", status="READY", last_head=H0)
+
+    def _commit_on_branch(self, _repo, _branch, sha):
+        return True if self.known_commits is None else sha in self.known_commits
 
     def _head(self, _repo, _branch):
         if self.pinned_head:
@@ -241,10 +258,255 @@ class OutcomesAreNotPermissions(unittest.TestCase):
     def test_the_full_cycle_reaches_complete_from_one_start(self):
         with tempfile.TemporaryDirectory() as td:
             h = Harness(td)
-            trail = h.ctl.drive("T")
+            trail = h.ctl.drive("T", "evt-cycle")
             self.assertEqual([t["action"] for t in trail],
                              ["REVIEW_PENDING", "FIX_PENDING", "REVIEW_PENDING", "COMPLETE"])
             self.assertEqual(h.store.task("T")["status"], "COMPLETE")
+
+
+WORKER = """
+import json, pathlib, sys, time
+sys.path.insert(0, sys.argv[1])
+from store import Store, ConcurrencyError
+root, rounds, start_at = pathlib.Path(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4])
+s = Store(root)
+time.sleep(max(0.0, start_at - time.time()))
+ok = 0
+for _ in range(rounds):
+    for _try in range(3000):
+        try:
+            rev = s.read()["revision"]
+            time.sleep(0.0005)          # widen the read-to-write window on purpose
+            s.commit(rev, lambda st: st["tasks"].setdefault("C", {"n": 0}).update(
+                n=st["tasks"].get("C", {}).get("n", 0) + 1))
+            ok += 1
+            break
+        except ConcurrencyError:
+            continue
+print(ok)
+"""
+
+
+class RealCrossProcessConcurrency(unittest.TestCase):
+    """G3. The previous concurrency tests ran in one process, where the GIL hides
+    exactly the bug they were meant to find. Run as separate OS processes, two
+    defects showed up that no sequential or threaded test could reach:
+
+      * every writer used the same temp file name, `state.tmp`. Two concurrent
+        writers overwrote each other's temp file and the loser's os.replace died
+        with FileNotFoundError. The 'atomic write' was atomic against a crash
+        and not against a second process.
+      * commit() read the revision, checked it, then wrote, with nothing held in
+        between. Six processes, sixty commits: 38 were reported successful and
+        silently lost. A revision check not held under a lock is a comment.
+
+    Measured, not argued: the controls are in evidence/concurrency.txt.
+    """
+
+    PROCS, ROUNDS = 6, 6
+
+    def test_no_commit_is_ever_silently_lost(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td) / "state"
+            Store(root)
+            script = pathlib.Path(td) / "worker.py"
+            script.write_text(WORKER)
+            start = time.time() + 1.0
+            procs = [subprocess.Popen(
+                [sys.executable, str(script), str(HERE), str(root),
+                 str(self.ROUNDS), str(start)],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                for _ in range(self.PROCS)]
+            reported = 0
+            for proc in procs:
+                out, err = proc.communicate(timeout=180)
+                self.assertEqual(proc.returncode, 0,
+                                 f"a writer crashed, which is the temp-name race: {err[-600:]}")
+                reported += int(out.strip())
+
+            final = Store(root).read()
+            self.assertEqual(reported, self.PROCS * self.ROUNDS)
+            self.assertEqual(final["tasks"]["C"]["n"], reported,
+                             f"{reported - final['tasks']['C']['n']} commits were "
+                             "reported successful and lost")
+            self.assertEqual(final["revision"], reported)
+
+    def test_two_writers_never_share_a_temp_file_name(self):
+        """The crash above, stated directly: the name must depend on the writer."""
+        with tempfile.TemporaryDirectory() as td:
+            store = Store(pathlib.Path(td))
+            seen = set()
+            real = pathlib.Path.write_text
+
+            def capture(self_path, *a, **kw):
+                if self_path.name.endswith(".tmp"):
+                    seen.add(self_path.name)
+                return real(self_path, *a, **kw)
+
+            with patch.object(pathlib.Path, "write_text", capture):
+                for _ in range(5):
+                    store.commit(store.read()["revision"], lambda st: None)
+            self.assertEqual(len(seen), 5, f"temp names were reused: {seen}")
+            self.assertNotIn("state.tmp", seen)
+
+    def test_the_lock_is_released_even_when_the_mutation_raises(self):
+        """A lock a failed commit keeps is a deadlock for every later worker.
+
+        The next commit runs on a thread with a join deadline, because the
+        failure mode here is a hang, not an exception, and a suite that hangs
+        tells you less than one that goes red."""
+        with tempfile.TemporaryDirectory() as td:
+            store = Store(pathlib.Path(td))
+
+            def explode(_state):
+                raise RuntimeError("mutation failed")
+
+            with self.assertRaises(RuntimeError):
+                store.commit(store.read()["revision"], explode)
+
+            done = []
+
+            def second():
+                store.commit(store.read()["revision"], lambda st: st.update(ok=True))
+                done.append(True)
+
+            worker = threading.Thread(target=second, daemon=True)
+            worker.start()
+            worker.join(timeout=10)
+            self.assertTrue(done, "the store stayed locked after a failed commit")
+            self.assertTrue(store.read()["ok"])
+
+
+class BothReplayEntryPointsStayWiredToTheRealChecks(unittest.TestCase):
+    """G2 aftermath. Verifying the executor's reported head was added to
+    Controller and to the unit suite, but neither replay entry point was given
+    a verifier, so both went straight to FAILED / reported_head_not_on_branch
+    against a live remote that has never heard of the scripted shas. The unit
+    tests did not see it because the harness stubs the verifier itself.
+
+    The lesson is the recurring one in this repository: a check added at the
+    entrance is not added at the exits. These tests exercise the exits."""
+
+    SCRIPTED = ("1" * 40, "2" * 40)
+
+    def _stage(self, tmp):
+        work = pathlib.Path(tmp) / "governance" / "controller"
+        work.parent.mkdir(parents=True)
+        shutil.copytree(HERE, work, ignore=shutil.ignore_patterns("__pycache__", "evidence"))
+        shutil.copy(HERE.parent / "preflight.py", work.parent / "preflight.py")
+        cfg = json.loads((work / "config.replay.json").read_text())
+        cfg["state_dir"] = str(pathlib.Path(tmp) / "state")
+        cfg["stop_file"] = str(pathlib.Path(tmp) / "state" / "STOP")
+        (work / "config.replay.json").write_text(json.dumps(cfg, indent=2))
+        return work, cfg
+
+    def test_the_replay_verifier_is_a_check_not_a_yes(self):
+        """If it returned True for everything it would delete the control."""
+        verify = scripted_commit_verifier(self.SCRIPTED)
+        self.assertTrue(verify("repo", "branch", "1" * 40))
+        self.assertFalse(verify("repo", "branch", "9" * 40),
+                         "an unscripted head was accepted; the check is vacuous")
+
+    def test_tick_in_replay_mode_builds_a_controller_that_can_verify(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            work, cfg = self._stage(tmp)
+            sys.path.insert(0, str(work))
+            for name in ("tick", "controller", "runners", "store"):
+                sys.modules.pop(name, None)
+            try:
+                import tick as staged_tick
+                from store import Store as StagedStore
+                ctl = staged_tick.build(cfg, StagedStore(pathlib.Path(cfg["state_dir"])))
+                self.assertTrue(ctl._commit_is_on_branch("r", "b", self.SCRIPTED[0]))
+                self.assertFalse(ctl._commit_is_on_branch("r", "b", "9" * 40))
+            finally:
+                sys.path.remove(str(work))
+                for name in ("tick", "controller", "runners", "store"):
+                    sys.modules.pop(name, None)
+                import controller, runners, store   # noqa: F401  restore this suite's modules
+
+    def test_the_replay_fixture_still_reaches_complete_end_to_end(self):
+        """Runs replay.py the way a reader would, in a staged copy so the
+        repository's own evidence file is not rewritten by the test suite."""
+        with tempfile.TemporaryDirectory() as tmp:
+            work, _ = self._stage(tmp)
+            proc = subprocess.run([sys.executable, str(work / "replay.py")],
+                                  capture_output=True, text=True, cwd=tmp)
+            self.assertEqual(proc.returncode, 0, proc.stderr[-2000:])
+            self.assertIn("status        : COMPLETE", proc.stdout)
+            self.assertNotIn("reported_head_not_on_branch", proc.stdout)
+            self.assertIn("REPLAY_VERIFIED", proc.stdout)
+            self.assertNotIn("ACTIVE —", proc.stdout)
+
+
+class EventIdsComeFromTheSource(unittest.TestCase):
+    """G3. The processed-event ledger only works if the key is stable at the
+    source. Two defects broke it in opposite directions:
+
+      * tick.py defaulted the id to f"{task}-{state revision}-{attempt}". The
+        revision changes on every write, so one firing delivered twice arrived
+        under two ids and was executed twice. Nothing was ever deduplicated.
+      * Controller.drive numbered its steps evt-<task>-0, -1, -2 from zero on
+        every call, so a second drive of the same task hit evt-T-0 already in
+        the ledger and returned NOOP without doing any work at all.
+
+    Both are the same mistake: a ledger keyed on something the caller does not
+    control. The fix is that nothing invents an event id."""
+
+    def test_a_redelivered_firing_is_recognised_and_does_no_work_twice(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            first = h.ctl.step("T", "delivery-abc123")
+            self.assertEqual(first["action"], "REVIEW_PENDING")
+            again = h.ctl.step("T", "delivery-abc123")
+            self.assertEqual(again, {"action": "NOOP", "reason": "duplicate"})
+            self.assertEqual(len(h.executor.calls), 1, "the executor ran twice for one event")
+
+    def test_a_second_drive_of_the_same_task_is_not_swallowed_as_a_duplicate(self):
+        """The regression: identical step ids across two separate firings."""
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td, executor_heads=[H1, H2], decisions=["BLOCKED", "APPROVED"])
+            h.ctl.drive("T", "firing-1", max_steps=2)
+            before = len(h.executor.calls)
+            trail = h.ctl.drive("T", "firing-2", max_steps=2)
+            self.assertNotEqual(trail[0], {"action": "NOOP", "reason": "duplicate"},
+                                "a fresh firing was deduplicated against the previous one")
+            self.assertGreater(len(h.executor.calls), before, "the second firing did nothing")
+
+    def test_an_empty_or_missing_event_id_is_refused_not_invented(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            for bad in ("", "   ", None):
+                with self.assertRaises(ValueError):
+                    h.ctl.step("T", bad)
+                with self.assertRaises(ValueError):
+                    h.ctl.drive("T", bad)
+            self.assertEqual(h.executor.calls, [])
+
+    def test_no_entry_point_derives_an_event_id_from_mutable_state(self):
+        """Checked against the parsed source, not the file text, because both
+        modules now name the old defect in a docstring on purpose."""
+        import ast as _ast
+        for name in ("tick.py", "controller.py"):
+            tree = _ast.parse((HERE / name).read_text())
+            for node in _ast.walk(tree):
+                if not isinstance(node, _ast.JoinedStr):
+                    continue
+                rendered = "".join(
+                    _ast.unparse(v) for v in node.values
+                    if isinstance(v, _ast.FormattedValue))
+                self.assertNotIn("revision", rendered,
+                                 f"{name} still builds a string from the state revision")
+                self.assertNotIn("attempt", rendered,
+                                 f"{name} still builds an event id from the attempt counter")
+
+    def test_tick_will_not_run_without_the_callers_event_id(self):
+        proc = subprocess.run(
+            [sys.executable, str(HERE / "tick.py"), "--config",
+             str(HERE / "config.replay.json"), "--task", "GOVDEMO"],
+            capture_output=True, text=True, env=os.environ.copy())
+        self.assertEqual(proc.returncode, 2, "tick ran with no event id")
+        self.assertIn("--event", proc.stderr)
 
 
 class LimitsAndStop(unittest.TestCase):
@@ -262,7 +524,7 @@ class LimitsAndStop(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             h = Harness(td, executor_heads=[H1, H2, H1], decisions=["BLOCKED"] * 3,
                         max_attempts=2)
-            trail = h.ctl.drive("T", max_steps=10)
+            trail = h.ctl.drive("T", "evt-cap", max_steps=10)
             self.assertIn("STOP", [t["action"] for t in trail])
             self.assertEqual(h.store.task("T")["status"], "STOPPED")
 
@@ -279,7 +541,7 @@ class LimitsAndStop(unittest.TestCase):
     def test_each_runner_invocation_costs_exactly_one_run(self):
         with tempfile.TemporaryDirectory() as td:
             h = Harness(td)
-            h.ctl.drive("T")                            # execute, review, execute, review
+            h.ctl.drive("T", "evt-cycle")                            # execute, review, execute, review
             self.assertEqual(h.store.spend(), 4)
 
     def test_a_phase_outside_the_authorized_list_is_refused(self):
@@ -387,12 +649,300 @@ class TrustBoundary(unittest.TestCase):
         self.assertIn("RUNS", cfg["run_budget_note"])
 
 
+class RunnerEnvironmentIsAnAllowlist(unittest.TestCase):
+    """G2 / GOV-R1-03. The old default was `env=None`, which subprocess reads as
+    'inherit everything'. On the host this was written on that is 142 variables
+    including GITHUB_TOKEN, AWS_SECRET_ACCESS_KEY and AITOKENKING_API_KEY, and
+    the shipped template never set the field. Nothing leaked because live
+    dispatch was never on, but the default contradicted what ACTIVATION.md
+    promised."""
+
+    PARENT = {
+        "PATH": "/usr/bin:/bin", "HOME": "/home/u", "LANG": "C.UTF-8",
+        "GITHUB_TOKEN": "ghs-SYNTHETIC", "GH_TOKEN": "ghs-SYNTHETIC",
+        "AWS_SECRET_ACCESS_KEY": "SYNTHETIC-AWS", "AITOKENKING_API_KEY": "sk-SYNTHETIC",
+        "CLAUDE_CODE_MESSAGING_TOKEN": "SYNTHETIC-MSG",
+        "ANTHROPIC_API_KEY": "sk-ant-SYNTHETIC", "HTTPS_PROXY": "http://p",
+    }
+    SECRETS = ("GITHUB_TOKEN", "GH_TOKEN", "AWS_SECRET_ACCESS_KEY",
+               "AITOKENKING_API_KEY", "CLAUDE_CODE_MESSAGING_TOKEN")
+
+    def test_untrusted_pr_tests_get_no_credential_at_all(self):
+        env = build_env("pr_tests", self.PARENT)
+        for name in self.SECRETS + ("ANTHROPIC_API_KEY",):
+            self.assertNotIn(name, env)
+        for value in self.PARENT.values():
+            if value.startswith(("ghs-", "sk-", "SYNTHETIC")):
+                self.assertNotIn(value, env.values())
+
+    def test_the_reviewer_never_receives_a_write_token(self):
+        env = build_env("reviewer", self.PARENT)
+        self.assertNotIn("GITHUB_TOKEN", env)
+        self.assertNotIn("GH_TOKEN", env)
+        self.assertIn("ANTHROPIC_API_KEY", env)      # it still needs the model
+
+    def test_the_second_line_holds_if_the_role_list_is_edited_wrongly(self):
+        """Mutation testing caught this: deleting the DENY_ALWAYS branch changed
+        nothing, because the reviewer's credential list does not name a write
+        token anyway — so the branch was a guard nothing could trigger. The
+        input it exists for is a future edit that wrongly adds one. Fed here."""
+        import runners
+        broken = dict(runners.ROLE_CREDENTIALS)
+        broken["reviewer"] = ("ANTHROPIC_API_KEY", "GITHUB_TOKEN", "GH_TOKEN")
+        with patch.object(runners, "ROLE_CREDENTIALS", broken):
+            env = runners.build_env("reviewer", self.PARENT)
+        self.assertNotIn("GITHUB_TOKEN", env, "the deny list did not stop a bad role edit")
+        self.assertNotIn("GH_TOKEN", env)
+        self.assertIn("ANTHROPIC_API_KEY", env)
+
+    def test_the_same_second_line_protects_untrusted_pr_tests(self):
+        broken = dict(runners.ROLE_CREDENTIALS)
+        broken["pr_tests"] = ("GITHUB_TOKEN",)
+        with patch.object(runners, "ROLE_CREDENTIALS", broken):
+            env = runners.build_env("pr_tests", self.PARENT)
+        self.assertNotIn("GITHUB_TOKEN", env)
+
+    def test_the_executor_gets_the_branch_token_and_nothing_unrelated(self):
+        env = build_env("executor", self.PARENT)
+        self.assertIn("GITHUB_TOKEN", env)
+        self.assertIn("ANTHROPIC_API_KEY", env)
+        self.assertNotIn("AWS_SECRET_ACCESS_KEY", env)
+        self.assertNotIn("CLAUDE_CODE_MESSAGING_TOKEN", env)
+
+    def test_a_variable_added_to_the_parent_later_is_still_excluded(self):
+        """An allowlist, not a denylist — new secrets do not leak by default."""
+        parent = dict(self.PARENT, SOME_FUTURE_TOKEN="SYNTHETIC-NEW")
+        for role in ROLE_CREDENTIALS:
+            self.assertNotIn("SOME_FUTURE_TOKEN", build_env(role, parent))
+
+    def test_there_is_no_way_to_ask_for_full_inheritance(self):
+        """The defect was an option that meant 'inherit everything'. It is gone.
+
+        Checked against the parsed module rather than the file text, because the
+        docstring names the old field on purpose to explain the defect — a
+        substring check would pass or fail on the wrong thing.
+        """
+        import ast as _ast
+        tree = _ast.parse(pathlib.Path(HERE / "runners.py").read_text())
+        for node in _ast.walk(tree):
+            if isinstance(node, _ast.Constant) and node.value == "env_passthrough_only":
+                self.fail("env_passthrough_only is still read somewhere in runners.py")
+            if isinstance(node, _ast.keyword) and node.arg == "env":
+                self.assertFalse(
+                    isinstance(node.value, _ast.Constant) and node.value.value is None,
+                    "a subprocess call still passes env=None, which inherits everything",
+                )
+        for role in ROLE_CREDENTIALS:
+            env = build_env(role, self.PARENT)
+            self.assertLessEqual(len(env), len(BASE_ENV_ALLOWLIST) + 4)
+
+    def test_every_subprocess_call_in_the_adapter_passes_an_explicit_env(self):
+        """Not just the model call — the clone and the checkout run PR-adjacent
+        git too, and an inherited environment there is the same leak."""
+        import ast as _ast
+        tree = _ast.parse(pathlib.Path(HERE / "runners.py").read_text())
+        calls = [n for n in _ast.walk(tree)
+                 if isinstance(n, _ast.Call)
+                 and isinstance(n.func, _ast.Attribute)
+                 and n.func.attr == "run"
+                 and isinstance(n.func.value, _ast.Name)
+                 and n.func.value.id == "subprocess"]
+        self.assertTrue(calls, "no subprocess.run calls found — did the adapter change?")
+        for call in calls:
+            self.assertIn("env", [k.arg for k in call.keywords],
+                          f"subprocess.run at line {call.lineno} passes no env")
+
+    def test_every_role_still_gets_a_usable_baseline(self):
+        for role in ROLE_CREDENTIALS:
+            env = build_env(role, {})
+            self.assertTrue(env["PATH"])
+            self.assertTrue(env["HOME"])
+
+    def test_an_unknown_role_is_refused_rather_than_defaulted(self):
+        with self.assertRaises(RunnerError):
+            build_env("something-else", self.PARENT)
+
+
+class MissingAuthIsBlockedNotPassed(unittest.TestCase):
+    """G2: an unauthenticated runner must report BLOCKED_ACCESS, never success."""
+
+    def test_has_credential_ignores_a_write_token(self):
+        self.assertFalse(has_credential("executor", {"GITHUB_TOKEN": "x"}))
+        self.assertTrue(has_credential("executor", {"ANTHROPIC_API_KEY": "x"}))
+
+    def test_the_controller_records_blocked_access_and_runs_nothing_further(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+
+            class NoAuth(FakeExecutor):
+                def run(self, order):
+                    raise AuthUnavailable("no model credential available to this role")
+
+            h.executor = NoAuth([H1])
+            h.ctl.executor = h.executor
+            out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out, {"action": "BLOCKED_ACCESS", "reason": "no_credential"})
+            self.assertEqual(h.store.task("T")["status"], "BLOCKED_ACCESS")
+            self.assertNotEqual(h.store.task("T")["status"], "COMPLETE")
+
+
+class TheRealAdapterIsTestedWithAStubExecutable(unittest.TestCase):
+    """G2 says explicitly: testing FakeExecutor does not verify SubprocessRunner.
+
+    These drive the real adapter's parsing and error handling with a stub program
+    that prints scripted bytes — no model, no network, no credential.
+    """
+
+    def test_a_well_formed_executor_verdict_parses(self):
+        out = parse_verdict("executor", json.dumps({"new_head": "a" * 40}))
+        self.assertEqual(out["new_head"], "a" * 40)
+
+    def test_a_short_or_non_hex_head_is_refused(self):
+        for bad in ("abc", "z" * 40, "", None, 12345):
+            with self.subTest(head=bad), self.assertRaises(RunnerError):
+                parse_verdict("executor", json.dumps({"new_head": bad}))
+
+    def test_unparseable_output_is_a_failure_not_an_approval(self):
+        for text in ("", "not json", "exit 0", "<html>error</html>"):
+            with self.subTest(text=text), self.assertRaises(RunnerError):
+                parse_verdict("reviewer", text)
+
+    def test_the_error_never_quotes_the_payload(self):
+        """stdout is exactly where a provider body or a log line would be."""
+        secret = "SYNTHETIC_PRIVATE_729"
+        with self.assertRaises(RunnerError) as cm:
+            parse_verdict("reviewer", f"garbage {secret} garbage")
+        self.assertNotIn(secret, str(cm.exception))
+
+    def test_a_review_without_evidence_is_refused(self):
+        payload = {"review": {"head": "a" * 40, "reviewer": "r",
+                              "decision": "APPROVED", "evidence": []}}
+        with self.assertRaises(RunnerError):
+            parse_verdict("reviewer", json.dumps(payload))
+
+    def test_a_review_missing_a_required_field_is_refused(self):
+        for drop in ("head", "reviewer", "decision"):
+            payload = {"review": {"head": "a" * 40, "reviewer": "r",
+                                  "decision": "APPROVED", "evidence": ["e"]}}
+            del payload["review"][drop]
+            with self.subTest(missing=drop), self.assertRaises(RunnerError):
+                parse_verdict("reviewer", json.dumps(payload))
+
+    def test_a_stub_executable_end_to_end_through_subprocess(self):
+        """The command template, the CLI wrapper and the JSON contract together."""
+        with tempfile.TemporaryDirectory() as td:
+            stub = pathlib.Path(td) / "stub.py"
+            stub.write_text('import json;print(json.dumps({"new_head": "b"*40}))')
+            result = subprocess.run([sys.executable, str(stub)],
+                                    capture_output=True, text=True,
+                                    env=build_env("executor", {"PATH": os.environ["PATH"]}))
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(parse_verdict("executor", result.stdout)["new_head"], "b" * 40)
+
+    def test_a_stub_that_exits_nonzero_is_a_failure(self):
+        with tempfile.TemporaryDirectory() as td:
+            stub = pathlib.Path(td) / "stub.py"
+            stub.write_text('import sys;print("SYNTHETIC_LEAK");sys.exit(3)')
+            result = subprocess.run([sys.executable, str(stub)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 3)
+            # the adapter turns this into RunnerError without quoting stdout
+            self.assertIn("SYNTHETIC_LEAK", result.stdout)
+
+
+class AReportedHeadIsVerifiedAgainstTheRemote(unittest.TestCase):
+    """G2: `new_head` from a runner is a claim. A push can fail silently."""
+
+    def test_a_head_that_is_not_on_the_branch_fails_the_task(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td, known_commits={H0})        # H1 was never pushed
+            out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out["action"], "FAILED")
+            self.assertEqual(out["reason"], "reported_head_not_on_branch")
+            self.assertEqual(h.store.task("T")["status"], "FAILED")
+            self.assertIn("recovery_point", h.store.task("T"))
+            self.assertEqual(h.reviewer.calls, [], "a reviewer ran against a phantom commit")
+
+    def test_a_head_that_is_on_the_branch_proceeds(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td, known_commits={H0, H1, H2})
+            self.assertEqual(h.ctl.step("T", "evt-1")["action"], "REVIEW_PENDING")
+
+
+class LeaseRenewalAndIntentLedger(unittest.TestCase):
+    """G3: a long task must not be stolen mid-flight; a crash between an
+    external side effect and the local save must not blindly repeat it."""
+
+    def test_a_holder_can_extend_its_own_lease(self):
+        with tempfile.TemporaryDirectory() as td:
+            now = [1000.0]
+            store = Store(pathlib.Path(td), clock=lambda: now[0])
+            store.acquire("T", "worker-a", ttl=100)
+            now[0] = 1050.0
+            store.renew("T", "worker-a", ttl=100)
+            now[0] = 1120.0
+            self.assertTrue(store.holds_lease("T", "worker-a"),
+                            "renewal did not extend past the original expiry")
+
+    def test_a_worker_that_already_lost_the_lease_cannot_renew(self):
+        with tempfile.TemporaryDirectory() as td:
+            now = [1000.0]
+            store = Store(pathlib.Path(td), clock=lambda: now[0])
+            store.acquire("T", "worker-a", ttl=10)
+            now[0] = 2000.0
+            with self.assertRaises(ConcurrencyError):
+                store.renew("T", "worker-a", ttl=100)
+
+    def test_someone_elses_lease_cannot_be_renewed(self):
+        with tempfile.TemporaryDirectory() as td:
+            store = Store(pathlib.Path(td))
+            store.acquire("T", "worker-a", ttl=600)
+            with self.assertRaises(ConcurrencyError):
+                store.renew("T", "worker-b", ttl=600)
+
+    def test_an_open_intent_survives_a_restart_and_names_what_to_check(self):
+        with tempfile.TemporaryDirectory() as td:
+            store = Store(pathlib.Path(td))
+            intent = store.record_intent("T", "push", branch="work", head=H1)
+            reopened = Store(pathlib.Path(td))        # a fresh process
+            open_now = reopened.open_intents("T")
+            self.assertEqual(len(open_now), 1)
+            self.assertEqual(open_now[0]["action"], "push")
+            self.assertEqual(open_now[0]["head"], H1)
+            reopened.close_intent("T", intent, outcome="confirmed")
+            self.assertEqual(Store(pathlib.Path(td)).open_intents("T"), [])
+
+
+class WorkOrderContract(unittest.TestCase):
+    """G3 lists the fields a work order must carry."""
+
+    REQUIRED = ("task_id", "goal", "scope_paths", "acceptance", "decision_ids",
+                "branch", "head", "policy_sha", "phase", "run_id",
+                "command_allowlist", "deadline", "evidence",
+                "max_attempts", "budget", "timeout")
+
+    def test_every_required_field_is_present(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td, goal="g", scope_paths=["a/"], acceptance="acc",
+                        decision_ids=["GOV-01"], command_allowlist=["git"])
+            order = h.ctl._order("T", "execute", H0, "evt", "run", "exec", 0, 0.0)
+            for field in self.REQUIRED:
+                self.assertIn(field, order, f"work order is missing {field}")
+
+    def test_the_policy_sha_is_recorded_on_every_order(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            order = h.ctl._order("T", "execute", H0, "evt", "run", "exec", 0, 0.0)
+            self.assertEqual(order["policy_sha"], "policy" + "0" * 35)
+            self.assertNotEqual(order["policy_sha"], "unrecorded")
+
+
 class AuditTrail(unittest.TestCase):
 
     def test_every_guard_decision_is_recorded(self):
         with tempfile.TemporaryDirectory() as td:
             h = Harness(td)
-            h.ctl.drive("T")
+            h.ctl.drive("T", "evt-cycle")
             guard_events = [e for e in h.store.events() if e["kind"] == "guard"]
             self.assertEqual([e["phase"] for e in guard_events],
                              ["execute", "review", "accept_review",
