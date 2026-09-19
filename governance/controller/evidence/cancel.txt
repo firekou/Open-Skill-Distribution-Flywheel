@@ -1,0 +1,50 @@
+G3 cancel semantics — 2026-09-19T18:56:31Z
+
+One word, 'cancel', was covering four actions that stop different things.
+Separated, each with what it CANNOT do stated:
+
+  L1 stop dispatch      STOP file, read before every action.
+                        Stops the NEXT runner. Does not touch one already running.
+  L2 cancel one task    CANCEL-<task> file, read at that task's next checkpoint.
+                        Ends that task only. Does not touch a running runner and
+                        does not stop other tasks.
+  L3 terminate runner   kills the runner AND every process it started.
+                        Does NOT undo a commit the runner already pushed.
+                        That needs a revert: a separate authorised action.
+  L4 revoke credential  NOT POSSIBLE FROM THIS PROGRAM. Only the issuer can
+                        revoke a key - the Anthropic console for the model
+                        credential, GitHub for the token. If a runner leaked
+                        or misused one, L1-L3 do not take it back.
+
+== The L3 defect, measured ==
+subprocess.run(timeout=...) kills only the direct child. A CLI agent that
+starts its own worker leaves that worker running, still holding the
+credentials that were in its environment.
+
+-- plain kill, which is what the code did --
+mode=plain  direct child killed=True  grandchild still alive=True
+-- process-group kill, which is what it does now --
+mode=group  direct child killed=True  grandchild still alive=False
+
+Note on measuring this: os.kill(pid, 0) is NOT a liveness check. A killed
+process whose parent is gone stays a zombie until reaped, and in this
+container pid 1 never reaps it, so signal 0 keeps succeeding for a process
+that is thoroughly dead. The first version of this test AND its negative
+control both asked that wrong question, which would have let the control
+pass without reproducing anything. The tests read /proc/<pid>/stat instead.
+
+== Tests covering the ladder ==
+  test_a_runner_that_ignores_sigterm_is_still_killed (test_controller.CancelIsFourDifferentThings.test_a_runner_that_ignores_sigterm_is_still_killed)
+  test_cancelling_one_task_does_not_stop_the_others (test_controller.CancelIsFourDifferentThings.test_cancelling_one_task_does_not_stop_the_others) ... ok
+  test_neither_file_switch_claims_to_reach_a_running_runner (test_controller.CancelIsFourDifferentThings.test_neither_file_switch_claims_to_reach_a_running_runner)
+  test_revoking_a_credential_is_not_claimed_to_be_implemented (test_controller.CancelIsFourDifferentThings.test_revoking_a_credential_is_not_claimed_to_be_implemented)
+  test_stop_dispatch_and_cancel_task_are_not_the_same_switch (test_controller.CancelIsFourDifferentThings.test_stop_dispatch_and_cancel_task_are_not_the_same_switch) ... ok
+  test_terminating_a_runner_takes_its_children_with_it (test_controller.CancelIsFourDifferentThings.test_terminating_a_runner_takes_its_children_with_it) ... ok
+  test_terminating_something_already_gone_is_not_an_error (test_controller.CancelIsFourDifferentThings.test_terminating_something_already_gone_is_not_an_error) ... ok
+  test_the_plain_kill_this_replaced_really_did_leave_an_orphan (test_controller.CancelIsFourDifferentThings.test_the_plain_kill_this_replaced_really_did_leave_an_orphan)
+  test_a_runner_can_be_cancelled_while_it_is_running (test_controller.TheRealRunAdapterIsDrivenEndToEnd.test_a_runner_can_be_cancelled_while_it_is_running)
+  test_a_runner_that_hangs_is_timed_out_with_its_children (test_controller.TheRealRunAdapterIsDrivenEndToEnd.test_a_runner_that_hangs_is_timed_out_with_its_children) ... ok
+  test_a_stub_runner_runs_and_its_verdict_is_parsed (test_controller.TheRealRunAdapterIsDrivenEndToEnd.test_a_stub_runner_runs_and_its_verdict_is_parsed) ... ok
+  test_the_timeout_message_never_quotes_the_runners_output (test_controller.TheRealRunAdapterIsDrivenEndToEnd.test_the_timeout_message_never_quotes_the_runners_output) ... ok
+  Ran 12 tests in 6.684s
+  OK

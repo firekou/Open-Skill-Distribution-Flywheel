@@ -12,7 +12,9 @@ No network, no credentials, no model call.
 
 from __future__ import annotations
 
+import contextlib
 import json
+import inspect
 import os
 import pathlib
 import shutil
@@ -28,11 +30,12 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import runners                                          # noqa: E402
-from controller import (Controller, load_guard,        # noqa: E402
-                        scripted_commit_verifier)
+from controller import (CANCEL_LADDER, Controller,     # noqa: E402
+                        load_guard, scripted_commit_verifier)
 from runners import (AuthUnavailable, BASE_ENV_ALLOWLIST, FakeExecutor,  # noqa: E402
                      FakeReviewer, ROLE_CREDENTIALS, RunnerError, SubprocessRunner,
-                     build_env, has_credential, parse_verdict)
+                     build_env, has_credential, parse_verdict,
+                     terminate_process_group)
 from store import ConcurrencyError, Store              # noqa: E402
 
 GUARD = load_guard(HERE.parent / "preflight.py")
@@ -265,10 +268,17 @@ class OutcomesAreNotPermissions(unittest.TestCase):
 
 
 WORKER = """
-import json, pathlib, sys, time
+import json, pathlib, signal, sys, time
 sys.path.insert(0, sys.argv[1])
 from store import Store, ConcurrencyError
 root, rounds, start_at = pathlib.Path(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4])
+
+# A hard deadline inside the worker itself. Without it a worker blocked on a
+# lock that is never released waits forever, and a failing run leaves six stuck
+# processes behind for whoever looks next. A test that leaks processes on
+# failure has the same defect this suite exists to catch in the runner.
+signal.alarm(int(float(sys.argv[5])))
+
 s = Store(root)
 time.sleep(max(0.0, start_at - time.time()))
 ok = 0
@@ -285,6 +295,177 @@ for _ in range(rounds):
             continue
 print(ok)
 """
+
+
+def still_running(pid: int) -> bool:
+    """Is this pid a LIVE process, as opposed to an unreaped zombie?
+
+    os.kill(pid, 0) is not that question. A killed process whose parent has
+    gone stays as a zombie until something reaps it, and in a container pid 1
+    often never does — so signal 0 keeps succeeding for a process that is
+    thoroughly dead. Both the test and its control were asking the wrong
+    question, which would have made the control pass without reproducing
+    anything. The process state is the real answer: Z is a zombie, X is gone.
+    """
+    try:
+        state = pathlib.Path(f"/proc/{pid}/stat").read_text().split()[2]
+    except (FileNotFoundError, ProcessLookupError, IndexError):
+        return False
+    return state not in ("Z", "X", "x")
+
+
+STUBBORN = """#!/bin/sh
+# A runner that refuses SIGTERM, which is what the SIGKILL backstop is for.
+trap '' TERM
+sh -c "trap '' TERM; while true; do sleep 0.2; done" &
+echo "$!" > "$1"
+while true; do sleep 0.2; done
+"""
+
+SPAWNER = """#!/bin/sh
+# A runner that starts its own worker, the way a CLI agent does.
+sh -c 'while true; do sleep 0.2; done' &
+echo "$!" > "$1"
+while true; do sleep 0.2; done
+"""
+
+
+class CancelIsFourDifferentThings(unittest.TestCase):
+    """G3. 'Cancel' was one word covering four actions that stop different
+    things. Separated, with what each one CANNOT do stated:
+
+      L1 stop dispatch    no new runner starts; a running one is untouched
+      L2 cancel task      that task ends at its next checkpoint; others run on
+      L3 terminate runner kills the runner and its children; does not undo a
+                          push the runner already made
+      L4 revoke credential not in this program's power at all
+
+    L3 needed a real fix, not just a name: subprocess.run(timeout=...) kills
+    only the direct child, so a runner's own worker survived the timeout still
+    holding the credentials from its environment. Measured in evidence/cancel.txt.
+    """
+
+    def _spawner(self, tmp):
+        script = pathlib.Path(tmp) / "spawner.sh"
+        script.write_text(SPAWNER)
+        script.chmod(0o755)
+        return script
+
+    def test_terminating_a_runner_takes_its_children_with_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pidfile = pathlib.Path(tmp) / "worker.pid"
+            proc = subprocess.Popen(["sh", str(self._spawner(tmp)), str(pidfile)],
+                                    start_new_session=True)
+            for _ in range(100):
+                if pidfile.exists() and pidfile.read_text().strip():
+                    break
+                time.sleep(0.05)
+            worker = int(pidfile.read_text().strip())
+
+            outcome = terminate_process_group(proc, grace_seconds=5)
+            self.assertIn(outcome, ("terminated", "killed"))
+            time.sleep(0.3)
+            self.assertFalse(still_running(worker),
+                             "the runner's own worker outlived the cancel")
+
+    def test_the_plain_kill_this_replaced_really_did_leave_an_orphan(self):
+        """The negative control. Without the process group the worker lives on,
+        which is the whole reason the fix exists."""
+        with tempfile.TemporaryDirectory() as tmp:
+            pidfile = pathlib.Path(tmp) / "worker.pid"
+            proc = subprocess.Popen(["sh", str(self._spawner(tmp)), str(pidfile)])
+            for _ in range(100):
+                if pidfile.exists() and pidfile.read_text().strip():
+                    break
+                time.sleep(0.05)
+            worker = int(pidfile.read_text().strip())
+            proc.kill()                       # exactly what subprocess.run(timeout=) does
+            proc.wait(timeout=10)
+            time.sleep(0.3)
+            try:
+                orphaned = still_running(worker)
+            finally:
+                with contextlib.suppress(ProcessLookupError):
+                    os.kill(worker, 9)
+            self.assertTrue(orphaned,
+                            "the control no longer reproduces the defect: without the "
+                            "process group the worker is supposed to survive")
+
+    def test_a_runner_that_ignores_sigterm_is_still_killed(self):
+        """The SIGKILL backstop. Mutation testing found it untested: every
+        earlier case died on SIGTERM, so replacing the SIGKILL with a no-op
+        signal-0 probe changed nothing. This feeds the backstop its input."""
+        with tempfile.TemporaryDirectory() as tmp:
+            script = pathlib.Path(tmp) / "stubborn.sh"
+            script.write_text(STUBBORN)
+            script.chmod(0o755)
+            pidfile = pathlib.Path(tmp) / "worker.pid"
+            proc = subprocess.Popen(["sh", str(script), str(pidfile)],
+                                    start_new_session=True)
+            for _ in range(100):
+                if pidfile.exists() and pidfile.read_text().strip():
+                    break
+                time.sleep(0.05)
+            worker = int(pidfile.read_text().strip())
+            self.assertTrue(still_running(worker))
+
+            outcome = terminate_process_group(proc, grace_seconds=1)
+            self.assertEqual(outcome, "killed", "SIGTERM was treated as sufficient")
+            time.sleep(0.4)
+            self.assertFalse(still_running(worker),
+                             "a runner that ignores SIGTERM survived the cancel")
+
+    def test_terminating_something_already_gone_is_not_an_error(self):
+        proc = subprocess.Popen([sys.executable, "-c", "pass"], start_new_session=True)
+        proc.wait(timeout=10)
+        self.assertEqual(terminate_process_group(proc, grace_seconds=2), "already_gone")
+
+    def test_cancelling_one_task_does_not_stop_the_others(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            pathlib.Path(h.config["stop_file"]).with_name("CANCEL-T").write_text("cancel")
+            out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out["action"], "CANCELLED")
+            self.assertEqual(h.store.task("T")["status"], "CANCELLED")
+            self.assertEqual(h.executor.calls, [], "a cancelled task still ran a runner")
+
+            other = h.ctl.step("OTHER", "evt-2")
+            self.assertEqual(other["action"], "REVIEW_PENDING",
+                             "cancelling one task stopped an unrelated one")
+
+    def test_stop_dispatch_and_cancel_task_are_not_the_same_switch(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            pathlib.Path(h.config["stop_file"]).write_text("stop")
+            self.assertEqual(h.ctl.step("T", "evt-1")["action"], "STOP")
+            self.assertEqual(h.store.task("T")["status"], "STOPPED")
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            pathlib.Path(h.config["stop_file"]).with_name("CANCEL-T").write_text("cancel")
+            self.assertEqual(h.ctl.step("T", "evt-1")["action"], "CANCELLED")
+            self.assertEqual(h.store.task("T")["status"], "CANCELLED")
+
+    def test_neither_file_switch_claims_to_reach_a_running_runner(self):
+        """The documented limit, asserted so a future edit cannot quietly drop
+        it: L1 and L2 are read at checkpoints, before a runner starts."""
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            source = inspect.getsource(type(h.ctl)._stopped)
+            self.assertIn("does not reach a runner", source)
+            self.assertEqual(CANCEL_LADDER,
+                             ("stop_dispatch", "cancel_task",
+                              "terminate_runner", "revoke_credential"))
+
+    def test_revoking_a_credential_is_not_claimed_to_be_implemented(self):
+        """L4 is the one that actually takes a leaked key back, and nothing here
+        can do it. A ladder that implies otherwise is worse than no ladder."""
+        import controller as ctl_mod
+        self.assertIn("revoke_credential", CANCEL_LADDER)
+        self.assertFalse(
+            any(name.startswith("revoke") for name in dir(ctl_mod.Controller)),
+            "something named revoke* exists; only the credential issuer can revoke")
+        self.assertIn("NOT IMPLEMENTABLE HERE", (HERE / "controller.py").read_text(),
+                      "the ladder no longer says that L4 is out of reach")
 
 
 class RealCrossProcessConcurrency(unittest.TestCase):
@@ -312,17 +493,28 @@ class RealCrossProcessConcurrency(unittest.TestCase):
             script = pathlib.Path(td) / "worker.py"
             script.write_text(WORKER)
             start = time.time() + 1.0
+            deadline = 60
             procs = [subprocess.Popen(
                 [sys.executable, str(script), str(HERE), str(root),
-                 str(self.ROUNDS), str(start)],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                 str(self.ROUNDS), str(start), str(deadline)],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                start_new_session=True)
                 for _ in range(self.PROCS)]
-            reported = 0
-            for proc in procs:
-                out, err = proc.communicate(timeout=180)
-                self.assertEqual(proc.returncode, 0,
-                                 f"a writer crashed, which is the temp-name race: {err[-600:]}")
-                reported += int(out.strip())
+            try:
+                reported = 0
+                for proc in procs:
+                    out, err = proc.communicate(timeout=deadline + 30)
+                    self.assertEqual(
+                        proc.returncode, 0,
+                        "a writer did not finish cleanly. A negative exit is the worker's "
+                        "own alarm, which means it waited forever on the lock: "
+                        f"{err[-600:]}")
+                    reported += int(out.strip())
+            finally:
+                # Leave nothing behind, whatever happened above.
+                for proc in procs:
+                    if proc.poll() is None:
+                        terminate_process_group(proc, grace_seconds=5)
 
             final = Store(root).read()
             self.assertEqual(reported, self.PROCS * self.ROUNDS)
@@ -848,6 +1040,121 @@ class TheRealAdapterIsTestedWithAStubExecutable(unittest.TestCase):
             self.assertEqual(result.returncode, 3)
             # the adapter turns this into RunnerError without quoting stdout
             self.assertIn("SYNTHETIC_LEAK", result.stdout)
+
+
+
+class TheRealRunAdapterIsDrivenEndToEnd(unittest.TestCase):
+    """Mutation testing found the hole: every adapter test above calls
+    parse_verdict or spawns its own subprocess, so SubprocessRunner.run — the
+    clone, the Popen, the timeout, the process-group kill — was never executed
+    by the suite at all. Deleting `start_new_session=True` from it changed
+    nothing and no test noticed.
+
+    These drive the real method against a local git repository and a stub
+    program. No model, no network, no real credential.
+    """
+
+    def _repo(self, tmp):
+        """A real git repo on disk, so `git clone` works with no network."""
+        repo = pathlib.Path(tmp) / "origin"
+        repo.mkdir()
+        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@e",
+                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@e")
+        run = lambda *a: subprocess.run(a, cwd=repo, check=True, env=env,
+                                        capture_output=True)
+        run("git", "init", "--quiet", "-b", "main")
+        (repo / "README").write_text("fixture\n")
+        run("git", "add", "README")
+        run("git", "commit", "--quiet", "-m", "fixture")
+        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
+                              capture_output=True, text=True).stdout.strip()
+        return repo, head
+
+    def _order(self, repo, head):
+        return {"task_id": "T", "head": head, "repo_url": str(repo),
+                "prompt_file": "governance/IMPLEMENTATION_PROMPT.md"}
+
+    def _runner(self, tmp, command, **over):
+        cfg = {"enabled": True, "command": command, "identity_suffix": "test",
+               "timeout_seconds": 30, "clone_timeout": 60, **over}
+        return SubprocessRunner("executor", cfg, pathlib.Path(tmp) / "work")
+
+    def test_a_stub_runner_runs_and_its_verdict_is_parsed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, head = self._repo(tmp)
+            stub = pathlib.Path(tmp) / "stub.py"
+            stub.write_text('import json; print(json.dumps({"new_head": "b"*40}))')
+            runner = self._runner(tmp, [sys.executable, str(stub)])
+            with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-SYNTHETIC"}):
+                out = runner.run(self._order(repo, head))
+            self.assertEqual(out["new_head"], "b" * 40)
+
+    def test_a_runner_that_hangs_is_timed_out_with_its_children(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, head = self._repo(tmp)
+            pidfile = pathlib.Path(tmp) / "worker.pid"
+            stub = pathlib.Path(tmp) / "stub.sh"
+            stub.write_text(SPAWNER)
+            stub.chmod(0o755)
+            runner = self._runner(tmp, ["sh", str(stub), str(pidfile)],
+                                  timeout_seconds=2, terminate_grace_seconds=2)
+            with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-SYNTHETIC"}):
+                with self.assertRaises(RunnerError) as cm:
+                    runner.run(self._order(repo, head))
+            self.assertIn("timed out", str(cm.exception))
+            worker = int(pidfile.read_text().strip())
+            time.sleep(0.4)
+            self.assertFalse(still_running(worker),
+                             "the timed-out runner left its own worker running, "
+                             "still holding the credentials from its environment")
+
+    def test_the_timeout_message_never_quotes_the_runners_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, head = self._repo(tmp)
+            stub = pathlib.Path(tmp) / "stub.sh"
+            stub.write_text("#!/bin/sh\necho SYNTHETIC_LEAK_881\nwhile true; do sleep 0.2; done\n")
+            stub.chmod(0o755)
+            runner = self._runner(tmp, ["sh", str(stub)], timeout_seconds=1,
+                                  terminate_grace_seconds=2)
+            with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-SYNTHETIC"}):
+                with self.assertRaises(RunnerError) as cm:
+                    runner.run(self._order(repo, head))
+            self.assertNotIn("SYNTHETIC_LEAK_881", str(cm.exception))
+
+    def test_a_runner_can_be_cancelled_while_it_is_running(self):
+        """L3 through the adapter: cancel_current reaches the live child."""
+        with tempfile.TemporaryDirectory() as tmp:
+            repo, head = self._repo(tmp)
+            pidfile = pathlib.Path(tmp) / "worker.pid"
+            stub = pathlib.Path(tmp) / "stub.sh"
+            stub.write_text(SPAWNER)
+            stub.chmod(0o755)
+            runner = self._runner(tmp, ["sh", str(stub), str(pidfile)],
+                                  timeout_seconds=60, terminate_grace_seconds=2)
+            self.assertEqual(runner.cancel_current(), "nothing_running")
+
+            box = {}
+
+            def go():
+                with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-SYNTHETIC"}):
+                    try:
+                        runner.run(self._order(repo, head))
+                    except RunnerError as exc:
+                        box["error"] = exc
+
+            worker_thread = threading.Thread(target=go, daemon=True)
+            worker_thread.start()
+            for _ in range(200):
+                if pidfile.exists() and pidfile.read_text().strip():
+                    break
+                time.sleep(0.05)
+            worker = int(pidfile.read_text().strip())
+            self.assertIn(runner.cancel_current(grace_seconds=2),
+                          ("terminated", "killed"))
+            worker_thread.join(timeout=20)
+            self.assertFalse(worker_thread.is_alive(), "run() never returned after cancel")
+            time.sleep(0.4)
+            self.assertFalse(still_running(worker))
 
 
 class AReportedHeadIsVerifiedAgainstTheRemote(unittest.TestCase):

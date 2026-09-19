@@ -3,12 +3,18 @@
     "Template for real executor/reviewer runs. Copy it, fill it in OUTSIDE the repository,",
     "and never commit the copy. Nothing here contains or should contain a secret.",
     "",
+    "ENTRY POINT: tick.py. It supports mode 'replay' and mode 'live'; controller.py's own",
+    "CLI is a replay-only convenience and is not the activation path. Enabling live",
+    "dispatch is a CONFIG change (the two enabled flags below), not a code change.",
+    "",
     "Live dispatch stays OFF until every one of these is true:",
-    "  1. runners[*].enabled = true AND a non-zero budget is set by the owner",
-    "  2. the credentials below exist in the operator's trusted environment",
+    "  1. runners[*].enabled = true, deliberately, in a copy outside the repository",
+    "  2. the credentials below exist in the environment of whatever runs tick.py",
     "  3. the stop file path is writable by whoever must be able to stop this",
-    "  4. a persistent trigger exists to call the controller (see docs/ACTIVATION.md)",
-    "controller.py refuses mode != replay in this build, on purpose."
+    "  4. a persistent caller invokes tick.py (see ACTIVATION.md and CAPABILITIES.md)",
+    "",
+    "run_budget is a count of RUNS. It is not a spending authorisation and proves",
+    "nothing about billing; see the authentication row in CAPABILITIES.md."
   ],
   "mode": "live",
   "controller_identity": "controller-1",
@@ -39,10 +45,11 @@
         "--permission-mode",
         "acceptEdits",
         "--append-system-prompt",
-        "You are the EXECUTOR. Read {prompt_file}. Work at {head}. Emit JSON: {\"new_head\": \"<sha>\", \"cost\": <usd>}."
+        "You are the EXECUTOR. Read {prompt_file}. Work at {head}. Emit JSON: {\"new_head\": \"<40-hex sha>\"}."
       ],
-      "timeout_seconds": 1800,
-      "clone_timeout": 300
+      "timeout_seconds": 1200,
+      "clone_timeout": 300,
+      "terminate_grace_seconds": 10
     },
     "reviewer": {
       "enabled": false,
@@ -55,16 +62,40 @@
         "--permission-mode",
         "plan",
         "--append-system-prompt",
-        "You are the INDEPENDENT REVIEWER. You did not write this. Review {head} from a fresh clone. Emit JSON: {\"review\": {\"head\": \"...\", \"reviewer\": \"...\", \"decision\": \"APPROVED|APPROVED_WITH_CONDITIONS|BLOCKED|NEEDS_INFORMATION\", \"evidence\": [\"...\"]}, \"cost\": <usd>}."
+        "You are the INDEPENDENT REVIEWER. You did not write this. Review {head} from a fresh clone. Emit JSON: {\"review\": {\"head\": \"...\", \"reviewer\": \"...\", \"decision\": \"APPROVED|APPROVED_WITH_CONDITIONS|BLOCKED|NEEDS_INFORMATION\", \"evidence\": [\"...\"]}}."
       ],
-      "timeout_seconds": 1800,
-      "clone_timeout": 300
+      "timeout_seconds": 1200,
+      "clone_timeout": 300,
+      "terminate_grace_seconds": 10
     }
   },
-  "credentials_expected_in_env": [
-    "ANTHROPIC_API_KEY or a Claude Code OAuth token — for the runners",
-    "GITHUB_TOKEN — push to the work branch only; must NOT be exposed to a PR checkout"
+  "_time_limits_note": [
+    "timeout_seconds at the top level bounds one review ROUND (45 min).",
+    "Each runner's own timeout_seconds bounds one model call (20 min).",
+    "A runner that overruns is killed together with every process it started;",
+    "terminate_grace_seconds is how long SIGTERM is given before SIGKILL.",
+    "Repository test suites, when run, belong under the pr_tests role, which",
+    "receives no credential at all; budget them at 10 minutes."
   ],
+  "_credentials_by_role": {
+    "executor": [
+      "ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN - the model call",
+      "GITHUB_TOKEN - push to the work branch only"
+    ],
+    "reviewer": [
+      "ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN - the model call",
+      "NO write token: the reviewer produces evidence, and evidence does not need push rights"
+    ],
+    "pr_tests": [
+      "nothing. Untrusted repository code runs with no credential of any kind."
+    ],
+    "_note": [
+      "This is the ALLOWLIST, enforced in runners.build_env. Every other variable in",
+      "the parent environment is dropped, including ones added later. It is not",
+      "configurable from this file on purpose: a config a pull request could edit",
+      "would not be a boundary."
+    ]
+  },
   "run_budget": 8,
-  "run_budget_note": "Unit is RUNS, not currency. One runner invocation costs 1. Subscription plans have no per-call price to meter; runs and wall-clock are what actually run out."
+  "run_budget_note": "Unit is RUNS, not currency. One runner invocation costs 1. A run cap bounds how many times a model is called; it says nothing about which authentication path is used or whether that path bills. Those are separate and are recorded in CAPABILITIES.md."
 }

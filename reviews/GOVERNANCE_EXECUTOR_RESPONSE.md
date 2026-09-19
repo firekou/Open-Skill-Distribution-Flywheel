@@ -4,6 +4,20 @@
 **Draft PR，未合併。** 本檔由 executor 撰寫，**不自我核准**；驗收由獨立 reviewer 作出。
 產品修復（PR #5）未混入本分支。
 
+## 送審定位（依 IMPLEMENTATION_PROMPT 新版接收規則）
+
+| | |
+|---|---|
+| **Repository** | `firekou/Open-Skill-Distribution-Flywheel` |
+| **PR** | [#6](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6) |
+| **完整 head** | `__HEAD__` |
+| **上一輪已審 head** | `c04ef465d000968b86065e7608a8c92761458c6d` |
+| **Response 路徑** | `reviews/GOVERNANCE_EXECUTOR_RESPONSE.md`（本檔 §8、§9） |
+| **本輪 G 編號** | **G1、G2、G3**。G4 是本次送審本身；**G5／G6 未做，需另外授權** |
+| **Finding 對應** | GOV-R1-01 → §8 撤回 ＋ `CAPABILITIES.md`；GOV-R1-02 → §9.1 ＋ `ACTIVATION.md`；GOV-R1-03 → §9.1 ＋ `runners.build_env`；GOV-R1-04 → §9.1 ＋ 限制表 |
+| **變更性質** | **程式與報告都有變更**，不是只改文字。程式證據見 `governance/controller/evidence/` |
+| **本輪未做** | 無真實執行、未安裝觸發器、未新增費用、未提交任何憑證；兩個 runner 仍停用 |
+
 ## 五行目標對齊
 
 | | |
@@ -177,12 +191,13 @@ guard——後者才是真正會無聲失效的單點，它現在會被變異測
 `governance/controller/ACTIVATION.md`：憑證與預算前置、開啟順序（先手動跑一輪拿
 `MANUAL_RUN_VERIFIED`，再裝觸發器才談 `ACTIVE`）、四種停用方式、以及尚未涵蓋的部分。
 
-`config.live.example.json` 是可直接複製的範本，**兩個 runner 預設停用、預算 0**，
-且 `controller.py` 在本版**拒絕 `mode != replay`**——啟用 live dispatch 必須是有人刻意
-在 review 中做的一次修改，不是一個早就開著的旗標。
+`config.live.example.json` 是可直接複製的範本，**兩個 runner 預設停用**。
 
-**觸發器是唯一無法在這個 repository 內解決的東西。** 三個選項與各自代價列在 ACTIVATION.md；
-建議 GitHub Actions（`workflow_dispatch` + `schedule`），因為觸發、隔離與稽核 GitHub 已經在做。
+> **本段在 G1 已更正（GOV-R1-02）。** 原文說「啟用 live dispatch 必須是有人刻意在 review 中
+> 做的一次修改」，讀起來像要改程式。實際不是：**入口是 `tick.py`，它本來就同時支援
+> `replay` 與 `live`**，開啟 live 只需要改設定的兩個 `enabled` 旗標。`controller.py`
+> 自己的 CLI 只是 replay 用的便利入口，不是啟用路徑。原文同時寫「預算 0」，也已不成立——
+> `run_budget` 是**次數**，預設 8。
 
 ---
 
@@ -191,7 +206,7 @@ guard——後者才是真正會無聲失效的單點，它現在會被變異測
 | | |
 |---|---|
 | **已接通** | 狀態持久化、CAS、租約、事件去重、稽核日誌、guard 整合、狀態機全流程、逾時／預算／次數／停止開關、崩潰重啟、可信邊界、真實 runner adapter（程式面） |
-| **未接通** | 模型憑證（容器內沒有）、預算（0）、持久觸發器（容器會被回收，必須外部）、**真實 AI 執行與 review（一次都沒跑過）** |
+| **未接通** | 見 §9 的九項能力表。簡短說：**沒有持久 launcher、沒有接收服務、沒有持久執行主機、容器內沒有模型憑證**，以及**真實 AI 執行與 review 一次都沒跑過** |
 
 **分類：`REPLAY_VERIFIED`。** `state.json` 的 `automation.status` 照此寫，**沒有寫 ACTIVE**。
 測試替身通過只證明 controller 正確，**不證明任何 AI 做過真實工作**。
@@ -201,8 +216,8 @@ guard——後者才是真正會無聲失效的單點，它現在會被變異測
 ## 6. 下一位 reviewer 需要核對
 
 - `evidence/replay.txt`：整圈是否真的一次啟動走完、guard 是否每步都被詢問。
-- `evidence/tests.txt` 與 `test_controller.py`：26 條是否真的會失敗（建議刻意破壞 `store.py`
-  的 CAS 或 `controller.py` 的 `_ask`，確認測試會抓到，而不是空轉綠燈）。
+- `test_controller.py`（本輪 81 條）是否真的會失敗。不必自己想破壞點：
+  `evidence/mutate_g123.py` 就是那份破壞清單，`evidence/mutation_g123.txt` 是結果。
 - `runners.SubprocessRunner` 是否真的無法在停用狀態啟動；`config.live.example.json` 的預設值。
 - **可信邊界**：controller 是否真的只從 config 路徑載入 guard，PR 內容能否影響它。
 - C1／C2／C3 的處置是否足夠，特別是 main 的 state 補正有沒有把 PR #5 寫成已通過
@@ -241,15 +256,66 @@ python3 governance/controller/tick.py --config <cfg> --task PR5 [--drive]
 **用 trigger 的方式真的跑過之後才發現的 bug：** replay 模式會去問真實 remote 要 live head，
 所以第一次之後每次 tick 都被 `stale_head` 打掉。**光讀程式不會發現**。已修，並留在證據裡。
 
-## 8. 真正還缺的，只有一項
+## 8. ~~真正還缺的，只有一項~~ —— 這個結論是錯的，已撤回
 
-**跑 runner 的那個行程裡要有模型憑證。**
+原文寫：「真正還缺的只有一項：跑 runner 的那個行程裡要有模型憑證。」
 
-`runners.SubprocessRunner` 對準的是 `claude -p --output-format json`，這個容器裡**有**（2.1.278），
-但**沒有憑證**——沒有 `ANTHROPIC_API_KEY`，也沒有 `~/.claude/.credentials.json`。
+**這是 GOV-R1-01，撤回。** 錯的不只是內容，是形狀：把一個**沒有任何持久 launcher**
+的系統，寫成只差一個旗標就會動。憑證確實缺，但它排在第五位，而且**前四項都不是憑證**。
+一個認證完美、卻沒有任何東西會去呼叫它的 runner，仍然什麼都不會做。
 
-這是環境事實，**不是一個要負責人決定的選項**：在已登入訂閱的環境裡跑 `tick.py` 就能認證，
-在這種裸容器裡就不能。不需要選方案，也不需要選價格。
+完整交代在 `governance/controller/CAPABILITIES.md`，摘要見 §9。
+
+---
+
+## 9. 本輪（G1–G3）：四項矛盾的處置、能力表、以及量出來的缺陷
+
+### 9.1 四項矛盾
+
+| Finding | 原本的說法 | 現在的說法 | 改在哪 |
+|---|---|---|---|
+| **GOV-R1-01** | 「只缺模型憑證」 | 九項能力逐項列出，缺口是第 1–4 項（事件來源、接收服務、持久 launcher、執行主機），憑證排第 5 | 新增 `CAPABILITIES.md`；`ACTIVATION.md` 的「唯一缺口」整節重寫；本檔 §8 撤回 |
+| **GOV-R1-02** | 「啟用 live dispatch 必須改程式」 | 入口是 `tick.py`，本來就支援 live；開啟只需改設定的兩個 `enabled` | `ACTIVATION.md`、`config.live.example.json` 的 `_README`、本檔 §4 |
+| **GOV-R1-03** | 「隔離＝每次一份乾淨 clone」 | 明確寫成立什麼、不成立什麼：環境變數改成**按角色的允許清單**；但 clone＋過濾環境**不是沙箱**，容器隔離仍未接上 | `runners.build_env`、`ACTIVATION.md`、`config.live.example.json` 的 `_credentials_by_role` |
+| **GOV-R1-04** | 次數上限與計費混為一談 | 次數、各層時間上限、認證入口分欄；明寫 run cap **不能**證明計費路徑 | `ACTIVATION.md` 的限制表、`config.live.example.json` 的 `run_budget_note` |
+
+### 9.2 能力表
+
+`governance/controller/CAPABILITIES.md`，九列：事件來源、接收服務、持久 launcher、
+執行主機、模型認證、reviewer 身分、GitHub 讀寫、狀態磁碟、取消與復原。
+每列都有提供者、存續條件、證據等級、證據位置、限制、缺口。
+
+**其中一列是這輪量出來、而不是推論出來的：** 帳號目前有三個 routine，**沒有一個**指向
+這個 repository、這個分支或 `tick.py`；本次工作期間建立的兩個 cron（`ee341b02`、
+`46edd712`）**都已不存在**。它們是 session 範圍的，沒有活下來。所以「持久 launcher」
+不是待辦，是 `NOT BUILT`。
+
+### 9.3 G2／G3 修掉的缺陷（每一項都有負控制）
+
+| 缺陷 | 怎麼發現的 | 證據 |
+|---|---|---|
+| runner 繼承父行程**整個**環境（`env=None`＝142 個變數，含 `GITHUB_TOKEN`、`AWS_SECRET_ACCESS_KEY`） | 讀設定範本時發現該欄位從未被設定 | `evidence/mutation_g123.txt` |
+| 事件 ID 由 **state revision** 拼出來，而 revision 每次寫入都變 → 同一事件重送兩次得到兩個 ID，**去重從來沒有生效過** | 照 G3 規劃逐條核對 | 同上 |
+| `drive` 每次都從 `evt-<task>-0` 重新編號 → **第二次** drive 撞到已處理的 ID，直接 NOOP，什麼都沒做 | 上一條的鏡像，一起發現 | 同上 |
+| 每個寫入者共用同一個暫存檔名 `state.tmp` → 兩個行程互相蓋掉，`os.replace` 炸掉／讀到半截的 `state.json` | **開六個真行程去打**，不是執行緒 | `evidence/concurrency.txt` |
+| CAS 的「讀→檢查→寫」中間沒有鎖 → 60 次 commit 有 **39 次被回報成功然後丟掉** | 同上 | 同上 |
+| 逾時只殺得到直接子行程 → CLI agent 自己開的 worker **活下來，而且還帶著環境裡的憑證** | 先量再改 | `evidence/cancel.txt` |
+| G2 新增的「回報 head 要驗證」只接進 `Controller`，**兩個 replay 入口都沒接** → `replay.py` 直接 FAILED | 照 trigger 的方式實跑 | `evidence/replay.txt` |
+
+最後一項是這個 repository 反覆出現的同一種形狀：**檢查加在入口，出口沒加**。
+
+### 9.4 「取消」其實是四件事
+
+`stop dispatch` / `cancel task` / `terminate runner` / `revoke credential`，
+每一層都寫明**做不到什麼**。第四層——撤銷憑證——**這支程式做不到**，只有發證方能做
+（模型憑證在 Anthropic console，token 在 GitHub）。前三層都不能替代它。
+
+### 9.5 本輪沒有做的事
+
+**沒有任何真實執行、沒有安裝任何觸發器、沒有新增任何費用。** 兩個 runner 仍然停用。
+沒有提交任何憑證。這些屬於 G5／G6，需要另外的授權。
+
+---
 
 PR #5 的 merge、About／topics、上游備稿、金鑰輪替與本輪無關，維持原狀。
 1A／2A／3A 與 GOV-01 已批准，本輪未重問。

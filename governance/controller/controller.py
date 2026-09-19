@@ -30,8 +30,29 @@ import time
 from runners import AuthUnavailable, RunnerError
 from store import ConcurrencyError, Store
 
-TERMINAL = {"COMPLETE", "STOPPED", "FAILED", "TIMEOUT", "CONDITIONS_PENDING",
-            "NEEDS_INFORMATION", "BLOCKED_ACCESS", "WAITING_OWNER"}
+TERMINAL = {"COMPLETE", "STOPPED", "CANCELLED", "FAILED", "TIMEOUT",
+            "CONDITIONS_PENDING", "NEEDS_INFORMATION", "BLOCKED_ACCESS",
+            "WAITING_OWNER"}
+
+# G3: four different things were all called "cancel". They stop different things
+# and three of them are not interchangeable with the fourth.
+#
+#   L1 stop dispatch     the STOP file. No NEW runner starts. A runner already
+#                        running is untouched.
+#   L2 cancel one task   the CANCEL-<task> file. That task is abandoned at its
+#                        next checkpoint and marked CANCELLED; other tasks and
+#                        any runner already running are untouched.
+#   L3 terminate runner  runners.terminate_process_group. Kills the runner and
+#                        everything it started. Does NOT undo a commit the
+#                        runner already pushed; that needs a revert, which is a
+#                        separate authorised action.
+#   L4 revoke credential NOT IMPLEMENTABLE HERE, and nothing in this repository
+#                        should claim otherwise. Only the issuer can revoke a
+#                        key — the Anthropic console for the model credential,
+#                        GitHub for the token. If a runner has leaked or misused
+#                        one, L1-L3 do not take it back and L4 is the only thing
+#                        that does.
+CANCEL_LADDER = ("stop_dispatch", "cancel_task", "terminate_runner", "revoke_credential")
 
 
 def load_guard(path: pathlib.Path):
@@ -137,9 +158,40 @@ class Controller:
     # ---------- helpers ----------
 
     def _stopped(self) -> bool:
-        """Operator stop switch: a file on disk, checked before every action, so
-        stopping never depends on this process being healthy enough to be asked."""
+        """L1, stop dispatch. A file on disk, checked before every action, so
+        stopping never depends on this process being healthy enough to be asked.
+
+        This stops the NEXT runner from starting. It does not reach a runner
+        that is already running — that is L3. Conflating the two is how an
+        operator comes to believe a stop file ended a model call that is in
+        fact still going.
+        """
         return pathlib.Path(self.config["stop_file"]).exists()
+
+    def _cancel_path(self, task_id: str) -> pathlib.Path:
+        """L2 is per task, so the switch is per task too. A single shared file
+        would make 'cancel this one' indistinguishable from 'stop everything'."""
+        return pathlib.Path(self.config["stop_file"]).with_name(f"CANCEL-{task_id}")
+
+    def _cancelled(self, task_id: str) -> bool:
+        return self._cancel_path(task_id).exists()
+
+    def cancel_runner(self, which: str = "both", grace_seconds: float | None = None) -> dict:
+        """L3, terminate the runner that is running NOW, and its children.
+
+        Only the process holding the child can do this, so it is a method on the
+        controller rather than a file an operator touches. It does not undo a
+        push the runner already made.
+        """
+        out = {}
+        for name in ("executor", "reviewer"):
+            if which not in ("both", name):
+                continue
+            runner = getattr(self, name)
+            cancel = getattr(runner, "cancel_current", None)
+            out[name] = cancel(grace_seconds) if callable(cancel) else "not_cancellable"
+        self.store.log(kind="cancel_runner", detail=out)
+        return out
 
     def _order(self, task_id: str, phase: str, head: str, event_id: str,
                run_identity: str, executor_identity: str, attempt: int,
@@ -238,6 +290,16 @@ class Controller:
 
             if status in TERMINAL:
                 return {"action": "NOOP", "reason": f"terminal:{status}"}
+
+            # L2: this task only. Checked at the checkpoint, before any runner
+            # is started, and deliberately NOT presented as reaching a runner
+            # that is already running.
+            if self._cancelled(task_id):
+                self.store.mark_processed(event_id)
+                self.store.set_task(task_id, status="CANCELLED",
+                                    failure="cancelled by operator at checkpoint")
+                self.store.log(kind="cancel_task", task=task_id, event=event_id)
+                return {"action": "CANCELLED", "reason": "operator_cancel_task"}
 
             head = task.get("last_head") or self._head_of(
                 self.config["repo_url"], self.config["branch"])

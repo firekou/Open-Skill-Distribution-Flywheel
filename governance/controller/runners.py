@@ -27,10 +27,12 @@ a container, which `ACTIVATION.md` records as not yet wired in.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import pathlib
 import shutil
+import signal
 import subprocess
 import uuid
 
@@ -159,6 +161,48 @@ class FakeReviewer(Runner):
 # Real adapter — off unless explicitly enabled
 # --------------------------------------------------------------------------
 
+
+def terminate_process_group(proc, grace_seconds: float = 10.0) -> str:
+    """Kill the runner AND everything it started, then confirm it is gone.
+
+    subprocess.run(timeout=...) kills only the direct child. A CLI agent that
+    spawns its own worker leaves that worker running — still holding the
+    credentials that were in its environment, still able to push. Measured:
+    evidence/cancel.txt, where the plain kill leaves the grandchild alive and
+    the group kill does not.
+
+    This needs the child to have been started with start_new_session=True, so
+    it leads its own process group and the group id is the child's pid.
+
+    Returns "terminated" if SIGTERM was enough, "killed" if SIGKILL was needed,
+    "already_gone" if it had exited by itself.
+    """
+    try:
+        pgid = os.getpgid(proc.pid)
+    except ProcessLookupError:
+        return "already_gone"
+    try:
+        os.killpg(pgid, signal.SIGTERM)
+    except ProcessLookupError:
+        return "already_gone"
+    try:
+        proc.wait(timeout=grace_seconds)
+        outcome = "terminated"
+    except subprocess.TimeoutExpired:
+        outcome = "killed"
+
+    # SIGKILL the group unconditionally, even when the leader exited politely.
+    # An earlier version sent signal 0 on that path, which asks whether the
+    # group exists and does nothing about it — so a worker that ignored or
+    # outlived SIGTERM was left running, which is the exact failure this
+    # function exists to prevent. SIGKILL to an empty group is harmless.
+    with contextlib.suppress(ProcessLookupError, PermissionError):
+        os.killpg(pgid, signal.SIGKILL)
+    with contextlib.suppress(subprocess.TimeoutExpired):
+        proc.wait(timeout=grace_seconds)
+    return outcome
+
+
 class SubprocessRunner(Runner):
     """Runs a CLI agent non-interactively in a throwaway clone.
 
@@ -181,6 +225,22 @@ class SubprocessRunner(Runner):
             )
         if self.role not in ROLE_CREDENTIALS:
             raise RunnerError(f"unknown runner role {self.role!r}")
+        self._current = None
+
+    def cancel_current(self, grace_seconds: float | None = None) -> str:
+        """Level 3 of the cancel ladder: stop the runner that is running NOW.
+
+        Levels 1 and 2 (stop dispatch, cancel the task) only decide what happens
+        at the next checkpoint; neither reaches inside a child that is already
+        executing. This does, and it does not undo anything the child already
+        pushed — that needs a revert, which is a separate authorised action.
+        """
+        proc = self._current
+        if proc is None:
+            return "nothing_running"
+        return terminate_process_group(
+            proc, self._config.get("terminate_grace_seconds", 10)
+            if grace_seconds is None else grace_seconds)
 
     def identity(self) -> str:
         return self._identity
@@ -213,15 +273,24 @@ class SubprocessRunner(Runner):
         repo = self._workspace(order, env)
         cmd = [part.format(prompt_file=order["prompt_file"], head=order["head"])
                for part in self._config["command"]]
+        limit = self._config.get("timeout_seconds", 1200)
+        grace = self._config.get("terminate_grace_seconds", 10)
+        # start_new_session puts the runner in its own process group, which is
+        # the only way to reach the processes IT starts. Without it a timeout
+        # kills the runner and leaves its workers holding the credentials.
+        proc = subprocess.Popen(
+            cmd, cwd=repo, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, env=env, start_new_session=True)
+        self._current = proc
         try:
-            result = subprocess.run(
-                cmd, cwd=repo, capture_output=True, text=True,
-                timeout=self._config.get("timeout_seconds", 1200),
-                env=env,
-            )
-        except subprocess.TimeoutExpired as exc:
-            raise RunnerError(f"{self.kind}: timed out after "
-                              f"{self._config.get('timeout_seconds', 1200)}s") from exc
+            stdout, _stderr = proc.communicate(timeout=limit)
+        except subprocess.TimeoutExpired:
+            outcome = terminate_process_group(proc, grace)
+            raise RunnerError(f"{self.kind}: timed out after {limit}s; "
+                              f"process group {outcome}")
+        finally:
+            self._current = None
+        result = subprocess.CompletedProcess(cmd, proc.returncode, stdout, None)
         if result.returncode != 0:
             # The child's stdout/stderr may carry a provider error body or a raw
             # log line. Neither is shown: the exit code is the diagnostic that
