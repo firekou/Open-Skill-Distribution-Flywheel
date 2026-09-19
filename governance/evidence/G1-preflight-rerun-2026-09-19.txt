@@ -1,0 +1,10 @@
+test_boundaries (__main__.GuardTests.test_boundaries) ... ok
+test_execute_allowed (__main__.GuardTests.test_execute_allowed) ... ok
+test_independent_review_and_fix_cycle (__main__.GuardTests.test_independent_review_and_fix_cycle) ... ok
+test_missing_contract (__main__.GuardTests.test_missing_contract) ... ok
+test_reject_bad_review_binding_and_missing_evidence (__main__.GuardTests.test_reject_bad_review_binding_and_missing_evidence) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK
