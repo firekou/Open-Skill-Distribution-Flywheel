@@ -263,9 +263,9 @@ Python 3.11.15 · headroom-ai 0.37.0（PyPI 最新版，upload 2026-08-27）· L
 
 ## P5-01 憑證可能被錯誤訊息回顯 — IMPLEMENTED_PENDING_REVIEW
 
-**根因。** handler 讀 error body、切 400 字元、直接丟進 exception。兩個問題疊在一起：provider 有權
-把它拒絕的憑證回顯在 body 裡；而且「先切再遮罩」根本遮不掉——被切斷的值已經不等於原值了。
-這正是 PR #4 的 P4-01／P4-R2-01，我在新腳本裡重犯了一次。
+**根因。**〔第三輪更正：原文寫「根因是先切再遮罩」，**這是錯的**——舊版 `03dc57b` **完全沒有遮罩**，
+只是把 body 切 400 字元直接印出來。「先切再遮罩」是 PR #4 當時的第二層問題，我把兩件事寫混了。〕
+實際根因：handler 讀 provider 的 error body 並原樣輸出，而 provider 有權把它拒絕的憑證回顯在裡面。
 
 **修復路徑。** 不另建框架，直接沿用 PR #4 已驗過的行為：預設**完全不輸出 body**
 （`ATK_INCLUDE_ERROR_BODY=1` 才輸出）；要輸出時**先遮罩整段、再截斷**；連線錯誤連 URL 一起遮罩
@@ -430,3 +430,116 @@ NOTSET、繼承 WARNING，`isEnabledFor(WARNING)` 為 **True**——record 有�
 輪替已暴露憑證。付費定價本輪依指示不請負責人選擇。
 
 下一輪 reviewer 檔名：`reviews/PR5_R2_REVIEW_<short-sha>.md`。
+
+---
+
+# 第三輪修復回覆（回應 reviews/PR5_R2_REVIEW_f41f8d9.md）
+
+**Reviewed head f41f8d9 → 本輪新 head（本檔 commit）** · PR #5 Draft、未合併
+標 **IMPLEMENTED_PENDING_REVIEW**。控制輸出：`integrations/headroom-atk/evidence/pr5-r3/controls.txt`
+
+## 五行目標對齊
+
+| | |
+|---|---|
+| **目標來源** | `reviews/PR5_R2_REVIEW_f41f8d9.md`（BLOCKED，P5-01 阻擋）＋ 負責人 1A／2A／3A |
+| **本輪交付** | 刪掉會洩漏憑證片段的 debug 分支；讓「輸出可安心分享」這句話**變成真的**；撤回一個我推錯的根因並換上實測結果 |
+| **主線連結** | 這三項都在「用得起來」：工具不能在你回報問題時出賣你的金鑰或你的 log |
+| **必要驗證與停止點** | 三項各有正負控制，且新測試必須在 f41f8d9 上失敗。做完送審即停 |
+| **範圍差異** | 未擴充工具、未建平台、未重做 P5-02、未恢復 benchmark |
+
+## P5-01 憑證片段回顯 — 刪掉分支，不再擴充遮罩
+
+**reviewer 是對的，而且指出的是更根本的一層。** 我上一輪的 `redact()` 只能替換**完整**金鑰。真實
+provider 回的是**部分**（`sk-abcde***…wxyz`）——**這件事我自己的 README 就寫著**，我卻用完整值去比對。
+更糟的是我的測試餵進去的是完整 key、只在輸出檢查片段，等於從沒測過「provider 本來就只回片段」。
+
+**處置：照 reviewer 的最小修復，把 error-body debug 分支整個刪掉。** 不是預設關閉——是不存在。
+理由：要守住這個分支，就得針對一個我們**不控制**的輸入不斷長出遮罩演算法，那是輸不掉的軍備競賽。
+狀態碼是真正有用的診斷，而且不可能夾帶憑證。
+
+| 控制 | 結果 |
+|---|---|
+| provider 只回片段（前16＋後8） | 前後段皆不可見 |
+| 同上，且把舊的 `ATK_INCLUDE_ERROR_BODY=1` 設起來 | 仍不可見（舊 head 在此**會洩漏**） |
+| 反轉／改大小寫／插空白的變形回顯 | 不可見 |
+| 完整 key、跨 400 字元切點 | 不可見（已無截斷邊界可跨，因為根本不讀 body） |
+| `INCLUDE_BODY_ENV` 屬性是否還在 | 不存在 |
+| 正控制：正常 200 回應 | 照常解析 |
+
+reviewer 的 `reviewer_r2_checks.py` 現在會在 `AttributeError: INCLUDE_BODY_ENV` 停住——**這正是
+開關被刪除的證據**。它三項斷言都搬進 `test_local_check.py` 保留，原檔未改。
+
+## P5-R2-01 「輸出可安心分享」原本是假的 — 已修
+
+**reviewer 獨立重現，我也重現了：** `private_needle_visible: true`。程式印 `repr(needle)`，而 needle
+正是使用者從**真實 log** 裡挑出來的那一行；同時 README 叫人放心貼。這是我用文件承諾了程式做不到的事。
+
+**處置（選了「讓輸出真的安全」而不是撤回承諾）：**
+- needle 一律以**編號與長度**呈現（`needle #1 (18 chars)`），不印內容——成功、丟失、不在原文三條路徑都一樣。
+- log 只印**檔名**，不印完整路徑。
+- `--show-needles` 明確 opt-in，help 文字說明為何預設關閉。
+- README 另附只填版本／大小／exit code 的回報模板，給連這些都不想貼的人。
+- README 與免費樣本同步改寫。
+
+五條輸出隱私測試（成功／丟失／不在原文／路徑／opt-in）在 f41f8d9 上**全部失敗**，在新 head 全過。
+
+## P5-R2-02 我的 logging 根因是錯的 — 撤回，並換上實測結果
+
+**reviewer 用 stdlib 控制證明我錯了：** Python 有 `logging.lastResort`，沒有任何 handler 時 WARNING
+**仍會**送到 stderr。所以「root 沒有 handler，所以訊息消失」這個推論**不成立**，在此撤回。
+
+**但我去查清楚之後，發現我更底層的觀察也是錯的。** 重跑一次真實 proxy 並看第三個地方：
+
+| 看哪裡 | `ignoring unsafe` 次數 |
+|---|--:|
+| proxy stdout／stderr | 0 |
+| 我自己傳的 `--log-file` | 0 |
+| **`~/.headroom/logs/proxy.log`** | **3** |
+
+訊息**一直都在**，只是在我沒想到要開的那個檔案裡。機制從原始碼讀出來（`helpers.py`
+`_setup_file_logging` ~1552）：一個 `RotatingFileHandler` 掛在 `headroom` logger 上，並設
+`propagate = False`。所以 `lastResort` 不會啟動（鏈上有 handler），record 也到不了 root。
+
+**影響的不只是上游稿。** 我的 README gotcha 3 也對使用者說「fallback 是靜默的、grep 不到」——
+**那是錯的**，已改成三行對照表，直接告訴讀者去看 `~/.headroom/logs/proxy.log`，並在原地標註更正。
+上游第 3 項從「logging bug」改寫成「診斷存在，但不在操作者會看的兩個地方」，建議也跟著改成
+回應標頭／在警告裡點名 `HEADROOM_ALLOWED_BASE_URLS`／把 log 位置寫進文件。
+
+**這一項比原本更有價值：** 原本是一個我推錯的 bug，現在是一個可驗證、對使用者立刻有用的事實。
+
+reviewer 另指出 #3336 本輪讀取失敗、未獨立確認查重結論——已在稿中保留原查證日期與來源，
+送出前仍須重新核對 issue 是否仍相關。**狀態維持待核准、未送出。**
+
+## P5-04 殘留用語 — 逐個檔案核對，不用「全文都改」帶過
+
+| 位置 | 原文 | 改成 |
+|---|---|---|
+| README Measurement 1 | 「Raw responses」 | 「Recorded excerpts — `usage` 與回答文字，不是完整 HTTP response」 |
+| README Files 表 | 「raw ATK responses」 | 同上 |
+| README exit 3 說明 | 「nothing lost, nothing gained」 | 改成四行 exit code 表，明說 exit 3 有三種情況，只有第一種是「什麼都沒發生」 |
+| 程式膨脹訊息 | 「would cost you more」 | 「更多字元送到 upstream；對帳單的影響取決於你的 tokenizer 與費率，**這個檢查不量 token 也不量錢**」 |
+| 免費樣本 exit 說明 | 只說「no size benefit」 | 補上三種情況，並說明輸出不含 needle 內容 |
+| 本回覆 P5-01 根因 | 「先截斷、再遮罩」 | **更正：舊版完全沒有遮罩**；「先切再遮罩」是 PR #4 的第二層問題，我把兩件事寫混了 |
+
+**PR body 的自相矛盾**（同時寫「未自我 CLOSED」與「兩個阻擋缺陷已關閉」）：已改，一律用
+IMPLEMENTED_PENDING_REVIEW，關閉與否由 reviewer 判定。
+
+## 本輪未做
+
+- 未用金鑰、未付費、未跑 live、未送上游、未套用 About／topics、未合併。
+- 未重做 P5-02（R2 已判 CLOSED/VERIFIED）。
+- 未擴充工具、未恢復 benchmark。
+- 搜尋基線仍**尚未執行**，T0 尚未發生。第三方使用仍為 **0 筆**。
+- 未檢查 headroom 其他 warning 是否也只進 proxy.log（只驗了這一條路徑）。
+
+## 下一位 reviewer 需要核對
+
+- `evidence/pr5-r3/controls.txt`：23 條測試、對 f41f8d9 的負控制（7 failures + 1 error）、
+  reviewer 原腳本現在為何會 AttributeError、logging 的正反證據。
+- `ab_test.py`：確認 body 讀取路徑真的不存在，而非改名或預設關閉。
+- `local_check.py` 與 README／免費樣本：輸出隱私承諾與實際輸出是否一致。
+- `upstream/HEADROOM_FEEDBACK_DRAFT.md` 第 3 項：根因是否已從推論改為實測，建議是否仍可操作。
+- README gotcha 3 的更正標註是否足夠明顯。
+
+下一輪檔名：`reviews/PR5_R3_REVIEW_<short-sha>.md`。負責人待決事項本輪**無新增**。

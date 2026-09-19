@@ -93,71 +93,69 @@ from a `/v1` sub-path would break. Documentation and a warning are the safe fixe
 
 ---
 
-## Item 3 — a refused upstream falls back with no diagnostic reaching any handler
+## Item 3 — a refused upstream is diagnosable only in a log file nobody is looking at
 
-**This is the one we would most like a maintainer's view on**, and the one with a concrete root
-cause rather than a documentation gap.
+**Correction first.** An earlier version of this draft claimed the warning "reaches nothing"
+because the root logger has no handlers. **That was wrong on both counts and is withdrawn.**
+Python's `logging.lastResort` writes WARNING to stderr even with no handlers configured, so the
+premise was invalid; and re-checking empirically showed the message is not lost at all.
 
-**Behaviour.** When `x-headroom-base-url` names a host resolving to loopback / RFC1918 /
-link-local, `is_safe_upstream_url` correctly refuses it (the CVE-2026-77775 guard). The handler
-then returns `None` and the request proceeds to the **self-resolved provider** — so the user sees
-the same misleading OpenAI 401 as in item 1, and has no way to tell "my upstream was rejected"
-apart from "my key is wrong".
+**What actually happens** (measured on 0.37.0, 2026-09-19). When `x-headroom-base-url` names a
+host resolving to loopback / RFC1918 / link-local, `is_safe_upstream_url` refuses it (the
+CVE-2026-77775 guard, working as intended), the override is dropped, and the request proceeds to
+the **self-resolved provider**. The client therefore sees a 401 from OpenAI and has no signal that
+its upstream was rejected rather than its key. The warning that would explain this goes to a third
+location:
 
-The code does try to say so:
+| destination | occurrences of `ignoring unsafe` |
+|---|--:|
+| proxy stdout + stderr | 0 |
+| `--log-file <path>` | 0 |
+| `~/.headroom/logs/proxy.log` | **3** |
 
-```python
-logger.warning("ignoring unsafe x-headroom-base-url override: %r", raw_base_url)
+```
+2026-09-19 06:45:04,348 - headroom.proxy - WARNING - ignoring unsafe x-headroom-base-url override: 'http://127.0.0.1:47779'
 ```
 
-**But that message reaches nothing.** Measured on 0.37.0:
+**Mechanism, from the source rather than inferred.** `_setup_file_logging`
+(`headroom/proxy/helpers.py`, ~1552) attaches a `RotatingFileHandler` to the `"headroom"` logger
+pointing at `~/.headroom/logs/proxy.log`, and sets `headroom_logger.propagate = False` — with the
+stated intent of avoiding duplicate writes when `wrap.py` redirects stderr to the same file. Both
+consequences follow: `lastResort` never fires, because the chain does have a handler; and the
+record never reaches root, so it is absent from stderr. `--log-file` is a separate
+request/response log and does not receive it either.
 
-| where | occurrences of `ignoring unsafe` |
-|---|--:|
-| proxy stdout + stderr | **0** |
-| `--log-file` output | **0** |
-
-**Root cause (this is the actionable part):** `logging.getLogger("headroom.proxy")` is at
-`NOTSET`, inheriting effective level `WARNING`, and `isEnabledFor(WARNING)` is `True` — so the
-record *is* created. The root logger, however, has **no handlers attached** in the proxy process,
-so the record is discarded. The warning is not suppressed by level; it is emitted into nowhere.
-Anyone who reads the source and greps their logs for that exact string — which is the obvious
-debugging move — finds nothing and concludes the branch was never taken.
+**So this is not a logging bug.** The diagnostic exists and is correct. The gap is that the two
+places an operator looks — the terminal, and the log file they explicitly passed on the command
+line — are the two places it is not, and nothing in the 401 points at the third.
 
 **Minimal reproduction, no secret required:**
 
 ```bash
-# a stub that records what it receives, on 127.0.0.1
 headroom proxy --port 8787 --no-http2 --log-file /tmp/hr.log &
 curl -sS http://127.0.0.1:8787/v1/chat/completions \
   -H "Authorization: Bearer not-a-real-key" -H "Content-Type: application/json" \
   -H "x-headroom-base-url: http://127.0.0.1:9999" \
   -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"hi"}]}'
-# -> 401 from api.openai.com; the stub on :9999 is never contacted
-grep -c "ignoring unsafe" /tmp/hr.log   # -> 0
+# -> 401 from api.openai.com; nothing listening on :9999 is ever contacted
+grep -c "ignoring unsafe" /tmp/hr.log                      # 0
+grep -c "ignoring unsafe" ~/.headroom/logs/proxy.log       # >0
 ```
 
-The workaround, once you know it exists, is `HEADROOM_ALLOWED_BASE_URLS`, which the code comment
-names but which is easy to miss when the log line you are grepping for never appears.
-
-**Impact.** Correctness is fine — the guard is doing its job, and we are not asking for it to be
-relaxed. The cost is diagnostic: a security refusal is indistinguishable from an authentication
-failure, and it is attributed to the wrong service.
-
 **Suggestion, in preference order:**
-1. Make the refusal observable — attach a handler so `headroom.proxy` warnings reach stderr and
-   `--log-file`, or surface the refusal on the response (a header such as
-   `x-headroom-upstream-override: rejected`).
-2. Mention `HEADROOM_ALLOWED_BASE_URLS` in the message and in the docs, since local stubs and
-   on-prem gateways are exactly the case that hits this.
-3. Consider fail-closed as an option rather than falling back to the default vendor — which is
-   the same request already made in **#3336**, and the reason we would post this there.
+1. Surface the refusal on the response — a header such as
+   `x-headroom-upstream-override: rejected` — so the caller can tell a security refusal from an
+   authentication failure without reading any log.
+2. Name `HEADROOM_ALLOWED_BASE_URLS` in the warning text, since a local stub or an on-prem gateway
+   is exactly the case that hits this.
+3. Document that `headroom` logger output goes to `~/.headroom/logs/proxy.log` and that
+   `--log-file` is a different stream. That alone would have saved this round.
+4. Consider fail-closed rather than falling back to the default vendor — the same request already
+   made in **#3336**, and the reason this belongs there.
 
-**What we are not claiming.** We did not test whether other `headroom.proxy` warnings are also
-discarded; we observed this one path. We did not test any version other than 0.37.0, and we did
-not test with an operator-supplied logging configuration, which may well attach handlers.
-
----
+**What we are not claiming.** We did not test whether other `headroom.proxy` warnings behave the
+same way, only this path. We did not test with an operator-supplied logging configuration, which
+may change the destination. We tested 0.37.0 only.
 
 ## Tone and disclosure
 

@@ -36,7 +36,8 @@ ab_test = load("ab_test")
 SYNTHETIC_KEY = "sk-SYNTHETIC0000NOTAREALKEY0000000000000ZZ"  # 41 chars, never valid
 
 
-def run_local_check(payload: str, transform, needles=("KEEP",), log_text=None):
+def run_local_check(payload: str, transform, needles=("KEEP",), log_text=None,
+                    extra_argv=()):
     """Drive local_check.main() through its real decision path.
 
     Only the process and network boundaries are replaced: the stub upstream, the
@@ -57,6 +58,7 @@ def run_local_check(payload: str, transform, needles=("KEEP",), log_text=None):
         argv = ["--log", str(log)]
         for n in needles:
             argv += ["--needle", n]
+        argv += list(extra_argv)
         out = io.StringIO()
         with patch.object(mod, "HTTPServer", return_value=MagicMock()), \
              patch.object(mod.threading, "Thread", return_value=MagicMock()), \
@@ -134,6 +136,52 @@ class AdoptionVerdict(unittest.TestCase):
         self.assertEqual(code, 1)
 
 
+class OutputPrivacy(unittest.TestCase):
+    """P5-R2-01: the README calls this output safe to paste into a bug report.
+
+    A needle is normally a real line lifted out of a real log, so printing it
+    made that promise false. It must hold by construction, not by hoping users
+    pick a harmless needle.
+    """
+
+    PRIVATE = "SYNTHETIC_PRIVATE_CUSTOMER_42"
+
+    def test_needle_content_is_not_printed_on_success(self):
+        code, out = run_local_check(
+            self.PRIVATE + " x" * 100, lambda s: self.PRIVATE, needles=(self.PRIVATE,)
+        )
+        self.assertEqual(code, 0)
+        self.assertNotIn(self.PRIVATE, out)
+        self.assertIn("#1", out)
+
+    def test_needle_content_is_not_printed_when_it_is_lost(self):
+        code, out = run_local_check(
+            self.PRIVATE + " x" * 100, lambda s: "gone", needles=(self.PRIVATE,)
+        )
+        self.assertEqual(code, 1)
+        self.assertNotIn(self.PRIVATE, out)
+
+    def test_needle_content_is_not_printed_when_it_is_absent_from_the_source(self):
+        code, out = run_local_check("x" * 200, lambda s: s, needles=(self.PRIVATE,))
+        self.assertEqual(code, 2)
+        self.assertNotIn(self.PRIVATE, out)
+
+    def test_full_log_path_is_not_printed(self):
+        code, out = run_local_check(
+            self.PRIVATE + " x" * 100, lambda s: self.PRIVATE, needles=(self.PRIVATE,)
+        )
+        self.assertNotIn("/", out.splitlines()[0])
+        self.assertIn("sample.log", out)
+
+    def test_show_needles_opts_back_in(self):
+        code, out = run_local_check(
+            self.PRIVATE + " x" * 100, lambda s: self.PRIVATE,
+            needles=(self.PRIVATE,), extra_argv=["--show-needles"],
+        )
+        self.assertEqual(code, 0)
+        self.assertIn(self.PRIVATE, out)
+
+
 class ErrorBodySafety(unittest.TestCase):
     """P5-01: a provider error must not put the credential on stderr."""
 
@@ -143,43 +191,60 @@ class ErrorBodySafety(unittest.TestCase):
             "http://test.invalid", 401, "denied", {}, io.BytesIO(body.encode())
         )
 
-    def _call_and_capture(self, body: str, include: bool) -> str:
-        env = dict(os.environ)
-        env[ab_test.INCLUDE_BODY_ENV] = "1" if include else "0"
-        with patch.dict(os.environ, env, clear=True), \
+    def _call_and_capture(self, body: str, env: dict | None = None) -> str:
+        with patch.dict(os.environ, env or {}, clear=True), \
              patch.object(ab_test.urllib.request, "urlopen",
                           side_effect=self._http_error(body)):
             with self.assertRaises(SystemExit) as cm:
                 ab_test.call("http://test.invalid", SYNTHETIC_KEY, "prompt", False)
         return str(cm.exception)
 
-    def test_body_is_withheld_by_default(self):
-        msg = self._call_and_capture(f'{{"error":"invalid key {SYNTHETIC_KEY}"}}', include=False)
+    def _assert_no_fragment(self, msg: str, value: str, width: int = 8):
+        for i in range(max(0, len(value) - width + 1)):
+            self.assertNotIn(value[i:i + width], msg,
+                             f"fragment of {value!r} at offset {i} leaked")
+
+    def test_body_is_never_shown_and_the_status_code_is(self):
+        msg = self._call_and_capture(f'{{"error":"invalid key {SYNTHETIC_KEY}"}}')
         self.assertNotIn(SYNTHETIC_KEY, msg)
-        self.assertIn("withheld", msg)
         self.assertIn("401", msg)
+        self.assertIn("never shown", msg)
 
-    def test_full_key_absent_when_body_is_included(self):
-        msg = self._call_and_capture(f'{{"error":"invalid key {SYNTHETIC_KEY}"}}', include=True)
-        self.assertNotIn(SYNTHETIC_KEY, msg)
-        self.assertIn("REDACTED", msg)
+    def test_no_env_var_can_turn_the_body_back_on(self):
+        """The opt-in debug branch was removed, not merely defaulted off. A
+        toggle that can be set is a toggle that gets set."""
+        for env in ({"ATK_INCLUDE_ERROR_BODY": "1"}, {"DEBUG": "1"}, {"ATK_DEBUG": "1"}):
+            msg = self._call_and_capture(f'{{"error":"invalid key {SYNTHETIC_KEY}"}}', env)
+            self.assertNotIn(SYNTHETIC_KEY, msg)
+            self._assert_no_fragment(msg, SYNTHETIC_KEY)
+        self.assertFalse(hasattr(ab_test, "INCLUDE_BODY_ENV"),
+                         "the include-body switch should no longer exist")
 
-    def test_no_fragment_of_the_key_survives_at_any_position(self):
-        """The original test only asserted the FULL key was absent — which a
-        truncated key passes. Assert no 8-character window of it survives."""
-        msg = self._call_and_capture(f'{{"error":"invalid key {SYNTHETIC_KEY}"}}', include=True)
-        for i in range(len(SYNTHETIC_KEY) - 7):
-            self.assertNotIn(SYNTHETIC_KEY[i:i + 8], msg,
-                             f"fragment at offset {i} leaked")
+    def test_provider_echoing_only_PART_of_the_key_cannot_leak(self):
+        """P5-01, round 2. The previous fix redacted the whole key, so a body
+        echoing `PREFIX***SUFFIX` — which is what real providers actually send —
+        matched nothing and passed straight through. Redaction cannot recognise a
+        fragment it was never given, which is why the body is not shown at all."""
+        partial = f"invalid key {SYNTHETIC_KEY[:16]}***{SYNTHETIC_KEY[-8:]}"
+        # Checked with the old debug switch set as well: on the previous head that
+        # combination printed both halves, so this asserts the leak is gone rather
+        # than merely defaulted off.
+        for env in ({}, {"ATK_INCLUDE_ERROR_BODY": "1"}):
+            msg = self._call_and_capture(partial, env)
+            self.assertNotIn(SYNTHETIC_KEY[:16], msg)
+            self.assertNotIn(SYNTHETIC_KEY[-8:], msg)
 
-    def test_key_straddling_the_truncation_boundary_does_not_leak_a_prefix(self):
-        """Redact-then-truncate. Truncate-then-redact leaves the prefix behind,
-        because you cannot match a value the cut already broke in half."""
-        padding = "A" * 390
-        msg = self._call_and_capture(padding + SYNTHETIC_KEY + "tail", include=True)
-        for i in range(len(SYNTHETIC_KEY) - 7):
-            self.assertNotIn(SYNTHETIC_KEY[i:i + 8], msg,
-                             f"fragment at offset {i} survived the truncation boundary")
+    def test_a_transformed_echo_cannot_leak_either(self):
+        """Redaction would also miss a reversed, re-cased or spaced-out echo."""
+        for variant in (SYNTHETIC_KEY[::-1], SYNTHETIC_KEY.upper(), " ".join(SYNTHETIC_KEY)):
+            msg = self._call_and_capture(f'{{"error":"rejected {variant}"}}')
+            self.assertNotIn(variant, msg)
+
+    def test_a_long_body_cannot_leak_at_any_offset(self):
+        """There is no truncation boundary left to straddle, because there is no
+        body in the output at all."""
+        msg = self._call_and_capture("A" * 390 + SYNTHETIC_KEY + "tail")
+        self._assert_no_fragment(msg, SYNTHETIC_KEY)
 
     def test_key_echoed_in_the_url_is_redacted_on_a_connection_error(self):
         with patch.dict(os.environ, {}, clear=True), \

@@ -55,15 +55,27 @@ Headroom resolves the provider itself (it uses LiteLLM internally), so your ATK 
 
 Correct value: `https://api.aitokenking.com.tw/api`
 
-**3. A loopback or private-network upstream is refused *silently*.** headroom 0.37.0 checks the
-client-named base URL against an SSRF guard (its CVE-2026-77775 fix). If the host resolves to
-loopback, RFC1918 or link-local space it **falls back to the provider it resolved itself** — so
-you get the same misleading OpenAI 401 as in gotcha 1.
+**3. A loopback or private-network upstream is refused, and the explanation is in a log file you
+would not think to open.** headroom 0.37.0 checks the client-named base URL against an SSRF guard
+(its CVE-2026-77775 fix). If the host resolves to loopback, RFC1918 or link-local space it drops
+your override and **falls back to the provider it resolved itself** — so you get the same
+misleading OpenAI 401 as in gotcha 1.
 
-The source contains a warning string, `ignoring unsafe x-headroom-base-url override`, but we
-measured that **it is not printed at default verbosity** — 0 occurrences in the proxy's combined
-stdout/stderr across a run that triggered the fallback. Grepping for it to diagnose will find
-nothing. The fallback really is silent.
+It does log the reason. Measured on 2026-09-19, on a run that triggered the fallback:
+
+| where you would look | occurrences of `ignoring unsafe` |
+|---|--:|
+| the proxy's stdout / stderr | 0 |
+| the file you passed to `--log-file` | 0 |
+| `~/.headroom/logs/proxy.log` | **3** |
+
+`_setup_file_logging` attaches a rotating file handler to the `headroom` logger and sets
+`propagate = False`, so the record goes to that file and nowhere else; `--log-file` is a separate
+request/response stream. **Check `~/.headroom/logs/proxy.log` — that is where the answer is.**
+
+> **Correction.** An earlier version of this page said the fallback was "silent" and that the
+> warning "is not printed", based on finding 0 occurrences in the two places above. That was
+> wrong: we had not looked in the third place. The claim is withdrawn and replaced by the table.
 
 It affects you only when pointing at something internal, such as a test stub: allowlist it with
 `HEADROOM_ALLOWED_BASE_URLS=http://127.0.0.1:PORT`. A public host like ATK needs nothing.
@@ -73,7 +85,8 @@ It affects you only when pointing at something internal, such as a test stub: al
 
 One 1,200-line deploy log, same model (`claude-sonnet-4.6`), same prompt, same moment. A single
 `FATAL` line at index 947 carries the answer. Token counts are **ATK's own `usage` field**, not an
-estimate. Raw responses: `evidence/ab_summary.json`, `evidence/ab_needle.json`.
+estimate. Recorded excerpts — the `usage` block and the answer text only, not the full HTTP
+response: `evidence/ab_summary.json`, `evidence/ab_needle.json`.
 
 ### Task A — summarise the log
 
@@ -182,9 +195,18 @@ below; that is the whole point of it.
 python3 local_check.py --log /path/to/your.log --needle "the line that must survive"
 ```
 
-`--needle` is repeatable. **Exit 0** = it shrank and every needle survived. **Exit 3** = it did not
-shrink at all; nothing lost, nothing gained, do not bother. **Exit 1** = a needle was lost; do not
-adopt for that payload.
+`--needle` is repeatable, and the output names needles by position, not content, so it is safe to
+paste into a bug report.
+
+| exit | meaning |
+|--:|---|
+| **0** | it shrank and every needle survived |
+| **3** | no size benefit. Three different cases, and the message says which: returned unchanged; rewritten but the same length (content changed — check that is acceptable to you); or **larger than the original** |
+| **1** | a needle was lost. Do not adopt for that payload |
+| **2** | misuse — no needle given, an empty needle, or a needle that is not in the log to begin with |
+
+Only the first case under exit 3 is "nothing happened". A same-length rewrite changed your payload,
+and an inflated one sent more upstream than sending it directly.
 
 **One thing we did not test:** the proxy's own banner reports `Code-Aware: NOT INSTALLED (pip
 install headroom-ai[code])`. There is an optional extra we never installed, and every number on
@@ -263,9 +285,24 @@ Open an issue: <https://github.com/firekou/Open-Skill-Distribution-Flywheel/issu
 headroom itself belong upstream at <https://github.com/headroomlabs-ai/headroom/issues>.
 
 There is **no telemetry here** — nothing phones home, nothing is logged, nothing observes you. So
-an issue is the only way we would ever know this helped or failed. If you open one, `local_check.py`
-output (sizes and pass/fail) is safe to share; **your log and your key are not — do not paste
-them.**
+an issue is the only way we would ever know this helped or failed.
+
+`local_check.py` output is written to be pasteable: it prints sizes, exit status, the log's file
+name and needles identified by position and length — **never the needle text and never your log**.
+(`--show-needles` turns that off for your own terminal; do not use it for output you intend to
+share.) If you would rather not paste even that, this is all we need:
+
+```
+headroom version:
+OS / Python:
+payload shape:      plain text | JSON lines | mixed | other
+size:               <lines>, <bytes>
+local_check exit:   0 | 1 | 2 | 3
+reduction:          <percent>
+used ATK?           yes | no | other upstream
+```
+
+**Never paste an API key or a real log line.**
 
 **Third-party reports to date: none.**
 
@@ -282,7 +319,7 @@ Install it from PyPI. Its own docs: <https://docs.headroomlabs.ai/docs>.
 | `make_log.py` | deterministic log generator (stdlib only) |
 | `local_check.py` | offline verification **and preflight for your own log** (`--log`, `--needle`): proxy routing, compression, needle survival — no key |
 | `ab_test.py` | the live A/B against ATK — needs `ATK_API_KEY` |
-| `evidence/ab_summary.json`, `evidence/ab_needle.json` | raw ATK responses from the live run |
+| `evidence/ab_summary.json`, `evidence/ab_needle.json` | `usage` and answer-text excerpts from the live run — not full HTTP responses |
 | `test_local_check.py` | 17 offline unit tests for the adoption verdict and the error-body redaction |
 | `evidence/local_check.txt` | output of the offline check, with versions and log md5 |
 | `evidence/pr5-r2/controls.txt` | positive and negative controls for the two defects fixed in review round 1 |

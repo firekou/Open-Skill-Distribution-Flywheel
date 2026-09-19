@@ -30,17 +30,19 @@ LOG = HERE / "deploy.log"
 EVIDENCE = HERE / "evidence"
 
 REDACTED = "***REDACTED***"
-INCLUDE_BODY_ENV = "ATK_INCLUDE_ERROR_BODY"
 _BODY_WITHHELD = (
-    f" — response body withheld; set {INCLUDE_BODY_ENV}=1 to include it (it may echo your "
-    "credential, so do not paste the result into a bug report)"
+    " — the response body is never shown. Providers echo parts of the credential they "
+    "rejected, and no redaction can reliably recognise a fragment it was never given. "
+    "Re-send the request yourself with a throwaway key if you need to read it."
 )
 
 
 def redact(text: str, secrets) -> str:
-    """Remove known secret values from anything about to be shown to a human.
+    """Remove known secret values from text about to be shown to a human.
 
-    Called on the WHOLE text before any truncation, never after.
+    A second line only. It can remove a value we hold in full; it cannot recognise a
+    transformed or partial echo of one, which is exactly why the provider's error body
+    is not shown at all (P5-01). Do not treat this as a sanitiser for untrusted input.
     """
     out = text
     for secret in secrets:
@@ -78,17 +80,18 @@ def call(url: str, key: str, prompt: str, via_headroom: bool) -> dict:
         with urllib.request.urlopen(req, timeout=300) as resp:
             payload = json.load(resp)
     except urllib.error.HTTPError as exc:
-        # P5-01. This used to read the provider's error body, slice it to 400 characters and
-        # print it. A server is free to echo the credential it rejected — a 401 reading
-        # {"error": "invalid key sk-..."} put the key straight onto stderr — and slicing first
-        # would even let a fragment survive redaction, because you cannot match a value the
-        # truncation already broke in half. Same defect class as PR #4's P4-01/P4-R2-01; the
-        # behaviour proven there is reused rather than reinvented.
-        detail = _BODY_WITHHELD
-        if os.environ.get(INCLUDE_BODY_ENV) == "1":
-            raw = exc.read().decode("utf-8", "replace")
-            detail = " — " + redact(raw, [key])[:400]
-        raise SystemExit(redact(f"{url} returned HTTP {exc.code}{detail}", [key])) from exc
+        # P5-01. The first version printed the provider's error body verbatim, sliced to 400
+        # characters, with NO redaction at all — a 401 reading {"error": "invalid key sk-..."}
+        # put the credential straight onto stderr. The first repair added an opt-in debug
+        # branch that redacted the body before truncating it. That was still wrong, and the
+        # review reproduced why: redaction can only remove a value it holds in full, and real
+        # providers echo a PARTIAL key (`sk-abcde***…wxyz`), which no amount of matching on the
+        # whole value will catch. Defending the debug branch means growing a redaction
+        # algorithm against an input we do not control — so the branch is gone instead. The
+        # status code is the diagnostic that matters and cannot carry a credential.
+        raise SystemExit(
+            redact(f"{url} returned HTTP {exc.code}{_BODY_WITHHELD}", [key])
+        ) from exc
     except urllib.error.URLError as exc:
         # A gateway can carry a credential in a query string, so the URL is redacted too
         # rather than assumed safe.

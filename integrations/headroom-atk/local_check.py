@@ -10,6 +10,11 @@ Proves three things on your machine, today:
   3. Your needle survives compression — it is still present in what the
      upstream receives.
 
+The output identifies needles by position and length, not by content, and prints the
+log's file name rather than its path, so the result can be pasted into a bug report.
+`--show-needles` turns that off when you want to read it yourself. Your log is never
+printed and never leaves the machine.
+
 Against the bundled sample log:
 
     python3 make_log.py > deploy.log
@@ -152,6 +157,12 @@ def parse_args(argv=None) -> argparse.Namespace:
         "--question", default=DEFAULT_QUESTION,
         help="the question wrapped around the payload",
     )
+    ap.add_argument(
+        "--show-needles", action="store_true",
+        help="print the needle text and the full log path. OFF by default, because a needle "
+             "is usually a real line out of a real log and this output is meant to be safe "
+             "to paste into a bug report.",
+    )
     return ap.parse_args(argv)
 
 
@@ -185,14 +196,17 @@ def main(argv=None) -> int:
             )
             return 2
         if needle not in log_text:
+            shown = repr(needle) if args.show_needles else f"#{needles.index(needle) + 1}"
             print(
-                f"needle {needle!r} is not in {log_path} to begin with — "
-                "nothing to preserve. Check the string.",
+                f"needle {shown} is not in the log to begin with — nothing to preserve. "
+                "Check the string. (Re-run with --show-needles to see which one, on a "
+                "terminal you are happy to have it on.)",
                 file=sys.stderr,
             )
             return 2
     prompt = f"{args.question}\n\n```\n{log_text}```\n"
-    print(f"log        : {log_path} — {len(log_text.splitlines())} lines, {len(log_text)} bytes")
+    shown_path = log_path if args.show_needles else log_path.name
+    print(f"log        : {shown_path} — {len(log_text.splitlines())} lines, {len(log_text)} bytes")
 
     stub_port = free_port()
     stub = HTTPServer(("127.0.0.1", stub_port), Stub)
@@ -264,10 +278,15 @@ def main(argv=None) -> int:
     # PASS — the inflated case printing "-166.7% fewer" on its way there. A
     # verdict that says PASS while the payload grew is worse than no verdict.
     # Adoption now requires a strict shrink AND every needle present.
+    # P5-R2-01: this used to print repr(needle). A needle is normally a real line lifted
+    # out of a real log — the exact thing a user must not paste into a bug report — while
+    # the README promised this output was safe to share. Identify needles by position and
+    # length instead; --show-needles opts back in.
     ok = True
-    for token in needles:
+    for i, token in enumerate(needles, 1):
         present = re.search(re.escape(token), via) is not None
-        print(f"needle {token!r}: {'present' if present else 'LOST'} after the proxy")
+        label = repr(token) if args.show_needles else f"#{i} ({len(token)} chars)"
+        print(f"needle {label}: {'present' if present else 'LOST'} after the proxy")
         ok = ok and present
 
     if not ok:
@@ -291,8 +310,10 @@ def main(argv=None) -> int:
             )
         else:
             why = (
-                f"the payload GREW by {-delta} characters ({-reduction:.1%} larger). Sending "
-                "this through the proxy would cost you more, not less."
+                f"the payload GREW by {-delta} characters ({-reduction:.1%} larger). More "
+                "characters reached the upstream than without the proxy. What that does to "
+                "your bill depends on your tokenizer and rate card — this check does not "
+                "measure tokens or money — but it is the wrong direction."
             )
         print(f"NO BENEFIT: {why}", file=sys.stderr)
         return 3

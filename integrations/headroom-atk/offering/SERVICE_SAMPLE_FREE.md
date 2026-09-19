@@ -88,8 +88,13 @@ your log is, and for some shapes it is zero:
 python3 local_check.py --log /path/to/your.log --needle "the line that must survive"
 ```
 
-Exit 0 = it shrank and your needle survived. Exit 3 = no size benefit, do not bother. Exit 1 = a
-needle was lost, do not adopt for that payload.
+Exit 0 = it shrank and your needle survived. Exit 3 = no size benefit — it came back unchanged, or
+rewritten at the same length, or larger; the message says which. Exit 1 = a needle was lost, do not
+adopt for that payload.
+
+The output names needles by position and length, never by content, and prints the log's file name
+rather than its path — so you can paste the result somewhere without leaking the line you were
+protecting.
 
 ## ── Why we recommend it ─────────────────────────────────────────────────────
 
