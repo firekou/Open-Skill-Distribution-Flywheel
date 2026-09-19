@@ -15,6 +15,8 @@ import io
 import json
 import os
 import pathlib
+import re
+import sys
 import tempfile
 import unittest
 import urllib.error
@@ -245,6 +247,27 @@ class MisuseIsExitTwoAndStillPrivate(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("#2", out)
         self.assertNotIn("#3", out)
+
+
+class DocumentedCountsMatchReality(unittest.TestCase):
+    """A hardcoded count in prose goes stale the moment a test is added.
+
+    It has now done so twice: the README said 17 while 23 ran, and the fix for
+    that said 23 in the same commit that made it 28. Asserting it here is the
+    only version that cannot drift silently — this test fails the moment the
+    number and the suite disagree.
+    """
+
+    def test_readme_states_the_real_number_of_tests(self):
+        readme = (HERE / "README.md").read_text()
+        claimed = {int(n) for n in re.findall(r"(\d+)\s+(?:offline )?unit tests", readme)}
+        loader = unittest.TestLoader()
+        actual = loader.loadTestsFromModule(sys.modules[__name__]).countTestCases()
+        self.assertTrue(claimed, "README no longer states a test count; update this test too")
+        self.assertEqual(
+            claimed, {actual},
+            f"README claims {sorted(claimed)} unit tests, the suite runs {actual}",
+        )
 
 
 class ErrorBodySafety(unittest.TestCase):

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 2,
+  "revision": 3,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": false,
@@ -9,7 +9,7 @@
     "additional_api_budget_usd": 0,
     "last_manual_run": {
       "task_id": "PR5",
-      "phase_chain": "execute -> review -> fix -> conditions_cleared",
+      "phase_chain": "execute -> review(R3) -> fix -> review(confirm) -> fix -> repair_round_complete",
       "reviewed_head": "9c439a40174e2fff9ed3d20ac973baf6758f1611",
       "executor_identity": "executor-pr5-claude-session-01RFeCsT",
       "reviewer_identity": "reviewer-pr5-r3-isolated",
@@ -17,37 +17,68 @@
       "owner_file_shuttling_required": false,
       "trigger_installed": false,
       "additional_paid_calls": 0,
-      "classification": "MANUAL_RUN_VERIFIED"
+      "classification": "MANUAL_RUN_VERIFIED",
+      "reviewer_identities": [
+        "reviewer-pr5-r3-isolated",
+        "reviewer-pr5-r3-confirm-isolated"
+      ],
+      "review_records": [
+        "reviews/PR5_R3_REVIEW_9c439a4.md",
+        "reviews/PR5_R3_CONFIRM_95215b0.md"
+      ],
+      "findings_raised_by_reviewers": 9,
+      "findings_refused_by_executor_with_reason": 1,
+      "refusal_independently_confirmed_correct": true
     }
   },
   "tasks": [
     {
       "task_id": "PR5",
-      "status": "CONDITIONS_CLEARED_PENDING_REVIEW",
+      "status": "REPAIR_ROUND_COMPLETE_PENDING_OWNER",
       "pr": 5,
-      "observed_head": "95215b045e78731fa02eab117bb71f73e0bbac37",
+      "observed_head": "PENDING_PUSH",
       "last_reviewed_head": "9c439a40174e2fff9ed3d20ac973baf6758f1611",
-      "last_review_decision": "APPROVED_WITH_CONDITIONS",
-      "next_action": "獨立 reviewer 確認三個條件已清除即可結束修復輪；merge 仍未授權，屬負責人決定",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS (conditions cleared)",
+      "next_action": "修復輪結束。剩下的是負責人決定：merge（未自動授權）、套用 About／topics、授權送出上游備稿、金鑰輪替。技術上的下一個未驗證目標是搜尋基線 T0 與外部實際採用。",
       "prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
-      "last_review_record": "reviews/PR5_R3_REVIEW_9c439a4.md",
+      "last_review_record": "reviews/PR5_R3_CONFIRM_95215b0.md",
       "conditions": {
         "P5-R3-01": "cleared",
-        "P5-R3-02": "cleared",
+        "P5-R3-02": "cleared after a second pass: the count was corrected AND pinned by a test that compares README against the loader",
         "P5-R3-03": "cleared",
         "P5-R3-04": "cleared (backlog, taken early)",
         "P5-R3-05a": "cleared (backlog, taken early)",
         "P5-R3-05b": "NOT_REPRODUCED - recorded, not claimed as fixed",
-        "P5-R3-06": "cleared (backlog, taken early)"
+        "P5-R3-06": "cleared (backlog, taken early)",
+        "P5-R3-02-residual": "cleared"
       },
       "repair_rounds_used": 3,
-      "note": "APPROVED_WITH_CONDITIONS 不是發布或合併許可。conditions cleared 由 executor 自報，須由 reviewer 確認。"
+      "note": "APPROVED_WITH_CONDITIONS 不是發布或合併許可。conditions cleared 由 executor 自報，須由 reviewer 確認。",
+      "still_open_not_defects": [
+        "外部第三方使用 0 筆",
+        "搜尋基線尚未執行，T0 未發生",
+        "上游備稿未送出",
+        "About／topics 未套用",
+        "付費側全部未驗證"
+      ]
     },
     {
       "task_id": "GOV-BOOTSTRAP",
       "status": "READY",
-      "next_action": "PR5 迴圈已以 executor -> 隔離 reviewer -> 修復 -> 條件清除 實跑一次，不需負責人搬檔；依定義為 MANUAL_RUN_VERIFIED，非 ACTIVE（無持久觸發器）。下一步仍是 IMPLEMENTATION_PROMPT.md 的最小 controller/runner。",
-      "prompt": "governance/IMPLEMENTATION_PROMPT.md"
+      "next_action": "PR5 已實跑 executor -> 隔離 reviewer -> 修復 -> 第二個隔離 reviewer 確認 -> 結束修復輪，全程不需負責人搬檔。依定義為 MANUAL_RUN_VERIFIED，非 ACTIVE（無持久觸發器、無新增預算）。下一步：IMPLEMENTATION_PROMPT.md 的最小 controller/runner，並先解 GOV-F1。",
+      "prompt": "governance/IMPLEMENTATION_PROMPT.md",
+      "findings_from_pr5_run": [
+        {
+          "id": "GOV-F1",
+          "observed": "一個純記帳欄位的提交讓 live head 前進，preflight 立即把進行中的 review 判為 stale_head；兩個 head 只差 governance/state.json 一行。",
+          "impact": "自動化後會變成記帳→撞掉 review→再記帳的循環。",
+          "options": [
+            "狀態檔移出被審查的分支",
+            "guard 增加 scope-unchanged 的重新綁定路徑，需列出差異檔案清單"
+          ],
+          "status": "OPEN — 交 GOV-BOOTSTRAP；executor 未自行修改 main 的可信政策"
+        }
+      ]
     }
   ]
 }
