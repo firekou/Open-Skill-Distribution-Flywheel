@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "decisions": [
+    {
+      "id": "GOAL",
+      "status": "approved",
+      "source": "使用者原目標及2026-09-18重申",
+      "decision": "工具分享、透明可選ATK接入、外部採用及價值回收",
+      "limits": [
+        "量測僅服務主張",
+        "不默認量測產品"
+      ]
+    },
+    {
+      "id": "1A",
+      "status": "approved",
+      "source": "使用者明確回覆1A 2A 3A",
+      "decision": "集中headroom修復、乾淨安裝及問題導向入口",
+      "limits": [
+        "不擴充另外兩工具",
+        "About方向已批准，PR通過後才套用設定"
+      ]
+    },
+    {
+      "id": "2A",
+      "status": "approved",
+      "source": "使用者明確回覆1A 2A 3A",
+      "decision": "先免費實用資產與明示品牌、可選ATK接入",
+      "limits": [
+        "付費樣本未批准推出"
+      ]
+    },
+    {
+      "id": "3A",
+      "status": "approved",
+      "source": "使用者明確回覆1A 2A 3A",
+      "decision": "上游三項心得備稿與查重",
+      "limits": [
+        "未批准送出，先交可審稿"
+      ]
+    },
+    {
+      "id": "GOV-01",
+      "status": "approved",
+      "source": "2026-09-19使用者要求先完成四項治理基礎，確認後交辦正式導入",
+      "decision": "統一入口、決策復用、缺陷檢查、精煉流程，再導入自動執行與獨立review",
+      "limits": [
+        "取代舊全面暫停治理排程",
+        "未授權merge、任意部署或新增付費",
+        "不保證零錯誤"
+      ]
+    },
+    {
+      "id": "REVIEW-MAIN",
+      "status": "approved",
+      "source": "本對話使用者明確要求push main，以reviews自行溝通",
+      "decision": "planner治理與review文檔可寫main",
+      "limits": [
+        "不包含實作PR合併"
+      ]
+    },
+    {
+      "id": "KEY-ROTATION",
+      "status": "action_required",
+      "source": "已暴露金鑰與先前安全交接",
+      "decision": "帳戶持有人撤銷輪替；完成狀態未知",
+      "limits": [
+        "不重用舊key",
+        "不得要求貼新key到聊天",
+        "不阻塞離線工作"
+      ]
+    }
+  ]
+}
