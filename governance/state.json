@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 3,
+  "revision": 4,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -31,14 +31,24 @@
     },
     {
       "task_id": "GOV-BOOTSTRAP",
-      "status": "AWAITING_INDEPENDENT_REVIEW",
-      "next_action": "Draft PR #6 已送出，等獨立 reviewer。內容：controller/store/runners/tick，30 條正負控制 + 變異測試，replay 一次啟動走完 execute→review→fix→review→close。未安裝新觸發器（不重複 GPT 已註冊的 reviewer 觸發），未宣稱 ACTIVE。",
+      "status": "NEEDS_INFORMATION",
+      "next_action": "規劃已備妥，依 GOV-PLAN-02 本輪不派工；未來收到啟動指示後執行 IMPLEMENTATION_PROMPT 的 G1-G3，再交獨立 reviewer。",
       "prompt": "governance/IMPLEMENTATION_PROMPT.md",
       "pr": 6,
       "branch": "claude/atk-governance-controller",
       "submitted_head": "c04ef465d000968b86065e7608a8c92761458c6d",
       "executor_response": "reviews/GOVERNANCE_EXECUTOR_RESPONSE.md (on the PR branch)",
-      "note": "Executor 自報進度，非驗收。automation.status 由 planner 維護，本次未更動。"
+      "note": "僅完成報告與啟動準備度審查，未独立重跑完整程式；G4-G6 尚待驗收。",
+      "last_reviewed_head": "c04ef465d000968b86065e7608a8c92761458c6d",
+      "last_review_decision": "NEEDS_INFORMATION",
+      "review": "reviews/PR6_R1_READINESS_REVIEW_c04ef465.md"
     }
-  ]
+  ],
+  "planning": {
+    "status": "PLANNED_NOT_DISPATCHED",
+    "decision_id": "GOV-PLAN-02",
+    "prompt": "governance/IMPLEMENTATION_PROMPT.md",
+    "scope": "G1-G7",
+    "note": "工作包已完成；尚未啟動執行，runtime 狀態不升格"
+  }
 }
