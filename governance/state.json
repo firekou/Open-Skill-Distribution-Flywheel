@@ -25,7 +25,7 @@
       "task_id": "PR5",
       "status": "CONDITIONS_CLEARED_PENDING_REVIEW",
       "pr": 5,
-      "observed_head": "PENDING_PUSH",
+      "observed_head": "95215b045e78731fa02eab117bb71f73e0bbac37",
       "last_reviewed_head": "9c439a40174e2fff9ed3d20ac973baf6758f1611",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
       "next_action": "獨立 reviewer 確認三個條件已清除即可結束修復輪；merge 仍未授權，屬負責人決定",
