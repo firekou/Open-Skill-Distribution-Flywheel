@@ -84,6 +84,19 @@
         "後續按 IMPLEMENTATION_PROMPT 各階段 gate 執行，文件讀取不構成啟動授權",
         "1A／2A／3A 不重問"
       ]
+    },
+    {
+      "id": "EXP-GUIDELINE-001",
+      "status": "approved",
+      "source": "本次對話負責人明確要求將外部回饋、recursive、大量實驗與局部成功準則寫入四個 repository 並 push main",
+      "decision": "採用共用實驗準則、工作單與專案接合；以最短有效回饋時間搜尋並獨立確認局部成功",
+      "supersedes": [],
+      "limits": [
+        "本次為文件寫入 main，不啟動實驗、runner 或排程",
+        "不變更 GOAL、GOV-PLAN-02、既有額度與對外送出界線",
+        "100／1,000 次為有限批次搜尋規模，不解除單 task 與修補限制",
+        "不宣稱獨立 review 或 runtime 已啟動"
+      ]
     }
   ]
 }
