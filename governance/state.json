@@ -1,28 +1,52 @@
 {
   "version": 1,
-  "revision": 1,
+  "revision": 2,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": false,
     "executor_connected": false,
     "reviewer_connected": false,
-    "additional_api_budget_usd": 0
+    "additional_api_budget_usd": 0,
+    "last_manual_run": {
+      "task_id": "PR5",
+      "phase_chain": "execute -> review -> fix -> conditions_cleared",
+      "reviewed_head": "9c439a40174e2fff9ed3d20ac973baf6758f1611",
+      "executor_identity": "executor-pr5-claude-session-01RFeCsT",
+      "reviewer_identity": "reviewer-pr5-r3-isolated",
+      "isolation": "separate run/session and workspace; same model family - NOT model-source independence",
+      "owner_file_shuttling_required": false,
+      "trigger_installed": false,
+      "additional_paid_calls": 0,
+      "classification": "MANUAL_RUN_VERIFIED"
+    }
   },
   "tasks": [
     {
       "task_id": "PR5",
-      "status": "REVIEW_PENDING",
+      "status": "CONDITIONS_CLEARED_PENDING_REVIEW",
       "pr": 5,
-      "observed_head": "d55911e983b24928e5f4f107483c5b1c2130e689",
-      "last_reviewed_head": "f41f8d93827003de151be7e9d06b2e472c837dee",
-      "last_review_decision": "BLOCKED",
-      "next_action": "獨立R3 review最新head，不重做已關閉P5-02",
-      "prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md"
+      "observed_head": "PENDING_PUSH",
+      "last_reviewed_head": "9c439a40174e2fff9ed3d20ac973baf6758f1611",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "next_action": "獨立 reviewer 確認三個條件已清除即可結束修復輪；merge 仍未授權，屬負責人決定",
+      "prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
+      "last_review_record": "reviews/PR5_R3_REVIEW_9c439a4.md",
+      "conditions": {
+        "P5-R3-01": "cleared",
+        "P5-R3-02": "cleared",
+        "P5-R3-03": "cleared",
+        "P5-R3-04": "cleared (backlog, taken early)",
+        "P5-R3-05a": "cleared (backlog, taken early)",
+        "P5-R3-05b": "NOT_REPRODUCED - recorded, not claimed as fixed",
+        "P5-R3-06": "cleared (backlog, taken early)"
+      },
+      "repair_rounds_used": 3,
+      "note": "APPROVED_WITH_CONDITIONS 不是發布或合併許可。conditions cleared 由 executor 自報，須由 reviewer 確認。"
     },
     {
       "task_id": "GOV-BOOTSTRAP",
       "status": "READY",
-      "next_action": "先驗此規範與guard，再依IMPLEMENTATION_PROMPT.md建立最小自動交接實作Draft PR",
+      "next_action": "PR5 迴圈已以 executor -> 隔離 reviewer -> 修復 -> 條件清除 實跑一次，不需負責人搬檔；依定義為 MANUAL_RUN_VERIFIED，非 ACTIVE（無持久觸發器）。下一步仍是 IMPLEMENTATION_PROMPT.md 的最小 controller/runner。",
       "prompt": "governance/IMPLEMENTATION_PROMPT.md"
     }
   ]

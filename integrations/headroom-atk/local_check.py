@@ -163,7 +163,14 @@ def parse_args(argv=None) -> argparse.Namespace:
              "is usually a real line out of a real log and this output is meant to be safe "
              "to paste into a bug report.",
     )
-    return ap.parse_args(argv)
+    # P5-R3-05: argparse's own error for an unknown flag echoes the VALUE next to
+    # it — which for a typo'd --needle is the very text this tool exists to keep
+    # out of shareable output. Handle unknown flags ourselves, naming only the flag.
+    args, unknown = ap.parse_known_args(argv)
+    if unknown:
+        flags = sorted({u.split("=", 1)[0] for u in unknown if u.startswith("-")})
+        ap.error("unrecognized option(s): " + (", ".join(flags) or "<value without a flag>"))
+    return args
 
 
 def main(argv=None) -> int:
@@ -178,14 +185,22 @@ def main(argv=None) -> int:
             file=sys.stderr,
         )
         return 2
+    shown_path = log_path if args.show_needles else log_path.name
     if not log_path.exists():
         if using_sample:
             print(f"{log_path} missing. Run: python3 make_log.py > deploy.log", file=sys.stderr)
         else:
-            print(f"{log_path} does not exist", file=sys.stderr)
+            print(f"{shown_path} does not exist", file=sys.stderr)
         return 2
-    log_text = log_path.read_text(errors="replace")
-    for needle in needles:
+    try:
+        log_text = log_path.read_text(errors="replace")
+    except OSError as exc:
+        # P5-R3-04: an unreadable path (a directory, a permissions error) used to
+        # escape as a traceback and exit 1 — the code this tool defines as "a needle
+        # was lost, do not adopt". A read failure is misuse, which is exit 2.
+        print(f"cannot read {shown_path}: {exc.strerror}", file=sys.stderr)
+        return 2
+    for position, needle in enumerate(needles, 1):
         if not needle.strip():
             # P5-02: an empty needle is present in every string, so it turns the
             # survival check into a no-op that always passes. Refuse it.
@@ -196,7 +211,7 @@ def main(argv=None) -> int:
             )
             return 2
         if needle not in log_text:
-            shown = repr(needle) if args.show_needles else f"#{needles.index(needle) + 1}"
+            shown = repr(needle) if args.show_needles else f"#{position}"
             print(
                 f"needle {shown} is not in the log to begin with — nothing to preserve. "
                 "Check the string. (Re-run with --show-needles to see which one, on a "
@@ -205,7 +220,6 @@ def main(argv=None) -> int:
             )
             return 2
     prompt = f"{args.question}\n\n```\n{log_text}```\n"
-    shown_path = log_path if args.show_needles else log_path.name
     print(f"log        : {shown_path} — {len(log_text.splitlines())} lines, {len(log_text)} bytes")
 
     stub_port = free_port()

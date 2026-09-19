@@ -1,4 +1,4 @@
-# PR5 R2 review — controls.  python 3.11.15  headroom 0.37.0  2026-09-19
+# Controls for the round-2 review findings (this is the r3 evidence directory).  python 3.11.15  headroom 0.37.0  2026-09-19
 # Synthetic values only. No real credential, no paid call, no live model.
 
 ## A. Regression tests on the new head (23, up from 17)

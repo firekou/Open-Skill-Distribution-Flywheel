@@ -127,11 +127,15 @@ cost. Output committed at `evidence/local_check.txt`:
 ```
 log        : deploy.log — 1200 lines, 111262 bytes
 direct     : 111357 chars reached the upstream
-via proxy  :  94578 chars reached the upstream  (15.1% fewer)
-needle '0042_add_tenant_id': present after compression
-needle '42701': present after compression
-PASS
+via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+needle #1 (18 chars): present after the proxy
+needle #2 (5 chars): present after the proxy
+PASS: 16779 fewer characters (15.1%) and every needle survived
+exit=0
 ```
+
+(Copied verbatim from `evidence/local_check.txt`. Note what it does **not** contain: the needle
+text. Needles are reported by position and length — that is the point of the next section.)
 
 The same file also records the **negative control** — the same records as JSON lines, where the
 reduction is exactly 0.0%. Read *Will this help your logs?* below before adopting.
@@ -228,7 +232,7 @@ pip install "headroom-ai[proxy]==0.37.0"
 cd integrations/headroom-atk                       # run from this directory
 python3 make_log.py > deploy.log                   # deterministic; md5 0ad9194a489136baa931881b78374cf7
 python3 local_check.py                             # offline, no key, no cost — about a minute
-python3 test_local_check.py                        # 17 unit tests, also offline
+python3 test_local_check.py                        # 23 unit tests, also offline
 ```
 
 `local_check.py` and `ab_test.py` resolve `deploy.log` **next to the script**, not in your current
@@ -320,9 +324,11 @@ Install it from PyPI. Its own docs: <https://docs.headroomlabs.ai/docs>.
 | `local_check.py` | offline verification **and preflight for your own log** (`--log`, `--needle`): proxy routing, compression, needle survival — no key |
 | `ab_test.py` | the live A/B against ATK — needs `ATK_API_KEY` |
 | `evidence/ab_summary.json`, `evidence/ab_needle.json` | `usage` and answer-text excerpts from the live run — not full HTTP responses |
-| `test_local_check.py` | 17 offline unit tests for the adoption verdict and the error-body redaction |
+| `test_local_check.py` | 23 offline unit tests: the adoption verdict, output privacy, and the error body never being shown |
 | `evidence/local_check.txt` | output of the offline check, with versions and log md5 |
 | `evidence/pr5-r2/controls.txt` | positive and negative controls for the two defects fixed in review round 1 |
+| `evidence/pr5-r3/controls.txt` | controls for review round 2: the partial-echo leak, output privacy, and the withdrawn logging root cause |
+| `evidence/pr5-r4/controls.txt` | controls for review round 3: the document/evidence mismatches, and misuse paths returning exit 2 |
 | `evidence/SEARCH_BASELINE.md` | the fixed queries for a discoverability re-test, and why the first run cannot be repeated |
 | `offering/` | free and paid service samples, unit economics — the paid one is an **unapproved draft** |
 | `upstream/HEADROOM_FEEDBACK_DRAFT.md` | three gotchas written up for the headroom maintainers, with duplicate check — **not sent** |

@@ -182,6 +182,71 @@ class OutputPrivacy(unittest.TestCase):
         self.assertIn(self.PRIVATE, out)
 
 
+class MisuseIsExitTwoAndStillPrivate(unittest.TestCase):
+    """P5-R3-04 / P5-R3-05, found by the round-3 reviewer.
+
+    An unreadable --log escaped as a traceback and exit 1 — the code this tool
+    defines as "a needle was lost, do not adopt". A read failure is misuse.
+    A typo'd flag also made argparse echo the value next to it, which for a
+    mistyped --needle is exactly the text that must stay out of shared output.
+    """
+
+    SECRET = "SYNTHETIC_PRIVATE_CUSTOMER_42"
+
+    def _run(self, argv):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            try:
+                code = local_check.main(argv)
+            except SystemExit as exc:          # argparse exits rather than returning
+                code = exc.code
+        return code, out.getvalue()
+
+    def test_directory_as_log_is_exit_2_not_a_traceback(self):
+        with tempfile.TemporaryDirectory() as td:
+            code, out = self._run(["--log", td, "--needle", "X"])
+        self.assertEqual(code, 2)
+        self.assertNotIn("Traceback", out)
+        self.assertIn("cannot read", out)
+
+    def test_read_failure_does_not_borrow_the_needle_lost_exit_code(self):
+        with tempfile.TemporaryDirectory() as td:
+            code, _ = self._run(["--log", td, "--needle", "X"])
+        self.assertNotEqual(code, 1, "exit 1 means a needle was lost, not that a file was unreadable")
+
+    def test_missing_file_message_does_not_print_the_full_path(self):
+        with tempfile.TemporaryDirectory() as td:
+            missing = pathlib.Path(td) / "absent.log"
+            code, out = self._run(["--log", str(missing), "--needle", "X"])
+        self.assertEqual(code, 2)
+        self.assertIn("absent.log", out)
+        self.assertNotIn(td, out)
+
+    def test_a_mistyped_flag_does_not_echo_its_value(self):
+        with tempfile.TemporaryDirectory() as td:
+            missing = pathlib.Path(td) / "absent.log"
+            code, out = self._run(["--log", str(missing), "--needlez", self.SECRET])
+        self.assertEqual(code, 2)
+        self.assertNotIn(self.SECRET, out)
+        self.assertIn("--needlez", out)
+
+    def test_the_reported_needle_number_is_its_position(self):
+        """The round-3 reviewer flagged `needles.index(needle)` as able to
+        mis-number a repeated needle. Checked: it cannot, in this code path —
+        the loop returns at the FIRST failing needle, which is the same element
+        `index()` finds, so old and new agree for every arrangement tried
+        (('KEEP','ABSENT','ABSENT') -> #2 both ways, ('A','B','A','ABSENT') ->
+        #4 both ways). The finding is recorded as NOT REPRODUCED; `enumerate`
+        was kept anyway because it states the intent and survives the loop being
+        changed later. This test pins the numbering, not a fixed defect."""
+        code, out = run_local_check(
+            "KEEP " + "x" * 200, lambda s: s, needles=("KEEP", "ABSENT", "ABSENT")
+        )
+        self.assertEqual(code, 2)
+        self.assertIn("#2", out)
+        self.assertNotIn("#3", out)
+
+
 class ErrorBodySafety(unittest.TestCase):
     """P5-01: a provider error must not put the credential on stderr."""
 

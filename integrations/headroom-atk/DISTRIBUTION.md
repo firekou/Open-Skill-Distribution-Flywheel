@@ -97,8 +97,13 @@ Useful to include: headroom version, OS and Python version, the shape of your pa
 JSON lines, mixed), what `local_check.py` exited with, and whether you used ATK or another
 upstream.
 
-**Do not paste an API key, a token, or a real log.** `local_check.py` prints only sizes and
-pass/fail — that output is safe to share; your log is not, and we do not want it.
+**Do not paste an API key, a token, or a real log.** `local_check.py` output is written to be
+pasteable: sizes, exit status, the log's **file name** (not its path), and needles identified by
+**position and length — never their text**. Your log is never printed and never leaves your
+machine.
+
+One exception to know about: `--show-needles` deliberately turns that protection off so you can
+read the needles on your own terminal. **Do not use it for output you intend to share.**
 
 **Recorded third-party feedback to date: none.** Not "low" — none. When there is any, it goes in
 the executor response as its own line, kept separate from request counts, brand impressions and
