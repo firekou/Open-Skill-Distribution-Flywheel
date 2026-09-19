@@ -1,18 +1,20 @@
 # 當前交接狀態
-規則、決策、任務分別以 [治理入口](../governance/OPERATING_RULES.md)、[決策紀錄](../governance/decisions.json)、[狀態快照](../governance/state.json) 為準。啟動時查live head，不以摘要代替實際狀態。
+唯一規則入口：[治理入口](../governance/OPERATING_RULES.md)。決策看 decisions.json；啟動查 live PR head，不沿用歷史快照當批准。
 
-## 2026-09-19：治理基礎完成，正式自動化尚未啟動
-- 負責人已授權 GOV-01，建立單一入口、決策復用、缺陷檢查及精煉協作，再正式導入。
-- [基礎自查與導入驗收](GOVERNANCE_FOUNDATION_REVIEW.md) 已完成；這是planner自查，不是獨立review。
-- 下一executor按 [導入交辦](../governance/IMPLEMENTATION_PROMPT.md) 建立最小runtime Draft PR，先以無秘密replay驗收；不能宣稱已自動喚醒Claude。
-- automation=FOUNDATION_ONLY。沒有持久觸發器或連線中的executor/reviewer。
+## 2026-09-19：PR5 最新獨立複核
+- head d1930e4696f11cfb3cdae2f59d1b3692b68ee127，Draft、未合併。
+- [GPT R4 review](PR5_R4_REVIEW_d1930e4.md)：APPROVED_WITH_CONDITIONS。實跑29個測試通過；HTTP error body 完整／部分／變形 echo 已驗不輸出。
+- 唯一當前條件 P5-R4-01：未知參數值以 "-" 開頭仍被錯誤訊息回顯。只修此條、跑必要正負控制、提交新SHA，reviewer窄範圍確認後收輪。不需負責人新決策。
+- Claude 同模型不同run的R3 review及確認保留在PR分支；本次不是覆寫它們。
+- 第三方採用0；搜尋T0尚未執行；不把修復數當分發成果。1A／2A／3A不重問；上游仍未授權送出。
 
-## 產品 PR #5
-- 最新觀察 head d55911e983b24928e5f4f107483c5b1c2130e689，executor自報R2修復，待獨立R3。
-- 最後已審 head f41f8d93827003de151be7e9d06b2e472c837dee，[R2](PR5_R2_REVIEW_f41f8d9.md) BLOCKED；P5-02已關閉，其餘狀態不可沿用為新head已通過。
-- 下一review檔 PR5_R3_REVIEW_<short-sha>.md。產品與治理工作分開，PR維持Draft、未合併。
-- 1A／2A／3A已決策，不重問；上游僅備稿未批准送出。key輪替完成狀態未知，不阻塞離線工作。
+## 持續檢查
+- 已註冊「ATK PR5 提交複核」，PR #5新commit事件喚醒GPT reviewer；沒有5/10分鐘輪詢，也沒有每小時替代排程。
+- 首次事件尚未驗證，無觸發延遲保證。只接reviewer，不能啟動遠端Claude；整套治理仍非ACTIVE。
+- 既有每小時「ATK 治理續作」監看的是另一repo virtual-strategy-lab，本輪未更動。
+- 報告／狀態寫main，不用被審分支記帳commit撞掉review。
+- GOV-BOOTSTRAP仍須驗證持久控制、實際runtime與停止／去重；不要再建重複PR5 reviewer排程，也不要把註冊成功當完整閉環驗收。見[原導入交辦](../governance/IMPLEMENTATION_PROMPT.md)。
 
 ## 歷史
 PR #4 的829c7e9已完成約定review，見 [R3及追加結案](PR4_R3_REVIEW_328a33b.md)。
-PR #1 benchmark維持暫停，歷史findings OPEN。舊STATUS排程保留在Git歷史，不再在現行頁面重複派工。
+PR #1 benchmark維持暫停，歷史findings OPEN。舊STATUS排程保留在Git歷史。
