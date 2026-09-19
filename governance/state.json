@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 3,
+  "revision": 4,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": false,
@@ -36,7 +36,6 @@
       "task_id": "PR5",
       "status": "REPAIR_ROUND_COMPLETE_PENDING_OWNER",
       "pr": 5,
-      "observed_head": "PENDING_PUSH",
       "last_reviewed_head": "9c439a40174e2fff9ed3d20ac973baf6758f1611",
       "last_review_decision": "APPROVED_WITH_CONDITIONS (conditions cleared)",
       "next_action": "修復輪結束。剩下的是負責人決定：merge（未自動授權）、套用 About／topics、授權送出上游備稿、金鑰輪替。技術上的下一個未驗證目標是搜尋基線 T0 與外部實際採用。",
@@ -60,7 +59,8 @@
         "上游備稿未送出",
         "About／topics 未套用",
         "付費側全部未驗證"
-      ]
+      ],
+      "observed_head_note": "DO NOT STORE. Read the live PR head at start-up (git ls-remote origin refs/heads/<branch>, or the PR API). A stored value is stale the moment it is committed, and updating it moves live head and expires any in-flight review — see GOV-F1."
     },
     {
       "task_id": "GOV-BOOTSTRAP",
@@ -76,7 +76,7 @@
             "狀態檔移出被審查的分支",
             "guard 增加 scope-unchanged 的重新綁定路徑，需列出差異檔案清單"
           ],
-          "status": "OPEN — 交 GOV-BOOTSTRAP；executor 未自行修改 main 的可信政策"
+          "status": "PARTIALLY ADDRESSED — the self-referential observed_head field is removed, which stops the记帳→撞掉→再記帳 loop for this task. The general problem (task state living in the tree under review) is still OPEN for the controller work. The guard was NOT modified: it is main's trusted policy and needs its own approval path."
         }
       ]
     }
