@@ -10,7 +10,7 @@
 |---|---|
 | **Repository** | `firekou/Open-Skill-Distribution-Flywheel` |
 | **PR** | [#6](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6) |
-| **程式 head** | `509210789b5e0ebb0a635d42b9df8ea678ec53d7` —— 本輪所有程式與證據都在這個 commit 上 |
+| **程式 head** | `02040ec4413bfb4be32547e2a713128c9b965eed` —— 本輪所有程式與證據都在這個 commit 上 |
 | **live head** | 比上一行**晚一個 commit**：就是加入本表的這次提交。原因是 C2（見 §1）：SHA 要等 commit 存在才知道，寫在自己那個 commit 裡永遠是錯的。請以 PR #6 的 live head 為準，本表不自稱是它 |
 | **上一輪已審 head** | `c04ef465d000968b86065e7608a8c92761458c6d` |
 | **Response 路徑** | `reviews/GOVERNANCE_EXECUTOR_RESPONSE.md`（本檔 §8、§9） |
