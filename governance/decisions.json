@@ -69,6 +69,21 @@
         "不得要求貼新key到聊天",
         "不阻塞離線工作"
       ]
+    },
+    {
+      "id": "GOV-PLAN-02",
+      "status": "approved",
+      "source": "本輪使用者明確澄清：執行規劃是將所有交給 Claude 的治理導入工作寫入 repository；先前已明確要求不是直接執行",
+      "decision": "Planner 完成全程 Claude 工作包、驗收、交接與入口同步；目前 PLANNED_NOT_DISPATCHED",
+      "supersedes": [
+        "GOV-01 的本輪立即執行解讀"
+      ],
+      "limits": [
+        "GOV-01 的治理導入目標保留",
+        "本輪不啟動實作、runner、排程或發出 Agent 喚起",
+        "後續按 IMPLEMENTATION_PROMPT 各階段 gate 執行，文件讀取不構成啟動授權",
+        "1A／2A／3A 不重問"
+      ]
     }
   ]
 }

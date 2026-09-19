@@ -1,50 +1,54 @@
 {
   "version": 1,
-  "revision": 3,
+  "revision": 4,
   "automation": {
-    "status": "REPLAY_VERIFIED",
-    "trigger_installed": false,
+    "status": "FOUNDATION_ONLY",
+    "trigger_installed": true,
     "executor_connected": false,
-    "reviewer_connected": false,
-    "status_meaning": "controller sequences execute -> independent review -> fix -> review -> close under the trusted guard, with negative controls. Runners are scripted test doubles: no AI ran, no trigger installed, no spend. NOT ACTIVE.",
-    "blocking_activation": [
-      "a model credential in whichever process runs the runners — runners.SubprocessRunner targets `claude -p` (present here, 2.1.278) but this container has no credential. Run tick.py where the subscription is already authenticated. Not an owner decision.",
-      "no real AI executor/reviewer round has been run through the controller yet"
-    ],
-    "accounting_unit": "runs, not currency. The work runs on Claude and ChatGPT SUBSCRIPTIONS; there is no per-call price to approve. run_budget defaults to 8 per task and is reserved before dispatch.",
-    "trigger": "EXISTS, external. A trigger already runs on the GPT side, outside this repository. The controller is the callee: governance/controller/tick.py, documented exit codes. This repo does not schedule and does not need to."
+    "reviewer_connected": true,
+    "additional_api_budget_usd": 0,
+    "reviewer_trigger": {
+      "status": "REGISTERED_PENDING_FIRST_EVENT",
+      "scope": "PR5",
+      "kind": "github_pull_request_commit_update",
+      "title": "ATK PR5 提交複核",
+      "registered_at": "2026-09-19",
+      "first_event_verified": false,
+      "claude_launcher": false
+    },
+    "status_note": "FOUNDATION_ONLY 是完整閉環等級；PR5 托管 reviewer 觸發已註冊但未驗證首次事件，executor 未接通，非 ACTIVE。"
   },
   "tasks": [
     {
       "task_id": "PR5",
-      "status": "REPAIR_ROUND_COMPLETE_PENDING_OWNER",
+      "status": "CONDITIONS_PENDING",
       "pr": 5,
-      "last_reviewed_head": "95215b045e78731fa02eab117bb71f73e0bbac37",
-      "last_review_decision": "APPROVED_WITH_CONDITIONS, conditions cleared",
-      "next_action": "負責人決定：merge（未自動授權）、About／topics、授權送出上游備稿、金鑰輪替。技術上的下一個未驗證目標是搜尋基線 T0 與外部實際採用。",
-      "prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
-      "head_source": "read live at start-up (git ls-remote / PR API). DO NOT STORE — see GOV-F1.",
-      "review_records": [
-        "reviews/PR5_R3_REVIEW_9c439a4.md",
-        "reviews/PR5_R3_CONFIRM_95215b0.md"
-      ]
+      "observed_head": "d1930e4696f11cfb3cdae2f59d1b3692b68ee127",
+      "last_reviewed_head": "d1930e4696f11cfb3cdae2f59d1b3692b68ee127",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "next_action": "只修 P5-R4-01 unknown-token 私密回顯，提交新 SHA 後窄範圍確認",
+      "prompt": "reviews/PR5_R4_REVIEW_d1930e4.md"
     },
     {
       "task_id": "GOV-BOOTSTRAP",
-      "status": "REPLAY_VERIFIED_PENDING_REVIEW",
-      "next_action": "獨立 reviewer 驗收 controller Draft PR（#6）。啟動不需負責人決定預算或選觸發器：預算不適用於訂閱制，觸發器 GPT 端已在運行。缺的是 runner 行程裡的模型憑證。",
+      "status": "NEEDS_INFORMATION",
+      "next_action": "規劃已備妥，依 GOV-PLAN-02 本輪不派工；未來收到啟動指示後執行 IMPLEMENTATION_PROMPT 的 G1-G3，再交獨立 reviewer。",
       "prompt": "governance/IMPLEMENTATION_PROMPT.md",
+      "pr": 6,
       "branch": "claude/atk-governance-controller",
-      "deliverables": [
-        "governance/controller/store.py",
-        "governance/controller/controller.py",
-        "governance/controller/runners.py",
-        "governance/controller/replay.py",
-        "governance/controller/test_controller.py",
-        "governance/controller/config.live.example.json",
-        "governance/controller/ACTIVATION.md"
-      ],
-      "entry_point": "governance/controller/tick.py --config <cfg> --task <id> [--drive]"
+      "submitted_head": "c04ef465d000968b86065e7608a8c92761458c6d",
+      "executor_response": "reviews/GOVERNANCE_EXECUTOR_RESPONSE.md (on the PR branch)",
+      "note": "僅完成報告與啟動準備度審查，未独立重跑完整程式；G4-G6 尚待驗收。",
+      "last_reviewed_head": "c04ef465d000968b86065e7608a8c92761458c6d",
+      "last_review_decision": "NEEDS_INFORMATION",
+      "review": "reviews/PR6_R1_READINESS_REVIEW_c04ef465.md"
     }
-  ]
+  ],
+  "planning": {
+    "status": "PLANNED_NOT_DISPATCHED",
+    "decision_id": "GOV-PLAN-02",
+    "prompt": "governance/IMPLEMENTATION_PROMPT.md",
+    "scope": "G1-G7",
+    "note": "工作包已完成；尚未啟動執行，runtime 狀態不升格"
+  }
 }

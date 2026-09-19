@@ -1,0 +1,46 @@
+[
+  {
+    "check": "shrink",
+    "exit": 0,
+    "expected": 0
+  },
+  {
+    "check": "unchanged",
+    "exit": 3,
+    "expected": 3
+  },
+  {
+    "check": "equal_rewrite",
+    "exit": 3,
+    "expected": 3
+  },
+  {
+    "check": "growth",
+    "exit": 3,
+    "expected": 3
+  },
+  {
+    "check": "lost",
+    "exit": 1,
+    "expected": 1
+  },
+  {
+    "check": "http_body_full_partial_transformed",
+    "withheld": true
+  },
+  {
+    "check": "plain_value",
+    "exit": 2,
+    "private_text_visible": false
+  },
+  {
+    "check": "dash_value",
+    "exit": 2,
+    "private_text_visible": true
+  },
+  {
+    "check": "equals_value",
+    "exit": 2,
+    "private_text_visible": false
+  }
+]

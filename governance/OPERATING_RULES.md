@@ -1,5 +1,8 @@
 # ATK 協作治理唯一有效入口
-版本 1，2026-09-19。負責人要求先統一規範、確認導入流程，再交辦自動治理。這是已授權的工作，不再沿用「所有治理導入暫停」的舊排程；通用 benchmark 仍暫停。
+版本 2，2026-09-19。負責人要求先統一規範、確認導入流程，再交辦自動治理。這是已授權的工作，不再沿用「所有治理導入暫停」的舊排程；通用 benchmark 仍暫停。
+
+## 目前工作範圍
+依 GOV-PLAN-02，本輪交付是完整規劃文件，狀態 PLANNED_NOT_DISPATCHED。治理導入目標保留；本輪不啟動實作、runner 或排程。Claude 後續完整工作包與各階段驗收見 governance/IMPLEMENTATION_PROMPT.md。讀到文件、新 main commit 或 review 不自動構成啟動授權。規劃完成與 runtime ACTIVE 分開記錄。
 
 ## 讀取順序與唯一資料來源
 1. 本檔：角色、流程、權限、檢查、停止條件。
@@ -72,4 +75,4 @@ C 有限啟動：獨立 reviewer 驗 B 後，具備權限／費用界線與實�
 D ACTIVE：持久觸發器已安裝，至少一個真實 executor → 獨立 reviewer → 必要修復 → 結案過程不用負責人傳話，且停機／重複／過期控制已實測；有 run IDs、SHA、時間與費用。人工啟動單次 runner 稱 MANUAL_RUN_VERIFIED，不稱 ACTIVE。
 
 state.json 的 automation.status 只有 runtime 實測後才能升格。preflight.py 是離線 guard，不是 scheduler、獨立 reviewer 或權限強制系統。
-PR #5 新 head d55911e 尚待 R3 review；本次治理建置不能把它寫成通過，也不用等待大型治理平台才複核。
+產品 PR 狀態以 live head 與對應 review 為準，不在政策檔固定過期 SHA。治理導入不替代產品驗收，也不以產品 PR 必須合併為前提。
