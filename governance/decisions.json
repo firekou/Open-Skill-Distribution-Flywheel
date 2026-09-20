@@ -97,6 +97,32 @@
         "100／1,000 次為有限批次搜尋規模，不解除單 task 與修補限制",
         "不宣稱獨立 review 或 runtime 已啟動"
       ]
+    },
+    {
+      "id": "AGENT-HANDOFF-001",
+      "status": "approved",
+      "source": "User 2026-09-20: push the magazine working method to Open Skill Outreach, DeFi Lab and Virtual Strategy Lab",
+      "decision": "Adopt common GPT planning/review, Claude execution, GitHub handoff and subscription-cloud validation documents version 1.0.0",
+      "limits": [
+        "Documentation push to main only",
+        "GOV-PLAN-02 and existing scope remain effective",
+        "No runtime activation, external dispatch, new spending or state promotion"
+      ]
+    },
+    {
+      "id": "GOAL-02",
+      "status": "approved",
+      "source": "2026-09-20 負責人本輪明確更新文化與定位",
+      "decision": "以幫助他人透過我們的基礎完成其工作目的與成果為核心；在成就他人的過程中持續強化上游 AI stack，成熟 routing、intelligence、skill 與治理能力，再依需求向下游延伸",
+      "supersedes": [
+        "GOAL 作為完整使命的狹義表述；原工具分享、可選 ATK 接入與採用仍是落地路徑"
+      ],
+      "limits": [
+        "善意與助人成果是使命；正向市場回饋是待驗證假設，不保證收入",
+        "最先進、最完整是持續追求，不要求全部自建或等待完美才交付",
+        "算力投入須對應可觀察的任務成果，既有支出與執行授權不變",
+        "NVIDIA/Jensen Huang 為負責人提出的定位類比，不作已核實引言或背書"
+      ]
     }
   ]
 }
