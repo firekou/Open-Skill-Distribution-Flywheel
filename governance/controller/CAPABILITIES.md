@@ -36,6 +36,45 @@ Evidence ladder, as used throughout this repository:
 
 ---
 
+## Which user bottleneck each capability removes
+
+Required by GOAL-02 (`governance/decisions.json`), which asks what real
+bottleneck each improvement relieves and whether an outside user could
+reproduce the result.
+
+**The honest frame first.** Every row below is upstream plumbing. The user it
+currently serves is **the owner of this repository**, and the bottleneck it
+removes is the owner having to carry files between two AIs by hand and having
+to re-check, by hand, whether what an AI reported actually happened. **No
+external user has completed any work through this.** Nothing here should be
+read as evidence that outside users succeed; per the mission text, a
+governance rehearsal proves relay, not external success.
+
+| # | Capability | The bottleneck, stated as the thing that goes wrong without it |
+|---|---|---|
+| 1 | Event source | Nobody knows there is work until a person notices. Every round starts with the owner checking. |
+| 2 | Receiving service | Even a known event has nowhere to land, so noticing still costs a person's attention. |
+| 3 | Persistent launcher | Work stops the moment the owner closes the session. This is the bottleneck that makes all the others theoretical. |
+| 4 | Execution host | State and history die with the container, so each round starts from nothing and prior evidence cannot be re-read. |
+| 5 | Model authentication | The executor and reviewer cannot run at all, so the loop is a design rather than a process. |
+| 6 | Reviewer identity | The author reviews their own work. That is the failure this whole project exists to prevent: it produces confident approval with nothing behind it. |
+| 7 | GitHub read / write | The result cannot be handed on, so a completed round still needs a person to move it. |
+| 8 | State disk | Two workers silently overwrite each other, and a crash loses the round. Measured: 39 of 60 writes were reported successful and lost. |
+| 9 | Cancel and recovery | A runner that misbehaves cannot be stopped, and a stuck one holds its credentials indefinitely. Without it, nobody can safely let this run unattended. |
+
+**What would make this real for someone other than the owner.** Rows 1–4
+becoming true would mean a round completes while nobody is watching. That is
+necessary and not sufficient: the mission's test is whether an outside person
+gets work they wanted done. That is G7, it needs a real tool task, and nothing
+in this round touched it.
+
+**Cost against result, as the same rule asks.** This round spent no money and
+made no model calls beyond this session: the runners never ran. What it bought
+is seven defects closed, each with a control that fails when the fix is removed
+— including three that made the system *report success while losing the work*,
+which is the failure mode most likely to waste a user's time without anyone
+noticing. Model-call volume is not offered as progress.
+
 ## What this table says, plainly
 
 Rows 1–4 are the real blockers, and none of them is a credential.
