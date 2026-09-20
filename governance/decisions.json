@@ -97,6 +97,17 @@
         "100／1,000 次為有限批次搜尋規模，不解除單 task 與修補限制",
         "不宣稱獨立 review 或 runtime 已啟動"
       ]
+    },
+    {
+      "id": "AGENT-HANDOFF-001",
+      "status": "approved",
+      "source": "User 2026-09-20: push the magazine working method to Open Skill Outreach, DeFi Lab and Virtual Strategy Lab",
+      "decision": "Adopt common GPT planning/review, Claude execution, GitHub handoff and subscription-cloud validation documents version 1.0.0",
+      "limits": [
+        "Documentation push to main only",
+        "GOV-PLAN-02 and existing scope remain effective",
+        "No runtime activation, external dispatch, new spending or state promotion"
+      ]
     }
   ]
 }

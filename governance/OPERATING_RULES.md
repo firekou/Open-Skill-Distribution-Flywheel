@@ -80,3 +80,7 @@ state.json 的 automation.status 只有 runtime 實測後才能升格。prefligh
 ## 全專案實驗方法補充
 
 依 EXP-GUIDELINE-001，所有後續實驗使用 [共用準則](../EXPERIMENT_GUIDELINE.md)、[專案接合](../EXPERIMENT_APPLICATION.md) 及 [工作單](../EXPERIMENT_TEMPLATE.md)。優先縮短有效外部回饋時間，探索與独立確認分離，成功後尋找反例並保存適用範圍。本次為文件採用，不改現行 task／修補／支出限制，不恢復舊 benchmark，不啟動 runner。大量實驗數量不等於單一 finding 的重試授權。
+
+## GPT／Claude 訂閱雲端接力方法
+
+本次使用者要求同步方法並 push main，採用 [共用方法](../AGENT_OPERATING_METHOD.md) 與 [本專案接合](../AGENT_METHOD_APPLICATION.md)。此為規劃與交接補充；GOV-PLAN-02、原狀態與權限不變，C0–C4 僅為既有導入包的接線驗收補充，不替代其 G1–G7。
