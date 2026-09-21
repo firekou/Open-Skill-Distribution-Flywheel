@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 9,
+  "revision": 10,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -29,31 +29,54 @@
   "tasks": [
     {
       "task_id": "PR5",
-      "status": "NEEDS_INFORMATION",
+      "status": "BLOCKED",
       "pr": 5,
-      "observed_head": "e8a15d7d2c012007a69ca69c7e4630c33147c4a6",
-      "last_reviewed_head": "933446ab230e6fb8b41d79b596ef3c19b721fb7a",
-      "last_review_decision": "NEEDS_INFORMATION",
-      "next_action": "等待具隔離能力、與作者獨立的 reviewer 重放既有 R5 content-addressed 證據包（runtime target 32ca53cd703efeb647ddb2d65168ba69f1e414d6）；不重派作者修復、不建立平行 controller。",
+      "observed_head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
+      "last_reviewed_head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
+      "last_review_decision": "BLOCKED",
+      "next_action": "等待 ATK-PR5-R7-LIVE-GUARD 限定修復：live 指令不得暴露 key、首次試行必須恰為兩次 provider calls、no-benefit 不得宣稱未證實根因。P5-R4-01 另行等待獨立隔離重放，不重派作者。",
       "prompt": "reviews/PR5_R4_REVIEW_d1930e4.md",
-      "review": "reviews/PR5_R6_REVIEW_933446ab.md",
+      "review": "reviews/PR5_R7_REVIEW_f4d676b.md",
       "last_head_verification": {
-        "verified_at": "2026-09-21T13:39:43Z",
-        "head": "e8a15d7d2c012007a69ca69c7e4630c33147c4a6",
-        "prior_reviewed_head": "933446ab230e6fb8b41d79b596ef3c19b721fb7a",
-        "classification": "MAIN_MERGE_ONLY_NO_PRODUCT_OR_EXECUTOR_EVIDENCE_CHANGE",
-        "product_blobs_verified_unchanged": {
-          "integrations/headroom-atk/local_check.py": "3036418da9fccf40959d2b6f1efc67fa6db5cf85",
-          "integrations/headroom-atk/test_local_check.py": "c154649b2a9f9d779511625a85f4071c8fc84810",
-          "integrations/headroom-atk/ab_test.py": "6dd9e14728a4e69577ed3a1b270cd6766896031c",
-          "integrations/headroom-atk/README.md": "26f8c8b1fc0030fdac1021b2e4e04187e1ee0ed3"
-        },
+        "verified_at": "2026-09-21T14:30:00Z",
+        "head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
+        "prior_head": "e8a15d7d2c012007a69ca69c7e4630c33147c4a6",
+        "classification": "NEW_PRODUCT_CONTENT_REVIEWED_BOUNDED_REPAIR_SIGNAL_SENT",
         "exact_head_checks": {
           "workflow_runs": 0,
-          "commit_statuses": 0
+          "commit_statuses": 0,
+          "check_runs": 0
         },
-        "decision": "NO_CONTENT_REREVIEW_NO_REDISPATCH",
-        "note": "Merge main brought trusted review and governance files into the branch and removed the branch-owned state.json delta. Existing P5-R4-01 remains INDEPENDENT_RUNTIME_VERIFICATION_PENDING."
+        "decision": "BLOCKED",
+        "note": "Offline/live boundary and Quick Start progressed. Live guide contradicts secret handling and sends four calls while promising two; stable pass-through still asserts an unproven cause. Existing P5-R4-01 remains independent-runtime pending."
+      },
+      "active_claim": null,
+      "bounded_repair": {
+        "work_id": "ATK-PR5-R7-LIVE-GUARD",
+        "revision": 1,
+        "source_head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:5:ATK-PR5-R7-LIVE-GUARD:1:f4d676b22a853f64b37f2c160cdb3d1f6bc47efc:executor",
+        "scope_paths": [
+          "integrations/headroom-atk/TRY_IT.md",
+          "integrations/headroom-atk/ab_test.py",
+          "integrations/headroom-atk/local_check.py",
+          "integrations/headroom-atk/test_local_check.py"
+        ],
+        "deadline": "2026-09-22T14:30:00Z",
+        "repair_rounds_used": 0,
+        "repair_rounds_limit": 2,
+        "delivery_status": "SIGNAL_SENT_NO_RECEIPT",
+        "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/5#issuecomment-5762144046",
+        "receipt": null,
+        "explicit_exclusions": [
+          "P5-R4-01",
+          "merge",
+          "deployment",
+          "secrets/permissions",
+          "upstream/publication",
+          "controller",
+          "MCP/benchmark/framework scope"
+        ]
       }
     },
     {
