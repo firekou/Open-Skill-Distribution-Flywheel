@@ -692,3 +692,21 @@ $ python3 governance/controller/evidence/probe_isolation_effect.py
 沒有外部使用者成功證據 · 沒有真實成功 envelope · 沒有完整隔離後端 ·
 `automation.status` 維持 `FOUNDATION_ONLY` · `findings_closed_by_executor: []`。
 六項 finding 的**處置**寫在上面，**是否關閉由獨立 reviewer 判定**。
+
+### 12.11 送審版本
+
+| | |
+|---|---|
+| **程式成果 SHA** | `25457fbd2ff02a900d55538eb4e2fa0893663c31` — 六項 finding 的修復、146 個測試、證據檔案，全部在這一個 commit |
+| 本節所在 head | 緊接其後的文件 commit（只加這一節，沒有程式差異） |
+| 上一輪被判 BLOCKED 的 head | `c86b626c8666b563e9e10413c5a967a4f94328cb` |
+| 可信政策 SHA | `38ee2303fd4c702af6d583a00dd9ed6f871ce54f`（reviewer 指定，未改寫） |
+| work_id / packet_revision | `GOV-PR6-R2` / `2`（同批第二次限定修復，**未換 ID 重置次數**） |
+| dedup_key | `firekou/Open-Skill-Distribution-Flywheel:6:GOV-PR6-R2:2:c86b626c8666b563e9e10413c5a967a4f94328cb:executor` |
+
+**claim 時間，據實記錄：** 派工留言 2026-09-21T10:53Z；45 分鐘 round 到期 11:38Z。
+程式與測試在期限內完成，**證據重新產生超出期限**：變異測試 harness 單次約 15–17 分鐘，
+本輪跑了兩次——第二次是因為我在第一次跑到一半時補了
+`test_run_really_launches_the_command_inside_the_backend`（把「隔離包裝有沒有到 `Popen`」
+從讀原始碼改成 runtime 實測）。讓證據對應**最終**的程式，比守住時限重要，所以我選擇重跑。
+超時的事實與理由寫在這裡，不修飾。
