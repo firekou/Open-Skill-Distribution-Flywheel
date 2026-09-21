@@ -1,11 +1,8 @@
-G1-G3 mutation run — 2026-09-19T20:00:40Z
-
-Each entry deletes one guarantee this round added. The suite must go red for
-every one. A hang is reported separately and never counted as a catch.
+G1-G3 + C0/C1 mutation run — 2026-09-21T06:07:37Z
 
 baseline: OK
 
-  [caught  ] runner inherits the whole parent env                 -> FAILED (failures=6, errors=1)
+  [caught  ] runner inherits the whole parent env                 -> FAILED (failures=7, errors=1)
   [caught  ] an unknown role silently defaults                    -> FAILED (failures=1)
   [caught  ] reviewer / pr_tests receive the write token          -> FAILED (failures=2)
   [caught  ] a review with no evidence is accepted                -> FAILED (failures=1)
@@ -27,6 +24,9 @@ baseline: OK
   [caught  ] terminate only signals, never confirms               -> FAILED (failures=1)
   [caught  ] cancelling one task is treated as stopping everything -> FAILED (failures=3)
   [caught  ] the per-task cancel checkpoint is skipped            -> FAILED (failures=2)
+  [caught  ] absence of an env credential blocks again (the old false negative) -> FAILED (errors=1)
+  [caught  ] untrusted pr_tests runs without a declared container -> FAILED (failures=1)
+  [caught  ] the caller's session id is allowed through           -> FAILED (failures=1)
   [caught  ] anyone can renew anyone's lease                      -> FAILED (failures=1)
 
-23/23 mutants caught
+26/26 mutants caught

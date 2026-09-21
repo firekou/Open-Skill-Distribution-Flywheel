@@ -328,3 +328,74 @@ python3 governance/controller/tick.py --config <cfg> --task PR5 [--drive]
 
 PR #5 的 merge、About／topics、上游備稿、金鑰輪替與本輪無關，維持原狀。
 1A／2A／3A 與 GOV-01 已批准，本輪未重問。
+
+
+---
+
+## 10. 本輪（G1–G3 續作 ＋ C0／C1）：量測推翻了三項我自己寫的保證
+
+**授權來源：** 負責人 2026-09-21 指示「開始續作：完成 G1～G3，以及雲端交接 C0／C1 的能力盤點、
+接線設計與必要分支實作，再交 GPT 做 G4 獨立驗收」。該指示明文取代先前「尚未派工」的限制。
+分支依 `IMPLEMENTATION_PROMPT.md`「治理修復沿用 PR #6 的治理分支」。
+
+### 10.1 先處理一件事：PR #7 的存在
+
+另一個 session 在 `claude/friendly-knuth-i9zfp7`（PR #7）也做了一份 G1，結論與本分支衝突。
+**本輪逐項獨立重現，不採信、也不忽略。** 三項全部重現成立，其中兩項我這邊原本是錯的。
+是否關閉 PR #7 屬 Planner 職權，executor 不自行處置（列為 D1）。
+
+### 10.2 量到什麼（腳本 `governance/controller/evidence/probe_auth_isolation.py`，結果 `auth_isolation_probe.json`）
+
+| 我原本寫的 | 量測結果 | 判定 |
+|---|---|---|
+| 「唯一真正缺的是模型憑證」 | 無 key、無 OAuth token、無憑證檔，5 種環境設定**全部認證成功** | **推翻** |
+| 「`pr_tests` 角色零憑證」 | 該角色只有 4 個變數、不含憑證、HOME 指向空目錄，**仍發出已認證且已計費的呼叫** | **推翻** |
+| `has_credential()` 可作認證閘門 | 三個角色全回 `False`，三個角色全部認證成功 | **推翻** |
+| 「訂閱制沒有單次價格」 | 每次呼叫自報 `total_cost_usd`，實測 0.0056–0.0425 | **推翻** |
+| 「不同 process ＝ 不同 run」 | 帶完整父環境時回傳的 session id **就是呼叫者的**；改用允許清單後才是新的 | **部分成立** |
+
+三項的共同形狀：**把「環境裡沒有」寫成「做不到」**。`ls` 看不到憑證，與無法認證，
+在輸出上長得一模一樣。
+
+### 10.3 據此改了什麼（不是改措辭，是改行為）
+
+| 缺陷 | 修法 |
+|---|---|
+| `_require_auth` 在環境沒有憑證時就擋 → **會把能跑的 runner 判成 BLOCKED_ACCESS** | 改為三態 `credential_state()`：`env_credential` / `ambient_possible` / `declared_unavailable`。**只有操作者明確宣告**（`ATK_NO_AMBIENT_MODEL_AUTH`）才擋。能不能認證由 runner 的退出碼決定，不由變數清單猜 |
+| 環境過濾被當成隔離邊界 | 新增 `isolation_level`（`process_env` / `container`）。`pr_tests` 角色**除非宣告 container，否則拒絕啟動**，丟 `IsolationUnavailable`。不再一邊跑不可信程式一邊宣稱它拿不到憑證 |
+| 呼叫者的 session id 會被繼承 | `CLAUDE_CODE_SESSION_ID` 加入 `DENY_SESSION_IDENTITY`，**按名字拒絕**。已測：就算有人把它加進允許清單也擋得住 |
+| 設定範本與能力表寫著已被推翻的話 | 範本與 `CAPABILITIES.md` 三列原地更正，**寫明原本說什麼、量到什麼**，不偷偷改掉 |
+
+### 10.4 驗證
+
+`Ran 92 tests … OK`（上輪 82）。變異測試 **26 個全部被抓到**（`evidence/mutation_g123.txt`），
+含本輪新增的三個：恢復舊的認證偽陰性、拿掉 `pr_tests` 隔離閘門、放行呼叫者 session id。
+
+### 10.5 C0／C1
+
+`governance/CLOUD_HANDOFF_WIRING.md`。兩項直接推翻手冊假設：
+
+1. **Routines 沒有 PR labeled 事件觸發**——可用介面只有 cron 與一次性。手冊路徑 A 如字面所寫不可行；
+   等價物是排程輪詢，**延遲由排程決定，不是由事件決定**，兩者不可混稱。
+2. **「5 分鐘補漏」以本帳號可證實的能力達不到**——實際最短是每小時。需裁定要確認平台上限，還是改寫目標。
+
+同時證實兩件好消息：**每次開新 session 的 Routine 可用**（另一個 Routine 實跑 88 秒），
+**PR 事件確實進得來**（PR #6 的派工留言就是這樣到的）——但前提是已經有 session 在線。
+
+### 10.6 本輪沒有做的
+
+沒有安裝任何觸發器 · 沒有 merge · 沒有改 Secrets／權限 · 沒有發上游 ·
+沒有改 `decisions.json`／`state.json`／`OPERATING_RULES.md`（`automation.status` 維持 `FOUNDATION_ONLY`）·
+沒有任何 session 外的完整往返 · 沒有任何外部使用者透過這套東西完成工作。
+
+本輪確實**呼叫了模型**：8 次能力探針，`total_cost_usd` 合計約 0.13，全部記在證據檔裡。
+這是 C0「優先查驗路徑是否實際可用」所必需，也是唯一能推翻上述三項錯誤主張的方法。
+
+### 10.7 交給 GPT 的 G4
+
+**審這一版**：分支 `claude/atk-governance-controller`，程式 head 見 PR #6 body 的「程式 head」列。
+重點請查：`auth_isolation_probe.py` 重跑是否得到相同結論 · `pr_tests` 拒絕啟動是否真的擋得住 ·
+26 個變異是否真的涵蓋本輪每一項保證 · C0 的「Routines 無事件觸發」是否為真。
+
+`findings_closed_by_executor: []`——executor 不自我關閉 finding。GOV-R1-03 維持 **OPEN**，
+本輪新增的是對它**不利**的證據。

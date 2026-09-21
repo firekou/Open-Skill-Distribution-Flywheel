@@ -53,9 +53,40 @@ ROLE_CREDENTIALS = {
 
 DENY_ALWAYS = ("GITHUB_TOKEN", "GH_TOKEN")   # never reaches reviewer or pr_tests
 
+# Carrying the caller's own session id into a runner makes that runner a
+# continuation of the caller rather than a separate run. Measured: with the
+# full parent environment the CLI returned the CALLER's session id and read the
+# caller's cached prefix; with the allowlist it returned a fresh one. Reviewer
+# independence depends on this, so the variable is named rather than merely
+# omitted — an allowlist that happens to exclude it is not the same as a rule.
+DENY_SESSION_IDENTITY = ("CLAUDE_CODE_SESSION_ID", "CLAUDE_CODE_REMOTE_SESSION_ID")
+
+# How much of a boundary the operator has actually built around a runner.
+#
+#   "process_env"  only this module's environment filtering.
+#   "container"    a container or namespace the operator has verified.
+#
+# These are not two grades of the same thing. MEASURED on this host
+# (evidence/auth_isolation_probe.json): under "process_env", with an
+# environment of four variables, no credential among them and HOME pointing at
+# an empty directory, the model CLI still authenticated and still billed. So
+# "process_env" is a tidiness measure, NOT a credential boundary, and the code
+# must not let anyone spend untrusted code against it.
+ISOLATION_LEVELS = ("process_env", "container")
+ROLES_REQUIRING_REAL_ISOLATION = ("pr_tests",)
+
+
 
 class RunnerError(RuntimeError):
     """A runner could not produce a verdict. Never interpreted as success."""
+
+
+class IsolationUnavailable(RunnerError):
+    """The requested role needs a boundary the operator has not established.
+
+    Raised instead of running, because the alternative is to run untrusted code
+    in an environment that was measured to reach a live, billable credential.
+    """
 
 
 class AuthUnavailable(RunnerError):
@@ -75,7 +106,8 @@ def build_env(role: str, parent: dict | None = None) -> dict:
     if role not in ROLE_CREDENTIALS:
         raise RunnerError(f"unknown runner role {role!r}")
     source = os.environ if parent is None else parent
-    env = {k: source[k] for k in BASE_ENV_ALLOWLIST if k in source}
+    env = {k: source[k] for k in BASE_ENV_ALLOWLIST
+           if k in source and k not in DENY_SESSION_IDENTITY}
     env.setdefault("PATH", "/usr/bin:/bin")
     env.setdefault("HOME", "/tmp")
     env["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -88,10 +120,43 @@ def build_env(role: str, parent: dict | None = None) -> dict:
 
 
 def has_credential(role: str, parent: dict | None = None) -> bool:
+    """Is a model credential present **as an environment variable**?
+
+    Note what this cannot tell you. On the host this was measured on, every
+    role authenticated a real, billed model call while this function returned
+    False for all three (evidence/auth_isolation_probe.json). The credential
+    was not in the environment and not in HOME; it was reachable anyway.
+
+    So a False here means "no credential in the environment", which is not the
+    same as "cannot authenticate", and the two must never be conflated again —
+    the previous code used this as a hard gate and would have reported
+    BLOCKED_ACCESS for a runner that works.
+    """
     source = os.environ if parent is None else parent
     return any(name in source and source[name]
                for name in ROLE_CREDENTIALS[role]
                if name not in ("GITHUB_TOKEN", "GH_TOKEN"))
+
+
+def credential_state(role: str, parent: dict | None = None) -> str:
+    """What can honestly be said about this role's ability to authenticate.
+
+    Three states, because two would force a guess:
+
+      "env_credential"          a credential is present in the environment.
+      "ambient_possible"        none is, but this host may still authenticate
+                                by a route this process cannot see. Measured
+                                to happen. Not a failure; not a guarantee.
+      "declared_unavailable"    the operator asserted, in config, that this
+                                host has no ambient route. Only an operator can
+                                know that, so only an operator may assert it.
+    """
+    if has_credential(role, parent):
+        return "env_credential"
+    source = os.environ if parent is None else parent
+    if str(source.get("ATK_NO_AMBIENT_MODEL_AUTH", "")).lower() in ("1", "true", "yes"):
+        return "declared_unavailable"
+    return "ambient_possible"
 
 
 class Runner:
@@ -238,6 +303,9 @@ class SubprocessRunner(Runner):
         if self.role not in ROLE_CREDENTIALS:
             raise RunnerError(f"unknown runner role {self.role!r}")
         self._current = None
+        self._credential_state = None
+        self._isolation_level = None
+        self._require_isolation()
 
     def cancel_current(self, grace_seconds: float | None = None) -> str:
         """Level 3 of the cancel ladder: stop the runner that is running NOW.
@@ -261,11 +329,56 @@ class SubprocessRunner(Runner):
         return build_env(self.role, parent)
 
     def _require_auth(self, parent: dict | None = None) -> None:
-        if not has_credential(self.role, parent):
+        """Block only when the operator has said authentication is impossible.
+
+        This used to block whenever no credential was in the environment. That
+        was measured to be wrong on this host: all three roles authenticated a
+        real model call while the environment held no credential at all. The
+        old gate would have turned a working runner into BLOCKED_ACCESS, which
+        is the same class of error as reporting success without running — an
+        outcome decided by inspection rather than by what happened.
+
+        What stays true: a runner that cannot authenticate must never be
+        recorded as having done the work. That is now enforced where it can be
+        known — at the runner's own exit code and verdict — instead of guessed
+        here.
+        """
+        state = credential_state(self.role, parent)
+        if state == "declared_unavailable":
             raise AuthUnavailable(
-                f"{self.kind}: no model credential available to this role. "
-                "Refusing to run rather than reporting an unverified result."
+                f"{self.kind}: the operator declared this host has no model "
+                "credential (ATK_NO_AMBIENT_MODEL_AUTH). Refusing to run "
+                "rather than reporting an unverified result."
             )
+        self._credential_state = state
+
+    def _require_isolation(self) -> None:
+        """Refuse a role whose boundary has not actually been built.
+
+        `pr_tests` runs code from the pull request under review. The repository
+        previously documented that this role "receives no credential of any
+        kind" and tested it by listing environment variables. Measured against
+        the real CLI, that role authenticated and billed
+        (evidence/auth_isolation_probe.json). Environment filtering was never
+        the boundary; it only looked like one.
+
+        So the boundary has to be declared and, by declaring it, owned:
+        `isolation_level: "container"` means an operator built and checked one.
+        Absent that, this refuses rather than running untrusted code next to a
+        live credential.
+        """
+        level = self._config.get("isolation_level", "process_env")
+        if level not in ISOLATION_LEVELS:
+            raise RunnerError(f"unknown isolation_level {level!r}")
+        if self.role in ROLES_REQUIRING_REAL_ISOLATION and level != "container":
+            raise IsolationUnavailable(
+                f"role {self.role!r} runs untrusted pull-request code and needs "
+                f"isolation_level='container'; this config says {level!r}. "
+                "Environment filtering was measured not to keep a model "
+                "credential out of this role on at least one host, so it is "
+                "not accepted as the boundary."
+            )
+        self._isolation_level = level
 
     def _workspace(self, order: dict, env: dict) -> pathlib.Path:
         path = self._workspace_root / f"{self.kind}-{order['task_id']}-{order['head'][:7]}"

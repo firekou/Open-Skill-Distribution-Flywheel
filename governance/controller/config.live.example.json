@@ -49,7 +49,9 @@
       ],
       "timeout_seconds": 1200,
       "clone_timeout": 300,
-      "terminate_grace_seconds": 10
+      "terminate_grace_seconds": 10,
+      "isolation_level": "process_env",
+      "_isolation_note": "process_env is hygiene, not a security boundary — see _credentials_by_role._note. Trusted roles are permitted under it; pr_tests is not."
     },
     "reviewer": {
       "enabled": false,
@@ -66,7 +68,8 @@
       ],
       "timeout_seconds": 1200,
       "clone_timeout": 300,
-      "terminate_grace_seconds": 10
+      "terminate_grace_seconds": 10,
+      "isolation_level": "process_env"
     }
   },
   "_time_limits_note": [
@@ -87,15 +90,21 @@
       "NO write token: the reviewer produces evidence, and evidence does not need push rights"
     ],
     "pr_tests": [
-      "nothing. Untrusted repository code runs with no credential of any kind."
+      "MEASURED FALSE, 2026-09-21: this role authenticated a real, billed model call",
+      "under the allowlist below, with no credential in its environment and HOME",
+      "pointed at an empty directory. See evidence/auth_isolation_probe.json.",
+      "Environment filtering is NOT the boundary here. The code now refuses this",
+      "role unless isolation_level='container' is declared by an operator who built one."
     ],
     "_note": [
-      "This is the ALLOWLIST, enforced in runners.build_env. Every other variable in",
-      "the parent environment is dropped, including ones added later. It is not",
-      "configurable from this file on purpose: a config a pull request could edit",
-      "would not be a boundary."
+      "This allowlist controls what is PASSED. It was measured not to control what is",
+      "REACHABLE: on at least one host the model CLI authenticated with four",
+      "variables and no credential among them. Treat the allowlist as hygiene, and",
+      "treat isolation_level as the thing that must be true before untrusted code runs.",
+      "It is not configurable from a pull request on purpose: a boundary a PR could",
+      "edit would not be a boundary."
     ]
   },
   "run_budget": 8,
-  "run_budget_note": "Unit is RUNS, not currency. One runner invocation costs 1. A run cap bounds how many times a model is called; it says nothing about which authentication path is used or whether that path bills. Those are separate and are recorded in CAPABILITIES.md."
+  "run_budget_note": "Unit is RUNS, not currency. One runner invocation costs 1. A run cap bounds how many times a model is called. MEASURED 2026-09-21: the CLI reports total_cost_usd per call (0.0056-0.0425 observed), so 'the subscription has no per-call price' is false as stated. A run cap bounds the number of calls, not the size of any one of them; record total_cost_usd per run rather than inferring it."
 }

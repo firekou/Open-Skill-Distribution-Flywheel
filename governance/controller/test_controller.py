@@ -33,7 +33,8 @@ sys.path.insert(0, str(HERE))
 import runners                                          # noqa: E402
 from controller import (CANCEL_LADDER, Controller,     # noqa: E402
                         load_guard, scripted_commit_verifier)
-from runners import (AuthUnavailable, BASE_ENV_ALLOWLIST, FakeExecutor,  # noqa: E402
+from runners import (AuthUnavailable, BASE_ENV_ALLOWLIST, DENY_SESSION_IDENTITY,  # noqa: E402
+                     FakeExecutor, IsolationUnavailable, credential_state,
                      FakeReviewer, ROLE_CREDENTIALS, RunnerError, SubprocessRunner,
                      build_env, has_credential, parse_verdict,
                      terminate_process_group)
@@ -985,6 +986,108 @@ class RunnerEnvironmentIsAnAllowlist(unittest.TestCase):
     def test_an_unknown_role_is_refused_rather_than_defaulted(self):
         with self.assertRaises(RunnerError):
             build_env("something-else", self.PARENT)
+
+
+class InspectionIsNotEvidenceOfAuthentication(unittest.TestCase):
+    """The defect this round measured rather than argued.
+
+    `_require_auth` used to refuse whenever no credential appeared in the
+    environment. Run against the real CLI, all three roles authenticated a
+    billed model call while the environment held no credential at all and HOME
+    pointed at an empty directory — evidence/auth_isolation_probe.json.
+
+    So the old gate would have turned a working runner into BLOCKED_ACCESS. The
+    failure mode is the mirror of reporting success without running: an outcome
+    decided by looking at variables instead of by what happened."""
+
+    CFG = {"enabled": True, "command": ["true"], "identity_suffix": "t"}
+
+    def _runner(self, tmp, role="reviewer", **over):
+        return SubprocessRunner(role, {**self.CFG, **over}, pathlib.Path(tmp))
+
+    def test_the_three_states_are_distinguishable(self):
+        self.assertEqual(credential_state("reviewer", {"ANTHROPIC_API_KEY": "x"}),
+                         "env_credential")
+        self.assertEqual(credential_state("reviewer", {}), "ambient_possible")
+        self.assertEqual(credential_state("reviewer", {"ATK_NO_AMBIENT_MODEL_AUTH": "1"}),
+                         "declared_unavailable")
+
+    def test_an_empty_environment_is_no_longer_treated_as_proof_of_failure(self):
+        """The regression. An empty parent must NOT raise on its own."""
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = self._runner(tmp)
+            runner._require_auth({})              # must not raise
+            self.assertEqual(runner._credential_state, "ambient_possible")
+
+    def test_only_the_operator_can_declare_authentication_impossible(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = self._runner(tmp)
+            with self.assertRaises(AuthUnavailable) as cm:
+                runner._require_auth({"ATK_NO_AMBIENT_MODEL_AUTH": "true"})
+            self.assertIn("declared", str(cm.exception))
+
+    def test_absence_in_the_environment_is_reported_as_unknown_not_as_no(self):
+        """The whole correction in one assertion: the same empty environment
+        that makes has_credential say False must NOT make the capability
+        question say 'cannot authenticate'. Collapsing those two was the bug."""
+        self.assertFalse(has_credential("reviewer", {}))
+        self.assertEqual(credential_state("reviewer", {}), "ambient_possible")
+        self.assertNotEqual(credential_state("reviewer", {}), "declared_unavailable")
+
+
+class EnvironmentFilteringIsNotAnIsolationBoundary(unittest.TestCase):
+    """Measured: under the repository's own allowlist — four variables, no
+    credential among them — the model CLI authenticated and billed, for the
+    `pr_tests` role that the config template described as receiving "nothing".
+
+    The fix is not a better allowlist. It is to stop accepting an allowlist as
+    the boundary for untrusted code, and to make the code refuse instead."""
+
+    CFG = {"enabled": True, "command": ["true"], "identity_suffix": "t"}
+
+    def test_untrusted_pr_code_will_not_run_without_a_declared_container(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(IsolationUnavailable) as cm:
+                SubprocessRunner("pr_tests", self.CFG, pathlib.Path(tmp), role="pr_tests")
+            self.assertIn("container", str(cm.exception))
+
+    def test_declaring_a_container_is_what_permits_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = SubprocessRunner("pr_tests", {**self.CFG, "isolation_level": "container"},
+                                 pathlib.Path(tmp), role="pr_tests")
+            self.assertEqual(r._isolation_level, "container")
+
+    def test_a_made_up_isolation_level_is_refused_not_defaulted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(RunnerError):
+                SubprocessRunner("reviewer", {**self.CFG, "isolation_level": "sandboxed"},
+                                 pathlib.Path(tmp))
+
+    def test_trusted_roles_still_run_under_the_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for role in ("executor", "reviewer"):
+                r = SubprocessRunner(role, self.CFG, pathlib.Path(tmp), role=role)
+                self.assertEqual(r._isolation_level, "process_env")
+
+
+class ARunnerMustNotInheritTheCallersSessionIdentity(unittest.TestCase):
+    """With the full parent environment the CLI returned the CALLER's session id
+    and read the caller's cached prefix; under the allowlist it returned a fresh
+    one. Reviewer independence rests on that, so the variable is denied by name
+    rather than merely left off the allowlist."""
+
+    def test_the_session_id_is_dropped_even_if_the_allowlist_grows(self):
+        import runners as _r
+        parent = {"PATH": "/usr/bin", "HOME": "/h",
+                  "CLAUDE_CODE_SESSION_ID": "SYNTHETIC-SESSION"}
+        wider = tuple(BASE_ENV_ALLOWLIST) + ("CLAUDE_CODE_SESSION_ID",)
+        with patch.object(_r, "BASE_ENV_ALLOWLIST", wider):
+            env = _r.build_env("reviewer", parent)
+        self.assertNotIn("CLAUDE_CODE_SESSION_ID", env,
+                         "a widened allowlist let the caller's session id through")
+
+    def test_the_denied_names_are_recorded_rather_than_implied(self):
+        self.assertIn("CLAUDE_CODE_SESSION_ID", DENY_SESSION_IDENTITY)
 
 
 class MissingAuthIsBlockedNotPassed(unittest.TestCase):
