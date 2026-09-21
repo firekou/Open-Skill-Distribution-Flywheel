@@ -2,16 +2,18 @@
 唯一規則入口：[治理入口](../governance/OPERATING_RULES.md)。決策看 decisions.json；啟動查 live PR head，不沿用歷史快照當批准。
 
 
-## 2026-09-21：已接管 GitHub 交接與獨立覆核
+## 2026-09-21：PR6 第二輪限定修復覆核結案
 
 - 方法：govern-github-agent-handoffs；授權 GOV-HANDOFF-TAKEOVER-20260921。review 仍依 REVIEW-MAIN 存 main。
-- 既有 reviewer automation `6aae969a0ff8819193be09f165c31fd8` 已更新為「ATK 專案交接覆核」，監聽本 repo PR 新提交、review、留言；無新增輪詢。新範圍首次事件待驗。
-- 接管時已發現新程式 `c86b626c8666b563e9e10413c5a967a4f94328cb`，完成 [R3 獨立 review](PR6_R3_G4_REVIEW_c86b626c.md)：**BLOCKED**。live `a21fa1e21f4f361bd7df2d379c2711bd3ac28c7b` 無後續 controller 程式差異。
-- 同批第二次有限修復包已[直接送 PR6](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167)，work_id GOV-PR6-R2、revision 2。狀態 SIGNAL_SENT_RECEIPT_PENDING；尚不宣稱 Claude 已啟動。
-- 既有接單證據只支持「已在線 Claude session 可接收」，不支持「新 session 持久喚起」。完整端到端仍 NOT_VERIFIED，controller FOUNDATION_ONLY。
-- PR5 live `933446ab230e6fb8b41d79b596ef3c19b721fb7a` 未變，保留 R6 NEEDS_INFORMATION，等待獨立隔離重放；不重派作者同類修復。PR7 留存補充證據，不建立平行 controller。
-- repo API 讀取及 main 文件寫入已成功；未推論分支保護或 merge 權限。merge／部署／Secrets／新增費用不在此次授權。
-- 產品主線仍是有用工具/skill、ATK 接入、分享與採用，不以治理 ACTIVE 阻塞無依賴交付。不恢復 benchmark、Freeze 或框架試點。
+- GPT reviewer webhook 已由 PR #6 的 synchronize 事件實際驗證，精確 live head e26aac4eed0696cefa45b19aac46e7fc9c3da6e8；這只證明 reviewer event path，不證明 Claude persistent launcher 或完整端到端接通。
+- Claude 既有 session session_01RFeCsTYkVywjHvXk7od7Ab 已交付 work_id GOV-PR6-R2、revision 2。程式 head 25457fbd2ff02a900d55538eb4e2fa0893663c31；live head 其後只追加 executor response，沒有 controller 程式差異。
+- [R4 獨立 review](PR6_R4_G4_REVIEW_25457fbd.md)：**BLOCKED**。CLI success envelope 與 guard ordering 在 source 層級關閉；lease-loss launch、effect binding、deadline launch gate 與 credentialed executor/reviewer isolation 仍阻擋。
+- 作者自報 146 tests、50/51 mutants 與 replay／recovery／isolation evidence；本 reviewer 沒有合格隔離 runtime，因此不升格為獨立通過。精確程式與 live SHA 都沒有 commit status 或 workflow run。
+- 同批限定修復已達兩輪上限，不再向 Claude 自動重派第三輪，也不改名規避。next checkpoint 改為 Planner scope reduction：保留 GitHub durable ledger、人工 bounded handoff 與已驗證 reviewer event；controller 維持 FOUNDATION_ONLY / 非 ACTIVE。
+- Claude persistent launcher、executor 接線、真實隔離 runtime 與完整閉環仍為 NOT_VERIFIED。沒有因留言送出或舊 session 回覆而提高這些狀態。
+- PR5 live 933446ab230e6fb8b41d79b596ef3c19b721fb7a 未變，P5-R4-01 繼續等待獨立隔離重放，不重派作者修復。PR7 只保留補充證據，不建立平行 controller。
+- repo API 讀取及 main review／ledger 寫入已成功；未合併、未部署、未修改 Secrets／權限、未新增費用、未送上游。
+- 產品主線仍是有用工具/skill、可選 ATK Router/API/MCP 接入、技術分享與實際採用；不以治理 ACTIVE 阻塞無依賴交付，不恢復 benchmark、Freeze 或框架試點。
 
 ## 2026-09-21：PR6 G4 獨立 review 與接續規劃（R2 歷史）
 
