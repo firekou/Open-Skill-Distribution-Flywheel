@@ -1,4 +1,5 @@
 # 當前交接狀態
+
 唯一規則入口：[治理入口](../governance/OPERATING_RULES.md)。決策看 decisions.json；啟動查 live PR head，不沿用歷史快照當批准。
 
 
@@ -55,4 +56,15 @@
 - 隔離驗收須分開可信 orchestration 與未信任 PR source：PR code 不直接取得 credential；必要模型連線經可信、可稽核、最小權限 wrapper/broker；GitHub write 另行綁定 work_id/result head；所有 denial claim 需要可工作的 unwrapped baseline。
 - Controller 維持 `FOUNDATION_ONLY`。主線 ATK 工具/skill、可選 Router／API／MCP 接入與實際採用不等待治理 ACTIVE；本輪沒有外部使用者成功證據。
 - Exact head 無 workflow runs 或 commit statuses；未執行 controller 測試，因為本輪沒有 implementation diff。
+
+## 2026-09-21：PR5 R7 採用準備覆核
+
+- Live head `f4d676b22a853f64b37f2c160cdb3d1f6bc47efc` 相對 `e8a15d7d` 有一個新內容 commit，含 preflight 修正、3 個新測試、TRY_IT 與 executor response；不是 reviewer-only 或 main merge。
+- [R7 review](PR5_R7_REVIEW_f4d676b.md)：**BLOCKED**。離線／live 外送邊界、最小試用入口及歷史資料標示有進展，但 live 指令仍有兩個 P1。
+- VERIFIED：TRY_IT 宣稱首次 live 為一個任務、direct／proxy 各一次；實際 `ab_test.py` 會跑 summary 與 needle，合計四次 provider calls。TRY_IT 同時禁止命令列放 key，卻示範 `ATK_API_KEY=...`。
+- VERIFIED：兩次 pass-through 只能證明觀察重複，`local_check.py` 仍將其解釋成 payload 沒有冗餘，與 executor「根因未建立」矛盾。
+- 作者自報 34 tests 與 controls 為 TESTED；exact head 無 workflow run、check run 或 commit status。本 reviewer 沒有合格隔離 runtime，未執行 PR code。
+- 已向 PR #5 留下一次限定修復包 `ATK-PR5-R7-LIVE-GUARD`，source head 與 dedup key 固定；目前僅為 `SIGNAL_SENT_NO_RECEIPT`，不代表 Claude session 已啟動。
+- `P5-R4-01` 繼續等待獨立隔離重放，不重派作者、不因 R7 修復關閉。第三方採用仍為 0。
+- 未 merge、未部署、未修改 secrets／權限、未呼叫模型、未新增費用、未送上游。
 
