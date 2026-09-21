@@ -1,84 +1,107 @@
 {
   "version": 1,
-  "revision": 4,
+  "revision": 7,
   "automation": {
     "status": "FOUNDATION_ONLY",
-    "trigger_installed": false,
+    "trigger_installed": true,
     "executor_connected": false,
-    "reviewer_connected": false,
+    "reviewer_connected": true,
     "additional_api_budget_usd": 0,
-    "last_manual_run": {
-      "task_id": "PR5",
-      "phase_chain": "execute -> review(R3) -> fix -> review(confirm) -> fix -> repair_round_complete",
-      "reviewed_head": "9c439a40174e2fff9ed3d20ac973baf6758f1611",
-      "executor_identity": "executor-pr5-claude-session-01RFeCsT",
-      "reviewer_identity": "reviewer-pr5-r3-isolated",
-      "isolation": "separate run/session and workspace; same model family - NOT model-source independence",
-      "owner_file_shuttling_required": false,
-      "trigger_installed": false,
-      "additional_paid_calls": 0,
-      "classification": "MANUAL_RUN_VERIFIED",
-      "reviewer_identities": [
-        "reviewer-pr5-r3-isolated",
-        "reviewer-pr5-r3-confirm-isolated"
-      ],
-      "review_records": [
-        "reviews/PR5_R3_REVIEW_9c439a4.md",
-        "reviews/PR5_R3_CONFIRM_95215b0.md"
-      ],
-      "findings_raised_by_reviewers": 9,
-      "findings_refused_by_executor_with_reason": 1,
-      "refusal_independently_confirmed_correct": true
-    }
+    "reviewer_trigger": {
+      "status": "EVENT_VERIFIED",
+      "scope": "repository pull requests",
+      "kind": "github_pull_request_commit_update",
+      "title": "ATK 專案交接覆核",
+      "registered_at": "2026-09-19",
+      "first_event_verified": true,
+      "claude_launcher": false,
+      "automation_id": "6aae969a0ff8819193be09f165c31fd8",
+      "first_verified_event": {
+        "type": "pull_request.synchronize",
+        "repository": "firekou/Open-Skill-Distribution-Flywheel",
+        "pr": 6,
+        "head": "e26aac4eed0696cefa45b19aac46e7fc9c3da6e8",
+        "observed_at": "2026-09-21T11:57:31Z"
+      }
+    },
+    "status_note": "GPT reviewer 的 repository PR event path 已由 PR6 synchronize 實際驗證；Claude persistent launcher 與 executor 仍未接通，完整治理維持 FOUNDATION_ONLY，非 ACTIVE。"
   },
   "tasks": [
     {
       "task_id": "PR5",
-      "status": "REPAIR_ROUND_COMPLETE_PENDING_OWNER",
+      "status": "NEEDS_INFORMATION",
       "pr": 5,
-      "last_reviewed_head": "9c439a40174e2fff9ed3d20ac973baf6758f1611",
-      "last_review_decision": "APPROVED_WITH_CONDITIONS (conditions cleared)",
-      "next_action": "修復輪結束。剩下的是負責人決定：merge（未自動授權）、套用 About／topics、授權送出上游備稿、金鑰輪替。技術上的下一個未驗證目標是搜尋基線 T0 與外部實際採用。",
-      "prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
-      "last_review_record": "reviews/PR5_R3_CONFIRM_95215b0.md",
-      "conditions": {
-        "P5-R3-01": "cleared",
-        "P5-R3-02": "cleared after a second pass: the count was corrected AND pinned by a test that compares README against the loader",
-        "P5-R3-03": "cleared",
-        "P5-R3-04": "cleared (backlog, taken early)",
-        "P5-R3-05a": "cleared (backlog, taken early)",
-        "P5-R3-05b": "NOT_REPRODUCED - recorded, not claimed as fixed",
-        "P5-R3-06": "cleared (backlog, taken early)",
-        "P5-R3-02-residual": "cleared"
-      },
-      "repair_rounds_used": 3,
-      "note": "APPROVED_WITH_CONDITIONS 不是發布或合併許可。conditions cleared 由 executor 自報，須由 reviewer 確認。",
-      "still_open_not_defects": [
-        "外部第三方使用 0 筆",
-        "搜尋基線尚未執行，T0 未發生",
-        "上游備稿未送出",
-        "About／topics 未套用",
-        "付費側全部未驗證"
-      ],
-      "observed_head_note": "DO NOT STORE. Read the live PR head at start-up (git ls-remote origin refs/heads/<branch>, or the PR API). A stored value is stale the moment it is committed, and updating it moves live head and expires any in-flight review — see GOV-F1."
+      "observed_head": "933446ab230e6fb8b41d79b596ef3c19b721fb7a",
+      "last_reviewed_head": "933446ab230e6fb8b41d79b596ef3c19b721fb7a",
+      "last_review_decision": "NEEDS_INFORMATION",
+      "next_action": "等待具隔離能力的獨立 reviewer 重放既有 R5 證據；無新 head，不再請作者重修或搬運報告。",
+      "prompt": "reviews/PR5_R4_REVIEW_d1930e4.md",
+      "review": "reviews/PR5_R6_REVIEW_933446ab.md"
     },
     {
       "task_id": "GOV-BOOTSTRAP",
-      "status": "READY",
-      "next_action": "PR5 已實跑 executor -> 隔離 reviewer -> 修復 -> 第二個隔離 reviewer 確認 -> 結束修復輪，全程不需負責人搬檔。依定義為 MANUAL_RUN_VERIFIED，非 ACTIVE（無持久觸發器、無新增預算）。下一步：IMPLEMENTATION_PROMPT.md 的最小 controller/runner，並先解 GOV-F1。",
+      "status": "BLOCKED",
+      "next_action": "同批兩輪修復上限已到，不再自動重派。保留 FOUNDATION_ONLY，由 Planner 縮小交付；未來只在完整隔離與重新授權的最小 controller 工作包下重啟。產品採用工作不受阻。",
       "prompt": "governance/IMPLEMENTATION_PROMPT.md",
-      "findings_from_pr5_run": [
-        {
-          "id": "GOV-F1",
-          "observed": "一個純記帳欄位的提交讓 live head 前進，preflight 立即把進行中的 review 判為 stale_head；兩個 head 只差 governance/state.json 一行。",
-          "impact": "自動化後會變成記帳→撞掉 review→再記帳的循環。",
-          "options": [
-            "狀態檔移出被審查的分支",
-            "guard 增加 scope-unchanged 的重新綁定路徑，需列出差異檔案清單"
-          ],
-          "status": "PARTIALLY ADDRESSED — the self-referential observed_head field is removed, which stops the记帳→撞掉→再記帳 loop for this task. The general problem (task state living in the tree under review) is still OPEN for the controller work. The guard was NOT modified: it is main's trusted policy and needs its own approval path."
-        }
-      ]
+      "pr": 6,
+      "branch": "claude/atk-governance-controller",
+      "submitted_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
+      "executor_response": "reviews/GOVERNANCE_EXECUTOR_RESPONSE.md (on the PR branch)",
+      "note": "第二輪限定修復完成 source review；CLI envelope 與 guard ordering 關閉，但 lease-loss launch、effect binding、deadline launch gate 與 credentialed role isolation 仍阻擋。未獨立執行 PR code。",
+      "last_reviewed_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
+      "last_review_decision": "BLOCKED",
+      "review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
+      "observed_head": "e26aac4eed0696cefa45b19aac46e7fc9c3da6e8",
+      "policy_sha": "38ee2303fd4c702af6d583a00dd9ed6f871ce54f",
+      "blocking_findings": [
+        "GOV-R2-02",
+        "GOV-R2-03",
+        "GOV-R2-05",
+        "GOV-R1-03"
+      ],
+      "independent_runtime_verified": false,
+      "source_findings_closed": [
+        "GOV-R2-01",
+        "GOV-R2-04"
+      ],
+      "repair_rounds_used": 2,
+      "repair_rounds_limit": 2
     }
-  ]
+  ],
+  "planning": {
+    "status": "SCOPE_REDUCTION_REQUIRED",
+    "decision_id": "GOV-PLAN-02",
+    "prompt": "governance/IMPLEMENTATION_PROMPT.md",
+    "scope": "G1-G7",
+    "note": "同批兩輪修復已用完；不再自動重派 controller 修復。保留 GitHub durable ledger、人工 bounded handoff 與已驗證 reviewer event path；Claude persistent launcher/isolated runtime 未啟用。產品採用工作繼續。",
+    "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md"
+  },
+  "handoff": {
+    "method": "govern-github-agent-handoffs",
+    "decision_id": "GOV-HANDOFF-TAKEOVER-20260921",
+    "automation_id": "6aae969a0ff8819193be09f165c31fd8",
+    "reviewer_event_scope": "repository pull requests: commits, reviews, comments",
+    "reviewer_event_status": "EVENT_VERIFIED",
+    "executor_channel": "PR conversation to existing subscribed Claude session; historical receipt observed",
+    "persistent_executor_launcher": "NOT_VERIFIED",
+    "end_to_end": "NOT_VERIFIED",
+    "work_id": "GOV-PR6-R2",
+    "packet_revision": 2,
+    "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:6:GOV-PR6-R2:2:c86b626c8666b563e9e10413c5a967a4f94328cb:executor",
+    "delivery_status": "RESULT_RECEIVED_REVIEWED_BLOCKED",
+    "receipt": {
+      "comment_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5760125918",
+      "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+      "work_id": "GOV-PR6-R2",
+      "program_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
+      "result_head": "e26aac4eed0696cefa45b19aac46e7fc9c3da6e8",
+      "received_at": "2026-09-21T11:57:31Z",
+      "claim_deadline_exceeded_for_evidence_append": true
+    },
+    "reviewer_only_head": null,
+    "review_storage": "main per REVIEW-MAIN",
+    "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
+    "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167",
+    "next_checkpoint": "PLANNER_SCOPE_REDUCTION_NO_THIRD_REPAIR"
+  }
 }

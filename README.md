@@ -149,3 +149,11 @@ Every major execution must answer the seven Forward-Motion questions in `EXECUTI
 ## License
 
 MIT for ATK-authored repository material unless otherwise stated. Third-party project licenses remain with their respective authors.
+
+## 外部實證與遞迴改善實驗準則
+
+所有後續實驗依 [共用實驗準則](EXPERIMENT_GUIDELINE.md)、[本專案接合](EXPERIMENT_APPLICATION.md) 與 [實驗工作單](EXPERIMENT_TEMPLATE.md) 規劃與留證。優先縮短有效外部回饋時間；大量探索後獨立確認，再找反例界定局部成功。100／1,000 次為有限批次搜尋規模，不是成功保證或解除既有權限。文件採用不代表自動執行已啟動。
+
+## GPT／Claude 接力與運作方法
+
+依 [共用運作方法](AGENT_OPERATING_METHOD.md)、[專案接合](AGENT_METHOD_APPLICATION.md)、[交接手冊](AGENT_HANDOFF_RUNBOOK.md) 與 [工作模板](AGENT_TASK_TEMPLATE.md) 續作；雲端接線依 [導入驗收包](AGENT_CLOUD_ADOPTION_PLAN.md)。版本 AGENT-HANDOFF-001 / 1.0.0。此次只採用文件，不代表 runtime 已啟用，原治理入口及授權維持。

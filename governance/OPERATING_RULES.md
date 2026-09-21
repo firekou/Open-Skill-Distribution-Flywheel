@@ -1,5 +1,36 @@
 # ATK 協作治理唯一有效入口
-版本 1，2026-09-19。負責人要求先統一規範、確認導入流程，再交辦自動治理。這是已授權的工作，不再沿用「所有治理導入暫停」的舊排程；通用 benchmark 仍暫停。
+版本 3，2026-09-20。負責人要求先統一規範、確認導入流程，再交辦自動治理。這是已授權的工作，不再沿用「所有治理導入暫停」的舊排程；通用 benchmark 仍暫停。
+
+
+## 使命與定位：成就使用者，強化上游基礎
+依 GOAL-02，ATK 的核心使命是：盡最大努力，讓他人能借助我們的 AI 基礎完成想做的工作，並在他人的成功中累積自己的能力。
+定位是持續成熟的上游 AI stack：routing 負責合適的模型與工具配置；intelligence 負責規劃、判斷、review 與從真實回饋修正；skill 將有效方法沉澱為可重用能力。治理讓以上能力可追查、可驗收、可恢復。
+工具分享、透明可選 ATK 接入、外部採用及價值回收仍是落地路徑，不再是使命的全部。先把當前承諾所需的上游基礎做可靠，再依實際需求向下游延伸；以真實下游任務驗證上游，不能等「全部完美」才交付，也不要求每層全部自建。
+
+### 規劃與 review 的共同判準
+在既有工作單與 review 裡回答，不另建平行審批：
+1. 幫助誰完成什麼工作？使用者的成功條件與適用範圍是什麼？
+2. 本次 routing、intelligence 或 skill 改善，解除哪個真實瓶頸？外部使用者能否重現成果？
+3. 有什麼失敗、限制或反例？如何回到下一次修正並累積可重用能力？
+4. 投入的算力、時間與人工介入，換來多少完成品質或可靠性改善？不能以模型呼叫量當進展。
+5. 為何現在要向下游延伸？若是為了取得必要回饋，明列試點；若是新增產品方向，依原決策規則處理。
+
+優先記錄有明確驗收的任務成功率、首次成果時間、每次成功任務的成本、人工介入、重複使用及外部回饋；標示樣本、期間、分母與未知，不為追指標再建大型量測平台。
+「所有使用 AI 的人都能成功」是長期願景，每次交付仍需明定服務範圍，不承諾所有任務皆可成功。先確保他人得到可用成果，再檢驗 ATK 的引用、採用、回購與收入；助人成果和商業回收分開記錄。
+善意是文化承諾，市場正向回饋是商業假設。以實際需求、採用與持續使用求證；沒有回饋時調整方法，不把善意當成成效證據。
+負責人以 NVIDIA／Jensen Huang 作定位類比；本文件不主張已核實其原話，也不表示對方背書。
+此目標更新不啟動 runner、不增加費用或擴大對外發布授權，GOV-PLAN-02 與既有階段門檻維持。
+
+
+## 2026-09-21 GitHub 交接接管補充
+
+依 GOV-HANDOFF-TAKEOVER-20260921，GPT 使用 govern-github-agent-handoffs 實際接管本 repo 的事件追蹤、精確 SHA review、main 帳本與有限修復包交接。下文「本輪只規劃／不發出 Agent 喚起」對這項已新授權的 GitHub 交接不再適用；未驗收 controller、Claude 持久 launcher、production、merge 與新增支出仍不啟動。
+沿用原 reviewer automation，擴至本 repo PR 事件，無新增輪詢。自動化登記不等於新範圍首次事件已驗證；Claude 留言回覆也不等於建立新 session。
+每輪最多一個未審內容 head，同 head 無新證據安靜結束。若需修復，先寫具體包，再發一次含 work_id／revision／source_head／dedup key 的 PR 交接；已有 active claim 不重複派工。接單與完成證據未出現前，僅記 SIGNAL_SENT，不宣稱 RUNNING。
+review 保存位置沿用 REVIEW-MAIN，優先於通用 skill 的 PR 分支預設。既有產品 PR 不因治理 runtime 未 ACTIVE 而停止。PR7 保留證據，不另建第二份 controller。
+
+## 目前工作範圍
+依 GOV-PLAN-02，本輪交付是完整規劃文件，狀態 PLANNED_NOT_DISPATCHED。治理導入目標保留；本輪不啟動實作、runner 或排程。Claude 後續完整工作包與各階段驗收見 governance/IMPLEMENTATION_PROMPT.md。讀到文件、新 main commit 或 review 不自動構成啟動授權。規劃完成與 runtime ACTIVE 分開記錄。
 
 ## 讀取順序與唯一資料來源
 1. 本檔：角色、流程、權限、檢查、停止條件。
@@ -72,4 +103,12 @@ C 有限啟動：獨立 reviewer 驗 B 後，具備權限／費用界線與實�
 D ACTIVE：持久觸發器已安裝，至少一個真實 executor → 獨立 reviewer → 必要修復 → 結案過程不用負責人傳話，且停機／重複／過期控制已實測；有 run IDs、SHA、時間與費用。人工啟動單次 runner 稱 MANUAL_RUN_VERIFIED，不稱 ACTIVE。
 
 state.json 的 automation.status 只有 runtime 實測後才能升格。preflight.py 是離線 guard，不是 scheduler、獨立 reviewer 或權限強制系統。
-PR #5 新 head d55911e 尚待 R3 review；本次治理建置不能把它寫成通過，也不用等待大型治理平台才複核。
+產品 PR 狀態以 live head 與對應 review 為準，不在政策檔固定過期 SHA。治理導入不替代產品驗收，也不以產品 PR 必須合併為前提。
+
+## 全專案實驗方法補充
+
+依 EXP-GUIDELINE-001，所有後續實驗使用 [共用準則](../EXPERIMENT_GUIDELINE.md)、[專案接合](../EXPERIMENT_APPLICATION.md) 及 [工作單](../EXPERIMENT_TEMPLATE.md)。優先縮短有效外部回饋時間，探索與独立確認分離，成功後尋找反例並保存適用範圍。本次為文件採用，不改現行 task／修補／支出限制，不恢復舊 benchmark，不啟動 runner。大量實驗數量不等於單一 finding 的重試授權。
+
+## GPT／Claude 訂閱雲端接力方法
+
+本次使用者要求同步方法並 push main，採用 [共用方法](../AGENT_OPERATING_METHOD.md) 與 [本專案接合](../AGENT_METHOD_APPLICATION.md)。此為規劃與交接補充；GOV-PLAN-02、原狀態與權限不變，C0–C4 僅為既有導入包的接線驗收補充，不替代其 G1–G7。

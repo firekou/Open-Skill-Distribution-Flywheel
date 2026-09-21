@@ -1,0 +1,24 @@
+{
+  "checked_at_utc": "2026-09-19T14:13:15Z",
+  "reviewed_head": "32ca53cd703efeb647ddb2d65168ba69f1e414d6",
+  "pr_code_executed": false,
+  "replay_script_executed": false,
+  "docker_found_on_PATH": false,
+  "attempts": [
+    {
+      "command": "bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --proc /proc --dev /dev --tmpfs /tmp --clearenv --setenv PATH /usr/bin:/bin /usr/bin/python3 -I -c 'import socket; print(\"isolation-ready\"); print(socket.if_nameindex())'",
+      "exit": 1,
+      "output": "bwrap: loopback: Failed to create NETLINK_ROUTE socket: Operation not permitted"
+    },
+    {
+      "command": "unshare --net -- /usr/bin/true",
+      "exit": 1,
+      "output": "unshare: unshare failed: Operation not permitted"
+    },
+    {
+      "command": "bwrap --unshare-user --unshare-pid --unshare-ipc --unshare-uts --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --proc /proc --dev /dev --tmpfs /tmp --clearenv --setenv PATH /usr/bin:/bin /usr/bin/python3 -I -c 'print(\"filesystem-isolation-ready\")'",
+      "exit": 1,
+      "output": "bwrap: setting up uid map: Operation not permitted"
+    }
+  ]
+}
