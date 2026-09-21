@@ -54,9 +54,11 @@ visibility, **not a demonstrated cause** of the 0/3 result — see the baseline'
 >    looks like a gateway problem and is not.
 > 2. Use `x-headroom-base-url`, and give it the base **without** `/v1`. It appends the path. With
 >    `/v1` you get a 404 from a URL containing `/v1/v1/`.
-> 3. Pointing it at a localhost test stub fails *silently*: its SSRF guard refuses private
->    addresses and falls back to its own provider resolution, so you see failure (1) again and
->    blame the wrong thing. `HEADROOM_ALLOWED_BASE_URLS` allowlists it.
+> 3. Pointing it at a localhost test stub looks like failure (1) all over again: its SSRF guard
+>    refuses private addresses, drops your override and falls back to its own provider
+>    resolution, so you get the same OpenAI 401 and blame the wrong thing. It *does* log the
+>    reason — in `~/.headroom/logs/proxy.log`, which is neither stderr nor the `--log-file` you
+>    passed. `HEADROOM_ALLOWED_BASE_URLS` allowlists it.
 >
 > Working example + an offline verification script: [link]
 
@@ -99,8 +101,10 @@ upstream.
 
 **Do not paste an API key, a token, or a real log.** `local_check.py` output is written to be
 pasteable: sizes, exit status, the log's **file name** (not its path), and needles identified by
-**position and length — never their text**. Your log is never printed and never leaves your
-machine.
+**position and length — never their text**. Your log is never printed, and the offline check
+never sends it anywhere — it talks only to loopback. (The **live** path is different by design:
+it sends the compressed prompt to the upstream you name. See *What leaves your machine* in the
+README.)
 
 One exception to know about: `--show-needles` deliberately turns that protection off so you can
 read the needles on your own terminal. **Do not use it for output you intend to share.**

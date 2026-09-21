@@ -27,7 +27,8 @@ saving is entirely a function of how repetitive your log is:
 
 --needle may be repeated. Exit 0 means it shrank and every needle survived;
 exit 1 means a needle was lost; exit 3 means it did not shrink at all, which is
-a real and common outcome (see the README on JSON-structured logs).
+a real and common outcome (see the README on JSON-structured logs); exit 4 means
+two measurements of the same request disagreed, so nothing is concluded.
 
 This does NOT measure token usage or cost — it cannot; there is no model call.
 For that, see ab_test.py, which needs a real key.
@@ -234,6 +235,7 @@ def main(argv=None) -> int:
     threading.Thread(target=stub.serve_forever, daemon=True).start()
     stub_base = f"http://127.0.0.1:{stub_port}"
 
+    recheck = None
     proxy_port = free_port()
     # headroom 0.37.0 refuses a client-named upstream that resolves to
     # loopback/RFC1918 (its SSRF guard) and silently falls back to the
@@ -261,6 +263,26 @@ def main(argv=None) -> int:
             {"x-headroom-base-url": stub_base},
         )
         via = user_text(RECEIVED[-1])
+
+        # A byte-for-byte pass-through is the one outcome this tool used to
+        # explain with a confident cause ("your payload has no redundancy to
+        # factor out") from a SINGLE measurement. Observed 2026-09-21 on the
+        # bundled sample, whose md5 is fixed: the first `headroom proxy` start
+        # in a fresh container returned the payload unchanged, and the next 22
+        # runs of the identical command compressed it by 15.1%. The root cause
+        # is NOT established. What is established is that one measurement is
+        # not enough to tell a user their log cannot benefit — and that verdict
+        # is the whole reason this tool exists.
+        #
+        # So the negative is confirmed before it is reported, and only in that
+        # case, so a normal run costs nothing extra.
+        if via == direct:
+            post(
+                f"http://127.0.0.1:{proxy_port}/v1/chat/completions",
+                prompt,
+                {"x-headroom-base-url": stub_base},
+            )
+            recheck = user_text(RECEIVED[-1])
     finally:
         proxy.terminate()
         try:
@@ -317,11 +339,25 @@ def main(argv=None) -> int:
     if delta <= 0:
         # Three distinct outcomes, described distinctly. Calling an equal-length
         # rewrite "byte-for-byte" was itself a false statement.
+        if via == direct and recheck is not None and recheck != direct:
+            # The two measurements of the same request disagreed. Reporting
+            # either one as the answer would be reporting a coin flip.
+            print(
+                "INCONCLUSIVE: the same request measured twice against the same proxy gave "
+                f"two different results — {len(via)} chars (unchanged) then {len(recheck)} "
+                "chars. The pass-through did not reproduce, so this payload is NOT shown to "
+                "be incompressible; something about the proxy's state differed between the "
+                "two calls. Run this again before deciding anything. If it keeps happening, "
+                "that is worth an issue.",
+                file=sys.stderr,
+            )
+            return 4
         if via == direct:
             why = (
-                "the proxy returned the payload unchanged, byte for byte. headroom saves by "
-                "factoring out text repeated across lines; this payload has no such redundancy "
-                "to factor out. Nothing was lost and nothing was gained."
+                "the proxy returned the payload unchanged, byte for byte, and a second "
+                "measurement against the same proxy agreed. headroom saves by factoring out "
+                "text repeated across lines; this payload has no such redundancy to factor "
+                "out. Nothing was lost and nothing was gained."
             )
         elif delta == 0:
             why = (

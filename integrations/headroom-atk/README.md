@@ -7,10 +7,31 @@ key and no cost. Raw output in `evidence/`.
 | | |
 |---|---|
 | **Problem** | An agent reads a 1,200-line deploy log. You pay for every token of it, and the one line you need is buried at line 947 |
-| **Tool** | [headroom](https://github.com/headroomlabs-ai/headroom) · Apache-2.0 · `pip install "headroom-ai[proxy]==0.37.0"` · compression runs locally, no content leaves your machine |
+| **Tool** | [headroom](https://github.com/headroomlabs-ai/headroom) · Apache-2.0 · `pip install "headroom-ai[proxy]==0.37.0"` · the compression step runs on your machine — see *What leaves your machine* |
 | **ATK integration** | **Configuration only.** No fork, no adapter, no SDK. |
 | **Live measurement** | **40,589 → 25,525 prompt tokens (37.1% fewer)**, and both paths still returned the exact migration name and SQLSTATE |
 | **Offline measurement** | **111,357 → 94,578 characters (15.1% fewer)** reaching the upstream, needle intact — reproducible without a key |
+
+## What leaves your machine
+
+This page has two paths and they are **not** the same on this question. An earlier version of
+this table said "compression runs locally, no content leaves your machine" in a row sitting next
+to the live measurement, which reads as though the whole thing stays local. It does not.
+
+| | what runs locally | **what is sent out** |
+|---|---|---|
+| `local_check.py` — the offline check | everything: the proxy and a stub upstream, both on loopback | **nothing.** No key, no model call, no network beyond `127.0.0.1` |
+| The live path — `headroom proxy` in front of ATK | the compression step only | **the compressed prompt, to ATK.** That is the point of the integration: fewer characters reach the provider, not zero |
+
+So the accurate sentence is: **compression happens before the request leaves, not instead of it.**
+If your logs must never reach a third party at all, this asset does not give you that — the
+offline check does, and it is a preflight, not a way to use a model.
+
+What headroom sends upstream is the rewritten prompt, and `local_check.py` measures exactly that
+body, so you can read what would go out before you send anything to anyone.
+
+**New here? [TRY_IT.md](TRY_IT.md) is the ten-minute version**: one task, offline first, with a
+record template for a live run if you decide to do one.
 
 ## The whole integration
 
@@ -205,9 +226,10 @@ paste into a bug report.
 | exit | meaning |
 |--:|---|
 | **0** | it shrank and every needle survived |
-| **3** | no size benefit. Three different cases, and the message says which: returned unchanged; rewritten but the same length (content changed — check that is acceptable to you); or **larger than the original** |
+| **3** | no size benefit, **confirmed by a second measurement**. Three different cases, and the message says which: returned unchanged; rewritten but the same length (content changed — check that is acceptable to you); or **larger than the original** |
 | **1** | a needle was lost. Do not adopt for that payload |
 | **2** | misuse — no needle given, an empty needle, or a needle that is not in the log to begin with |
+| **4** | two measurements of the same request disagreed — the pass-through did not reproduce. **Nothing is concluded about your payload.** Run it again |
 
 Only the first case under exit 3 is "nothing happened". A same-length rewrite changed your payload,
 and an inflated one sent more upstream than sending it directly.
@@ -232,7 +254,7 @@ pip install "headroom-ai[proxy]==0.37.0"
 cd integrations/headroom-atk                       # run from this directory
 python3 make_log.py > deploy.log                   # deterministic; md5 0ad9194a489136baa931881b78374cf7
 python3 local_check.py                             # offline, no key, no cost — about a minute
-python3 test_local_check.py                        # 31 unit tests, also offline
+python3 test_local_check.py                        # 34 unit tests, also offline
 ```
 
 `local_check.py` and `ab_test.py` resolve `deploy.log` **next to the script**, not in your current
@@ -320,16 +342,18 @@ Install it from PyPI. Its own docs: <https://docs.headroomlabs.ai/docs>.
 
 | File | |
 |---|---|
+| `TRY_IT.md` | the ten-minute trial: one task, offline first, plus the record template for a live run |
 | `make_log.py` | deterministic log generator (stdlib only) |
 | `local_check.py` | offline verification **and preflight for your own log** (`--log`, `--needle`): proxy routing, compression, needle survival — no key |
 | `ab_test.py` | the live A/B against ATK — needs `ATK_API_KEY` |
 | `evidence/ab_summary.json`, `evidence/ab_needle.json` | `usage` and answer-text excerpts from the live run — not full HTTP responses |
-| `test_local_check.py` | 31 offline unit tests: the adoption verdict, output privacy, and the error body never being shown |
+| `test_local_check.py` | 34 offline unit tests: the adoption verdict, a pass-through confirmed before it is reported, output privacy, and the error body never being shown |
 | `evidence/local_check.txt` | output of the offline check, with versions and log md5 |
 | `evidence/pr5-r2/controls.txt` | positive and negative controls for the two defects fixed in review round 1 |
 | `evidence/pr5-r3/controls.txt` | controls for review round 2: the partial-echo leak, output privacy, and the withdrawn logging root cause |
 | `evidence/pr5-r4/controls.txt` | controls for review round 3: the document/evidence mismatches, and misuse paths returning exit 2 |
 | `evidence/pr5-r5/controls.txt` | controls for review round 4: an unrecognised token is never echoed, in any form |
+| `evidence/pr5-r7/controls.txt` | controls for this round: the pass-through re-check, its true-negative control, and the mutation that proves it is load-bearing |
 | `evidence/SEARCH_BASELINE.md` | the fixed queries for a discoverability re-test, and why the first run cannot be repeated |
 | `offering/` | free and paid service samples, unit economics — the paid one is an **unapproved draft** |
 | `upstream/HEADROOM_FEEDBACK_DRAFT.md` | three gotchas written up for the headroom maintainers, with duplicate check — **not sent** |

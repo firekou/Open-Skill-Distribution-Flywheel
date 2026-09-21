@@ -138,6 +138,64 @@ class AdoptionVerdict(unittest.TestCase):
         self.assertEqual(code, 1)
 
 
+class APassThroughIsConfirmedBeforeItIsReported(unittest.TestCase):
+    """The verdict this tool exists to give is 'should you adopt this'. It used
+    to answer the negative from ONE measurement, and explain it with a confident
+    cause: your payload has no redundancy to factor out.
+
+    Observed 2026-09-21 on the bundled sample (md5 fixed, headroom 0.37.0): the
+    first `headroom proxy` start in a fresh container returned the payload
+    unchanged, and the next 22 runs of the identical command compressed it by
+    15.1%. The cause is NOT established and is not claimed here. What is
+    established is that one measurement is not enough to tell somebody their
+    logs cannot benefit — they would read the explanation, believe it, and
+    leave."""
+
+    PAYLOAD = "KEEP " + "x" * 200
+
+    def test_a_pass_through_that_does_not_reproduce_is_inconclusive(self):
+        calls = []
+
+        def flaky(text):
+            calls.append(text)
+            return text if len(calls) == 1 else "KEEP"
+
+        code, out = run_local_check(self.PAYLOAD, flaky)
+        self.assertEqual(code, 4)
+        self.assertIn("INCONCLUSIVE", out)
+        self.assertEqual(len(calls), 2,
+                         "the negative was reported from a single measurement")
+        self.assertNotIn("no such redundancy", out,
+                         "a cause was asserted for a result that did not reproduce")
+
+    def test_a_reproducible_pass_through_is_still_a_clean_negative(self):
+        """The control that keeps the re-check from destroying a true negative:
+        a payload that genuinely does not compress must still say so."""
+        calls = []
+
+        def stable(text):
+            calls.append(text)
+            return text
+
+        code, out = run_local_check(self.PAYLOAD, stable)
+        self.assertEqual(code, 3)
+        self.assertIn("NO BENEFIT", out)
+        self.assertIn("second measurement", out)
+        self.assertEqual(len(calls), 2)
+
+    def test_a_run_that_compresses_is_not_measured_twice(self):
+        """The re-check is only for the negative, so the common path is unchanged."""
+        calls = []
+
+        def shrink(text):
+            calls.append(text)
+            return "KEEP"
+
+        code, out = run_local_check(self.PAYLOAD, shrink)
+        self.assertEqual(code, 0)
+        self.assertEqual(len(calls), 1, "a passing run paid for a second measurement")
+
+
 class OutputPrivacy(unittest.TestCase):
     """P5-R2-01: the README calls this output safe to paste into a bug report.
 

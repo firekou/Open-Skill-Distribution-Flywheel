@@ -111,8 +111,10 @@ every plan, and our test provider reported `cost_usd: null` on every call.
 1. Setting `OPENAI_BASE_URL` for the proxy does **not** redirect it to a non-OpenAI gateway — it
    resolves the provider itself and your key goes to OpenAI, which rejects it.
 2. The `x-headroom-base-url` header takes the base **without** `/v1`; headroom appends it.
-3. A loopback or private-network upstream is refused *silently* (its SSRF guard) and it falls back
-   to its own provider resolution. Allowlist with `HEADROOM_ALLOWED_BASE_URLS` when testing locally.
+3. A loopback or private-network upstream is refused by its SSRF guard: the override is dropped
+   and it falls back to its own provider resolution, so you see gotcha 1 again. The reason *is*
+   logged — in `~/.headroom/logs/proxy.log`, not on stderr and not in `--log-file`. Allowlist with
+   `HEADROOM_ALLOWED_BASE_URLS` when testing locally.
 
 ---
 
