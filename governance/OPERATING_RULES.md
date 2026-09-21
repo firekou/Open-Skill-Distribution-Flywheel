@@ -21,6 +21,14 @@
 負責人以 NVIDIA／Jensen Huang 作定位類比；本文件不主張已核實其原話，也不表示對方背書。
 此目標更新不啟動 runner、不增加費用或擴大對外發布授權，GOV-PLAN-02 與既有階段門檻維持。
 
+
+## 2026-09-21 GitHub 交接接管補充
+
+依 GOV-HANDOFF-TAKEOVER-20260921，GPT 使用 govern-github-agent-handoffs 實際接管本 repo 的事件追蹤、精確 SHA review、main 帳本與有限修復包交接。下文「本輪只規劃／不發出 Agent 喚起」對這項已新授權的 GitHub 交接不再適用；未驗收 controller、Claude 持久 launcher、production、merge 與新增支出仍不啟動。
+沿用原 reviewer automation，擴至本 repo PR 事件，無新增輪詢。自動化登記不等於新範圍首次事件已驗證；Claude 留言回覆也不等於建立新 session。
+每輪最多一個未審內容 head，同 head 無新證據安靜結束。若需修復，先寫具體包，再發一次含 work_id／revision／source_head／dedup key 的 PR 交接；已有 active claim 不重複派工。接單與完成證據未出現前，僅記 SIGNAL_SENT，不宣稱 RUNNING。
+review 保存位置沿用 REVIEW-MAIN，優先於通用 skill 的 PR 分支預設。既有產品 PR 不因治理 runtime 未 ACTIVE 而停止。PR7 保留證據，不另建第二份 controller。
+
 ## 目前工作範圍
 依 GOV-PLAN-02，本輪交付是完整規劃文件，狀態 PLANNED_NOT_DISPATCHED。治理導入目標保留；本輪不啟動實作、runner 或排程。Claude 後續完整工作包與各階段驗收見 governance/IMPLEMENTATION_PROMPT.md。讀到文件、新 main commit 或 review 不自動構成啟動授權。規劃完成與 runtime ACTIVE 分開記錄。
 
