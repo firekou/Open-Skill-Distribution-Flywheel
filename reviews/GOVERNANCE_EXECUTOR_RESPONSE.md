@@ -399,3 +399,66 @@ PR #5 的 merge、About／topics、上游備稿、金鑰輪替與本輪無關，
 
 `findings_closed_by_executor: []`——executor 不自我關閉 finding。GOV-R1-03 維持 **OPEN**，
 本輪新增的是對它**不利**的證據。
+
+
+---
+
+## 11. 回應 PR6 R2 G4 review（BLOCKED，六項 P1）
+
+Review：`reviews/PR6_R2_G4_REVIEW_86421c90.md`，判 **BLOCKED**。
+**六項全部重現，六項全部接受，沒有一項爭議。** 重現輸出：`evidence/live_template_repro.txt`。
+
+### 11.1 最該承認的一件事
+
+GOV-R2-02／R2-03 指出 `renew`、`holds_lease`、`record_intent`、`open_intents`、`close_intent`
+**五個 API 我在 G3 寫了、測了，然後一次都沒接進 controller**。AST 核對確認呼叫次數為 0。
+
+這正是我這幾輪一直在別處抓、還寫進 commit message 的那個形狀——**「一個沒有任何輸入到得了的 guard」**——
+出現在我自己身上，而且我的變異測試沒抓到，因為變異都打在 `store.py` 內部，
+沒有一個打在「controller 到底有沒有用它」。本輪新增的變異補上了這一格。
+
+### 11.2 逐項處置
+
+| Finding | 重現 | 修法 |
+|---|---|---|
+| **R2-01** 範本在模型啟動前就 KeyError | ✅ executor `'"new_head"'`／reviewer `'"review"'` | 新增 `render_command()`：只替換四個具名 placeholder，**其餘大括號原樣保留**。未知 placeholder 丟 `CommandTemplateError`（設定錯誤），不再是逃出結構化失敗路徑的裸 KeyError。**測試直接對 shipped 範本跑**，不另造一份沒有該缺陷的設定 |
+| **R2-02** 租約不續、可重入 | ✅ 呼叫數 0；900s 租約 < 1500s 佔用 | worker 身分改為**每次 invocation 唯一**；runner 執行期間以 `lease/3` 續租；**提交前 fence**（`holds_lease` 為假就丟棄結果並保留 open intent）；範本租約改 2100s 並註明必須大於 clone+timeout |
+| **R2-03** intent 未用、事件與狀態分兩次寫 | ✅ 呼叫數 0；`mark_processed` 在 `set_task` 之前 | 派工**前**寫 durable intent；新增 `commit_event_and_task()` 把消費事件與推進狀態合併為**單一 CAS**；原本那段註解說法與程式相反，已刪除改寫 |
+| **R2-04** policy 未釘、工作單沒送到 runner | ✅ 範本無 `policy_sha`，`run` 只代入兩個欄位 | `tick.py` live 模式**驗證 policy checkout 的實際 SHA 等於設定值**，且 `guard_path` 必須位於該 checkout 內，否則 `SystemExit`；完整工作單寫成 **clone 之外**的唯讀 JSON，以 `{work_order}` 交給 runner；缺綁定欄位直接拒絕 |
+| **R2-05** 失敗不計 run、整輪時計每步重置 | ✅ `add_spend` 在成功之後；`started` 每步重設 | run **派工前預留**；`round_deadline` 存在 task 上，跨步驟與重啟有效；runner 取「自身上限」與「整輪剩餘」的**較小值**（`{deadline_seconds}`） |
+| **GOV-R1-03** 隔離仍未完成 | ✅ 接受，維持 **OPEN** | `isolation_level: "container"` 從**宣告**改為**啟動時實測**：依序探測 unshare／bwrap／docker，全部不可用就拒絕啟動。本主機 unshare 可用、docker daemon 不可用；**reviewer 的環境三者皆不可用**——所以這必須逐主機實測，不能寫死 |
+
+### 11.3 我自己的新測試又抓到兩個
+
+寫完修復後，新測試當場抓到兩個我剛寫進去的錯：
+
+1. `commit_event_and_task` 去 pop 一個**不存在的頂層 dict**——intent 實際掛在 task 的 list 上。
+   close 靜靜地什麼都沒做，**正是這個帳本要防的那件事**。
+2. 未知 placeholder（如 `{branch}`）不在具名清單內，regex 根本不匹配 → 不替換也不報錯，
+   會直接把壞掉的 prompt 送上線。改為以「`{` 後接裸識別字」判定為手誤並拒絕（JSON 的 `{` 後必有引號）。
+
+順帶抓到一個產品缺陷：`SubprocessRunner.run` 在**逾時與取消路徑不關管道**，
+每次逾時漏兩個 fd。由測試的 `ResourceWarning` 發現，不是讀程式讀出來的。已修，現為零警告。
+
+### 11.4 驗證
+
+`Ran 108 tests … OK`（上輪 92）。變異測試 **34 個全部被抓到**，含本輪新增 8 個，
+每一個對應上面一項 finding。replay 仍一次啟動走完到 `COMPLETE`。
+
+### 11.5 接受 reviewer 的範圍判定
+
+- **D1** 沿用 PR #6，不需負責人重選；PR #7 保留其證據，本輪不關閉。
+- **D3** 同模型可，但必須不同 run／session／工作區／權限，且**不得宣稱模型來源獨立**。已照此措辭。
+- **D4** 記錄 `total_cost_usd` 不另立商業決策；**它不證明帳戶實際扣款**。我上輪寫的「約 0.13 USD」
+  是 provider 自報值，**未獨立核對帳單**，措辭已在此更正。
+- **C0 能力主張已限縮**為「作者當時看見的帳號／工具介面」。**「5 分鐘補漏」維持為目標與缺口**，
+  我上輪擅自建議改寫成每小時，收回。
+- **不以 git fetch 推導已取得 labels／comments**；事件資料與結果的讀寫端在接線文件中分開指定。
+- runtime durable store 為 task／lease／event 的**唯一權威**，main `state.json` 只是治理摘要。
+
+### 11.6 仍然沒有做到的
+
+沒有跨行程並行的 runtime 重現（reviewer 也指出他未做）· 沒有 crash injection 實測 ·
+沒有真實 CLI 契約端到端 · GOV-R1-03 **維持 OPEN** · 沒有任何 session 外往返 ·
+沒有外部使用者成功證據。`automation.status` 維持 `FOUNDATION_ONLY`。
+`findings_closed_by_executor: []`。

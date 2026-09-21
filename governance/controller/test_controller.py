@@ -33,7 +33,8 @@ sys.path.insert(0, str(HERE))
 import runners                                          # noqa: E402
 from controller import (CANCEL_LADDER, Controller,     # noqa: E402
                         load_guard, scripted_commit_verifier)
-from runners import (AuthUnavailable, BASE_ENV_ALLOWLIST, DENY_SESSION_IDENTITY,  # noqa: E402
+from runners import (AuthUnavailable, BASE_ENV_ALLOWLIST, CommandTemplateError,  # noqa: E402
+                     DENY_SESSION_IDENTITY, render_command,
                      FakeExecutor, IsolationUnavailable, credential_state,
                      FakeReviewer, ROLE_CREDENTIALS, RunnerError, SubprocessRunner,
                      build_env, has_credential, parse_verdict,
@@ -544,10 +545,16 @@ class RealCrossProcessConcurrency(unittest.TestCase):
                         f"{err[-600:]}")
                     reported += int(out.strip())
             finally:
-                # Leave nothing behind, whatever happened above.
+                # Leave nothing behind, whatever happened above — neither a
+                # process nor a pipe. Killing a writer without closing its
+                # stdout/stderr leaks the descriptors, which is the same class
+                # of untidiness this suite complains about elsewhere.
                 for proc in procs:
                     if proc.poll() is None:
                         terminate_process_group(proc, grace_seconds=5)
+                    for stream in (proc.stdout, proc.stderr):
+                        if stream is not None and not stream.closed:
+                            stream.close()
 
             final = Store(root).read()
             self.assertEqual(reported, self.PROCS * self.ROUNDS)
@@ -1090,6 +1097,203 @@ class ARunnerMustNotInheritTheCallersSessionIdentity(unittest.TestCase):
         self.assertIn("CLAUDE_CODE_SESSION_ID", DENY_SESSION_IDENTITY)
 
 
+class TheShippedLiveTemplateMustActuallyLaunch(unittest.TestCase):
+    """GOV-R2-01. The reviewer filled in the shipped template with the same
+    standard function the adapter used and got KeyError: '"new_head"'. The
+    template could never have dispatched, and the failure was not a RunnerError,
+    so it escaped the structured failure path too.
+
+    The earlier adapter test passed because it wrote its own command. Testing a
+    configuration that does not contain the defect is not testing the one that
+    ships."""
+
+    def _live(self):
+        return json.loads((HERE / "config.live.example.json").read_text())
+
+    def test_both_shipped_roles_render_without_raising(self):
+        cfg = self._live()
+        for role in ("executor", "reviewer"):
+            with self.subTest(role=role):
+                out = render_command(cfg["runners"][role]["command"], {
+                    "prompt_file": "p.md", "head": "a" * 40,
+                    "work_order": "/w/work_order.json", "deadline_seconds": 60})
+                self.assertTrue(all(isinstance(x, str) for x in out))
+
+    def test_a_prompt_describing_json_survives_substitution(self):
+        """The exact input that broke it: braces that are not placeholders."""
+        out = render_command(['emit {"new_head": "<sha>"} for {head}'], {"head": "H"})
+        self.assertEqual(out, ['emit {"new_head": "<sha>"} for H'])
+
+    def test_str_format_still_fails_on_that_input(self):
+        """The negative control: prove the old approach really was broken, so
+        this test cannot quietly pass for the wrong reason."""
+        with self.assertRaises(KeyError):
+            'emit {"new_head": "<sha>"}'.format(head="H")
+
+    def test_an_unknown_placeholder_is_a_config_error_not_a_keyerror(self):
+        with self.assertRaises(CommandTemplateError):
+            render_command(["--at {branch}"], {"head": "H"})
+
+
+class TheWorkOrderReachesTheRunnerNotJustTheLog(unittest.TestCase):
+    """GOV-R2-04. goal, scope_paths, acceptance, decision_ids, policy_sha,
+    run identity and deadline were assembled, logged, and never delivered: the
+    command only ever received prompt_file and head, and prompt_file pointed
+    INSIDE the clone under review."""
+
+    CFG = {"enabled": True, "command": ["true"], "identity_suffix": "t"}
+
+    def test_a_work_order_missing_the_binding_fields_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = SubprocessRunner("executor", self.CFG, pathlib.Path(tmp))
+            with self.assertRaises(RunnerError) as cm:
+                r._write_work_order({"task_id": "T", "head": "a" * 40},
+                                    pathlib.Path(tmp) / "repo")
+            for field in ("policy_sha", "phase", "run_identity"):
+                self.assertIn(field, str(cm.exception))
+
+    def test_it_is_written_outside_the_checkout_under_review(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = pathlib.Path(tmp) / "ws" / "repo"
+            repo.mkdir(parents=True)
+            r = SubprocessRunner("executor", self.CFG, pathlib.Path(tmp))
+            order = {"task_id": "T", "head": "a" * 40, "policy_sha": "c" * 40,
+                     "phase": "execute", "run_identity": "exec-1",
+                     "goal": "g", "scope_paths": ["x/"], "decision_ids": ["GOV-01"]}
+            path = r._write_work_order(order, repo)
+            self.assertNotIn(repo, path.parents,
+                             "the contract sits inside the tree it governs")
+            got = json.loads(path.read_text())
+            for field in ("goal", "scope_paths", "decision_ids", "policy_sha"):
+                self.assertIn(field, got)
+
+
+class TheLeaseIsKeptAliveAndTheCommitIsFenced(unittest.TestCase):
+    """GOV-R2-02. Store.renew and holds_lease were written, tested, and never
+    called by the controller. Meanwhile the template gave a runner 1500s under
+    a 900s lease."""
+
+    def test_the_shipped_lease_outlasts_the_slowest_runner(self):
+        cfg = json.loads((HERE / "config.live.example.json").read_text())
+        worst = max(r["timeout_seconds"] + r["clone_timeout"]
+                    for r in cfg["runners"].values())
+        self.assertGreater(cfg["lease_seconds"], worst,
+                           "a runner can outlive its own lease")
+
+    def test_the_controller_actually_calls_renew_and_holds_lease(self):
+        """The dead-code check, stated as a test so it cannot come back."""
+        import ast as _ast
+        tree = _ast.parse((HERE / "controller.py").read_text())
+        called = {n.func.attr for n in _ast.walk(tree)
+                  if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)}
+        for api in ("renew", "holds_lease", "record_intent"):
+            self.assertIn(api, called, f"{api} is still never called")
+
+    def test_two_controllers_from_one_config_do_not_share_an_owner(self):
+        with tempfile.TemporaryDirectory() as td:
+            a, b = Harness(td + "/a"), Harness(td + "/b")
+            self.assertNotEqual(a.ctl.owner, b.ctl.owner,
+                                "a static identity lets a second tick re-enter")
+
+    def test_a_result_is_discarded_when_the_lease_was_lost(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            with patch.object(type(h.store), "holds_lease", return_value=False):
+                out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out, {"action": "NOOP", "reason": "lease_lost_mid_run"})
+            self.assertNotEqual(h.store.task("T").get("status"), "REVIEW_PENDING")
+            self.assertTrue(h.store.open_intents("T"),
+                            "an unresolved external effect left no intent to reconcile")
+
+
+class TheEventAndTheTransitionCommitTogether(unittest.TestCase):
+    """GOV-R2-03. mark_processed ran before set_task, so a crash between them
+    deduplicated the event away while the task had not moved. The comment in
+    the code claimed the opposite of what the code did."""
+
+    def test_the_two_writes_are_one_commit(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            before = h.store.read()["revision"]
+            h.ctl.step("T", "evt-1")
+            state = h.store.read()
+            self.assertIn("evt-1", state["processed_events"])
+            self.assertEqual(state["tasks"]["T"]["status"], "REVIEW_PENDING")
+            self.assertLess(state["revision"] - before, 8,
+                            "the event and the transition are still separate commits")
+
+    def test_the_controller_no_longer_marks_an_event_before_advancing(self):
+        import ast as _ast
+        src = (HERE / "controller.py").read_text()
+        self.assertIn("commit_event_and_task", src)
+        tree = _ast.parse(src)
+        n_mark = sum(1 for n in _ast.walk(tree)
+                     if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)
+                     and n.func.attr == "mark_processed")
+        self.assertLessEqual(n_mark, 1, "event-first commits remain on a live path")
+
+    def test_an_intent_is_recorded_before_the_external_effect(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            seen = []
+
+            class Watch(FakeExecutor):
+                def run(self, order):
+                    seen.append(list(h.store.open_intents("T")))
+                    return super().run(order)
+
+            h.executor = Watch([H1]); h.ctl.executor = h.executor
+            h.ctl.step("T", "evt-1")
+            self.assertTrue(seen and seen[0],
+                            "the runner was dispatched with no durable intent")
+            self.assertFalse(h.store.open_intents("T"),
+                             "the intent was never closed after the result landed")
+
+
+class RunsAndTheRoundDeadlineAreNotResetByFailure(unittest.TestCase):
+    """GOV-R2-05. add_spend sat after a successful return, so a call that
+    started and then failed cost nothing; and `started` was reset on every
+    step, so the round limit bounded a step rather than a round."""
+
+    def test_a_failed_run_still_costs_a_run(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+
+            class Boom(FakeExecutor):
+                def run(self, order):
+                    raise RunnerError("provider exploded")
+
+            h.executor = Boom([H1]); h.ctl.executor = h.executor
+            out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out["action"], "FAILED")
+            self.assertEqual(h.store.spend(), 1,
+                             "a started-then-failed call was counted as free")
+
+    def test_the_round_deadline_survives_steps(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            h.ctl.step("T", "evt-1")
+            first = h.store.task("T")["round_deadline"]
+            h.ctl.step("T", "evt-2")
+            self.assertEqual(h.store.task("T")["round_deadline"], first,
+                             "each step restarted the round clock")
+
+    def test_the_runner_is_told_the_remaining_round_time(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            seen = {}
+
+            class Peek(FakeExecutor):
+                def run(self, order):
+                    seen.update(order)
+                    return super().run(order)
+
+            h.executor = Peek([H1]); h.ctl.executor = h.executor
+            h.ctl.step("T", "evt-1")
+            self.assertIn("deadline_seconds", seen)
+            self.assertGreater(seen["deadline_seconds"], 0)
+
+
 class MissingAuthIsBlockedNotPassed(unittest.TestCase):
     """G2: an unauthenticated runner must report BLOCKED_ACCESS, never success."""
 
@@ -1205,9 +1409,21 @@ class TheRealRunAdapterIsDrivenEndToEnd(unittest.TestCase):
                               capture_output=True, text=True).stdout.strip()
         return repo, head
 
-    def _order(self, repo, head):
-        return {"task_id": "T", "head": head, "repo_url": str(repo),
-                "prompt_file": "governance/IMPLEMENTATION_PROMPT.md"}
+    def _order(self, repo, head, **over):
+        """A work order that satisfies the contract the runner now enforces.
+
+        It used to be four keys. The runner accepted it because it only ever
+        read two of them; the rest of the contract was assembled, logged, and
+        never delivered."""
+        order = {"task_id": "T", "head": head, "repo_url": str(repo),
+                 "prompt_file": "governance/IMPLEMENTATION_PROMPT.md",
+                 "policy_sha": "c" * 40, "phase": "execute",
+                 "run_identity": "executor-test-1", "goal": "fixture",
+                 "scope_paths": ["governance/"], "acceptance": "fixture",
+                 "decision_ids": ["GOV-01"], "event_id": "evt-fixture",
+                 "deadline_seconds": 30}
+        order.update(over)
+        return order
 
     def _runner(self, tmp, command, **over):
         cfg = {"enabled": True, "command": command, "identity_suffix": "test",

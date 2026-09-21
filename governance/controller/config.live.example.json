@@ -31,7 +31,7 @@
   ],
   "max_attempts": 2,
   "timeout_seconds": 2700,
-  "lease_seconds": 900,
+  "lease_seconds": 2100,
   "workspace_root": "/var/tmp/atk-runners",
   "runners": {
     "executor": {
@@ -45,7 +45,7 @@
         "--permission-mode",
         "acceptEdits",
         "--append-system-prompt",
-        "You are the EXECUTOR. Read {prompt_file}. Work at {head}. Emit JSON: {\"new_head\": \"<40-hex sha>\"}."
+        "You are the EXECUTOR. Your full work order is the JSON file at {work_order} — read it first; it is outside the checkout under review and is the authoritative contract. Work at {head}. You have {deadline_seconds} seconds. Emit one JSON object on stdout, per the schema named in the work order."
       ],
       "timeout_seconds": 1200,
       "clone_timeout": 300,
@@ -64,7 +64,7 @@
         "--permission-mode",
         "plan",
         "--append-system-prompt",
-        "You are the INDEPENDENT REVIEWER. You did not write this. Review {head} from a fresh clone. Emit JSON: {\"review\": {\"head\": \"...\", \"reviewer\": \"...\", \"decision\": \"APPROVED|APPROVED_WITH_CONDITIONS|BLOCKED|NEEDS_INFORMATION\", \"evidence\": [\"...\"]}}."
+        "You are the INDEPENDENT REVIEWER. Your full work order is the JSON file at {work_order} — read it first; it is outside the checkout under review and is the authoritative contract. Work at {head}. You have {deadline_seconds} seconds. Emit one JSON object on stdout, per the schema named in the work order."
       ],
       "timeout_seconds": 1200,
       "clone_timeout": 300,
@@ -106,5 +106,26 @@
     ]
   },
   "run_budget": 8,
-  "run_budget_note": "Unit is RUNS, not currency. One runner invocation costs 1. A run cap bounds how many times a model is called. MEASURED 2026-09-21: the CLI reports total_cost_usd per call (0.0056-0.0425 observed), so 'the subscription has no per-call price' is false as stated. A run cap bounds the number of calls, not the size of any one of them; record total_cost_usd per run rather than inferring it."
+  "run_budget_note": "Unit is RUNS, not currency. One runner invocation costs 1. A run cap bounds how many times a model is called. MEASURED 2026-09-21: the CLI reports total_cost_usd per call (0.0056-0.0425 observed), so 'the subscription has no per-call price' is false as stated. A run cap bounds the number of calls, not the size of any one of them; record total_cost_usd per run rather than inferring it.",
+  "_lease_note": [
+    "MUST exceed clone_timeout + timeout_seconds of the slowest runner (300+1200=1500).",
+    "It was 900 while a runner could hold the task for 1500s, so a long job outlived",
+    "its own lease. The controller also renews it every lease/3 while a runner runs,",
+    "and refuses to record a result it no longer holds the lease for."
+  ],
+  "policy_repo": "/path/to/trusted/checkout/of/main",
+  "policy_sha": "REQUIRED-IN-LIVE-MODE: full 40-hex SHA of the trusted policy checkout",
+  "_policy_note": [
+    "tick.py in live mode verifies that policy_repo is at exactly policy_sha and that",
+    "guard_path resolves inside it, and refuses to start otherwise. Recording a field",
+    "is not pinning a version; the previous build left Controller.policy_sha at",
+    "'unrecorded' and nothing checked it."
+  ],
+  "_command_note": [
+    "Placeholders are substituted by name: prompt_file, head, work_order, deadline_seconds.",
+    "Every other brace is left alone. The previous build ran str.format over each element,",
+    "so a prompt describing JSON ({\"new_head\": ...}) raised KeyError: '\"new_head\"' and the",
+    "shipped template could never launch. A prompt that describes JSON is data, not a",
+    "format string."
+  ]
 }

@@ -21,11 +21,14 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import contextlib
 import json
 import pathlib
 import subprocess
 import sys
+import threading
 import time
+import uuid
 
 from runners import AuthUnavailable, RunnerError
 from store import ConcurrencyError, Store
@@ -153,7 +156,11 @@ class Controller:
             lambda repo, branch, sha: commit_is_on_branch(
                 repo, branch, sha, pathlib.Path(config["state_dir"]) / "verify"))
         self.policy_sha = policy_sha_value or config.get("policy_sha") or "unrecorded"
-        self.owner = config["controller_identity"]
+        # R2-02: one identity per INVOCATION, not per config. A static
+        # controller_identity meant Store.acquire — which only refuses a live
+        # lease held by a DIFFERENT owner — let a second tick started from the
+        # same config walk straight into a task the first one was working on.
+        self.owner = f"{config['controller_identity']}/{uuid.uuid4().hex[:8]}"
 
     # ---------- helpers ----------
 
@@ -240,6 +247,9 @@ class Controller:
             "run_id": f"{run_identity}:{event_id}",
             "command_allowlist": self.config.get("command_allowlist", []),
             "deadline": self.config.get("timeout_seconds"),
+            # R2-05: the runner takes the SMALLER of its own limit and what is
+            # left of the round, so a late step cannot reset the round budget.
+            "deadline_seconds": max(1, int(self._remaining_round_seconds(task_id))),
             "evidence": [],
         }
         if review is not None:
@@ -252,6 +262,61 @@ class Controller:
                        head=order["head"][:12], event=order["event_id"],
                        run=order["run_identity"], verdict=verdict)
         return verdict
+
+    @contextlib.contextmanager
+    def _lease_kept_alive(self, task_id: str, ttl: float):
+        """Renew the lease for as long as the runner is running.
+
+        `renew` was written, tested and never called. Meanwhile the shipped
+        template gave a runner up to 1500s (1200 model + 300 clone) under a
+        900s lease, so a long job outlived its own lease and the task became
+        claimable by anyone while its worker was still writing.
+        """
+        stop = threading.Event()
+        failures = []
+
+        def beat():
+            # A third of the TTL: two renewals may be missed before expiry.
+            while not stop.wait(max(1.0, ttl / 3.0)):
+                try:
+                    self.store.renew(task_id, self.owner, ttl)
+                except Exception as exc:          # lost it, or the store is gone
+                    failures.append(exc)
+                    return
+
+        t = threading.Thread(target=beat, daemon=True)
+        t.start()
+        try:
+            yield failures
+        finally:
+            stop.set()
+            t.join(timeout=5)
+
+    def _fence(self, task_id: str) -> None:
+        """Refuse to record a result the worker was no longer entitled to write.
+
+        Renewal can fail; the process can be paused past its expiry. Checking
+        possession only at acquire time makes the lease a formality — the
+        commit is the moment that matters.
+        """
+        if not self.store.holds_lease(task_id, self.owner):
+            raise ConcurrencyError(
+                f"lease for {task_id} was lost before the result could be recorded; "
+                "discarding rather than overwriting whoever holds it now")
+
+    def _remaining_round_seconds(self, task_id: str) -> float:
+        """Time left in the ROUND, not in this step.
+
+        `started` was reset on every step, so the template's 2700s round limit
+        bounded nothing: ten steps of 2699s each passed it. The deadline is
+        stored on the task so it survives steps, processes and restarts.
+        """
+        task = self.store.task(task_id)
+        deadline = task.get("round_deadline")
+        if not deadline:
+            deadline = self._clock() + self.config.get("timeout_seconds", 2700)
+            self.store.set_task(task_id, round_deadline=deadline)
+        return deadline - self._clock()
 
     # ---------- one step ----------
 
@@ -295,9 +360,9 @@ class Controller:
             # is started, and deliberately NOT presented as reaching a runner
             # that is already running.
             if self._cancelled(task_id):
-                self.store.mark_processed(event_id)
-                self.store.set_task(task_id, status="CANCELLED",
-                                    failure="cancelled by operator at checkpoint")
+                self.store.commit_event_and_task(
+                    event_id, task_id, status="CANCELLED",
+                    failure="cancelled by operator at checkpoint")
                 self.store.log(kind="cancel_task", task=task_id, event=event_id)
                 return {"action": "CANCELLED", "reason": "operator_cancel_task"}
 
@@ -323,44 +388,68 @@ class Controller:
         if verdict["action"] != "DISPATCH_ALLOWED":
             return self._halt(task_id, event_id, verdict)
 
+        # R2-05: reserve the run BEFORE dispatch. add_spend used to sit after a
+        # successful return, so a call that started and then failed, timed out
+        # or crashed cost the budget nothing — the cap counted successes, which
+        # is not what runs out.
+        self.store.add_spend(1)
+        # R2-03: a durable record of the intent to cause an external effect,
+        # written BEFORE causing it. record_intent existed and was never called,
+        # so recovery had nothing to consult and could only guess.
+        intent = self.store.record_intent(
+            task_id, "execute", head=head, event_id=event_id,
+            run_identity=self.executor.identity())
+
         try:
-            result = self.executor.run(order)
+            ttl = self.config["lease_seconds"]
+            with self._lease_kept_alive(task_id, ttl) as renew_failures:
+                result = self.executor.run(order)
+            if renew_failures:
+                raise ConcurrencyError(f"lease renewal failed: {renew_failures[0]}")
+            self._fence(task_id)
         except AuthUnavailable as exc:
             # G2: no credential is BLOCKED_ACCESS, never an unverified pass.
-            self.store.mark_processed(event_id)
-            self.store.set_task(task_id, status="BLOCKED_ACCESS", failure=str(exc),
-                                recovery_point=f"head={head}")
+            self.store.commit_event_and_task(
+                event_id, task_id, close_intent_id=intent,
+                status="BLOCKED_ACCESS", failure=str(exc),
+                recovery_point=f"head={head}")
             self.store.log(kind="blocked_access", task=task_id, role="executor")
             return {"action": "BLOCKED_ACCESS", "reason": "no_credential"}
+        except ConcurrencyError as exc:
+            # The intent stays OPEN on purpose: something was dispatched and we
+            # no longer hold the right to record what it did. Recovery must ask
+            # GitHub, not assume.
+            self.store.log(kind="lease_lost", task=task_id, role="executor",
+                           detail=str(exc), intent=intent)
+            return {"action": "NOOP", "reason": "lease_lost_mid_run"}
         except RunnerError as exc:
-            self.store.mark_processed(event_id)
-            self.store.set_task(task_id, status="FAILED", failure=str(exc),
-                                recovery_point=f"head={head}")
+            self.store.commit_event_and_task(
+                event_id, task_id, close_intent_id=intent,
+                status="FAILED", failure=str(exc),
+                recovery_point=f"head={head}")
             self.store.log(kind="runner_failed", task=task_id, role="executor", detail=str(exc))
             return {"action": "FAILED", "reason": str(exc)}
-
-        self.store.add_spend(1)          # one executor run
 
         # G2: do not advance on a sha the runner merely claims to have pushed.
         new_head = result["new_head"]
         if not self._commit_is_on_branch(
                 self.config["repo_url"], self.config["branch"], new_head):
-            self.store.mark_processed(event_id)
-            self.store.set_task(task_id, status="FAILED",
-                                failure=f"executor reported {new_head[:12]} but it is not "
-                                        f"on {self.config['branch']}",
-                                recovery_point=f"head={head}")
+            self.store.commit_event_and_task(
+                event_id, task_id, close_intent_id=intent, status="FAILED",
+                failure=f"executor reported {new_head[:12]} but it is not "
+                        f"on {self.config['branch']}",
+                recovery_point=f"head={head}")
             self.store.log(kind="phantom_head", task=task_id, claimed=new_head[:12])
             return {"action": "FAILED", "reason": "reported_head_not_on_branch"}
 
-        # The event is marked processed and the state advanced in that order, so a
-        # crash between them re-runs a step that produced no state change, rather
-        # than skipping one that did.
-        self.store.mark_processed(event_id)
-        self.store.set_task(task_id, status="REVIEW_PENDING",
-                            last_head=new_head,
-                            executor_identity=self.executor.identity(),
-                            attempt=attempt)
+        # R2-03: one commit. The two-step version marked the event processed
+        # first, so a crash in between left the event deduplicated away and the
+        # task un-advanced — the round silently lost. The comment that used to
+        # sit here claimed the opposite of what the code did.
+        self.store.commit_event_and_task(
+            event_id, task_id, close_intent_id=intent,
+            status="REVIEW_PENDING", last_head=new_head,
+            executor_identity=self.executor.identity(), attempt=attempt)
         self.store.log(kind="executed", task=task_id, new_head=new_head[:12],
                        executor=self.executor.identity())
         return {"action": "REVIEW_PENDING", "head": new_head}
@@ -377,22 +466,35 @@ class Controller:
         if verdict["action"] != "DISPATCH_ALLOWED":
             return self._halt(task_id, event_id, verdict)
 
+        self.store.add_spend(1)                       # reserved before dispatch
+        intent = self.store.record_intent(
+            task_id, "review", head=head, event_id=event_id,
+            run_identity=self.reviewer.identity())
         try:
-            result = self.reviewer.run(order)
+            ttl = self.config["lease_seconds"]
+            with self._lease_kept_alive(task_id, ttl) as renew_failures:
+                result = self.reviewer.run(order)
+            if renew_failures:
+                raise ConcurrencyError(f"lease renewal failed: {renew_failures[0]}")
+            self._fence(task_id)
         except AuthUnavailable as exc:
             # G2: no credential is BLOCKED_ACCESS, never an unverified pass.
-            self.store.mark_processed(event_id)
-            self.store.set_task(task_id, status="BLOCKED_ACCESS", failure=str(exc),
-                                recovery_point=f"head={head}")
+            self.store.commit_event_and_task(
+                event_id, task_id, close_intent_id=intent,
+                status="BLOCKED_ACCESS", failure=str(exc),
+                recovery_point=f"head={head}")
             self.store.log(kind="blocked_access", task=task_id, role="reviewer")
             return {"action": "BLOCKED_ACCESS", "reason": "no_credential"}
+        except ConcurrencyError as exc:
+            self.store.log(kind="lease_lost", task=task_id, role="reviewer",
+                           detail=str(exc), intent=intent)
+            return {"action": "NOOP", "reason": "lease_lost_mid_run"}
         except RunnerError as exc:
-            self.store.mark_processed(event_id)
-            self.store.set_task(task_id, status="FAILED", failure=str(exc),
-                                recovery_point=f"head={head}")
+            self.store.commit_event_and_task(
+                event_id, task_id, close_intent_id=intent,
+                status="FAILED", failure=str(exc),
+                recovery_point=f"head={head}")
             return {"action": "FAILED", "reason": str(exc)}
-
-        self.store.add_spend(1)          # one reviewer run
 
         # The verdict is put back through the guard, which re-checks that the
         # review is bound to this head and this reviewer, cites evidence, and
@@ -404,17 +506,19 @@ class Controller:
                              review=result["review"])
         outcome = self._ask(accept)
 
-        self.store.mark_processed(event_id)
-
         if outcome["action"] == "FIX_PENDING":
-            self.store.set_task(task_id, status="FIX_PENDING", attempt=attempt + 1,
-                                last_review=result["review"])
+            self.store.commit_event_and_task(
+                event_id, task_id, close_intent_id=intent,
+                status="FIX_PENDING", attempt=attempt + 1,
+                last_review=result["review"])
             return {"action": "FIX_PENDING", "attempt": attempt + 1}
         if outcome["action"] in ("COMPLETE", "CONDITIONS_PENDING", "NEEDS_INFORMATION"):
-            self.store.set_task(task_id, status=outcome["action"],
-                                last_review=result["review"],
-                                reviewed_head=head)
+            self.store.commit_event_and_task(
+                event_id, task_id, close_intent_id=intent,
+                status=outcome["action"], last_review=result["review"],
+                reviewed_head=head)
             return {"action": outcome["action"], "head": head}
+        self.store.mark_processed(event_id)
         return self._halt(task_id, event_id, outcome)
 
     def _halt(self, task_id, event_id, verdict):

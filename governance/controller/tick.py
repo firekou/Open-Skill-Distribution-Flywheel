@@ -85,6 +85,32 @@ def build(config: dict, store: Store):
                               config["replay"]["executor_heads"]))
     elif mode == "live":
         from runners import SubprocessRunner
+        from controller import policy_sha as read_policy_sha
+        # R2-04: pin the policy to a verified checkout, or refuse to start.
+        # policy_sha() existed and the live path never called it, so
+        # Controller.policy_sha fell back to "unrecorded" and every work order
+        # carried a field that proved nothing.
+        declared = config.get("policy_sha", "")
+        policy_repo = config.get("policy_repo")
+        if not policy_repo or len(declared) != 40:
+            raise SystemExit(
+                "live mode needs policy_repo and a full 40-hex policy_sha; "
+                "an unpinned policy is not a trusted policy")
+        actual = read_policy_sha(pathlib.Path(policy_repo))
+        if actual != declared:
+            raise SystemExit(
+                f"policy checkout is at {actual[:12]}… but the config pins "
+                f"{declared[:12]}…; refusing to dispatch against a policy "
+                "version nobody approved")
+        guard = load_guard(resolve(config["guard_path"]))
+        try:
+            pathlib.Path(config["guard_path"]).resolve().relative_to(
+                pathlib.Path(policy_repo).resolve())
+        except ValueError:
+            raise SystemExit(
+                f"guard_path is outside the pinned policy checkout; the guard "
+                "must come from the version that was verified")
+        config = dict(config, policy_sha=actual)
         root = pathlib.Path(config["workspace_root"])
         executor = SubprocessRunner("executor", config["runners"]["executor"], root)
         reviewer = SubprocessRunner("reviewer", config["runners"]["reviewer"], root)

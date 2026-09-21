@@ -30,6 +30,7 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import re
 import pathlib
 import shutil
 import signal
@@ -159,6 +160,35 @@ def credential_state(role: str, parent: dict | None = None) -> str:
     return "ambient_possible"
 
 
+# Candidate boundaries, in the order they are tried. Each is PROBED, never
+# assumed: the reviewer's environment had none of these working while this
+# author's had one, so "container" must mean "checked here, now".
+CONTAINER_BACKENDS = (
+    ("unshare", ["unshare", "--user", "--map-root-user", "--net", "true"]),
+    ("bwrap", ["bwrap", "--unshare-all", "--ro-bind", "/", "/", "/usr/bin/true"]),
+    ("docker", ["docker", "info"]),
+)
+
+
+def working_container_backend(timeout: float = 20.0):
+    """Return the name of a backend that actually runs here, or None."""
+    for name, probe in CONTAINER_BACKENDS:
+        if shutil.which(probe[0]) is None:
+            continue
+        try:
+            # An explicit env here too: the suite requires every subprocess in
+            # this module to state what it passes, and a capability probe that
+            # inherits 142 variables is not a probe of the same thing.
+            r = subprocess.run(probe, capture_output=True, timeout=timeout,
+                               stdin=subprocess.DEVNULL,
+                               env={"PATH": os.environ.get("PATH", "/usr/bin:/bin")})
+        except (OSError, subprocess.TimeoutExpired):
+            continue
+        if r.returncode == 0:
+            return name
+    return None
+
+
 class Runner:
     """Interface. `run(order)` returns a dict; it must not touch the store."""
 
@@ -225,6 +255,70 @@ class FakeReviewer(Runner):
 # --------------------------------------------------------------------------
 # Real adapter — off unless explicitly enabled
 # --------------------------------------------------------------------------
+
+
+COMMAND_PLACEHOLDERS = ("prompt_file", "head", "work_order", "deadline_seconds")
+
+_PLACEHOLDER_RE = re.compile(r"\{(" + "|".join(COMMAND_PLACEHOLDERS) + r")\}")
+
+# A brace followed immediately by a bare identifier and a closing brace is a
+# placeholder the author meant; JSON always has a quote or space after `{`.
+# Anything matching this shape that is NOT a known placeholder is a typo, and
+# silently leaving it in the command would ship a broken prompt.
+_LOOKS_LIKE_PLACEHOLDER_RE = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
+
+
+class CommandTemplateError(RunnerError):
+    """The operator's command template cannot be filled in.
+
+    A separate type because this is a configuration fault found before any
+    dispatch, not a runner that failed. It used to surface as a bare KeyError
+    from str.format and escape the structured failure path entirely.
+    """
+
+
+def render_command(parts, values: dict) -> list:
+    """Fill the operator's command template WITHOUT touching JSON braces.
+
+    The previous code called `str.format` on every element. The shipped live
+    template tells the model to emit `{"new_head": "<sha>"}`, and str.format
+    reads `{"new_head"}` as a field name, so building the command raised
+    KeyError: '"new_head"' — reproduced against the shipped file in
+    evidence/live_template_repro.txt. The template could never have launched,
+    and the error was not a RunnerError, so it did not even fail the way the
+    rest of this module promises to fail.
+
+    Only the four names in COMMAND_PLACEHOLDERS are substituted. Every other
+    brace is left exactly as the operator wrote it, which is the whole point:
+    a prompt that describes JSON is data, not a format string.
+    """
+    missing = set()
+    unknown = set()
+    out = []
+    for part in parts:
+        if not isinstance(part, str):
+            raise CommandTemplateError("command elements must be strings")
+
+        def sub(m):
+            name = m.group(1)
+            if name not in values:
+                missing.add(name)
+                return m.group(0)
+            return str(values[name])
+
+        rendered = _PLACEHOLDER_RE.sub(sub, part)
+        unknown |= {m for m in _LOOKS_LIKE_PLACEHOLDER_RE.findall(rendered)
+                    if m not in COMMAND_PLACEHOLDERS}
+        out.append(rendered)
+    if unknown:
+        raise CommandTemplateError(
+            f"command template uses unknown placeholder(s) {sorted(unknown)}; "
+            f"supported: {sorted(COMMAND_PLACEHOLDERS)}")
+    if missing:
+        raise CommandTemplateError(
+            f"command template uses placeholder(s) {sorted(missing)} that this "
+            "runner does not supply")
+    return out
 
 
 def terminate_process_group(proc, grace_seconds: float = 10.0) -> str:
@@ -370,6 +464,12 @@ class SubprocessRunner(Runner):
         level = self._config.get("isolation_level", "process_env")
         if level not in ISOLATION_LEVELS:
             raise RunnerError(f"unknown isolation_level {level!r}")
+        if level == "container" and not self._container_backend_works():
+            raise IsolationUnavailable(
+                "isolation_level='container' was declared, but no working backend "
+                "was found on this host. Declaring a boundary is not building one, "
+                "so this refuses rather than trusting the declaration. Checked: "
+                f"{', '.join(n for n, _ in CONTAINER_BACKENDS)}.")
         if self.role in ROLES_REQUIRING_REAL_ISOLATION and level != "container":
             raise IsolationUnavailable(
                 f"role {self.role!r} runs untrusted pull-request code and needs "
@@ -379,6 +479,38 @@ class SubprocessRunner(Runner):
                 "not accepted as the boundary."
             )
         self._isolation_level = level
+
+    WORK_ORDER_FIELDS = ("task_id", "goal", "scope_paths", "acceptance", "decision_ids",
+                         "repo_url", "branch", "head", "policy_sha", "phase", "run_id",
+                         "run_identity", "executor_identity", "command_allowlist",
+                         "deadline", "deadline_seconds", "event_id", "attempt", "review")
+
+    def _container_backend_works(self) -> bool:
+        self._container_backend = working_container_backend()
+        return self._container_backend is not None
+
+    def _write_work_order(self, order: dict, repo: pathlib.Path) -> pathlib.Path:
+        """Hand the runner the whole contract, in a file the PR cannot rewrite.
+
+        Before this, `run` substituted only `prompt_file` and `head` into the
+        command, and `prompt_file` was a path *inside the pull request's own
+        clone*. So the fields the controller assembled — goal, scope_paths,
+        acceptance, decision_ids, policy_sha, run identity, deadline — existed
+        in a dict, were logged, and never reached the process they were meant
+        to bind. A record of a contract is not the contract.
+
+        The file is written to the workspace root, a sibling of the clone, so
+        content under review cannot edit its own instructions.
+        """
+        payload = {k: order[k] for k in self.WORK_ORDER_FIELDS if k in order}
+        missing = [k for k in ("task_id", "head", "policy_sha", "phase", "run_identity")
+                   if not payload.get(k)]
+        if missing:
+            raise RunnerError(f"work order is missing required field(s): {missing}")
+        path = repo.parent / "work_order.json"
+        path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        path.chmod(0o400)
+        return path
 
     def _workspace(self, order: dict, env: dict) -> pathlib.Path:
         path = self._workspace_root / f"{self.kind}-{order['task_id']}-{order['head'][:7]}"
@@ -396,8 +528,14 @@ class SubprocessRunner(Runner):
         env = self.environment()
         self._require_auth()
         repo = self._workspace(order, env)
-        cmd = [part.format(prompt_file=order["prompt_file"], head=order["head"])
-               for part in self._config["command"]]
+        work_order_path = self._write_work_order(order, repo)
+        cmd = render_command(self._config["command"], {
+            "prompt_file": order["prompt_file"],
+            "head": order["head"],
+            "work_order": str(work_order_path),
+            "deadline_seconds": int(order.get("deadline_seconds")
+                                    or self._config.get("timeout_seconds", 1200)),
+        })
         limit = self._config.get("timeout_seconds", 1200)
         grace = self._config.get("terminate_grace_seconds", 10)
         # start_new_session puts the runner in its own process group, which is
@@ -415,6 +553,14 @@ class SubprocessRunner(Runner):
                               f"process group {outcome}")
         finally:
             self._current = None
+            # communicate() closes these on the normal path; on the timeout and
+            # cancel paths nothing did, so every timed-out runner leaked two
+            # descriptors. Found as a ResourceWarning from the adapter's own
+            # tests rather than from reading the code.
+            for stream in (proc.stdout, proc.stderr, proc.stdin):
+                if stream is not None and not stream.closed:
+                    with contextlib.suppress(OSError):
+                        stream.close()
         result = subprocess.CompletedProcess(cmd, proc.returncode, stdout, None)
         if result.returncode != 0:
             # The child's stdout/stderr may carry a provider error body or a raw

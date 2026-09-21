@@ -210,6 +210,34 @@ class Store:
         self.commit(state["revision"],
                     lambda s: s["processed_events"].append(event_id))
 
+    def commit_event_and_task(self, event_id: str, task_id: str,
+                              close_intent_id: str | None = None, **fields) -> dict:
+        """Consume the event and advance the task in ONE compare-and-swap.
+
+        These were two commits, event first. The comment above them claimed a
+        crash in between would re-run a step that changed nothing — the
+        opposite of what the code does. Marking the event first means a
+        redelivery is deduplicated away while the task has NOT moved, so the
+        round is lost silently. One commit removes the window rather than
+        arguing about which side of it is safer.
+        """
+        state = self.read()
+
+        def mutate(s):
+            if event_id not in s["processed_events"]:
+                s["processed_events"].append(event_id)
+            task = s["tasks"].setdefault(task_id, {})
+            task.update(fields)
+            if close_intent_id:
+                # Intents live on the task as a list, not in a top-level dict.
+                # The first version popped a key from a dict that never existed
+                # and reported success — the close silently did nothing, which
+                # is exactly the failure this ledger is supposed to prevent.
+                task["open_intents"] = [i for i in task.get("open_intents", [])
+                                        if i["intent_id"] != close_intent_id]
+
+        return self.commit(state["revision"], mutate)
+
     # ---------- spend ----------
 
     def spend(self) -> float:

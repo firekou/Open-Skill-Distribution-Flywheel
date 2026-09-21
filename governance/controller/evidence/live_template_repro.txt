@@ -1,0 +1,19 @@
+GOV-R2 逐項重現（修復前）— 2026-09-21
+命令：對 shipped config.live.example.json 施以 runners.py 當時的 str.format
+
+executor: KeyError: '"new_head"'
+reviewer: KeyError: '"review"'
+
+controller 對下列 store API 的呼叫次數（修復前全為 0）：
+  renew=0 holds_lease=0 record_intent=0 open_intents=0 close_intent=0
+
+租約 lease_seconds=900 < runner 最長佔用 timeout(1200)+clone(300)=1500
+config 無 policy_sha → Controller.policy_sha 退回 'unrecorded'
+add_spend 位於 runner 成功回傳之後 → 已啟動但失敗的呼叫不計 run
+step() 每次重設 started → 範本宣稱的 2700s 整輪上限不成立
+
+容器隔離後端實測（本主機）：
+  docker: 二進位存在，daemon 不可用
+  podman: 不存在   bwrap: 不存在
+  unshare --user --map-root-user --net true: exit 0（可用）
+  → reviewer 的環境三者皆不可用。故 isolation_level='container' 改為啟動時實測，不採信宣告。

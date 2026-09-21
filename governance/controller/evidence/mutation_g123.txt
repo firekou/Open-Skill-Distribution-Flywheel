@@ -1,4 +1,4 @@
-G1-G3 + C0/C1 mutation run — 2026-09-21T06:07:37Z
+PR6 R2 修復後變異測試 — 2026-09-21T07:23:34Z
 
 baseline: OK
 
@@ -9,7 +9,7 @@ baseline: OK
   [caught  ] a malformed new_head is accepted                     -> FAILED (failures=5)
   [caught  ] a phantom head is never verified                     -> FAILED (failures=1)
   [caught  ] the work order drops the policy sha                  -> FAILED (failures=1, errors=1)
-  [caught  ] missing auth falls through instead of BLOCKED_ACCESS -> FAILED (errors=2)
+  [caught  ] missing auth falls through instead of BLOCKED_ACCESS -> FAILED (errors=4)
   [caught  ] an expired holder can still renew                    -> FAILED (failures=1)
   [caught  ] drive renumbers steps from zero on every firing      -> FAILED (failures=1)
   [caught  ] tick invents an event id from the state revision     -> FAILED (failures=1)
@@ -27,6 +27,14 @@ baseline: OK
   [caught  ] absence of an env credential blocks again (the old false negative) -> FAILED (errors=1)
   [caught  ] untrusted pr_tests runs without a declared container -> FAILED (failures=1)
   [caught  ] the caller's session id is allowed through           -> FAILED (failures=1)
+  [caught  ] the shipped command template is str.format'ed again (R2-01) -> FAILED (errors=2)
+  [caught  ] the work order is never written (R2-04)              -> FAILED (failures=1)
+  [caught  ] the lease is never renewed (R2-02)                   -> FAILED (failures=1)
+  [caught  ] the commit is not fenced by the lease (R2-02)        -> FAILED (failures=2)
+  [caught  ] event and transition split apart again (R2-03)       -> FAILED (failures=13, errors=4)
+  [caught  ] the intent close silently does nothing (R2-03)       -> FAILED (failures=1)
+  [caught  ] a failed run costs nothing again (R2-05)             -> FAILED (failures=3)
+  [caught  ] the round clock restarts every step (R2-05)          -> FAILED (failures=1)
   [caught  ] anyone can renew anyone's lease                      -> FAILED (failures=1)
 
-26/26 mutants caught
+34/34 mutants caught
