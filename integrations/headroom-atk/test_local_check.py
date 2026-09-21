@@ -384,13 +384,13 @@ class TheFirstLiveRunSpendsWhatItSaidItWould(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(calls, ["direct", "proxy"],
                          "the documented first live run did not spend exactly two calls")
-        self.assertIn("exactly 2 live calls", out)
+        self.assertIn("exactly 2 client requests", out)
 
     def test_the_count_is_printed_before_the_first_call_is_made(self):
         """Printing it afterwards would tell you what you already paid for."""
         _code, _calls, snapshots, _out = self._run([])
         self.assertTrue(snapshots, "no call was made, so the ordering is untested")
-        self.assertIn("exactly 2 live calls", snapshots[0],
+        self.assertIn("exactly 2 client requests", snapshots[0],
                       "the first call went out before the count was stated")
 
     def test_the_four_call_run_has_to_be_asked_for(self):
@@ -399,7 +399,7 @@ class TheFirstLiveRunSpendsWhatItSaidItWould(unittest.TestCase):
         code, calls, _snap, out = self._run(["--task", "both"])
         self.assertEqual(code, 0)
         self.assertEqual(len(calls), 4)
-        self.assertIn("exactly 4 live calls", out)
+        self.assertIn("exactly 4 client requests", out)
 
     def test_no_key_refuses_and_spends_nothing(self):
         calls = []
@@ -431,6 +431,63 @@ class TheFirstLiveRunSpendsWhatItSaidItWould(unittest.TestCase):
                                  f"{name} still shows the key on the command line")
         doc = (HERE / "ab_test.py").read_text().lower().replace("**", "")
         self.assertIn("never put the key on the command line", doc)
+
+
+class TheLiveStartupFlagAndTheCeilingClaimDoNotDrift(unittest.TestCase):
+    """P5-R8-01. `ab_test.py` sends each request once, so the mock in the class
+    above proves two CLIENT requests. It does not prove two PROVIDER attempts:
+    headroom 0.37.0 takes --retry-max-attempts, defaults it to 3, and its
+    non-streaming path re-sends on 429/529, other 5xx and transport errors
+    (`for attempt in range(self.config.retry_max_attempts)` in
+    headroom/proxy/server.py — a total, not a count of retries). Two client
+    requests could be four upstream, and the page said "no automatic retries".
+
+    These read the shipped documents, so the safe startup flag and the claim
+    cannot drift apart from each other or from the tool."""
+
+    LIVE_DOCS = ("README.md", "TRY_IT.md", "ab_test.py")
+    FLAG = "--retry-max-attempts 1"
+
+    def test_every_documented_live_proxy_start_pins_the_attempt_ceiling(self):
+        for name in self.LIVE_DOCS:
+            text = (HERE / name).read_text()
+            starts = [line for line in text.splitlines()
+                      if "headroom proxy --port" in line]
+            self.assertTrue(starts, f"{name} documents no proxy start to check")
+            for line in starts:
+                self.assertIn(self.FLAG, line,
+                              f"{name} starts the live proxy without pinning "
+                              f"the attempt ceiling: {line.strip()}")
+
+    def test_no_document_still_claims_retries_cannot_happen(self):
+        """The old wording was true of the script and false of the path the
+        money travels down."""
+        for name in self.LIVE_DOCS:
+            text = (HERE / name).read_text().lower()
+            self.assertNotIn("no automatic retries: a failed call stops the run", text,
+                             f"{name} still makes the unconditional claim")
+            self.assertNotIn("exactly 2 live calls", text,
+                             f"{name} still counts provider calls as client requests")
+
+    def test_every_document_says_a_differently_started_proxy_breaks_the_ceiling(self):
+        for name in self.LIVE_DOCS:
+            text = (HERE / name).read_text().lower()
+            self.assertIn("retry-max-attempts", text)
+            self.assertTrue(
+                any(phrase in text for phrase in (
+                    "does not hold",
+                    "no longer holds",
+                    "cannot see how your proxy was started",
+                )),
+                f"{name} states a ceiling without saying what invalidates it")
+
+    def test_the_default_of_three_is_named_so_the_risk_is_legible(self):
+        """Naming the flag without naming what it defaults to would leave a
+        reader thinking the flag is optional tidiness."""
+        for name in self.LIVE_DOCS:
+            text = (HERE / name).read_text()
+            self.assertTrue(re.search(r"default[\s\S]{0,40}?\b3\b", text, re.I),
+                            f"{name} does not say the shipped default is 3")
 
 
 class DocumentedCountsMatchReality(unittest.TestCase):

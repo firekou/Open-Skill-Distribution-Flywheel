@@ -2,7 +2,7 @@
 """A/B the same prompt against ATK directly and through the headroom proxy.
 
     pip install "headroom-ai[proxy]"
-    headroom proxy --port 8787 --no-http2 &
+    headroom proxy --port 8787 --no-http2 --retry-max-attempts 1 &
     python3 make_log.py > deploy.log
 
     # the key comes from the environment or your secret manager, already injected.
@@ -18,11 +18,28 @@ example is what people copy (P5-R7-01). The literal form is not reproduced
 here even as an illustration, so that a grep over this directory answers the
 question outright.
 
-**Exactly two live requests by default** — one direct, one through the proxy,
-for the needle task only, with no automatic retries. The count is printed
-before the first call is made. `--task both` adds the summary task and makes it
-four; you have to ask for that. Every number comes from ATK's own `usage` field
-in the response — nothing here estimates.
+**Two client requests by default** — one direct, one through the proxy, for the
+needle task only. The count is printed before the first request goes out.
+`--task both` adds the summary task and makes it four; you have to ask for that.
+
+**Client requests are not provider attempts, and the difference costs money**
+(P5-R8-01). This script sends each request once and never retries. The PROXY
+does retry: headroom 0.37.0 takes `--retry-max-attempts` (range 1-10, default
+**3**) and its non-streaming path re-sends on 429/529, other 5xx and transport
+errors — `for attempt in range(self.config.retry_max_attempts)` in
+`headroom/proxy/server.py`, so the value is the total number of attempts, not
+the number of retries.
+
+So the ceiling depends on how YOUR proxy was started:
+
+    started as documented (--retry-max-attempts 1)   ceiling 2 provider attempts
+    started with the 0.37.0 default (3)              ceiling 4 provider attempts
+
+A successful default run makes two provider attempts either way. **This script
+cannot see how your proxy was started and does not claim to verify it.**
+
+Every number comes from ATK's own `usage` field in the response — nothing here
+estimates.
 
 Writes evidence/ab_needle.json (and ab_summary.json only if you asked for it).
 """
@@ -154,10 +171,22 @@ def main(argv=None) -> int:
     # about to be spent are visible in the same place.
     tasks = planned_tasks(args.task)
     names = ", ".join(tasks)
+    n = len(tasks)
     print(
-        f"about to make exactly {2 * len(tasks)} live calls "
-        f"({len(tasks)} direct + {len(tasks)} via proxy) for task(s): {names}. "
-        "No automatic retries: a failed call stops the run."
+        f"about to issue exactly {2 * n} client requests "
+        f"({n} direct + {n} via the proxy) for task(s): {names}."
+    )
+    # P5-R8-01: "no automatic retries" was true of this script and false of the
+    # path the money travels down. The proxy retries underneath, up to
+    # --retry-max-attempts times, 3 by default. Stating the ceiling
+    # unconditionally would be stating something this process cannot see.
+    print(
+        f"  provider attempts: this script sends each request once and never retries. "
+        f"The proxied leg is retried by headroom itself, up to --retry-max-attempts "
+        f"times (0.37.0 default: 3). Started as documented with "
+        f"--retry-max-attempts 1, the ceiling for this run is {2 * n} provider "
+        f"attempts; with the default it is {4 * n}. This script cannot see how your "
+        f"proxy was started, so it does not verify which applies."
     )
 
     EVIDENCE.mkdir(exist_ok=True)

@@ -1,0 +1,65 @@
+
+## R8 — ATK-PR5-R7-LIVE-GUARD revision 2
+# source_head: cde4e5c855096b1d7566d44680259851810aec99
+# No key, no model call, no paid endpoint.
+
+### the flag exists and 'attempts' means total attempts, verified at the source
+$ headroom proxy --help | grep -A3 retry-max-attempts
+  --retry-max-attempts INTEGER RANGE
+                                  Maximum upstream retry attempts for
+                                  connect/read/5xx failures (1–10, default:
+                                  3). Env: HEADROOM_RETRY_MAX_ATTEMPTS.
+
+$ grep -n 'for attempt in range' $(python3 -c 'import headroom,pathlib;print(pathlib.Path(headroom.__file__).parent)')/proxy/server.py
+2294:        for attempt in range(self.config.retry_max_attempts):
+  -> range(N) is N attempts in total, not N retries. --retry-max-attempts 1 == one attempt.
+
+### every documented live proxy start pins the ceiling
+$ grep -n 'headroom proxy --port' README.md TRY_IT.md ab_test.py
+README.md:40:headroom proxy --port 8787 --no-http2 --retry-max-attempts 1
+README.md:274:headroom proxy --port 8787 --no-http2 --retry-max-attempts 1 &
+TRY_IT.md:100:headroom proxy --port 8787 --no-http2 --retry-max-attempts 1 &
+ab_test.py:5:    headroom proxy --port 8787 --no-http2 --retry-max-attempts 1 &
+
+### the banner printed before the first request
+$ python3 ab_test.py   (no key -> refuses, so the banner is shown here from the mock test)
+ATK_API_KEY is not set; refusing to run. No mock is substituted.
+exit=2
+
+### drift tests
+$ python3 -m unittest test_local_check.TheLiveStartupFlagAndTheCeilingClaimDoNotDrift -v
+test_every_document_says_a_differently_started_proxy_breaks_the_ceiling (test_local_check.TheLiveStartupFlagAndTheCeilingClaimDoNotDrift.test_every_document_says_a_differently_started_proxy_breaks_the_ceiling) ... ok
+test_every_documented_live_proxy_start_pins_the_attempt_ceiling (test_local_check.TheLiveStartupFlagAndTheCeilingClaimDoNotDrift.test_every_documented_live_proxy_start_pins_the_attempt_ceiling) ... ok
+test_no_document_still_claims_retries_cannot_happen (test_local_check.TheLiveStartupFlagAndTheCeilingClaimDoNotDrift.test_no_document_still_claims_retries_cannot_happen)
+The old wording was true of the script and false of the path the ... ok
+test_the_default_of_three_is_named_so_the_risk_is_legible (test_local_check.TheLiveStartupFlagAndTheCeilingClaimDoNotDrift.test_the_default_of_three_is_named_so_the_risk_is_legible)
+Naming the flag without naming what it defaults to would leave a ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.003s
+
+OK
+
+### mutation: drop the flag from ONE documented start — the drift test must go red
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.003s
+
+FAILED (failures=1)
+
+### mutation: put the unconditional 'no automatic retries' claim back — must go red
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.003s
+
+FAILED (failures=1)
+
+### out of scope, reported not changed
+offering/SERVICE_SAMPLE_FREE.md:26 still starts the proxy without the flag.
+26:headroom proxy --port 8787 --no-http2
+That file is not in this packet's scope list, so it is reported rather than edited.
+
+### full suite
+Ran 44 tests in 0.109s
+
+OK

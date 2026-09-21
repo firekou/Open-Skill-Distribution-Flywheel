@@ -287,3 +287,94 @@ FAILED (failures=2)
 
 未觸碰也未宣稱關閉 `P5-R4-01`，未重做其作者端證據 · 未發布 · 未 merge · 未改 Secrets／權限 ·
 未送上游 · 未更動 controller · 未新增 MCP／benchmark／框架範圍。
+
+---
+
+# R8 最終限定修復 — `ATK-PR5-R7-LIVE-GUARD` revision 2
+
+| | |
+|---|---|
+| work_id / revision | `ATK-PR5-R7-LIVE-GUARD` / `2`（**第 2 輪 / 上限 2 輪**，不開第三輪） |
+| source_head | `cde4e5c855096b1d7566d44680259851810aec99` |
+| review | `reviews/PR5_R8_CONFIRM_cde4e5c.md` |
+| dedup_key | `firekou/Open-Skill-Distribution-Flywheel:5:ATK-PR5-R7-LIVE-GUARD:2:cde4e5c855096b1d7566d44680259851810aec99:executor` |
+| 本輪金鑰／模型／付費 | **0 / 0 / 0**，三個 ATK 變數全程 NOT_SET |
+| 證據 | `integrations/headroom-atk/evidence/pr5-r7/r8_controls.txt` |
+
+## 這項 finding 我沒想到，而且它比前一項更深一層
+
+R7 我修好了「文件說兩次、程式跑四次」。**但我證明的是兩次 client 請求，不是兩次 provider attempt。**
+proxy 會在底下自己重試，而我完全沒看那一層。
+
+先把事實查清楚再改，兩項都在證據檔裡：
+
+```
+$ headroom proxy --help | grep -A3 -- --retry-max-attempts
+  --retry-max-attempts INTEGER RANGE
+        Maximum upstream retry attempts for connect/read/5xx failures
+        (1–10, default: 3). Env: HEADROOM_RETRY_MAX_ATTEMPTS.
+
+$ grep -n 'for attempt in range(self.config.retry_max_attempts)' …/headroom/proxy/server.py
+2294:        for attempt in range(self.config.retry_max_attempts):
+```
+
+`range(N)` 是**總共嘗試 N 次**，不是重試 N 次——所以 `--retry-max-attempts 1` 等於「只送一次」。
+這一點我從原始碼確認，沒有用旗標說明的字面猜。
+
+**後果**：兩次 client 請求，在 0.37.0 的預設下最多可以變成上游 **4 次**（direct 這條由
+`urllib` 直送、不重試；proxy 那條最多 3 次）。我上一輪寫的「No automatic retries: a failed call
+stops the run」對 `ab_test.py` 為真，**對錢實際走的那條路為假**。
+
+## 修法
+
+**1. 每一個文件化的 live proxy 啟動都釘住上限。** 四處全部改為
+`headroom proxy --port 8787 --no-http2 --retry-max-attempts 1`：`README.md`（兩處）、
+`TRY_IT.md`、`ab_test.py` docstring。
+
+**2. 把無條件宣稱換成可成立的契約。** `ab_test.py` 在第一次請求前印的字改成：
+
+```
+about to issue exactly 2 client requests (1 direct + 1 via the proxy) for task(s): needle.
+  provider attempts: this script sends each request once and never retries. The proxied leg
+  is retried by headroom itself, up to --retry-max-attempts times (0.37.0 default: 3).
+  Started as documented with --retry-max-attempts 1, the ceiling for this run is 2 provider
+  attempts; with the default it is 4. This script cannot see how your proxy was started, so
+  it does not verify which applies.
+```
+
+最後一句是重點：**這個程式看不到你的 proxy 是怎麼起的，所以它不宣稱驗證過。**
+上限是有條件成立的，條件寫在旁邊。三份文件都寫明**用別的方式啟動 proxy，這個上限就不成立**。
+
+**3. 防漂移測試**（`TheLiveStartupFlagAndTheCeilingClaimDoNotDrift`，4 條，離線）：
+
+| 測試 | 驗的事 |
+|---|---|
+| `test_every_documented_live_proxy_start_pins_the_attempt_ceiling` | 三份文件裡**每一行** `headroom proxy --port` 都帶旗標 |
+| `test_no_document_still_claims_retries_cannot_happen` | 舊的無條件宣稱不再出現 |
+| `test_every_document_says_a_differently_started_proxy_breaks_the_ceiling` | 講了上限就必須講什麼會讓它失效 |
+| `test_the_default_of_three_is_named_so_the_risk_is_legible` | 只寫旗標不寫預設是 3，讀者會以為那是可有可無的整潔 |
+
+**變異控制**：任一處拿掉旗標 → 紅；把無條件宣稱放回去 → 紅。
+
+`Ran 44 tests ... OK`（本輪開始時 40）。
+
+## 一項超出範圍、只報告不改
+
+`integrations/headroom-atk/offering/SERVICE_SAMPLE_FREE.md:26` 也文件化了一次 live proxy 啟動，
+**同樣沒有旗標**：
+
+```
+26:headroom proxy --port 8787 --no-http2
+```
+
+它不在本封包的 scope 清單裡。上一輪我為了 finding 的目的自行擴到 README，這一輪 reviewer 已經
+把 README 明確列進 scope——表示檔案清單是刻意挑的。**第 2 輪（最後一輪）不是擅自擴大範圍的時候**，
+所以我只報告位置，由 reviewer 決定要不要另開。
+
+## 明確排除，已遵守
+
+未觸碰也未宣稱關閉 `P5-R4-01`、未重做其作者端證據 · 未發布 · 未 merge · 未改 Secrets／權限 ·
+未送上游 · 未更動 controller · 未新增 MCP／benchmark／框架範圍 · `local_check.py` 未改
+（離線對 stub，重試不花錢，封包也說可不動）。
+
+**這是本封包的第 2 輪，不開第三輪。**

@@ -97,7 +97,7 @@ You need all four, and "we have a key" is not three of them:
 4. An explicit spend ceiling, agreed before the first call.
 
 ```bash
-headroom proxy --port 8787 --no-http2 &
+headroom proxy --port 8787 --no-http2 --retry-max-attempts 1 &
 
 # The key is already injected by your environment or secret manager. Confirm it
 # is there WITHOUT printing it:
@@ -114,16 +114,31 @@ you a shortcut that leaks.
 
 `ab_test.py` refuses to run without `ATK_API_KEY` and substitutes no mock.
 
-**What it will spend, stated before it spends it.** The default is the needle task only:
+**What it will spend, stated before it spends it.** The default is the needle task only, and
+the script prints this before its first request goes out:
 
 ```
-about to make exactly 2 live calls (1 direct + 1 via proxy) for task(s): needle.
-No automatic retries: a failed call stops the run.
+about to issue exactly 2 client requests (1 direct + 1 via the proxy) for task(s): needle.
+  provider attempts: this script sends each request once and never retries. The proxied leg
+  is retried by headroom itself, up to --retry-max-attempts times (0.37.0 default: 3).
+  Started as documented with --retry-max-attempts 1, the ceiling for this run is 2 provider
+  attempts; with the default it is 4. This script cannot see how your proxy was started, so
+  it does not verify which applies.
 ```
 
-That line is printed before the first request goes out. `--task both` adds the five-bullet summary
-task and prints `exactly 4` instead — you have to ask for it. An earlier version of this page
-authorised two calls and then told you to run a command that made four.
+`--task both` adds the five-bullet summary task and doubles both numbers — you have to ask for it.
+
+**Why the wording is that careful.** Two earlier versions of this page were wrong in the same
+direction, each time by promising a number the tooling did not actually hold to:
+
+1. It authorised "one task, one direct call, one proxied call" and then told you to run a command
+   that made **four** paid calls.
+2. It then said "no automatic retries", which was true of `ab_test.py` and false of the path the
+   money travels down: **the proxy retries underneath**, three times by default in 0.37.0. Two
+   client requests could still be four upstream.
+
+Hence `--retry-max-attempts 1` in the command above. **If you start the proxy any other way, the
+two-attempt ceiling does not hold** and nothing here can tell that it did not.
 
 ### Record this, and only this
 

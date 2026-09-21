@@ -37,8 +37,14 @@ record template for a live run if you decide to do one.
 
 ```bash
 pip install "headroom-ai[proxy]==0.37.0"    # the version every number here was measured on
-headroom proxy --port 8787 --no-http2
+headroom proxy --port 8787 --no-http2 --retry-max-attempts 1
 ```
+
+`--retry-max-attempts 1` is not cosmetic. headroom 0.37.0 defaults it to **3**, and its
+non-streaming path re-sends on 429/529, other 5xx and transport errors, so one request from your
+client can become three upstream. The value is the total number of attempts, not the number of
+retries (`for attempt in range(self.config.retry_max_attempts)` in `headroom/proxy/server.py`).
+Start it without the flag and any per-run attempt ceiling stated on this page no longer holds.
 
 Then send requests to the proxy and name ATK as the upstream **per request**:
 
@@ -254,7 +260,7 @@ pip install "headroom-ai[proxy]==0.37.0"
 cd integrations/headroom-atk                       # run from this directory
 python3 make_log.py > deploy.log                   # deterministic; md5 0ad9194a489136baa931881b78374cf7
 python3 local_check.py                             # offline, no key, no cost — about a minute
-python3 test_local_check.py                        # 40 unit tests, also offline
+python3 test_local_check.py                        # 44 unit tests, also offline
 ```
 
 `local_check.py` and `ab_test.py` resolve `deploy.log` **next to the script**, not in your current
@@ -265,10 +271,16 @@ both scripts are stdlib-only.
 To repeat the live measurement (**this spends real tokens**):
 
 ```bash
-headroom proxy --port 8787 --no-http2 &
+headroom proxy --port 8787 --no-http2 --retry-max-attempts 1 &
 [ -n "$ATK_API_KEY" ] && echo SET || echo NOT_SET     # confirm without printing it
-python3 ab_test.py                                    # exactly 2 calls; --task both makes it 4
+python3 ab_test.py                                    # 2 client requests; --task both makes it 4
 ```
+
+**Client requests are not provider attempts.** `ab_test.py` sends each request once and never
+retries, so the default run is 2 client requests. What reaches ATK depends on the proxy: started
+as above the ceiling is **2 provider attempts**; started with 0.37.0's default of 3 it is **4**.
+A successful run makes two attempts either way. `ab_test.py` prints this before its first request
+and states plainly that it cannot see how your proxy was started.
 
 `ab_test.py` refuses to run without `ATK_API_KEY` and substitutes no mock. Put the key in the
 environment the way you handle every other secret — **never on the command line** (including as a
@@ -350,7 +362,7 @@ Install it from PyPI. Its own docs: <https://docs.headroomlabs.ai/docs>.
 | `local_check.py` | offline verification **and preflight for your own log** (`--log`, `--needle`): proxy routing, compression, needle survival — no key |
 | `ab_test.py` | the live A/B against ATK — needs `ATK_API_KEY` |
 | `evidence/ab_summary.json`, `evidence/ab_needle.json` | `usage` and answer-text excerpts from the live run — not full HTTP responses |
-| `test_local_check.py` | 40 offline unit tests: the adoption verdict, a pass-through confirmed before it is reported, output privacy, and the error body never being shown |
+| `test_local_check.py` | 44 offline unit tests: the adoption verdict, a pass-through confirmed before it is reported, output privacy, and the error body never being shown |
 | `evidence/local_check.txt` | output of the offline check, with versions and log md5 |
 | `evidence/pr5-r2/controls.txt` | positive and negative controls for the two defects fixed in review round 1 |
 | `evidence/pr5-r3/controls.txt` | controls for review round 2: the partial-echo leak, output privacy, and the withdrawn logging root cause |
