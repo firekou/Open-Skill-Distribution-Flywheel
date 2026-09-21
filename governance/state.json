@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 5,
+  "revision": 6,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -8,42 +8,44 @@
     "reviewer_connected": true,
     "additional_api_budget_usd": 0,
     "reviewer_trigger": {
-      "status": "REGISTERED_PENDING_FIRST_EVENT",
-      "scope": "PR5",
+      "status": "REGISTERED_UPDATED_PENDING_NEW_SCOPE_EVENT",
+      "scope": "repository pull requests",
       "kind": "github_pull_request_commit_update",
-      "title": "ATK PR5 提交複核",
+      "title": "ATK 專案交接覆核",
       "registered_at": "2026-09-19",
       "first_event_verified": false,
-      "claude_launcher": false
+      "claude_launcher": false,
+      "automation_id": "6aae969a0ff8819193be09f165c31fd8"
     },
     "status_note": "FOUNDATION_ONLY 是完整閉環等級；PR5 托管 reviewer 觸發已註冊但未驗證首次事件，executor 未接通，非 ACTIVE。"
   },
   "tasks": [
     {
       "task_id": "PR5",
-      "status": "CONDITIONS_PENDING",
+      "status": "NEEDS_INFORMATION",
       "pr": 5,
-      "observed_head": "d1930e4696f11cfb3cdae2f59d1b3692b68ee127",
-      "last_reviewed_head": "d1930e4696f11cfb3cdae2f59d1b3692b68ee127",
-      "last_review_decision": "APPROVED_WITH_CONDITIONS",
-      "next_action": "只修 P5-R4-01 unknown-token 私密回顯，提交新 SHA 後窄範圍確認",
-      "prompt": "reviews/PR5_R4_REVIEW_d1930e4.md"
+      "observed_head": "933446ab230e6fb8b41d79b596ef3c19b721fb7a",
+      "last_reviewed_head": "933446ab230e6fb8b41d79b596ef3c19b721fb7a",
+      "last_review_decision": "NEEDS_INFORMATION",
+      "next_action": "等待具隔離能力的獨立 reviewer 重放既有 R5 證據；無新 head，不再請作者重修或搬運報告。",
+      "prompt": "reviews/PR5_R4_REVIEW_d1930e4.md",
+      "review": "reviews/PR5_R6_REVIEW_933446ab.md"
     },
     {
       "task_id": "GOV-BOOTSTRAP",
       "status": "FIX_PENDING",
-      "next_action": "Claude 依 IMPLEMENTATION_PROMPT 本輪接續規劃，修 GOV-R2-01～05 與 GOV-R1-03；新 SHA 交獨立隔離 reviewer 做 G4。此摘要不啟動 runner。",
+      "next_action": "同批第二次限定修復：依 R3 六項殘餘接線缺口補實作與隔離證據，新 SHA 再交 reviewer。",
       "prompt": "governance/IMPLEMENTATION_PROMPT.md",
       "pr": 6,
       "branch": "claude/atk-governance-controller",
-      "submitted_head": "86421c903563a16ca888a4aed10bd614e223ca0e",
+      "submitted_head": "c86b626c8666b563e9e10413c5a967a4f94328cb",
       "executor_response": "reviews/GOVERNANCE_EXECUTOR_RESPONSE.md (on the PR branch)",
-      "note": "新報告已收到；獨立重現命令範本錯誤並核對接線缺口。隔離不可用，未獨立執行 PR runtime tests；FOUNDATION_ONLY 維持。",
-      "last_reviewed_head": "86421c903563a16ca888a4aed10bd614e223ca0e",
+      "note": "接管時已獨立閱讀新版本；有部分改善但仍有原始碼可確認阻擋；未獨立運行 PR code。",
+      "last_reviewed_head": "c86b626c8666b563e9e10413c5a967a4f94328cb",
       "last_review_decision": "BLOCKED",
-      "review": "reviews/PR6_R2_G4_REVIEW_86421c90.md",
-      "observed_head": "75976be1db636ef72d76206b387583fb3cc03443",
-      "policy_sha": "d92d082bfcee7002d737e2c3ee2914d2b1fa804c",
+      "review": "reviews/PR6_R3_G4_REVIEW_c86b626c.md",
+      "observed_head": "a21fa1e21f4f361bd7df2d379c2711bd3ac28c7b",
+      "policy_sha": "38ee2303fd4c702af6d583a00dd9ed6f871ce54f",
       "blocking_findings": [
         "GOV-R2-01",
         "GOV-R2-02",
@@ -60,7 +62,26 @@
     "decision_id": "GOV-PLAN-02",
     "prompt": "governance/IMPLEMENTATION_PROMPT.md",
     "scope": "G1-G7",
-    "note": "G1-G7 與 C0-C4 接續工作已寫入 IMPLEMENTATION_PROMPT；Claude 新成果已送審且 G4 BLOCKED。本次 Planner 未派工，runtime 不升格；PLANNED_NOT_DISPATCHED 僅指本次接續工作包。",
-    "last_review": "reviews/PR6_R2_G4_REVIEW_86421c90.md"
+    "note": "完整導入工作包保留；本次 GitHub 交接及 reviewer 事件接管已獲 GOV-HANDOFF-TAKEOVER-20260921 授權，不再把這一部分當僅規劃。controller/Claude 持久 launcher 仍未啟用。",
+    "last_review": "reviews/PR6_R3_G4_REVIEW_c86b626c.md"
+  },
+  "handoff": {
+    "method": "govern-github-agent-handoffs",
+    "decision_id": "GOV-HANDOFF-TAKEOVER-20260921",
+    "automation_id": "6aae969a0ff8819193be09f165c31fd8",
+    "reviewer_event_scope": "repository pull requests: commits, reviews, comments",
+    "reviewer_event_status": "REGISTERED_UPDATED_PENDING_NEW_SCOPE_EVENT",
+    "executor_channel": "PR conversation to existing subscribed Claude session; historical receipt observed",
+    "persistent_executor_launcher": "NOT_VERIFIED",
+    "end_to_end": "NOT_VERIFIED",
+    "work_id": "GOV-PR6-R2",
+    "packet_revision": 2,
+    "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:6:GOV-PR6-R2:2:c86b626c8666b563e9e10413c5a967a4f94328cb:executor",
+    "delivery_status": "SIGNAL_SENT_RECEIPT_PENDING",
+    "receipt": null,
+    "reviewer_only_head": null,
+    "review_storage": "main per REVIEW-MAIN",
+    "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
+    "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167"
   }
 }
