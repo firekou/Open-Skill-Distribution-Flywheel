@@ -1,0 +1,53 @@
+{
+  "kind": "static_and_template_data_only",
+  "code_head": "86421c903563a16ca888a4aed10bd614e223ca0e",
+  "template_expansion": {
+    "executor": "KeyError: '\"new_head\"'",
+    "reviewer": "KeyError: '\"review\"'"
+  },
+  "controller_durability_calls": {
+    "acquire": [
+      281
+    ],
+    "renew": [],
+    "holds_lease": [],
+    "record_intent": [],
+    "open_intents": [],
+    "close_intent": [],
+    "mark_processed": [
+      359,
+      407,
+      348,
+      298,
+      330,
+      336,
+      384,
+      390
+    ],
+    "set_task": [
+      360,
+      425,
+      349,
+      410,
+      414,
+      299,
+      331,
+      337,
+      385,
+      391
+    ],
+    "add_spend": [
+      342,
+      395
+    ]
+  },
+  "template_policy_sha": null,
+  "lease_seconds": 900,
+  "runner_timeout_seconds": 1200,
+  "limitations": [
+    "No PR module imported or executed",
+    "No independent controller runtime verification",
+    "No model calls",
+    "No authentication or billing inference"
+  ]
+}
