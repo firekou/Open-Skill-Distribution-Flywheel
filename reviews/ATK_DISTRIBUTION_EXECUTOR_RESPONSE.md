@@ -183,3 +183,107 @@ NO BENEFIT: the proxy returned the payload unchanged, byte for byte.
 0 次模型呼叫 · 0 元新增支出 · 未安裝 launcher · 未啟用觸發器 · 未改 main 政策 ·
 未 merge · 未部署 · 未送上游 · 未發布任何對外內容 · 未關閉 `P5-R4-01`
 （它等的是獨立隔離重放，依定義不是 executor 能關的）· 未觸碰 controller。
+
+---
+
+# R7 限定修復包 — `ATK-PR5-R7-LIVE-GUARD` revision 1
+
+| | |
+|---|---|
+| work_id / revision | `ATK-PR5-R7-LIVE-GUARD` / `1`（本留言開啟第 1 輪，上限 2 輪） |
+| source_head | `f4d676b22a853f64b37f2c160cdb3d1f6bc47efc` |
+| review | `reviews/PR5_R7_REVIEW_f4d676b.md`（BLOCKED） |
+| deadline | 2026-09-22T14:30:00Z |
+| dedup_key | `firekou/Open-Skill-Distribution-Flywheel:5:ATK-PR5-R7-LIVE-GUARD:1:f4d676b22a853f64b37f2c160cdb3d1f6bc47efc:executor` |
+| 本輪金鑰／模型／付費呼叫 | **0 / 0 / 0**。`ATK_API_KEY`、`ATK_BASE_URL`、`ATK_MODEL` 仍全部 NOT_SET |
+| 證據 | `integrations/headroom-atk/evidence/pr5-r7/r7_controls.txt` |
+
+三項 finding 我逐項核過，**沒有一項爭議**。
+
+## P1-01 — 金鑰示範在命令列（正確）
+
+`ab_test.py` 的 docstring **在同一段裡自相矛盾**：第 6 行示範把金鑰前綴在命令上，第 13 行寫
+「絕不要放在命令列」。`TRY_IT.md` 與 `README.md` 各有一份同樣的範例。使用者會複製的是範例，
+不是禁令。
+
+**修法**：三個檔案的可執行範例全部改成「金鑰已由環境／secret manager 注入」，只示範
+不回顯的 `[ -n "$ATK_API_KEY" ] && echo SET || echo NOT_SET` 加 `python3 ab_test.py`。
+docstring 同步，並且**連引用都不再寫出那個字面形式**——改成文字描述，這樣 reviewer
+對整個交付目錄下 grep 就能直接得到答案，不會被我自己的說明文字干擾。
+
+**驗收**（`r7_controls.txt`）：
+
+```
+$ grep -rn 'ATK_API_KEY=sk-|ATK_API_KEY=\.\.\.|ATK_API_KEY=[^ ]* python' . --include=*.md --include=*.py
+(no matches)  exit=1  PASS
+
+$ python3 ab_test.py
+ATK_API_KEY is not set; refusing to run. No mock is substituted.
+exit=2
+```
+
+**範圍說明**：封包列的四個檔案不含 `README.md`，但同一份 finding 的驗收條件寫的是
+「搜索**交付目錄**不得再出現」。README 裡有一份同樣的範例，我把它一併修了——留著一個
+已知會外洩的示範，不符合這條 finding 的目的。這是本輪唯一超出檔案清單的改動，在此明列。
+
+## P1-02 — 文件承諾兩次呼叫、實際送出四次（正確，而且這項最嚴重）
+
+我在 `TRY_IT.md` 寫「一個合成任務、direct／proxy 各一次、零自動重試」，然後叫人跑
+`ab_test.py`——那支程式迴圈跑 `TASKS` 的**兩個**任務，各 direct + proxy，**共四次付費呼叫**。
+使用者依我寫的授權兩次費用，實際會被扣四次。**工具悄悄超過的費用上限，比沒有上限更糟。**
+
+**修法**：不是改文字把四次包裝成兩次。`ab_test.py` 新增 `--task {needle,summary,both}`，
+**預設 `needle`（2 次）**，四次的那個要主動要求；並在**第一次呼叫送出之前**印出精確次數：
+
+```
+about to make exactly 2 live calls (1 direct + 1 via proxy) for task(s): needle.
+No automatic retries: a failed call stops the run.
+```
+
+零自動重試維持不變（單次 `urlopen`，失敗即停）。
+
+**驗收**：新增 5 條以 mock 計數的測試，全部不需金鑰、不觸網。
+
+| 測試 | 驗的事 |
+|---|---|
+| `test_the_default_run_is_exactly_two_calls_one_each_way` | 恰好 `["direct", "proxy"]` |
+| `test_the_count_is_printed_before_the_first_call_is_made` | 在第一次呼叫的當下擷取 stdout 快照，確認次數**已經**印出——印在後面等於事後通知你付了多少 |
+| `test_the_four_call_run_has_to_be_asked_for` | 負控制：四次的路徑還在，只是要主動要求，而且自己報 `exactly 4` |
+| `test_no_key_refuses_and_spends_nothing` | 無金鑰 exit 2，計數器為 0 |
+| `test_the_docstring_no_longer_demonstrates_what_it_forbids` | 三個檔案都不含那個字面形式 |
+
+**變異控制**：把預設改回 `both`，`test_the_default_run_is_exactly_two_calls_one_each_way`
+立刻紅：
+
+```
++ ['direct', 'proxy'] : the documented first live run did not spend exactly two calls
+FAILED (failures=2)
+```
+
+## P2-01 — 兩次一致仍不足以證明「沒有冗餘」（正確）
+
+這一項我上一輪已經改過一次，**但只改了一半**：我把「一次觀察」升格成「兩次觀察」，
+因果句原封不動留著。兩次一致只是同一個觀察出現兩次，不排除 proxy 沒就緒、壓縮器被跳過
+或其他未明原因。這是**同一個錯誤做了兩遍**。
+
+**修法**：exit 3 保留，訊息只陳述量到什麼——「no size benefit was observed, twice」——
+並明講**這不建立因果**：
+
+> two matching observations do not establish that your payload lacks the redundancy headroom
+> factors out, and do not rule out the proxy not compressing on this run.
+
+然後給可行動的下一步（換 payload 形狀、重跑、查 `~/.headroom/logs/proxy.log`），
+不下結論。exit 4 的不一致分支不變。
+
+**驗收**：真陰性（JSON lines）仍 exit 3；新測試
+`test_a_repeated_observation_is_not_reported_as_a_cause` 斷言輸出**不含** `no such redundancy`
+且**含有** `do not establish`。變異控制：把因果句放回去，該測試紅。
+
+## 本輪數字
+
+`Ran 40 tests ... OK`（本包開始時 34）。0 次模型呼叫、0 元支出、未觸網（loopback 除外）。
+
+## 明確排除，已遵守
+
+未觸碰也未宣稱關閉 `P5-R4-01`，未重做其作者端證據 · 未發布 · 未 merge · 未改 Secrets／權限 ·
+未送上游 · 未更動 controller · 未新增 MCP／benchmark／框架範圍。

@@ -180,8 +180,18 @@ class APassThroughIsConfirmedBeforeItIsReported(unittest.TestCase):
         code, out = run_local_check(self.PAYLOAD, stable)
         self.assertEqual(code, 3)
         self.assertIn("NO BENEFIT", out)
-        self.assertIn("second measurement", out)
+        self.assertIn("twice", out)
         self.assertEqual(len(calls), 2)
+
+    def test_a_repeated_observation_is_not_reported_as_a_cause(self):
+        """P5-R7-03. Two matching observations are two observations. Concluding
+        from them that the payload lacks redundancy is the single-measurement
+        mistake made twice, and a reader who believes it stops looking."""
+        code, out = run_local_check(self.PAYLOAD, lambda text: text)
+        self.assertEqual(code, 3)
+        self.assertNotIn("no such redundancy", out)
+        self.assertNotIn("has no", out)
+        self.assertIn("do not establish", out)
 
     def test_a_run_that_compresses_is_not_measured_twice(self):
         """The re-check is only for the negative, so the common path is unchanged."""
@@ -338,6 +348,89 @@ class MisuseIsExitTwoAndStillPrivate(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("#2", out)
         self.assertNotIn("#3", out)
+
+
+class TheFirstLiveRunSpendsWhatItSaidItWould(unittest.TestCase):
+    """P5-R7-02. TRY_IT.md authorised "one synthetic task, one direct call, one
+    proxied call". The command it then told you to run iterated every entry in
+    TASKS and made FOUR paid calls. A cost ceiling the tool quietly exceeds is
+    worse than no ceiling, and the user only finds out from the bill.
+
+    No key, no network: `call` is replaced by a counter, so these count what
+    would have been spent."""
+
+    def _run(self, argv):
+        calls, snapshots = [], []
+        out = io.StringIO()
+
+        def fake_call(url, key, prompt, via_headroom):
+            calls.append("proxy" if via_headroom else "direct")
+            snapshots.append(out.getvalue())
+            return {"usage": {"prompt_tokens": 60 if via_headroom else 100}, "text": "x"}
+
+        with tempfile.TemporaryDirectory() as td:
+            log = pathlib.Path(td) / "deploy.log"
+            log.write_text("a line\n")
+            with patch.object(ab_test, "call", side_effect=fake_call), \
+                 patch.object(ab_test, "LOG", log), \
+                 patch.object(ab_test, "EVIDENCE", pathlib.Path(td) / "evidence"), \
+                 patch.dict(os.environ, {"ATK_API_KEY": SYNTHETIC_KEY}), \
+                 contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+                code = ab_test.main(argv)
+        return code, calls, snapshots, out.getvalue()
+
+    def test_the_default_run_is_exactly_two_calls_one_each_way(self):
+        code, calls, _snap, out = self._run([])
+        self.assertEqual(code, 0)
+        self.assertEqual(calls, ["direct", "proxy"],
+                         "the documented first live run did not spend exactly two calls")
+        self.assertIn("exactly 2 live calls", out)
+
+    def test_the_count_is_printed_before_the_first_call_is_made(self):
+        """Printing it afterwards would tell you what you already paid for."""
+        _code, _calls, snapshots, _out = self._run([])
+        self.assertTrue(snapshots, "no call was made, so the ordering is untested")
+        self.assertIn("exactly 2 live calls", snapshots[0],
+                      "the first call went out before the count was stated")
+
+    def test_the_four_call_run_has_to_be_asked_for(self):
+        """The negative control: the bigger run still exists, it is just opt-in,
+        and it announces its own real number."""
+        code, calls, _snap, out = self._run(["--task", "both"])
+        self.assertEqual(code, 0)
+        self.assertEqual(len(calls), 4)
+        self.assertIn("exactly 4 live calls", out)
+
+    def test_no_key_refuses_and_spends_nothing(self):
+        calls = []
+        out = io.StringIO()
+        with tempfile.TemporaryDirectory() as td:
+            log = pathlib.Path(td) / "deploy.log"
+            log.write_text("a line\n")
+            env = {k: v for k, v in os.environ.items() if k != "ATK_API_KEY"}
+            with patch.object(ab_test, "call", side_effect=lambda *a, **k: calls.append(1)), \
+                 patch.object(ab_test, "LOG", log), \
+                 patch.dict(os.environ, env, clear=True), \
+                 contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+                code = ab_test.main([])
+        self.assertEqual(code, 2)
+        self.assertEqual(calls, [])
+
+    def test_the_docstring_no_longer_demonstrates_what_it_forbids(self):
+        """P5-R7-01: it said 'never put the key on the command line' four lines
+        under a command that did exactly that."""
+        # The forbidden literals are assembled rather than written out, so that
+        # a grep over the delivery directory for them finds only real examples
+        # and not this check.
+        var = "ATK_API_KEY"
+        forbidden = [f"{var}=sk-", f"{var}=... python3", f"{var}=$"]
+        for name in ("ab_test.py", "TRY_IT.md", "README.md"):
+            src = (HERE / name).read_text()
+            for bad in forbidden:
+                self.assertNotIn(bad, src,
+                                 f"{name} still shows the key on the command line")
+        doc = (HERE / "ab_test.py").read_text().lower().replace("**", "")
+        self.assertIn("never put the key on the command line", doc)
 
 
 class DocumentedCountsMatchReality(unittest.TestCase):

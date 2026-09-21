@@ -98,11 +98,32 @@ You need all four, and "we have a key" is not three of them:
 
 ```bash
 headroom proxy --port 8787 --no-http2 &
-ATK_API_KEY=... python3 ab_test.py            # refuses to run without the key; substitutes no mock
+
+# The key is already injected by your environment or secret manager. Confirm it
+# is there WITHOUT printing it:
+[ -n "$ATK_API_KEY" ] && echo SET || echo NOT_SET
+
+python3 ab_test.py
 ```
 
-Suggested shape for a first live trial: **one synthetic task, one direct call, one proxied call,
-zero automatic retries.**
+**Do not prefix the key to the command as a variable assignment.** That form lands in shell
+history, in terminal recordings and in any command auditing you have — and an earlier version of
+this page said so two paragraphs above an example doing exactly it. If your key is not already in
+the environment, put it there the way you put every other secret there; this page will not show
+you a shortcut that leaks.
+
+`ab_test.py` refuses to run without `ATK_API_KEY` and substitutes no mock.
+
+**What it will spend, stated before it spends it.** The default is the needle task only:
+
+```
+about to make exactly 2 live calls (1 direct + 1 via proxy) for task(s): needle.
+No automatic retries: a failed call stops the run.
+```
+
+That line is printed before the first request goes out. `--task both` adds the five-bullet summary
+task and prints `exactly 4` instead — you have to ask for it. An earlier version of this page
+authorised two calls and then told you to run a command that made four.
 
 ### Record this, and only this
 

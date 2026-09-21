@@ -353,11 +353,19 @@ def main(argv=None) -> int:
             )
             return 4
         if via == direct:
+            # P5-R7-03: two identical observations are two observations, not a
+            # cause. The previous wording concluded from them that the payload
+            # "has no such redundancy to factor out" — which does not follow,
+            # and is the same mistake as the single-measurement version it
+            # replaced, made twice. A reader who trusts it stops looking.
             why = (
-                "the proxy returned the payload unchanged, byte for byte, and a second "
-                "measurement against the same proxy agreed. headroom saves by factoring out "
-                "text repeated across lines; this payload has no such redundancy to factor "
-                "out. Nothing was lost and nothing was gained."
+                "no size benefit was observed, twice. The payload came back unchanged, byte "
+                "for byte, on both measurements against the same proxy. Nothing was lost and "
+                "nothing was gained. This says what was measured and not why: two matching "
+                "observations do not establish that your payload lacks the redundancy "
+                "headroom factors out, and do not rule out the proxy not compressing on this "
+                "run. If it matters, try a different payload shape, run it again, and check "
+                "~/.headroom/logs/proxy.log."
             )
         elif delta == 0:
             why = (

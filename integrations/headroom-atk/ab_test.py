@@ -4,15 +4,30 @@
     pip install "headroom-ai[proxy]"
     headroom proxy --port 8787 --no-http2 &
     python3 make_log.py > deploy.log
-    ATK_API_KEY=sk-... python3 ab_test.py
 
-Sends four live requests and costs real tokens. Token counts come from ATK's
-own `usage` field in the response — nothing here estimates them.
-Writes evidence/ab_summary.json and evidence/ab_needle.json.
+    # the key comes from the environment or your secret manager, already injected.
+    # Check it is there WITHOUT printing it, then run:
+    [ -n "$ATK_API_KEY" ] && echo SET || echo NOT_SET
+    python3 ab_test.py
 
-Never put the key in a file or on the command line; pass it in the environment.
+**Never put the key on the command line**, including as a variable assignment
+prefixed to the command: that form lands in shell history, in terminal
+recordings and in any command auditing you have. This docstring used to say
+exactly that, four lines under a runnable example doing precisely it, and the
+example is what people copy (P5-R7-01). The literal form is not reproduced
+here even as an illustration, so that a grep over this directory answers the
+question outright.
+
+**Exactly two live requests by default** — one direct, one through the proxy,
+for the needle task only, with no automatic retries. The count is printed
+before the first call is made. `--task both` adds the summary task and makes it
+four; you have to ask for that. Every number comes from ATK's own `usage` field
+in the response — nothing here estimates.
+
+Writes evidence/ab_needle.json (and ab_summary.json only if you asked for it).
 """
 
+import argparse
 import json
 import os
 import pathlib
@@ -102,7 +117,28 @@ def call(url: str, key: str, prompt: str, via_headroom: bool) -> dict:
     }
 
 
-def main() -> int:
+def parse_args(argv=None) -> argparse.Namespace:
+    ap = argparse.ArgumentParser(
+        description="Live A/B against ATK. Spends real tokens.",
+    )
+    # P5-R7-02: the default used to be every task in TASKS, which is four paid
+    # calls, while the page telling people to run this authorised two. A cost
+    # ceiling the tool quietly exceeds is worse than no ceiling. The default is
+    # now the task the whole asset is about, and the bigger run is opt-in.
+    ap.add_argument(
+        "--task", choices=("needle", "summary", "both"), default="needle",
+        help="needle (default): the migration/SQLSTATE question — 2 calls. "
+             "summary: the five-bullet prompt — 2 calls. both: 4 calls.",
+    )
+    return ap.parse_args(argv)
+
+
+def planned_tasks(which: str) -> dict:
+    return TASKS if which == "both" else {which: TASKS[which]}
+
+
+def main(argv=None) -> int:
+    args = parse_args(argv)
     key = os.environ.get("ATK_API_KEY")
     if not key:
         print("ATK_API_KEY is not set; refusing to run. No mock is substituted.", file=sys.stderr)
@@ -113,9 +149,20 @@ def main() -> int:
 
     log_text = LOG.read_text()
     print(f"log: {len(log_text.splitlines())} lines, {len(log_text)} bytes")
+
+    # Stated BEFORE the first call, so the number you authorised and the number
+    # about to be spent are visible in the same place.
+    tasks = planned_tasks(args.task)
+    names = ", ".join(tasks)
+    print(
+        f"about to make exactly {2 * len(tasks)} live calls "
+        f"({len(tasks)} direct + {len(tasks)} via proxy) for task(s): {names}. "
+        "No automatic retries: a failed call stops the run."
+    )
+
     EVIDENCE.mkdir(exist_ok=True)
 
-    for name, question in TASKS.items():
+    for name, question in tasks.items():
         prompt = f"{question}\n\n```\n{log_text}```\n"
         result = {
             "direct": call(ATK_DIRECT, key, prompt, via_headroom=False),

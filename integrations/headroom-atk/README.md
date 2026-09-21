@@ -254,7 +254,7 @@ pip install "headroom-ai[proxy]==0.37.0"
 cd integrations/headroom-atk                       # run from this directory
 python3 make_log.py > deploy.log                   # deterministic; md5 0ad9194a489136baa931881b78374cf7
 python3 local_check.py                             # offline, no key, no cost — about a minute
-python3 test_local_check.py                        # 34 unit tests, also offline
+python3 test_local_check.py                        # 40 unit tests, also offline
 ```
 
 `local_check.py` and `ab_test.py` resolve `deploy.log` **next to the script**, not in your current
@@ -266,11 +266,14 @@ To repeat the live measurement (**this spends real tokens**):
 
 ```bash
 headroom proxy --port 8787 --no-http2 &
-ATK_API_KEY=sk-... python3 ab_test.py
+[ -n "$ATK_API_KEY" ] && echo SET || echo NOT_SET     # confirm without printing it
+python3 ab_test.py                                    # exactly 2 calls; --task both makes it 4
 ```
 
-`ab_test.py` refuses to run without `ATK_API_KEY` and substitutes no mock. Pass the key in the
-environment only — never on the command line, never in a file in this repo.
+`ab_test.py` refuses to run without `ATK_API_KEY` and substitutes no mock. Put the key in the
+environment the way you handle every other secret — **never on the command line** (including as a
+variable assignment prefixed to the command, which lands in shell history), and never in a file in
+this repo. It prints the exact number of live calls before it makes the first one.
 
 ## There is a second, official route we did NOT test
 
@@ -347,7 +350,7 @@ Install it from PyPI. Its own docs: <https://docs.headroomlabs.ai/docs>.
 | `local_check.py` | offline verification **and preflight for your own log** (`--log`, `--needle`): proxy routing, compression, needle survival — no key |
 | `ab_test.py` | the live A/B against ATK — needs `ATK_API_KEY` |
 | `evidence/ab_summary.json`, `evidence/ab_needle.json` | `usage` and answer-text excerpts from the live run — not full HTTP responses |
-| `test_local_check.py` | 34 offline unit tests: the adoption verdict, a pass-through confirmed before it is reported, output privacy, and the error body never being shown |
+| `test_local_check.py` | 40 offline unit tests: the adoption verdict, a pass-through confirmed before it is reported, output privacy, and the error body never being shown |
 | `evidence/local_check.txt` | output of the offline check, with versions and log md5 |
 | `evidence/pr5-r2/controls.txt` | positive and negative controls for the two defects fixed in review round 1 |
 | `evidence/pr5-r3/controls.txt` | controls for review round 2: the partial-echo leak, output privacy, and the withdrawn logging root cause |
