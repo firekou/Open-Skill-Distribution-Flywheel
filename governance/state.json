@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 6,
+  "revision": 7,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -8,16 +8,23 @@
     "reviewer_connected": true,
     "additional_api_budget_usd": 0,
     "reviewer_trigger": {
-      "status": "REGISTERED_UPDATED_PENDING_NEW_SCOPE_EVENT",
+      "status": "EVENT_VERIFIED",
       "scope": "repository pull requests",
       "kind": "github_pull_request_commit_update",
       "title": "ATK 專案交接覆核",
       "registered_at": "2026-09-19",
-      "first_event_verified": false,
+      "first_event_verified": true,
       "claude_launcher": false,
-      "automation_id": "6aae969a0ff8819193be09f165c31fd8"
+      "automation_id": "6aae969a0ff8819193be09f165c31fd8",
+      "first_verified_event": {
+        "type": "pull_request.synchronize",
+        "repository": "firekou/Open-Skill-Distribution-Flywheel",
+        "pr": 6,
+        "head": "e26aac4eed0696cefa45b19aac46e7fc9c3da6e8",
+        "observed_at": "2026-09-21T11:57:31Z"
+      }
     },
-    "status_note": "FOUNDATION_ONLY 是完整閉環等級；PR5 托管 reviewer 觸發已註冊但未驗證首次事件，executor 未接通，非 ACTIVE。"
+    "status_note": "GPT reviewer 的 repository PR event path 已由 PR6 synchronize 實際驗證；Claude persistent launcher 與 executor 仍未接通，完整治理維持 FOUNDATION_ONLY，非 ACTIVE。"
   },
   "tasks": [
     {
@@ -33,55 +40,68 @@
     },
     {
       "task_id": "GOV-BOOTSTRAP",
-      "status": "FIX_PENDING",
-      "next_action": "同批第二次限定修復：依 R3 六項殘餘接線缺口補實作與隔離證據，新 SHA 再交 reviewer。",
+      "status": "BLOCKED",
+      "next_action": "同批兩輪修復上限已到，不再自動重派。保留 FOUNDATION_ONLY，由 Planner 縮小交付；未來只在完整隔離與重新授權的最小 controller 工作包下重啟。產品採用工作不受阻。",
       "prompt": "governance/IMPLEMENTATION_PROMPT.md",
       "pr": 6,
       "branch": "claude/atk-governance-controller",
-      "submitted_head": "c86b626c8666b563e9e10413c5a967a4f94328cb",
+      "submitted_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
       "executor_response": "reviews/GOVERNANCE_EXECUTOR_RESPONSE.md (on the PR branch)",
-      "note": "接管時已獨立閱讀新版本；有部分改善但仍有原始碼可確認阻擋；未獨立運行 PR code。",
-      "last_reviewed_head": "c86b626c8666b563e9e10413c5a967a4f94328cb",
+      "note": "第二輪限定修復完成 source review；CLI envelope 與 guard ordering 關閉，但 lease-loss launch、effect binding、deadline launch gate 與 credentialed role isolation 仍阻擋。未獨立執行 PR code。",
+      "last_reviewed_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
       "last_review_decision": "BLOCKED",
-      "review": "reviews/PR6_R3_G4_REVIEW_c86b626c.md",
-      "observed_head": "a21fa1e21f4f361bd7df2d379c2711bd3ac28c7b",
+      "review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
+      "observed_head": "e26aac4eed0696cefa45b19aac46e7fc9c3da6e8",
       "policy_sha": "38ee2303fd4c702af6d583a00dd9ed6f871ce54f",
       "blocking_findings": [
-        "GOV-R2-01",
         "GOV-R2-02",
         "GOV-R2-03",
-        "GOV-R2-04",
         "GOV-R2-05",
         "GOV-R1-03"
       ],
-      "independent_runtime_verified": false
+      "independent_runtime_verified": false,
+      "source_findings_closed": [
+        "GOV-R2-01",
+        "GOV-R2-04"
+      ],
+      "repair_rounds_used": 2,
+      "repair_rounds_limit": 2
     }
   ],
   "planning": {
-    "status": "PLANNED_NOT_DISPATCHED",
+    "status": "SCOPE_REDUCTION_REQUIRED",
     "decision_id": "GOV-PLAN-02",
     "prompt": "governance/IMPLEMENTATION_PROMPT.md",
     "scope": "G1-G7",
-    "note": "完整導入工作包保留；本次 GitHub 交接及 reviewer 事件接管已獲 GOV-HANDOFF-TAKEOVER-20260921 授權，不再把這一部分當僅規劃。controller/Claude 持久 launcher 仍未啟用。",
-    "last_review": "reviews/PR6_R3_G4_REVIEW_c86b626c.md"
+    "note": "同批兩輪修復已用完；不再自動重派 controller 修復。保留 GitHub durable ledger、人工 bounded handoff 與已驗證 reviewer event path；Claude persistent launcher/isolated runtime 未啟用。產品採用工作繼續。",
+    "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md"
   },
   "handoff": {
     "method": "govern-github-agent-handoffs",
     "decision_id": "GOV-HANDOFF-TAKEOVER-20260921",
     "automation_id": "6aae969a0ff8819193be09f165c31fd8",
     "reviewer_event_scope": "repository pull requests: commits, reviews, comments",
-    "reviewer_event_status": "REGISTERED_UPDATED_PENDING_NEW_SCOPE_EVENT",
+    "reviewer_event_status": "EVENT_VERIFIED",
     "executor_channel": "PR conversation to existing subscribed Claude session; historical receipt observed",
     "persistent_executor_launcher": "NOT_VERIFIED",
     "end_to_end": "NOT_VERIFIED",
     "work_id": "GOV-PR6-R2",
     "packet_revision": 2,
     "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:6:GOV-PR6-R2:2:c86b626c8666b563e9e10413c5a967a4f94328cb:executor",
-    "delivery_status": "SIGNAL_SENT_RECEIPT_PENDING",
-    "receipt": null,
+    "delivery_status": "RESULT_RECEIVED_REVIEWED_BLOCKED",
+    "receipt": {
+      "comment_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5760125918",
+      "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+      "work_id": "GOV-PR6-R2",
+      "program_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
+      "result_head": "e26aac4eed0696cefa45b19aac46e7fc9c3da6e8",
+      "received_at": "2026-09-21T11:57:31Z",
+      "claim_deadline_exceeded_for_evidence_append": true
+    },
     "reviewer_only_head": null,
     "review_storage": "main per REVIEW-MAIN",
     "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
-    "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167"
+    "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167",
+    "next_checkpoint": "PLANNER_SCOPE_REDUCTION_NO_THIRD_REPAIR"
   }
 }
