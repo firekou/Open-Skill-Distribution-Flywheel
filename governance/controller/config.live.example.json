@@ -77,8 +77,12 @@
     "Each runner's own timeout_seconds bounds one model call (20 min).",
     "A runner that overruns is killed together with every process it started;",
     "terminate_grace_seconds is how long SIGTERM is given before SIGKILL.",
-    "Repository test suites, when run, belong under the pr_tests role, which",
-    "receives no credential at all; budget them at 10 minutes."
+    "Repository test suites, when run, belong under the pr_tests role, which is",
+    "REFUSED until a container backend is measured to deny the network, deny the",
+    "host filesystem and keep the source read-only; budget them at 10 minutes.",
+    "The round limit is enforced by the guard: the controller sends the ROUND's",
+    "elapsed time and an absolute deadline_at, and an overrun round is refused",
+    "at dispatch rather than clamped to one second."
   ],
   "_credentials_by_role": {
     "executor": [
@@ -116,13 +120,18 @@
   "policy_repo": "/path/to/trusted/checkout/of/main",
   "policy_sha": "REQUIRED-IN-LIVE-MODE: full 40-hex SHA of the trusted policy checkout",
   "_policy_note": [
-    "tick.py in live mode verifies that policy_repo is at exactly policy_sha and that",
-    "guard_path resolves inside it, and refuses to start otherwise. Recording a field",
-    "is not pinning a version; the previous build left Controller.policy_sha at",
-    "'unrecorded' and nothing checked it."
+    "tick.py in live mode verifies that policy_repo is at exactly policy_sha, that",
+    "guard_path resolves inside it, and that the guard file is neither modified nor",
+    "untracked -- ALL of it BEFORE the first import, because importing the guard",
+    "executes it. Recording a field is not pinning a version; the previous build left",
+    "Controller.policy_sha at 'unrecorded' and nothing checked it, and the build after",
+    "that imported the guard on tick.build()'s first line and validated afterwards."
   ],
   "_command_note": [
     "Placeholders are substituted by name: prompt_file, head, work_order, deadline_seconds.",
+    "deadline_seconds goes into the PROMPT. What actually stops the process is",
+    "deadline_at, an absolute instant the controller puts on the work order and the",
+    "runner re-reads before the clone, before the checkout and when it waits.",
     "Every other brace is left alone. The previous build ran str.format over each element,",
     "so a prompt describing JSON ({\"new_head\": ...}) raised KeyError: '\"new_head\"' and the",
     "shipped template could never launch. A prompt that describes JSON is data, not a",

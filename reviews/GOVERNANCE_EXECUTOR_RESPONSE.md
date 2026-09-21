@@ -462,3 +462,233 @@ GOV-R2-02／R2-03 指出 `renew`、`holds_lease`、`record_intent`、`open_inten
 沒有真實 CLI 契約端到端 · GOV-R1-03 **維持 OPEN** · 沒有任何 session 外往返 ·
 沒有外部使用者成功證據。`automation.status` 維持 `FOUNDATION_ONLY`。
 `findings_closed_by_executor: []`。
+
+## 12. 回應 PR6 R3 G4 review（BLOCKED，六項 P1 的第二次限定修復）
+
+**授權來源**：負責人於本輪對話指示續作 G1–G3 與 C0／C1，並在 PR #6 留言派工
+「原包第二次限定修復」六項。範圍限 `governance/controller/`、既有接線文件與本分支
+executor response；不混入產品修復、不合併、不啟用持久觸發器、不改 Secrets、不新增費用。
+本輪**未自我 APPROVED**，`findings_closed_by_executor: []` 維持不變。
+
+**可信政策 SHA**：`38ee2303fd4c702af6d583a00dd9ed6f871ce54f`（reviewer 指定，未改寫）。
+**受審上一版 head**：`c86b626c8666b563e9e10413c5a967a4f94328cb`。
+**本輪成果 SHA**：見本檔末「送審版本」一節與 PR 留言（commit 後補齊，不預寫）。
+
+### 12.0 這一輪解除的交付瓶頸
+
+每項都對著同一個瓶頸：**一次交接中途斷掉之後，人要回頭手動重建現場**。
+崩潰後不知道模型做了什麼（§12.3）、租約過期後兩個 worker 同時寫（§12.5）、
+重送事件卡在第一步（§12.3）、CLI 的實際輸出根本接不上（§12.6）——
+這四件事各自會讓「沒有人在中間搬東西」的承諾回到「有人在中間搬東西」。
+
+### 12.1 GOV-R1-03 — 探測到隔離工具，不等於在隔離工具內執行
+
+**處置：修復（本機仍拒絕 `pr_tests`，這是量出來的結果，不是放寬條件）。**
+
+- `isolate_command(backend, cmd)` 現在**真的包住命令**：`run()` 的 `Popen` 收到的是
+  `["unshare","--user","--map-root-user","--net","--"] + cmd`。
+- 新增 `measure_backend_properties(backend)`：對 `network_denied` / `host_fs_denied` /
+  `source_readonly` 各跑一次負控制。宣告 `container` **不再等於放行**。
+- 本機量測（`evidence/probe_isolation_effect.py`）：
+
+  ```json
+  {"backend_selected": "unshare",
+   "network_reachable":      {"unwrapped": {"exit": 0}, "wrapped": {"exit": 1}},
+   "host_secret_readable":   {"unwrapped": {"exit": 0}, "wrapped": {"exit": 0}},
+   "source_writable":        {"unwrapped": {"exit": 0}, "wrapped": {"exit": 0}},
+   "source_after_wrapped_write": "original\ntampered\ntampered"}
+  ```
+
+  `unshare` 只擋網路。因此 `pr_tests` 仍被拒絕，錯誤訊息指名**缺哪些性質**而不是缺哪個工具：
+
+  ```
+  backend 'unshare' runs, but role 'pr_tests' needs
+  ['network_denied', 'host_fs_denied', 'source_readonly'] and this host's backend
+  does not provide ['host_fs_denied', 'source_readonly']. Measured, not assumed.
+  ```
+
+- 未用真實模型呼叫當探針（reviewer 明令禁止），三個探針都是 socket connect / `cat` / `sh -c`。
+- **包裝有沒有真的到達 `Popen`，用 runtime 測，不是用讀原始碼**：
+  `test_run_really_launches_the_command_inside_the_backend` 讓 runner 啟動一個
+  **會回報自己能不能開 socket** 的子程式，走完整條 `SubprocessRunner.run`
+  （真 clone、真 `Popen`）。把 `launched = isolate_command(...)` 改回 `launched = cmd`，
+  同一個測試立刻紅：
+
+  ```
+  AssertionError: {'new_head': 'bbbb…'} != {'new_head': 'aaaa…'} :
+  the runner's own child still reached the network: the wrap did not reach Popen
+  ```
+
+  這個測試會在沒有後端、後端不擋網路、或本機根本沒有對外網路時 **skip 並說明理由**，
+  不會因為「連不上」而假通過。
+- **仍未完成**：本機沒有可用的**完整**隔離後端（缺 `host_fs_denied`、`source_readonly`），
+  所以 `pr_tests` 在真實 runner 邊界的正控制只有 test double。
+  這一項維持 **UNVERIFIED**，不因為修好了包裝就宣稱關閉。
+
+### 12.2 GOV-R2-05 — round deadline 現在真的會停掉程序
+
+**處置：修復。** 上一版有兩個各自獨立的斷點，reviewer 兩個都指對了：
+
+1. `runners._remaining()` 讀 `order["deadline_at"]`，而 controller **從來沒有寫過這個欄位**，
+   於是每次都走 fallback 回到 runner 自己的 1200s。一邊讀、一邊沒人寫——
+   和「寫了沒人呼叫的 guard」是同一種缺陷。現在 `_order()` 寫入
+   `deadline_at = self._round_deadline_at(task_id)`（絕對時刻，存在 task 上，跨 step／重啟）。
+2. `elapsed` 送的是**本 step** 的 elapsed，所以 guard 自己的
+   `elapsed >= timeout` STOP 永遠不會觸發，過期只會把 `deadline_seconds` 夾成 1 然後照樣派工。
+   現在送的是**整輪**的 age，過期由**可信 guard** 拒絕，不是由呼叫端自己夾值。
+
+測試：`test_the_runner_stops_at_the_round_deadline_not_at_its_own` 真的起一個
+`sleep 120`、把 `deadline_at` 設在 3 秒後，量實際結束時間；
+`test_an_expired_round_refuses_to_dispatch_at_all` 證明過期不派工；
+`test_the_round_age_grows_across_steps` 是它的負控制。
+
+### 12.3 GOV-R2-03 — 恢復會先問外面發生了什麼，再決定要不要重派
+
+**處置：修復。**
+
+- `step()` 取得租約後、派工前，先跑 `_reconcile()`。
+- `_observe_effect(head)` 去問 remote：分支動了＝`effect_confirmed`；沒動＝`effect_refuted`；
+  **問不到＝`effect_unknown`**。第三種不會被當成第二種——這正是 reviewer 說的
+  「未知結果保留可恢復狀態」。
+- `store.INTENT_OUTCOMES` 把「關掉 intent」拆成三個必填結果，
+  `commit_event_and_task(close_intent_id=…)` **沒有 `close_outcome` 就拋 ValueError**。
+  已關的 intent 連同結果搬到 `resolved_intents`。
+- `drive` 的重送：遇到自己上一次留下的 `duplicate` **不再當成停止訊號**，跳過該子步驟續行。
+
+四種崩潰，四個不同答案（`evidence/recovery.txt`，無模型、無網路）：
+
+```
+## the push LANDED  -> do not run the executor again
+  executor re-run : 0 time(s)   intent: effect_confirmed   status: COMPLETE
+## the push did NOT land -> safe to redo
+  executor re-run : 1 time(s)   intent: effect_refuted     status: REVIEW_PENDING
+## the remote cannot be asked -> stop, do not guess
+  executor re-run : 0 time(s)   intent: effect_unknown     status: NEEDS_INFORMATION
+## a resend of a drive that only got partway
+  first delivery  : ['REVIEW_PENDING']
+  resend          : ['NOOP', 'COMPLETE']
+```
+
+- RunnerError 也不再一律當「什麼都沒發生」：失敗的 executor 可能已經推了。
+  現在先問 remote，動過就是 `NEEDS_INFORMATION`，沒動過才是 `FAILED`。
+- **一個要講清楚的取捨**：reviewer 依規格不寫任何外部狀態，所以分支沒動＝重跑是安全的，
+  恢復時會重派一次 review。**那次遺失的呼叫已經計過 run**，重派會再計一次；
+  run budget 因此可能被一次崩潰多吃一格。這是刻意的：寧可多花一格，
+  也不要把一個沒人看過的 verdict 當成已完成。若分支在 read-only 的 review 期間動了，
+  代表這個假設不成立，直接停在 `NEEDS_INFORMATION`。
+- **刻意保留的一個行為**：L2 取消（`CANCEL-<task>`）發生在 checkpoint，
+  它**不關閉任何 open intent**。取消是操作者的意思，它不告訴我們外面已經發生了什麼；
+  intent 留在 `open_intents` 讓之後的人看得到，比自動關成「沒發生」誠實。
+- **仍未完成**：crash injection 是用「把 worker 留下的 open intent 直接寫進 store」重現的，
+  **不是真的把行程殺在 push 與寫入之間**。行為等價，來源不同，據此標 **TESTED，非 REPRODUCED**。
+
+### 12.4 GOV-R2-04 — 驗證全部搬到第一次 import 之前
+
+**處置：修復。**
+
+- `tick.build()` 不再在函式第一行 `load_guard`。`guard_path = resolve(...)` 只算路徑，
+  **replay 才立刻載入**；live 走完「pin 比對 → 路徑包含 → dirty/untracked」三關後才載入。
+- 新增 `guard_is_clean(policy_repo, guard_path)`：`git status --porcelain --untracked-files=all`
+  只看 guard 那一個檔。`rev-parse HEAD` 對得上、檔案被改過或是 untracked，一樣拒絕。
+- 路徑解析統一：包含性檢查與載入用的是**同一個 `guard_path` 變數**，
+  不再一邊 `resolve()` 一邊 `pathlib.Path(raw)`。
+- 測試 `test_a_wrong_pin_refuses_before_the_guard_module_runs` 用**頂層會寫 sentinel 檔的假 guard**，
+  斷言 pin 不符時 sentinel **從未被建立**；
+  `test_a_relative_guard_path_works_from_a_cwd_outside_the_repository` 從 repo 外的 cwd 起 tick。
+- **收回一個過度宣稱**：工作單的 `chmod 0400` 與「放在 clone 外」**不是不可改寫邊界**。
+  runner 與寫檔者同 uid，它可以 chmod 回去再覆寫。docstring 已改寫為：
+  它擋的是**受審內容**（PR 裡的 commit 改不到自己的指令），不是擋執行中的那個行程；
+  真正的邊界要靠不同 uid 或 container，而本機量測沒有。
+
+### 12.5 GOV-R2-02 — 失租立刻取消，提交與持有驗證同一筆交易
+
+**處置：修復。**
+
+- 心跳執行緒 renew 失敗時**立刻呼叫 `runner.cancel_current()`**，不再等 runner 自己跑完。
+- `_run_with_lease()` 把 runner 的例外**先押住**，先判租約：因失租被殺的 child 會以非 0 退出，
+  把它記成 `FAILED` 就是用一個看起來合理的理由寫下我們無權寫的結果。
+- **每一個** `commit_event_and_task` 呼叫端現在都帶 `require_owner` / `require_generation`
+  （集中在 `Controller._commit`），驗證在 `mutate` 內、與寫入同一次 CAS。
+  上一版這兩個參數**沒有任何呼叫端傳過**——只在它自己的單元測試裡生效。
+  `test_no_unfenced_state_commit_is_left_in_the_controller` 用 AST 釘住這件事。
+- `lease_generation` 從「存在 lease 裡」改成「存在 task 上」：放在 lease 裡會被 `release` 一併刪掉，
+  同一個 owner 釋放再取得會拿到同樣的 generation 1。**會被常規操作重設的單調計數不是 fence。**
+- `release()` 的擁有者檢查移進 `mutate`；`step()` 的 `finally` 把 `release` 的失敗**記 log、不覆蓋結果**。
+- 真實跨行程驗證（`RealCrossProcessConcurrency`）：worker A 以 1 秒 TTL 取得、睡 3 秒超時，
+  本行程以 worker B 接手，A 回來提交 → `refused`，task 未被推進，租約仍是 B 的。
+  負控制：同一個腳本在 TTL 內提交 → `committed`。
+- **自己抓到的一個假綠燈**：我第一版「租約被搶走」的測試裡，小偷是直接 `acquire`——
+  但活著的租約本來就搶不走，那個 `ConcurrencyError` 來自 `acquire` 而不是 fence，
+  測試**通過的理由是錯的**。改成先讓租約過期再接手。
+
+### 12.6 GOV-R2-01 — 用真實 CLI envelope 跑完整條 adapter
+
+**處置：修復。**
+
+- `parse_verdict` 先拆 CLI 的 result envelope（`type == "result"` → `result` 這個**字串**再 parse），
+  再驗 verdict 本體。
+- 新增 `evidence/cli_envelope_fixture.json`。它的來源分得很清楚：
+
+  | 區塊 | 證據階梯 | 怎麼來的 |
+  |---|---|---|
+  | `error_envelope_measured` | **REPRODUCED** | `claude -p --output-format json --max-turns 1`，以 `env -i`、空 HOME、`ANTHROPIC_BASE_URL=http://127.0.0.1:9` 跑。請求沒離開本機，`total_cost_usd: 0`。CLI 版本 2.1.278。只把 `session_id` / `uuid` 換成固定全零 uuid。 |
+  | `success_envelope_derived` | **OBSERVED（形狀）＋ SYNTHETIC（值）** | 用上面量到的 key set，把失敗欄位翻成成功值、`result` 換成本 adapter 要求的 verdict 字串。要拿到真正成功的 envelope 得花一次模型呼叫，本輪離線，所以**把捏造的部分寫在檔案裡**而不是當成量測。 |
+
+- **這個 fixture 記錄下一個量出來的陷阱**：真實失敗的 envelope 裡
+  `"subtype": "success"` 與 `"is_error": true` **同時成立**。
+  只看 `subtype` 的 adapter 會把一次 API 失敗當成完成的工作。這不是推理出來的，是跑出來的。
+- 完整路徑測試：拿 **config.live.example.json 出貨的 command**（只把程式名換成 stub，
+  旗標與 prompt 一字不動）→ 真的 `git clone` 一個本地 repo → 真的 `Popen` →
+  stub 印出 fixture 的 envelope → verdict。executor 與 reviewer 兩角色各一。
+  斷言 stub 的 argv 裡真的有 `work_order.json` 與 `60 seconds`。
+- 負控制：量到的 error envelope 被拒且**不引述 provider 的錯誤內文**；
+  envelope 內是散文不是 JSON → 拒；`result` 缺席或不是字串 → 拒；
+  `new_head` 不是 40 hex → 拒；fixture 自己的 provenance 欄位也被測試釘住。
+
+### 12.7 順手修掉的兩個測試基礎設施缺陷（不是 finding，但會產生假訊號）
+
+1. `tick.py` 在 import 時會把自己的目錄塞進 `sys.path`，所以 staged-copy 測試跑完後
+   `sys.path` 上那個暫存路徑**有兩份**，一次 `remove` 只拿掉一份。
+   之後整個檔案裡的 `import runners` 都拿到一份已被刪除的暫存副本，
+   `assertRaises(IsolationUnavailable)` 等於在等一個**不同的類別物件**。
+   修法：把原本的 module 物件存起來原樣放回，不重新 import。
+2. `close_intent` 與 `commit_event_and_task` 各有一份 intent 關閉邏輯，之前已經飄開過一次。
+   現在共用 `store._resolve_intent`。
+
+### 12.8 驗證
+
+```
+$ python3 governance/controller/test_controller.py
+Ran 146 tests ... OK                      # 上一版 108
+$ python3 governance/controller/evidence/mutate_g123.py
+50/51 mutants caught, 1 HUNG (harness deadline, not a result)
+    # 上一版 34 個，本輪新增 17 個，R3 的每一項 finding 各有對應的變異。
+    # 那 1 個 HUNG 是「失敗的 commit 不放鎖」——它造成的是死鎖不是紅燈，
+    # harness 刻意把它單獨報，不計入 caught。這不是新狀況。
+$ python3 governance/controller/replay.py            -> COMPLETE / REPLAY_VERIFIED
+$ python3 governance/controller/tick.py … --drive    -> COMPLETE, exit 10；同 --event 重送 exit 20
+$ python3 governance/controller/evidence/probe_recovery.py   -> evidence/recovery.txt
+$ python3 governance/controller/evidence/probe_isolation_effect.py
+```
+
+### 12.9 已實測 ／ 僅離線驗證 ／ 仍未知
+
+| 項目 | 狀態 |
+|---|---|
+| CLI 失敗 envelope 的實際欄位（含 `subtype=success` 與 `is_error=true` 並存） | **已實測**，零成本、無網路 |
+| `unshare --user --net` 只擋網路，不擋宿主檔案與來源寫入 | **已實測** |
+| 隔離包裝真的到達 `Popen`（runner 的子程式連不出去） | **已實測**（去掉包裝同測試立刻紅） |
+| 環境變數過濾不是憑證邊界（三個角色都認證成功並計費） | **已實測**（上一輪） |
+| 租約過期後舊 worker 無法推進狀態 | **已實測**（真實雙行程） |
+| round deadline 真的提早終止 runner | **已實測**（真實 `sleep 120` 子行程） |
+| 恢復／重送／未知副作用的四種分支 | **僅離線**（stub remote，非真實 crash） |
+| 完整 CLI 成功 envelope 的逐欄位內容 | **仍未知**（需一次模型呼叫，本輪離線） |
+| 可用的完整隔離後端下 `pr_tests` 會跑起來 | **仍未知**（本機沒有這種後端） |
+| Routines 能否把事件（非 cron）喚醒持久 session | **仍未知**（C0 已記錄：Routines 只有 cron） |
+
+### 12.10 本輪沒有做到的，照舊列出
+
+沒有真實 crash injection（是用 store 狀態重建的）· 沒有任何 session 外往返 ·
+沒有外部使用者成功證據 · 沒有真實成功 envelope · 沒有完整隔離後端 ·
+`automation.status` 維持 `FOUNDATION_ONLY` · `findings_closed_by_executor: []`。
+六項 finding 的**處置**寫在上面，**是否關閉由獨立 reviewer 判定**。

@@ -1,0 +1,30 @@
+# recovery: four crashes, four different answers
+
+## the push LANDED  -> do not run the executor again
+  remote says head is : 111111111111
+  executor re-run     : 0 time(s)
+  intent outcome      : ['effect_confirmed', 'effect_refuted']
+  task status         : COMPLETE
+  step returned       : {'action': 'COMPLETE', 'head': '1111111111111111111111111111111111111111'}
+
+## the push did NOT land -> safe to redo
+  remote says head is : 000000000000
+  executor re-run     : 1 time(s)
+  intent outcome      : ['effect_refuted', 'effect_confirmed']
+  task status         : REVIEW_PENDING
+  step returned       : {'action': 'REVIEW_PENDING', 'head': '1111111111111111111111111111111111111111'}
+
+## the remote cannot be asked -> stop, do not guess
+  remote says head is : UNREACHABLE
+  executor re-run     : 0 time(s)
+  intent outcome      : ['effect_unknown']
+  task status         : NEEDS_INFORMATION
+  step returned       : {'action': 'NEEDS_INFORMATION', 'reason': 'unreconciled:effect_unknown'}
+
+## a resend of a drive that only got partway
+  first delivery      : ['REVIEW_PENDING']
+  status after it     : REVIEW_PENDING
+  resend              : ['NOOP', 'COMPLETE']
+  status after resend : COMPLETE
+
+No model ran. No credential was read. The only variable is what the remote was made to say.

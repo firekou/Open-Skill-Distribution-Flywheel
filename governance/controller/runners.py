@@ -34,6 +34,7 @@ import re
 import pathlib
 import shutil
 import signal
+import time
 import subprocess
 import uuid
 
@@ -170,6 +171,81 @@ CONTAINER_BACKENDS = (
 )
 
 
+def isolate_command(backend: str | None, cmd: list) -> list:
+    """Wrap the runner so the boundary is on the command, not in a field.
+
+    GOV-R1-03, second round: the previous build probed a backend, stored its
+    name, and then ran `subprocess.Popen(cmd)` on the host anyway. A probe that
+    nothing uses is a label. What the wrap does and does not achieve is
+    measured, not asserted — see evidence/isolation_negative_controls.txt.
+    """
+    if backend is None:
+        return list(cmd)
+    if backend == "unshare":
+        # user + network namespace. This denies the network, which is what
+        # keeps an untrusted role away from a credentialed endpoint. It does
+        # NOT make the source read-only; that limit is recorded rather than
+        # papered over, and pr_tests additionally runs against a copy.
+        return ["unshare", "--user", "--map-root-user", "--net", "--"] + list(cmd)
+    if backend == "bwrap":
+        return ["bwrap", "--unshare-all", "--ro-bind", "/", "/",
+                "--bind", "/tmp", "/tmp", "--"] + list(cmd)
+    if backend == "docker":
+        raise IsolationUnavailable(
+            "the docker backend needs an image and mount policy this build does "
+            "not define; refusing rather than running unisolated")
+    raise IsolationUnavailable(f"unknown isolation backend {backend!r}")
+
+
+# What a role needs the boundary to actually DENY. Measured per property,
+# because a backend that denies one of them is not a sandbox and must not be
+# accepted as though it were. On the host this was written on, the available
+# backend denies the network and nothing else
+# (evidence/isolation_negative_controls.txt).
+ISOLATION_PROPERTIES = ("network_denied", "host_fs_denied", "source_readonly")
+
+ROLE_ISOLATION_REQUIREMENTS = {
+    # Untrusted pull-request code: must not reach the network (a credentialed
+    # endpoint is on it), must not read the host, must not rewrite the very
+    # source it is being run to check.
+    "pr_tests": ("network_denied", "host_fs_denied", "source_readonly"),
+    # Trusted roles run code we wrote; they need the network to reach a model.
+    "executor": (),
+    "reviewer": (),
+}
+
+_PROBE_ENV = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": "/tmp"}
+
+
+def _denies(backend, cmd, cwd=None, timeout=45.0) -> bool:
+    """True when the wrap makes this command fail that would otherwise pass."""
+    try:
+        r = subprocess.run(isolate_command(backend, cmd), capture_output=True,
+                           timeout=timeout, env=_PROBE_ENV, cwd=cwd,
+                           stdin=subprocess.DEVNULL)
+        return r.returncode != 0
+    except (OSError, subprocess.TimeoutExpired, IsolationUnavailable):
+        return False
+
+
+def measure_backend_properties(backend: str) -> dict:
+    """Ask the boundary what it actually refuses. No model call, no network cost."""
+    import tempfile as _tf
+    with _tf.TemporaryDirectory() as td:
+        host = pathlib.Path(td) / "SYNTHETIC_HOST_SECRET"
+        host.write_text("SYNTHETIC-NOT-A-REAL-CREDENTIAL\n")
+        src = pathlib.Path(td) / "source.txt"
+        src.write_text("original\n")
+        return {
+            "network_denied": _denies(backend, [
+                "python3", "-c",
+                "import socket,sys;s=socket.socket();s.settimeout(5);"
+                "sys.exit(0 if s.connect_ex(('1.1.1.1',443))==0 else 1)"]),
+            "host_fs_denied": _denies(backend, ["cat", str(host)]),
+            "source_readonly": _denies(backend, ["sh", "-c", f"echo x >> {src}"]),
+        }
+
+
 def working_container_backend(timeout: float = 20.0):
     """Return the name of a backend that actually runs here, or None."""
     for name, probe in CONTAINER_BACKENDS:
@@ -180,8 +256,7 @@ def working_container_backend(timeout: float = 20.0):
             # this module to state what it passes, and a capability probe that
             # inherits 142 variables is not a probe of the same thing.
             r = subprocess.run(probe, capture_output=True, timeout=timeout,
-                               stdin=subprocess.DEVNULL,
-                               env={"PATH": os.environ.get("PATH", "/usr/bin:/bin")})
+                               stdin=subprocess.DEVNULL, env=_PROBE_ENV)
         except (OSError, subprocess.TimeoutExpired):
             continue
         if r.returncode == 0:
@@ -464,12 +539,24 @@ class SubprocessRunner(Runner):
         level = self._config.get("isolation_level", "process_env")
         if level not in ISOLATION_LEVELS:
             raise RunnerError(f"unknown isolation_level {level!r}")
-        if level == "container" and not self._container_backend_works():
-            raise IsolationUnavailable(
-                "isolation_level='container' was declared, but no working backend "
-                "was found on this host. Declaring a boundary is not building one, "
-                "so this refuses rather than trusting the declaration. Checked: "
-                f"{', '.join(n for n, _ in CONTAINER_BACKENDS)}.")
+        self._container_backend = None
+        self._isolation_properties = {}
+        if level == "container":
+            if not self._container_backend_works():
+                raise IsolationUnavailable(
+                    "isolation_level='container' was declared, but no working "
+                    "backend was found on this host. Declaring a boundary is not "
+                    "building one, so this refuses rather than trusting the "
+                    f"declaration. Checked: {', '.join(n for n, _ in CONTAINER_BACKENDS)}.")
+            self._isolation_properties = measure_backend_properties(self._container_backend)
+            need = ROLE_ISOLATION_REQUIREMENTS.get(self.role, ())
+            short = [k for k in need if not self._isolation_properties.get(k)]
+            if short:
+                raise IsolationUnavailable(
+                    f"backend {self._container_backend!r} runs, but role "
+                    f"{self.role!r} needs {list(need)} and this host's backend "
+                    f"does not provide {short}. Measured, not assumed. Refusing "
+                    "rather than calling a partial boundary a sandbox.")
         if self.role in ROLES_REQUIRING_REAL_ISOLATION and level != "container":
             raise IsolationUnavailable(
                 f"role {self.role!r} runs untrusted pull-request code and needs "
@@ -485,12 +572,32 @@ class SubprocessRunner(Runner):
                          "run_identity", "executor_identity", "command_allowlist",
                          "deadline", "deadline_seconds", "event_id", "attempt", "review")
 
+    def _remaining(self, order: dict) -> float:
+        """Seconds left on the ROUND, recomputed every time it is asked.
+
+        An absolute instant, not a duration handed over once: the clone and the
+        checkout spend real time before the model starts, and a value captured
+        at dispatch would already be wrong by then.
+        """
+        deadline_at = order.get("deadline_at")
+        if deadline_at is None:
+            return float(self._config.get("timeout_seconds", 1200))
+        return deadline_at - time.time()
+
+    def _require_time(self, order: dict, phase: str) -> float:
+        left = self._remaining(order)
+        if left <= 0:
+            raise RunnerError(
+                f"{self.kind}: the round deadline passed before {phase}; "
+                "refusing to start work that cannot finish inside it")
+        return left
+
     def _container_backend_works(self) -> bool:
         self._container_backend = working_container_backend()
         return self._container_backend is not None
 
     def _write_work_order(self, order: dict, repo: pathlib.Path) -> pathlib.Path:
-        """Hand the runner the whole contract, in a file the PR cannot rewrite.
+        """Hand the runner the whole contract, in a file outside the checkout.
 
         Before this, `run` substituted only `prompt_file` and `head` into the
         command, and `prompt_file` was a path *inside the pull request's own
@@ -500,7 +607,21 @@ class SubprocessRunner(Runner):
         to bind. A record of a contract is not the contract.
 
         The file is written to the workspace root, a sibling of the clone, so
-        content under review cannot edit its own instructions.
+        a change committed IN the pull request cannot edit the instructions the
+        runner is given. That is the whole of the property, and GOV-R2-04 is
+        right that the earlier wording overstated it:
+
+          * chmod 0400 is not a boundary. The runner executes as the same uid
+            that wrote the file, so it can chmod it back and rewrite it. The
+            mode raises the cost of an ACCIDENT — a stray `>` — and nothing
+            more.
+          * "outside the clone" is not a boundary either, for the same reason;
+            it is a boundary against the CONTENT UNDER REVIEW, which is the
+            threat this addresses, and not against the process being run.
+
+        A real boundary here needs a different uid or a container, which is
+        what `isolation_level` is for and what this host was measured not to
+        provide (evidence/probe_isolation_effect.py).
         """
         payload = {k: order[k] for k in self.WORK_ORDER_FIELDS if k in order}
         missing = [k for k in ("task_id", "head", "policy_sha", "phase", "run_identity")
@@ -518,14 +639,18 @@ class SubprocessRunner(Runner):
             shutil.rmtree(path)
         path.mkdir(parents=True)
         repo = path / "repo"
+        left = self._require_time(order, "the clone")
         subprocess.run(["git", "clone", "--quiet", order["repo_url"], str(repo)],
-                       check=True, timeout=self._config.get("clone_timeout", 300), env=env)
+                       check=True, env=env,
+                       timeout=min(self._config.get("clone_timeout", 300), left))
+        left = self._require_time(order, "the checkout")
         subprocess.run(["git", "checkout", "--quiet", order["head"]],
-                       cwd=repo, check=True, timeout=60, env=env)
+                       cwd=repo, check=True, env=env, timeout=min(60, left))
         return repo
 
     def run(self, order: dict) -> dict:
         env = self.environment()
+        self._require_time(order, "dispatch")
         self._require_auth()
         repo = self._workspace(order, env)
         work_order_path = self._write_work_order(order, repo)
@@ -536,13 +661,20 @@ class SubprocessRunner(Runner):
             "deadline_seconds": int(order.get("deadline_seconds")
                                     or self._config.get("timeout_seconds", 1200)),
         })
-        limit = self._config.get("timeout_seconds", 1200)
+        # GOV-R2-05: the round deadline is absolute and is re-read at every
+        # phase. The previous build passed deadline_seconds into the PROMPT and
+        # then waited for the role's own full timeout, so the round limit
+        # bounded nothing — the submission's claim that the runner "takes the
+        # smaller value" did not match the code.
+        limit = min(self._config.get("timeout_seconds", 1200),
+                    int(self._remaining(order)))
         grace = self._config.get("terminate_grace_seconds", 10)
         # start_new_session puts the runner in its own process group, which is
         # the only way to reach the processes IT starts. Without it a timeout
         # kills the runner and leaves its workers holding the credentials.
+        launched = isolate_command(getattr(self, "_container_backend", None), cmd)
         proc = subprocess.Popen(
-            cmd, cwd=repo, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            launched, cwd=repo, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, env=env, start_new_session=True)
         self._current = proc
         try:
@@ -587,6 +719,28 @@ def parse_verdict(kind: str, stdout: str) -> dict:
                           f"({len(stdout)} bytes, not shown)") from exc
     if not isinstance(payload, dict):
         raise RunnerError(f"{kind}: verdict is not an object")
+
+    # The CLI does not print the verdict at the root. It prints its own result
+    # envelope and puts the model's text in `result`. parse_verdict used to read
+    # the root directly, so it only ever worked against a stub that printed a
+    # bare object — which is what the suite supplied, and why nothing noticed.
+    # Shape taken from real runs, de-identified: evidence/cli_envelope_fixture.json
+    if payload.get("type") == "result":
+        if payload.get("is_error") or payload.get("subtype") != "success":
+            raise RunnerError(
+                f"{kind}: CLI reported subtype={payload.get('subtype')!r}, "
+                f"is_error={payload.get('is_error')!r}; no verdict was produced")
+        inner = payload.get("result")
+        if not isinstance(inner, str):
+            raise RunnerError(f"{kind}: CLI envelope has no text result")
+        try:
+            payload = json.loads(inner)
+        except json.JSONDecodeError as exc:
+            raise RunnerError(
+                f"{kind}: the CLI's result text is not the JSON verdict this "
+                f"adapter requires ({len(inner)} bytes, not shown)") from exc
+        if not isinstance(payload, dict):
+            raise RunnerError(f"{kind}: verdict inside the envelope is not an object")
     if kind == "executor":
         head = payload.get("new_head")
         if not isinstance(head, str) or len(head) != 40 or not all(

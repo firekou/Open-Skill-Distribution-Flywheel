@@ -563,6 +563,72 @@ class RealCrossProcessConcurrency(unittest.TestCase):
                              "reported successful and lost")
             self.assertEqual(final["revision"], reported)
 
+    STALE_WORKER = """
+import json, pathlib, sys, time
+sys.path.insert(0, sys.argv[1])
+from store import ConcurrencyError, Store
+root, ttl, sleep_for = pathlib.Path(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4])
+store = Store(root)
+store.acquire("T", "worker-a", ttl=ttl)
+generation = store.lease_generation("T")
+time.sleep(sleep_for)                      # the lease expires while we "work"
+try:
+    store.commit_event_and_task("evt-a", "T", require_owner="worker-a",
+                                require_generation=generation,
+                                status="ADVANCED_BY_A")
+    print("committed")
+except ConcurrencyError:
+    print("refused")
+"""
+
+    def test_a_worker_whose_lease_expired_cannot_advance_the_task(self):
+        """GOV-R2-02, across real processes and a real TTL.
+
+        Worker A takes the lease and overruns it. Worker B — this process —
+        legitimately takes over. A then finishes and tries to record its
+        result. It must be refused: by then the task belongs to B, and A's
+        write would silently overwrite work B is in the middle of."""
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td) / "state"
+            store = Store(root)
+            store.set_task("T", status="READY")
+            script = pathlib.Path(td) / "stale.py"
+            script.write_text(self.STALE_WORKER)
+            proc = subprocess.Popen(
+                [sys.executable, str(script), str(HERE), str(root), "1", "3"],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                start_new_session=True)
+            try:
+                time.sleep(1.6)                      # A's lease has now expired
+                store.acquire("T", "worker-b", ttl=60)
+                out, err = proc.communicate(timeout=30)
+            finally:
+                if proc.poll() is None:
+                    terminate_process_group(proc, grace_seconds=5)
+                for stream in (proc.stdout, proc.stderr):
+                    if stream is not None and not stream.closed:
+                        stream.close()
+            self.assertEqual(proc.returncode, 0, err[-800:])
+            self.assertEqual(out.strip(), "refused",
+                             "a worker whose lease had expired still advanced the task")
+            self.assertNotEqual(store.task("T").get("status"), "ADVANCED_BY_A")
+            self.assertEqual(store.task("T")["lease"]["owner"], "worker-b")
+
+    def test_the_same_worker_inside_its_lease_is_still_allowed(self):
+        """The negative control. A fence that refuses everyone is not a fence,
+        it is an outage."""
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td) / "state"
+            script = pathlib.Path(td) / "stale.py"
+            script.write_text(self.STALE_WORKER)
+            Store(root).set_task("T", status="READY")
+            proc = subprocess.run(
+                [sys.executable, str(script), str(HERE), str(root), "60", "0"],
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(proc.returncode, 0, proc.stderr[-800:])
+            self.assertEqual(proc.stdout.strip(), "committed")
+            self.assertEqual(Store(root).task("T")["status"], "ADVANCED_BY_A")
+
     def test_two_writers_never_share_a_temp_file_name(self):
         """The crash above, stated directly: the name must depend on the writer."""
         with tempfile.TemporaryDirectory() as td:
@@ -643,8 +709,8 @@ class BothReplayEntryPointsStayWiredToTheRealChecks(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             work, cfg = self._stage(tmp)
             sys.path.insert(0, str(work))
-            for name in ("tick", "controller", "runners", "store"):
-                sys.modules.pop(name, None)
+            saved = {name: sys.modules.pop(name, None)
+                     for name in ("tick", "controller", "runners", "store")}
             try:
                 import tick as staged_tick
                 from store import Store as StagedStore
@@ -652,10 +718,26 @@ class BothReplayEntryPointsStayWiredToTheRealChecks(unittest.TestCase):
                 self.assertTrue(ctl._commit_is_on_branch("r", "b", self.SCRIPTED[0]))
                 self.assertFalse(ctl._commit_is_on_branch("r", "b", "9" * 40))
             finally:
-                sys.path.remove(str(work))
-                for name in ("tick", "controller", "runners", "store"):
-                    sys.modules.pop(name, None)
-                import controller, runners, store   # noqa: F401  restore this suite's modules
+                # tick.py inserts its OWN directory on import, so the staged
+                # path is on sys.path twice by now. A single remove() left one
+                # behind and every later `import runners` in this file silently
+                # got the staged copy from a deleted temp dir -- which is why
+                # an isolation test started raising a class that was not the
+                # class its assertRaises was watching for.
+                while str(work) in sys.path:
+                    sys.path.remove(str(work))
+                # Put the ORIGINAL module objects back rather than importing
+                # fresh ones. A fresh import would rebuild the classes, and
+                # this file's top-level `from runners import IsolationUnavailable`
+                # would then name a class no longer raised by anything -- an
+                # assertRaises that can never match.
+                for name, mod in saved.items():
+                    if mod is None:
+                        sys.modules.pop(name, None)
+                    else:
+                        sys.modules[name] = mod
+                import runners as _restored
+                assert _restored is saved["runners"], "module restore failed"
 
     def test_the_replay_fixture_still_reaches_complete_end_to_end(self):
         """Runs replay.py the way a reader would, in a staged copy so the
@@ -1058,11 +1140,106 @@ class EnvironmentFilteringIsNotAnIsolationBoundary(unittest.TestCase):
                 SubprocessRunner("pr_tests", self.CFG, pathlib.Path(tmp), role="pr_tests")
             self.assertIn("container", str(cm.exception))
 
-    def test_declaring_a_container_is_what_permits_it(self):
+    def test_declaring_a_container_is_no_longer_enough(self):
+        """R3 tightened this. Declaring the level used to permit the role. Now
+        the backend's properties are MEASURED and the role is refused unless
+        they cover what it needs. On this host the available backend denies the
+        network and nothing else, so pr_tests is still refused — with a reason
+        that names the missing properties rather than the missing tool."""
+        import runners as _r
         with tempfile.TemporaryDirectory() as tmp:
-            r = SubprocessRunner("pr_tests", {**self.CFG, "isolation_level": "container"},
-                                 pathlib.Path(tmp), role="pr_tests")
+            with patch.object(_r, "working_container_backend", return_value="unshare"), \
+                 patch.object(_r, "measure_backend_properties",
+                              return_value={"network_denied": True,
+                                            "host_fs_denied": False,
+                                            "source_readonly": False}):
+                with self.assertRaises(IsolationUnavailable) as cm:
+                    _r.SubprocessRunner("pr_tests", {**self.CFG,
+                                                     "isolation_level": "container"},
+                                        pathlib.Path(tmp), role="pr_tests")
+            self.assertIn("host_fs_denied", str(cm.exception))
+
+    def test_a_backend_that_covers_every_required_property_is_accepted(self):
+        import runners as _r
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(_r, "working_container_backend", return_value="bwrap"), \
+                 patch.object(_r, "measure_backend_properties",
+                              return_value={k: True for k in _r.ISOLATION_PROPERTIES}):
+                r = _r.SubprocessRunner("pr_tests", {**self.CFG,
+                                                     "isolation_level": "container"},
+                                        pathlib.Path(tmp), role="pr_tests")
             self.assertEqual(r._isolation_level, "container")
+
+    def test_the_wrap_is_actually_applied_to_the_command(self):
+        """The R3 finding: the backend was probed, stored, and then Popen ran
+        the bare command on the host anyway."""
+        import runners as _r
+        self.assertEqual(_r.isolate_command(None, ["x"]), ["x"])
+        wrapped = _r.isolate_command("unshare", ["x", "-y"])
+        self.assertEqual(wrapped[:2], ["unshare", "--user"])
+        self.assertEqual(wrapped[-2:], ["x", "-y"])
+        src = (HERE / "runners.py").read_text()
+        self.assertIn("isolate_command(getattr(self", src,
+                      "run() no longer routes the command through the wrap")
+
+    NET_PROBE = """#!/usr/bin/env python3
+import json, socket
+s = socket.socket(); s.settimeout(5)
+denied = s.connect_ex(("1.1.1.1", 443)) != 0
+print(json.dumps({"new_head": ("a" if denied else "b") * 40}))
+"""
+
+    def test_run_really_launches_the_command_inside_the_backend(self):
+        """The runtime half of the R3 finding. A source check proves the call
+        is written down; this proves it reached the kernel. The command the
+        runner launches reports whether IT could open a socket — if the wrap
+        were dropped between the probe and Popen, the answer changes."""
+        backend = runners.working_container_backend()
+        if backend is None:
+            self.skipTest("no container backend on this host; nothing to prove")
+        props = runners.measure_backend_properties(backend)
+        if not props.get("network_denied"):
+            self.skipTest(f"backend {backend!r} does not deny the network here")
+        with tempfile.TemporaryDirectory() as tmp:
+            probe = pathlib.Path(tmp) / "probe.py"
+            probe.write_text(self.NET_PROBE)
+            probe.chmod(0o755)
+            repo = pathlib.Path(tmp) / "origin"
+            repo.mkdir()
+            env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@e",
+                       GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@e")
+            run = lambda *a: subprocess.run(a, cwd=repo, check=True, env=env,
+                                            capture_output=True)
+            run("git", "init", "--quiet", "-b", "main")
+            (repo / "README").write_text("x\n")
+            run("git", "add", "README"); run("git", "commit", "--quiet", "-m", "c")
+            head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
+                                  capture_output=True, text=True).stdout.strip()
+
+            # Unwrapped first: if the host has no network at all, "denied" would
+            # be true for the wrong reason and this test would pass vacuously.
+            bare = subprocess.run([sys.executable, str(probe)], capture_output=True,
+                                  text=True, timeout=60)
+            if json.loads(bare.stdout)["new_head"] != "b" * 40:
+                self.skipTest("this host has no outbound network; the control is vacuous")
+
+            import runners as _r
+            with patch.object(_r, "measure_backend_properties",
+                              return_value={k: True for k in _r.ISOLATION_PROPERTIES}):
+                runner = _r.SubprocessRunner(
+                    "executor", {"enabled": True, "identity_suffix": "iso",
+                                 "command": [sys.executable, str(probe)],
+                                 "isolation_level": "container",
+                                 "timeout_seconds": 120},
+                    pathlib.Path(tmp) / "ws", role="executor")
+                result = runner.run({"task_id": "T", "head": head,
+                                     "repo_url": str(repo), "prompt_file": "P.md",
+                                     "policy_sha": "p" * 40, "phase": "execute",
+                                     "run_identity": "r", "deadline_seconds": 100,
+                                     "deadline_at": time.time() + 100})
+            self.assertEqual(result, {"new_head": "a" * 40},
+                             "the runner's own child still reached the network: "
+                             "the wrap did not reach Popen")
 
     def test_a_made_up_isolation_level_is_refused_not_defaulted(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1292,6 +1469,83 @@ class RunsAndTheRoundDeadlineAreNotResetByFailure(unittest.TestCase):
             h.ctl.step("T", "evt-1")
             self.assertIn("deadline_seconds", seen)
             self.assertGreater(seen["deadline_seconds"], 0)
+            # R3: the runner recomputes what is left from an ABSOLUTE instant,
+            # because the clone and the checkout spend real time before the
+            # model starts. The controller shipped only `deadline_seconds`
+            # while runners._remaining read `deadline_at`, found nothing, and
+            # fell back to the runner's own full timeout — so the round limit
+            # reached the prompt and bounded nothing that actually stops.
+            self.assertIn("deadline_at", seen,
+                          "the absolute round deadline never reached the runner")
+            self.assertAlmostEqual(seen["deadline_at"],
+                                   h.store.task("T")["round_deadline"], places=3)
+
+    def test_an_expired_round_refuses_to_dispatch_at_all(self):
+        """GOV-R2-05: an overrun round used to clamp `deadline_seconds` to 1
+        and dispatch anyway. The round's real age now goes to the guard, whose
+        own `elapsed >= timeout` STOP is what refuses it — so the limit is
+        enforced by the trusted policy rather than by the caller."""
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            h.store.set_task("T", round_deadline=time.time() - 1)
+            out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out["action"], "STOP")
+            self.assertEqual(out["reason"], "limit")
+            self.assertEqual(h.executor.calls, [],
+                             "a runner was started after the round had expired")
+            self.assertEqual(h.store.task("T")["status"], "STOPPED")
+
+    def test_the_round_age_grows_across_steps(self):
+        """The negative control for the same field: if `elapsed` were still
+        per-step it would be ~0 every time and the STOP above could not fire."""
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            seen = []
+
+            class Peek(FakeExecutor):
+                def run(self, order):
+                    seen.append(order["elapsed"])
+                    return super().run(order)
+
+            h.executor = Peek([H1, H2]); h.ctl.executor = h.executor
+            h.ctl.step("T", "evt-1")
+            h.store.set_task("T", round_deadline=time.time() + 100)
+            h.store.set_task("T", status="READY")
+            h.ctl.step("T", "evt-2")
+            self.assertGreater(seen[-1], 2500,
+                               "elapsed is still measured from the start of the step")
+
+    def test_the_runner_stops_at_the_round_deadline_not_at_its_own(self):
+        """The runner's own timeout is 1200s. If the round has two seconds
+        left, two seconds is the limit — measured by actually running one."""
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = pathlib.Path(tmp) / "origin"
+            repo.mkdir()
+            env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@e",
+                       GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@e")
+            run = lambda *a: subprocess.run(a, cwd=repo, check=True, env=env,
+                                            capture_output=True)
+            run("git", "init", "--quiet", "-b", "main")
+            (repo / "README").write_text("x\n")
+            run("git", "add", "README"); run("git", "commit", "--quiet", "-m", "c")
+            head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
+                                  capture_output=True, text=True).stdout.strip()
+            runner = SubprocessRunner(
+                "executor", {"enabled": True, "identity_suffix": "d",
+                             "command": ["sleep", "120"],
+                             "timeout_seconds": 1200, "terminate_grace_seconds": 1},
+                pathlib.Path(tmp) / "ws", role="executor")
+            order = {"task_id": "T", "head": head, "repo_url": str(repo),
+                     "prompt_file": "P.md", "policy_sha": "p" * 40,
+                     "phase": "execute", "run_identity": "r",
+                     "deadline_seconds": 1200,
+                     "deadline_at": time.time() + 3}
+            started = time.time()
+            with self.assertRaises(RunnerError) as cm:
+                runner.run(order)
+            self.assertIn("timed out", str(cm.exception))
+            self.assertLess(time.time() - started, 60,
+                            "the runner waited for its own timeout, not the round's")
 
 
 class MissingAuthIsBlockedNotPassed(unittest.TestCase):
@@ -1567,7 +1821,7 @@ class LeaseRenewalAndIntentLedger(unittest.TestCase):
             self.assertEqual(len(open_now), 1)
             self.assertEqual(open_now[0]["action"], "push")
             self.assertEqual(open_now[0]["head"], H1)
-            reopened.close_intent("T", intent, outcome="confirmed")
+            reopened.close_intent("T", intent, outcome="effect_confirmed")
             self.assertEqual(Store(pathlib.Path(td)).open_intents("T"), [])
 
 
@@ -1618,6 +1872,553 @@ class AuditTrail(unittest.TestCase):
             b.log(kind="two")
             self.assertEqual([e["kind"] for e in Store(pathlib.Path(td)).events()],
                              ["one", "two"])
+
+
+class RecoveryReadsTheIntentLedger(unittest.TestCase):
+    """GOV-R2-03, second pass. `record_intent` wrote the ledger and NOTHING
+    read it. A controller restarted after a crash went straight back to
+    dispatch, so the single case the ledger exists for — the executor pushed,
+    the process died before the push was recorded — re-ran the executor on top
+    of its own unrecorded work.
+
+    Recovery is now a reconciliation: go and look at the remote, and let what
+    is actually there decide."""
+
+    def _crashed_mid_execute(self, td, live_head):
+        """The state a worker leaves behind when it dies after dispatching."""
+        h = Harness(td, pinned_head=live_head)
+        h.store.record_intent("T", "execute", head=H0, event_id="evt-crashed",
+                              run_identity="executor-gone")
+        return h
+
+    def test_a_push_that_landed_is_not_dispatched_a_second_time(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = self._crashed_mid_execute(td, live_head=H1)   # the branch moved
+            out = h.ctl.step("T", "evt-after-restart")
+            self.assertEqual(h.executor.calls, [],
+                             "the executor was re-run on top of its own unrecorded push")
+            self.assertEqual(h.store.task("T")["last_head"], H1)
+            self.assertEqual(h.store.open_intents("T"), [])
+            resolved = h.store.task("T")["resolved_intents"]
+            self.assertEqual(resolved[0]["action"], "execute")
+            self.assertEqual(resolved[0]["outcome"], "effect_confirmed")
+            # Reconciliation puts the task where the push left it, so the same
+            # step carries straight on into the REVIEW it was owed.
+            self.assertIn(out["action"], ("FIX_PENDING", "COMPLETE",
+                                          "CONDITIONS_PENDING", "NEEDS_INFORMATION"))
+
+    def test_a_push_that_did_not_land_is_safe_to_redo(self):
+        """The negative control. If reconciliation refused to dispatch whenever
+        an intent was open, it would deadlock every crash instead of only the
+        dangerous ones."""
+        with tempfile.TemporaryDirectory() as td:
+            h = self._crashed_mid_execute(td, live_head=H0)   # branch never moved
+            out = h.ctl.step("T", "evt-after-restart")
+            self.assertEqual(out["action"], "REVIEW_PENDING")
+            self.assertEqual(len(h.executor.calls), 1, "safe work was not redone")
+            self.assertEqual(
+                [i["outcome"] for i in h.store.task("T")["resolved_intents"]],
+                ["effect_refuted", "effect_confirmed"])
+
+    def test_an_effect_nobody_can_observe_stops_instead_of_guessing(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = self._crashed_mid_execute(td, live_head=H1)
+
+            def unreachable(_repo, _branch):
+                raise RuntimeError("git ls-remote: could not resolve host")
+
+            h.ctl._head_of = unreachable
+            out = h.ctl.step("T", "evt-after-restart")
+            self.assertEqual(out["action"], "NEEDS_INFORMATION")
+            self.assertEqual(h.executor.calls, [])
+            self.assertEqual(h.store.task("T")["status"], "NEEDS_INFORMATION")
+            self.assertEqual(
+                [i["outcome"] for i in h.store.task("T")["resolved_intents"]],
+                ["effect_unknown"],
+                "an unobservable effect was filed as a known one")
+
+    def test_step_actually_reads_the_ledger(self):
+        """The dead-code check, stated as a test. This is the exact shape the
+        finding was about: an API with tests and no caller."""
+        import ast as _ast
+        tree = _ast.parse((HERE / "controller.py").read_text())
+        called = {n.func.attr for n in _ast.walk(tree)
+                  if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)}
+        self.assertIn("open_intents", called, "the intent ledger is still never read")
+
+    def test_an_intent_cannot_be_closed_without_saying_what_was_observed(self):
+        with tempfile.TemporaryDirectory() as td:
+            store = Store(pathlib.Path(td))
+            intent = store.record_intent("T", "execute", head=H0)
+            with self.assertRaises(ValueError):
+                store.commit_event_and_task("e", "T", close_intent_id=intent)
+            with self.assertRaises(ValueError):
+                store.close_intent("T", intent, outcome="done")
+            self.assertTrue(store.open_intents("T"),
+                            "a refused close still emptied the ledger")
+
+
+class ADriveResendResumesInsteadOfStalling(unittest.TestCase):
+    """GOV-R2-03. `drive` namespaces its steps as `<event>/<n>`, so a RESEND of
+    the same firing meets `<event>/0` in the processed-event ledger. The loop
+    treated that duplicate as a stop signal and returned having done nothing —
+    in exactly the situation a resend exists for."""
+
+    def test_a_resend_picks_up_where_the_first_delivery_stopped(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td, decisions=("APPROVED",))
+            first = h.ctl.drive("T", "delivery-1", max_steps=1)
+            self.assertEqual([r["action"] for r in first], ["REVIEW_PENDING"])
+            self.assertNotIn(h.store.task("T")["status"],
+                             ("COMPLETE", "CONDITIONS_PENDING"))
+
+            resend = h.ctl.drive("T", "delivery-1", max_steps=6)
+            self.assertEqual(resend[0], {"action": "NOOP", "reason": "duplicate"},
+                             "the already-run sub-step should be recognised")
+            self.assertGreater(len(resend), 1,
+                               "the resend stopped at the duplicate and did nothing")
+            self.assertEqual(h.store.task("T")["status"], "COMPLETE")
+
+    def test_a_real_noop_still_stops_the_loop(self):
+        """The negative control: only a DUPLICATE is a reason to keep going.
+        Skipping every NOOP would turn a task leased elsewhere into a spin."""
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            h.store.set_task("T", status="WAITING_OWNER")
+            trail = h.ctl.drive("T", "delivery-9", max_steps=5)
+            self.assertEqual(len(trail), 1)
+            self.assertEqual(trail[0]["reason"], "terminal:WAITING_OWNER")
+
+
+class TheLeaseFenceIsWiredAtEveryCommit(unittest.TestCase):
+    """GOV-R2-02, second pass. `commit_event_and_task` grew require_owner and
+    require_generation, and not one call site passed them: the check existed
+    only in its own unit test. And when renewal failed, the runner was left to
+    finish — burning the rest of its timeout, possibly pushing, while another
+    worker already held the task."""
+
+    def test_no_unfenced_state_commit_is_left_in_the_controller(self):
+        import ast as _ast
+        tree = _ast.parse((HERE / "controller.py").read_text())
+        unfenced = []
+        for node in _ast.walk(tree):
+            if (isinstance(node, _ast.Call) and isinstance(node.func, _ast.Attribute)
+                    and node.func.attr == "commit_event_and_task"):
+                names = {kw.arg for kw in node.keywords}
+                if "require_owner" not in names:
+                    unfenced.append(node.lineno)
+        self.assertEqual(unfenced, [],
+                         f"unfenced commit_event_and_task at line(s) {unfenced}")
+
+    @staticmethod
+    def _take_over(store, task_id):
+        """What actually happens: our lease EXPIRES — because renewal stopped,
+        or the process was paused — and another worker legitimately claims the
+        task. A stranger cannot simply seize a live lease, so a test that has
+        one do so is testing `acquire`, not the fence."""
+        state = store.read()
+        store.commit(state["revision"],
+                     lambda s: s["tasks"][task_id]["lease"].update(expires_at=0))
+        store.acquire(task_id, "someone-else", ttl=600)
+
+    def _thief(self, h):
+        thief = FakeExecutor([H1])
+        real_run = thief.run
+
+        def steal_then_run(order):
+            self._take_over(h.store, "T")
+            return real_run(order)
+
+        thief.run = steal_then_run
+        return thief
+
+    def test_a_lease_taken_over_mid_run_makes_the_commit_refuse(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            h.ctl.executor = self._thief(h)
+            out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out, {"action": "NOOP", "reason": "lease_lost_mid_run"})
+            self.assertNotEqual(h.store.task("T").get("status"), "REVIEW_PENDING")
+            self.assertEqual(h.store.task("T")["lease"]["owner"], "someone-else",
+                             "the discarded worker released the new holder's lease")
+
+    def test_the_generation_is_what_distinguishes_a_returned_lease(self):
+        """Owner alone is not enough: the same identity releasing and
+        re-acquiring produces a lease that is NOT the one we were holding."""
+        with tempfile.TemporaryDirectory() as td:
+            store = Store(pathlib.Path(td))
+            store.acquire("T", "worker-a", ttl=600)
+            first = store.lease_generation("T")
+            store.release("T", "worker-a")
+            store.acquire("T", "worker-a", ttl=600)
+            self.assertNotEqual(store.lease_generation("T"), first)
+            with self.assertRaises(ConcurrencyError):
+                store.commit_event_and_task("e", "T", require_owner="worker-a",
+                                            require_generation=first, status="X")
+
+    def test_losing_the_lease_cancels_the_runner_there_and_then(self):
+        cancelled = []
+
+        class SlowRunner:
+            def identity(self):
+                return "slow-1"
+
+            def cancel_current(self, grace_seconds=None):
+                cancelled.append(True)
+                self.stop.set()
+                return "terminated"
+
+            def run(self, order):
+                self.stop = getattr(self, "stop", threading.Event())
+                if not self.stop.wait(20):
+                    raise AssertionError("the runner was never cancelled")
+                raise RunnerError("slow-1: exited -15")
+
+        runner = SlowRunner()
+        runner.stop = threading.Event()
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td, lease_seconds=3)
+            h.ctl.executor = runner
+            with patch.object(type(h.store), "renew",
+                              side_effect=ConcurrencyError("lease gone")):
+                out = h.ctl.step("T", "evt-1")
+            self.assertTrue(cancelled, "the runner kept running after the lease was lost")
+            self.assertEqual(out, {"action": "NOOP", "reason": "lease_lost_mid_run"})
+            self.assertTrue(h.store.open_intents("T"),
+                            "an unresolved external effect left no intent to reconcile")
+            # The subtle half of the same bug: the child killed BECAUSE we lost
+            # the lease exits non-zero, and recording that as FAILED writes a
+            # result we are not entitled to write, under a plausible reason.
+            self.assertNotEqual(h.store.task("T").get("status"), "FAILED")
+
+    def test_the_commit_refuses_even_when_the_pre_check_passed(self):
+        """`_fence` is a read taken before the commit, so it cannot cover the
+        window between them. This removes the pre-check entirely and demands
+        the commit itself still refuse — which is the whole reason
+        require_owner exists."""
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            h.ctl.executor = self._thief(h)
+            with patch.object(Controller, "_fence", lambda self, task_id: None):
+                out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out, {"action": "NOOP", "reason": "lease_lost_at_commit"})
+            self.assertNotEqual(h.store.task("T").get("status"), "REVIEW_PENDING")
+            self.assertIn("commit_refused", [e["kind"] for e in h.store.events()])
+
+    def test_release_never_takes_someone_elses_lease(self):
+        with tempfile.TemporaryDirectory() as td:
+            store = Store(pathlib.Path(td))
+            store.acquire("T", "worker-a", ttl=600)
+            with self.assertRaises(ConcurrencyError):
+                store.release("T", "worker-b")
+            self.assertEqual(store.task("T")["lease"]["owner"], "worker-a",
+                             "a stranger's release deleted the live lease")
+
+    def test_a_failed_release_does_not_replace_the_step_result(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            with patch.object(type(h.store), "release",
+                              side_effect=ConcurrencyError("not ours")):
+                out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out["action"], "REVIEW_PENDING",
+                             "cleanup replaced the answer the step had already reached")
+            self.assertIn("release_skipped", [e["kind"] for e in h.store.events()])
+
+    def test_a_runner_failure_asks_the_remote_before_calling_it_a_failure(self):
+        """A failing executor may still have pushed. Recording FAILED without
+        looking is a claim about the world made from an exit code."""
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+
+            class Fails:
+                def identity(self):
+                    return "fails-1"
+
+                def cancel_current(self, grace_seconds=None):
+                    return "nothing_running"
+
+                def run(self, order):
+                    # It pushed, and then it died. The branch moves while the
+                    # runner is running, not before it is dispatched.
+                    h.pinned_head = H1
+                    raise RunnerError("fails-1: exited 1")
+
+            h.ctl.executor = Fails()
+            out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out["action"], "NEEDS_INFORMATION")
+            self.assertEqual(h.store.task("T")["status"], "NEEDS_INFORMATION")
+            self.assertEqual(
+                [i["outcome"] for i in h.store.task("T")["resolved_intents"]],
+                ["effect_confirmed"])
+
+    def test_a_runner_failure_that_changed_nothing_is_still_a_failure(self):
+        """The negative control for the test above."""
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+
+            class Fails:
+                def identity(self):
+                    return "fails-1"
+
+                def cancel_current(self, grace_seconds=None):
+                    return "nothing_running"
+
+                def run(self, order):
+                    raise RunnerError("fails-1: exited 1")
+
+            h.ctl.executor = Fails()
+            out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out["action"], "FAILED")
+            self.assertEqual(
+                [i["outcome"] for i in h.store.task("T")["resolved_intents"]],
+                ["effect_refuted"])
+
+
+class TheGuardIsCheckedBeforeItIsExecuted(unittest.TestCase):
+    """GOV-R2-04. `build()` called load_guard at the TOP, before the policy pin
+    was verified — and load_guard EXECUTES the module. Every check that
+    followed was a check on code that had already run. Separately, the
+    containment test compared a RAW config path while the loader was handed a
+    resolved one, so a relative guard_path was checked as one file and executed
+    as another."""
+
+    def _policy_repo(self, tmp, guard_body):
+        repo = pathlib.Path(tmp) / "policy"
+        (repo / "governance").mkdir(parents=True)
+        guard = repo / "governance" / "preflight.py"
+        guard.write_text(guard_body)
+        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@e",
+                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@e")
+        run = lambda *a: subprocess.run(a, cwd=repo, check=True, env=env,
+                                        capture_output=True)
+        run("git", "init", "--quiet", "-b", "main")
+        run("git", "add", "-A")
+        run("git", "commit", "--quiet", "-m", "policy")
+        sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
+                             capture_output=True, text=True).stdout.strip()
+        return repo, guard, sha
+
+    def test_a_wrong_pin_refuses_before_the_guard_module_runs(self):
+        import tick as _tick
+        with tempfile.TemporaryDirectory() as td:
+            marker = pathlib.Path(td) / "the-guard-ran"
+            repo, guard, sha = self._policy_repo(
+                td, f"import pathlib\npathlib.Path({str(marker)!r}).write_text('x')\n"
+                    "def evaluate(order):\n    return {'action': 'NOOP'}\n")
+            cfg = {"mode": "live", "guard_path": str(guard),
+                   "policy_repo": str(repo), "policy_sha": "9" * 40,
+                   "state_dir": str(pathlib.Path(td) / "s"),
+                   "workspace_root": str(pathlib.Path(td) / "w"),
+                   "controller_identity": "t", "run_budget": 1}
+            with self.assertRaises(SystemExit):
+                _tick.build(cfg, Store(pathlib.Path(td) / "s"))
+            self.assertFalse(marker.exists(),
+                             "the guard module was executed before its pin was checked")
+
+    def test_a_modified_guard_is_refused_even_though_head_still_matches(self):
+        import tick as _tick
+        with tempfile.TemporaryDirectory() as td:
+            repo, guard, sha = self._policy_repo(
+                td, "def evaluate(order):\n    return {'action': 'NOOP'}\n")
+            clean, why = _tick.guard_is_clean(repo, guard)
+            self.assertTrue(clean, why)              # positive control first
+            guard.write_text("def evaluate(order):\n"
+                             "    return {'action': 'DISPATCH_ALLOWED'}\n")
+            clean, why = _tick.guard_is_clean(repo, guard)
+            self.assertFalse(clean, "an edited guard passed a check on HEAD alone")
+            self.assertIn("modified or untracked", why)
+
+    def test_an_untracked_guard_is_refused(self):
+        import tick as _tick
+        with tempfile.TemporaryDirectory() as td:
+            repo, guard, sha = self._policy_repo(
+                td, "def evaluate(order):\n    return {'action': 'NOOP'}\n")
+            other = repo / "governance" / "preflight_new.py"
+            other.write_text("def evaluate(order):\n    return {}\n")
+            clean, why = _tick.guard_is_clean(repo, other)
+            self.assertFalse(clean, "an untracked file was accepted as pinned policy")
+
+    def test_a_guard_outside_the_pinned_checkout_is_refused(self):
+        import tick as _tick
+        with tempfile.TemporaryDirectory() as td:
+            repo, guard, sha = self._policy_repo(
+                td, "def evaluate(order):\n    return {'action': 'NOOP'}\n")
+            outside = pathlib.Path(td) / "elsewhere.py"
+            outside.write_text("def evaluate(order):\n    return {}\n")
+            clean, why = _tick.guard_is_clean(repo, outside)
+            self.assertFalse(clean)
+            self.assertIn("outside", why)
+
+    def test_a_relative_guard_path_works_from_a_cwd_outside_the_repository(self):
+        """A trigger calls tick from wherever it happens to live. The shipped
+        config's guard_path is relative, so if it resolved against the caller's
+        cwd the whole thing would only ever work from the repo root — and the
+        containment check would be comparing a different file from the one that
+        gets executed."""
+        with tempfile.TemporaryDirectory() as td:
+            cfg = json.loads((HERE / "config.replay.json").read_text())
+            self.assertFalse(pathlib.Path(cfg["guard_path"]).is_absolute(),
+                             "the shipped config no longer exercises this")
+            cfg["state_dir"] = str(pathlib.Path(td) / "state")
+            cfg["stop_file"] = str(pathlib.Path(td) / "state" / "STOP")
+            cfg_path = pathlib.Path(td) / "cfg.json"
+            cfg_path.write_text(json.dumps(cfg))
+            proc = subprocess.run(
+                [sys.executable, str(HERE / "tick.py"), "--config", str(cfg_path),
+                 "--task", "RELPATH", "--event", "e-1", "--drive"],
+                cwd=td, capture_output=True, text=True, timeout=120)
+            self.assertEqual(proc.returncode, 10,
+                             f"tick did not run from an outside cwd: {proc.stderr[-800:]}")
+            self.assertIn("COMPLETE", proc.stdout)
+
+    def test_the_same_resolver_produces_the_checked_path_and_the_loaded_path(self):
+        src = (HERE / "tick.py").read_text()
+        self.assertNotIn('pathlib.Path(config["guard_path"])', src,
+                         "tick still builds the guard path two different ways")
+        self.assertEqual(src.count('resolve(config["guard_path"])'), 1,
+                         "guard_path should be resolved once and reused")
+
+
+class TheShippedTemplateIsDrivenAgainstTheRealCliEnvelope(unittest.TestCase):
+    """GOV-R2-01. `parse_verdict` read the model's JSON at the ROOT of stdout.
+    The CLI does not put it there: it prints its own result envelope and puts
+    the model's text in `result`, as a STRING. Every adapter test in this file
+    supplied a bare object, so the suite agreed with the code and both were
+    wrong about the only shape that would ever have run in production.
+
+    These drive the SHIPPED command template — the flags and the prompt exactly
+    as config.live.example.json has them, with only the program replaced — over
+    a real git clone, against the envelope recorded in
+    evidence/cli_envelope_fixture.json. No model, no network, no credential."""
+
+    FIXTURE = json.loads((HERE / "evidence" / "cli_envelope_fixture.json").read_text())
+
+    def _origin(self, tmp):
+        repo = pathlib.Path(tmp) / "origin"
+        repo.mkdir()
+        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@e",
+                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@e")
+        run = lambda *a: subprocess.run(a, cwd=repo, check=True, env=env,
+                                        capture_output=True)
+        run("git", "init", "--quiet", "-b", "main")
+        (repo / "README").write_text("fixture\n")
+        run("git", "add", "README")
+        run("git", "commit", "--quiet", "-m", "fixture")
+        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
+                              capture_output=True, text=True).stdout.strip()
+        return repo, head
+
+    def _stub_cli(self, tmp, envelope, name="claude-stub"):
+        """Stands in for `claude`. Prints the envelope; records its own argv so
+        the test can prove the shipped prompt actually reached the program."""
+        stub = pathlib.Path(tmp) / name
+        argv_log = pathlib.Path(tmp) / f"{name}.argv.json"
+        stub.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json, sys, pathlib\n"
+            f"pathlib.Path({str(argv_log)!r}).write_text(json.dumps(sys.argv[1:]))\n"
+            f"sys.stdout.write({json.dumps(json.dumps(envelope))})\n")
+        stub.chmod(0o755)
+        return stub, argv_log
+
+    def _shipped_command(self, role, stub):
+        cfg = json.loads((HERE / "config.live.example.json").read_text())
+        command = list(cfg["runners"][role]["command"])
+        self.assertEqual(command[0], "claude",
+                         "the shipped template no longer starts with the CLI")
+        command[0] = str(stub)                    # ONLY the program is replaced
+        return cfg, command
+
+    def _drive(self, tmp, role, envelope):
+        repo, head = self._origin(tmp)
+        stub, argv_log = self._stub_cli(tmp, envelope)
+        cfg, command = self._shipped_command(role, stub)
+        runner_cfg = dict(cfg["runners"][role], command=command, enabled=True,
+                          identity_suffix="fixture")
+        runner = runners.SubprocessRunner(role, runner_cfg,
+                                          pathlib.Path(tmp) / "ws", role=role)
+        order = {"task_id": "T", "head": head, "repo_url": str(repo),
+                 "prompt_file": "PROMPT.md", "policy_sha": "p" * 40,
+                 "phase": "execute" if role == "executor" else "review",
+                 "run_identity": f"{role}-fixture", "goal": "g",
+                 "deadline_seconds": 60, "deadline_at": time.time() + 120}
+        return runner.run(order), json.loads(argv_log.read_text())
+
+    def test_the_whole_path_from_the_shipped_template_to_a_verdict(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result, argv = self._drive(
+                tmp, "executor", self.FIXTURE["success_envelope_derived"])
+            self.assertEqual(result, {"new_head": "a" * 40})
+            joined = " ".join(argv)
+            self.assertIn("--output-format", argv)
+            self.assertIn("json", argv)
+            self.assertIn("work_order.json", joined,
+                          "the work order never reached the program's argv")
+            self.assertIn("60 seconds", joined,
+                          "the deadline was substituted nowhere the runner can see")
+            self.assertNotIn("{head}", joined, "a placeholder shipped unsubstituted")
+
+    def test_the_reviewer_half_of_the_same_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result, argv = self._drive(
+                tmp, "reviewer", self.FIXTURE["success_envelope_review_derived"])
+            self.assertEqual(result["review"]["decision"], "APPROVED")
+            self.assertIn("INDEPENDENT REVIEWER", " ".join(argv))
+
+    def test_the_measured_error_envelope_is_refused(self):
+        """The negative control, and the reason the fixture is kept at all."""
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(RunnerError) as cm:
+                self._drive(tmp, "executor",
+                            self.FIXTURE["error_envelope_measured"])
+            self.assertNotIn("Connection refused", str(cm.exception),
+                             "the provider's error body was quoted back")
+
+    def test_subtype_alone_would_have_accepted_that_failure(self):
+        """Measured, not reasoned about: in a real failing run the CLI reports
+        subtype='success' AND is_error=true at the same time. An adapter that
+        gates on subtype accepts an API failure as a completed run."""
+        measured = self.FIXTURE["error_envelope_measured"]
+        self.assertEqual(measured["subtype"], "success")
+        self.assertTrue(measured["is_error"])
+        self.assertEqual(measured["total_cost_usd"], 0,
+                         "the fixture was supposed to cost nothing to record")
+        src = (HERE / "runners.py").read_text()
+        self.assertIn('payload.get("is_error")', src,
+                      "parse_verdict no longer looks at is_error")
+
+    def test_prose_inside_a_valid_envelope_is_not_a_verdict(self):
+        envelope = dict(self.FIXTURE["success_envelope_derived"],
+                        result="Sure! I have pushed the commit for you.")
+        with self.assertRaises(RunnerError) as cm:
+            parse_verdict("executor", json.dumps(envelope))
+        self.assertNotIn("Sure!", str(cm.exception))
+
+    def test_an_envelope_with_no_text_result_is_not_a_verdict(self):
+        envelope = dict(self.FIXTURE["success_envelope_derived"])
+        envelope.pop("result")
+        with self.assertRaises(RunnerError):
+            parse_verdict("executor", json.dumps(envelope))
+        envelope["result"] = {"new_head": "a" * 40}     # right data, wrong shape
+        with self.assertRaises(RunnerError):
+            parse_verdict("executor", json.dumps(envelope))
+
+    def test_a_verdict_nested_in_an_envelope_still_has_to_be_well_formed(self):
+        envelope = dict(self.FIXTURE["success_envelope_derived"],
+                        result=json.dumps({"new_head": "not-a-sha"}))
+        with self.assertRaises(RunnerError):
+            parse_verdict("executor", json.dumps(envelope))
+
+    def test_the_fixture_says_which_of_its_fields_were_measured(self):
+        """A fixture that presents synthesised values as observations is worse
+        than no fixture: it launders a guess into evidence."""
+        prov = self.FIXTURE["_provenance"]
+        self.assertEqual(prov["error_envelope_measured"]["evidence_ladder"],
+                         "REPRODUCED")
+        self.assertIn("SYNTHETIC",
+                      prov["success_envelope_derived"]["evidence_ladder"])
+        self.assertIn("result", prov["success_envelope_derived"]["not_measured"])
+        self.assertNotIn("ANTHROPIC_API_KEY=", json.dumps(self.FIXTURE))
 
 
 if __name__ == "__main__":

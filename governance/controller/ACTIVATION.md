@@ -101,7 +101,12 @@ authenticated runner that nothing ever invokes still does nothing.
    `runners.*.enabled = true`. It ships disabled so that enabling live dispatch
    is a deliberate, reviewable edit rather than a flag already on.
 2. Point `state_dir` at persistent disk and `stop_file` somewhere the operator
-   can write.
+   can write. In `mode: "live"`, `policy_repo` must be a checkout whose
+   `HEAD` equals the configured `policy_sha`, `guard_path` must resolve
+   **inside** it, and that file must be neither modified nor untracked —
+   `tick.py` checks all three **before** it imports the guard, because
+   importing it executes it. A pin that does not cover the file it names is
+   decoration.
 3. Run **one** task with `max_attempts: 1` and keep the run IDs, SHAs and
    timings. That earns `MANUAL_RUN_VERIFIED`.
 4. Point a launcher that outlives this session at `tick.py`, passing its own
@@ -142,9 +147,10 @@ controller and loses history; it does not touch the repo.
 | fix rounds | `max_attempts` | 2 | how many times a task comes back |
 | one model call | runner `timeout_seconds` | 1200s (20 min) | one execute or one review |
 | one round | top-level `timeout_seconds` | 2700s (45 min) | execute + review together |
-| repository tests | `pr_tests` role, when wired | 600s (10 min) | untrusted code, no credential |
+| repository tests | `pr_tests` role, **refused until a container provides all three of `network_denied`, `host_fs_denied`, `source_readonly`** | 600s (10 min) | untrusted code |
 | runner overrun | `terminate_grace_seconds` | 10s | SIGTERM before SIGKILL, to the whole process group |
-| one worker per task | lease in the store | 900s, recoverable after expiry | concurrent workers |
+| one worker per task | lease in the store | 2100s, recoverable after expiry | concurrent workers |
+| one round, enforced | `elapsed >= timeout` **in the trusted guard** | 2700s | an overrun round is refused at dispatch, not clamped |
 
 **These are counts and clocks. None of them is a billing statement.** The run
 cap bounds how many times a model is called; it says nothing about which
@@ -169,18 +175,31 @@ start one run over the cap. Verified: `run_budget=N` starts exactly N runs.
 - **Isolation, stated exactly.** What now holds: each runner gets a fresh clone,
   and its environment is an **allowlist** built per role — `PATH`, `HOME` and a
   few locale variables, plus only the credentials that role is entitled to. The
-  reviewer never receives a write token; the `pr_tests` role receives no
-  credential at all; anything added to the parent environment later is dropped
-  rather than inherited. The previous default was `env=None`, which subprocess
-  reads as "inherit everything": 142 variables on the host this was written on,
-  including `GITHUB_TOKEN` and `AWS_SECRET_ACCESS_KEY`. Nothing leaked, because
-  live dispatch was never on — but the default contradicted this file.
-  What still does **not** hold: a fresh clone plus a filtered environment is not
-  a sandbox. Untrusted repository code executed by a runner still shares the
-  kernel, the filesystem outside the clone and the network with the controller.
-  Container or namespace isolation is available in principle and **is not wired
-  in here**. Until it is, running an untrusted PR's own test suite is outside
-  what this design covers.
+  reviewer never receives a write token; anything added to the parent
+  environment later is dropped rather than inherited, and the caller's own
+  `CLAUDE_CODE_SESSION_ID` is denied **by name** so a widened allowlist cannot
+  leak the caller's session identity. The previous default was `env=None`,
+  which subprocess reads as "inherit everything": 142 variables on the host
+  this was written on, including `GITHUB_TOKEN` and `AWS_SECRET_ACCESS_KEY`.
+  Nothing leaked, because live dispatch was never on — but the default
+  contradicted this file.
+
+  **Correction, measured.** This file used to say the `pr_tests` role "receives
+  no credential at all", and proved it by listing environment variables. Run
+  against the real CLI, all three roles **authenticated and billed** under that
+  same empty allowlist (`evidence/auth_isolation_probe.json`). Environment
+  filtering was never the credential boundary; it only looked like one. So the
+  claim is withdrawn and the code now refuses instead: `pr_tests` will not start
+  unless an `isolation_level: "container"` backend is present **and measured**
+  to deny the network, deny the host filesystem and keep the source read-only.
+  On the host this was written on the available backend (`unshare --user --net`)
+  denies only the network, so `pr_tests` is refused — that refusal is the
+  current, honest state, not a wiring to-do.
+
+  The work order is written outside the clone so that a commit **in the pull
+  request** cannot rewrite the runner's own instructions. It is `chmod 0400`,
+  and that mode is **not** a boundary against the runner: same uid, so it can
+  chmod it back. The mode raises the cost of an accident, nothing more.
 - The GPT-side trigger is outside this repository and is not described by it.
   This file specifies the interface it can call; it does not claim to know how
   that trigger is configured.

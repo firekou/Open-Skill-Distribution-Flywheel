@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import subprocess
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -64,10 +65,42 @@ def resolve(path_text: str) -> pathlib.Path:
     return path if path.is_absolute() else (REPO / path)
 
 
+def guard_is_clean(policy_repo: pathlib.Path, guard_path: pathlib.Path) -> tuple[bool, str]:
+    """Is the guard file on disk actually the one the pinned commit contains?
+
+    GOV-R2-04: `policy_sha` proved which COMMIT was checked out and nothing
+    about the working tree. `git checkout <sha>` followed by an edit — or an
+    untracked file where the guard is expected — leaves rev-parse HEAD saying
+    exactly what the config pins while the bytes that get executed are
+    something nobody approved. A pin that does not cover the file it names is
+    decoration.
+    """
+    try:
+        relative = guard_path.resolve().relative_to(policy_repo.resolve())
+    except ValueError:
+        return False, f"{guard_path} is outside {policy_repo}"
+    porcelain = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=all", "--", str(relative)],
+        cwd=policy_repo, capture_output=True, text=True, timeout=60)
+    if porcelain.returncode != 0:
+        return False, f"git status failed in {policy_repo}: {porcelain.stderr.strip()[:200]}"
+    dirty = [line for line in porcelain.stdout.splitlines() if line.strip()]
+    if dirty:
+        return False, (f"the guard at {relative} is modified or untracked in the pinned "
+                       f"checkout ({dirty[0][:2].strip() or '??'}); the pinned sha does "
+                       "not describe the code that would run")
+    return True, ""
+
+
 def build(config: dict, store: Store):
-    guard = load_guard(resolve(config["guard_path"]))
     mode = config.get("mode")
+    # GOV-R2-04: nothing is imported from `guard_path` until every check on it
+    # has passed. The previous build called load_guard() here, at the top,
+    # before the policy pin was verified — and load_guard EXECUTES the module.
+    # Validating afterwards checks a file whose code has already run.
+    guard_path = resolve(config["guard_path"])
     if mode == "replay":
+        guard = load_guard(guard_path)
         from runners import FakeExecutor, FakeReviewer
         executor = FakeExecutor(config["replay"]["executor_heads"])
         reviewer = FakeReviewer(config["replay"]["reviewer_decisions"])
@@ -96,22 +129,24 @@ def build(config: dict, store: Store):
             raise SystemExit(
                 "live mode needs policy_repo and a full 40-hex policy_sha; "
                 "an unpinned policy is not a trusted policy")
-        actual = read_policy_sha(pathlib.Path(policy_repo))
+        policy_repo = resolve(policy_repo)          # one resolver, everywhere
+        actual = read_policy_sha(policy_repo)
         if actual != declared:
             raise SystemExit(
                 f"policy checkout is at {actual[:12]}… but the config pins "
                 f"{declared[:12]}…; refusing to dispatch against a policy "
                 "version nobody approved")
-        guard = load_guard(resolve(config["guard_path"]))
-        try:
-            pathlib.Path(config["guard_path"]).resolve().relative_to(
-                pathlib.Path(policy_repo).resolve())
-        except ValueError:
-            raise SystemExit(
-                f"guard_path is outside the pinned policy checkout; the guard "
-                "must come from the version that was verified")
+        # Containment and cleanliness both use `guard_path`, the same value
+        # load_guard is handed. The earlier version built the path a second
+        # time, straight from the raw config string, and compared THAT against
+        # the policy repo — so a relative guard_path was checked as one file
+        # and executed as another.
+        clean, why = guard_is_clean(policy_repo, guard_path)
+        if not clean:
+            raise SystemExit(f"refusing to load the guard: {why}")
+        guard = load_guard(guard_path)
         config = dict(config, policy_sha=actual)
-        root = pathlib.Path(config["workspace_root"])
+        root = resolve(config["workspace_root"])
         executor = SubprocessRunner("executor", config["runners"]["executor"], root)
         reviewer = SubprocessRunner("reviewer", config["runners"]["reviewer"], root)
     else:

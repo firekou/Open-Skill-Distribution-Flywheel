@@ -1,38 +1,5 @@
-# Controller negative & positive controls
-# python 3.11.15  2026-09-19
-# No network, no credentials, no model call.
-
 $ python3 governance/controller/test_controller.py
-test_every_guard_decision_is_recorded  [AuditTrail.test_every_guard_decision_is_recorded) ... ok
-test_the_log_is_append_only_across_processes  [AuditTrail.test_the_log_is_append_only_across_processes) ... ok
-test_a_crash_before_the_state_write_leaves_the_previous_state_intact  [CrashAndRestart.test_a_crash_before_the_state_write_leaves_the_previous_state_intact) ... ok
-test_a_failed_runner_records_a_recovery_point  [CrashAndRestart.test_a_failed_runner_records_a_recovery_point) ... ok
-test_a_restart_does_not_repeat_a_completed_write  [CrashAndRestart.test_a_restart_does_not_repeat_a_completed_write) ... ok
-test_a_lost_compare_and_swap_raises_rather_than_overwriting  [DuplicateAndConcurrency.test_a_lost_compare_and_swap_raises_rather_than_overwriting) ... ok
-test_a_redelivered_event_does_nothing_the_second_time  [DuplicateAndConcurrency.test_a_redelivered_event_does_nothing_the_second_time) ... ok
-test_an_expired_lease_can_be_taken_over  [DuplicateAndConcurrency.test_an_expired_lease_can_be_taken_over) ... ok
-test_two_workers_racing_the_same_task_produce_one_execution  [DuplicateAndConcurrency.test_two_workers_racing_the_same_task_produce_one_execution) ... ok
-test_a_review_for_a_head_that_is_no_longer_live_is_refused  [HeadAndIdentity.test_a_review_for_a_head_that_is_no_longer_live_is_refused) ... ok
-test_a_review_signed_for_a_different_head_is_refused  [HeadAndIdentity.test_a_review_signed_for_a_different_head_is_refused) ... ok
-test_a_review_with_no_evidence_is_refused  [HeadAndIdentity.test_a_review_with_no_evidence_is_refused) ... ok
-test_an_invented_verdict_word_is_refused  [HeadAndIdentity.test_an_invented_verdict_word_is_refused) ... ok
-test_the_executor_cannot_review_its_own_work  [HeadAndIdentity.test_the_executor_cannot_review_its_own_work) ... ok
-test_a_phase_outside_the_authorized_list_is_refused  [LimitsAndStop.test_a_phase_outside_the_authorized_list_is_refused) ... ok
-test_exceeding_the_attempt_cap_stops_instead_of_looping_forever  [LimitsAndStop.test_exceeding_the_attempt_cap_stops_instead_of_looping_forever) ... ok
-The guard refuses any action name it does not recognise, so a config ... ok
-test_spending_over_budget_stops  [LimitsAndStop.test_spending_over_budget_stops) ... ok
-test_the_stop_file_halts_before_any_runner_is_started  [LimitsAndStop.test_the_stop_file_halts_before_any_runner_is_started) ... ok
-test_blocked_sends_it_back_to_the_executor_with_a_new_attempt  [OutcomesAreNotPermissions.test_blocked_sends_it_back_to_the_executor_with_a_new_attempt) ... ok
-test_conditional_approval_does_not_complete_the_task  [OutcomesAreNotPermissions.test_conditional_approval_does_not_complete_the_task) ... ok
-test_the_full_cycle_reaches_complete_from_one_start  [OutcomesAreNotPermissions.test_the_full_cycle_reaches_complete_from_one_start) ... ok
-test_a_work_order_is_built_by_the_controller_not_supplied_by_a_runner  [TrustBoundary.test_a_work_order_is_built_by_the_controller_not_supplied_by_a_runner) ... ok
-A PR that rewrites governance/preflight.py must not change how the ... ok
-test_the_live_runner_refuses_to_start_while_disabled  [TrustBoundary.test_the_live_runner_refuses_to_start_while_disabled) ... ok
-test_the_shipped_live_template_has_both_runners_disabled_and_zero_budget  [TrustBoundary.test_the_shipped_live_template_has_both_runners_disabled_and_zero_budget) ... ok
-
-Ran 26 tests in 0.070s
-
-OK
-Ran 28 tests in 0.072s
+----------------------------------------------------------------------
+Ran 146 tests in 15.753s
 
 OK

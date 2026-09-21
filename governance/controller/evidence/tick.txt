@@ -1,29 +1,12 @@
-# tick.py — the contract an existing external trigger calls.
-# 2026-09-19. No model call, no network, no credential.
+$ python3 governance/controller/tick.py --config governance/controller/config.replay.json --task TICKDEMO --event demo-1 --drive
+{"action": "REVIEW_PENDING", "head": "1111111111111111111111111111111111111111"}
+{"action": "FIX_PENDING", "attempt": 1}
+{"action": "REVIEW_PENDING", "head": "2222222222222222222222222222222222222222"}
+{"action": "COMPLETE", "head": "2222222222222222222222222222222222222222"}
+{"task": "TICKDEMO", "status": "COMPLETE", "runs_used": 4.0, "run_budget": 8}
+exit=10
 
-## a caller ticking until it is told to stop
-  $ tick.py --task T   -> exit 0   {"task": "T", "status": "REVIEW_PENDING", "runs_used": 1.0, "run_budget": 8}
-  $ tick.py --task T   -> exit 0   {"task": "T", "status": "FIX_PENDING", "runs_used": 2.0, "run_budget": 8}
-  $ tick.py --task T   -> exit 0   {"task": "T", "status": "REVIEW_PENDING", "runs_used": 3.0, "run_budget": 8}
-  $ tick.py --task T   -> exit 0   {"task": "T", "status": "FIX_PENDING", "runs_used": 4.0, "run_budget": 8}
-  $ tick.py --task T   -> exit 30   {"task": "T", "status": "STOPPED", "runs_used": 4.0, "run_budget": 8}
-
-  exit 0 = progressed, call again.  exit 30 = a limit or the stop switch; do not retry.
-
-## --drive: one process, straight to terminal
-  {"action": "REVIEW_PENDING", "head": "1111111111111111111111111111111111111111"}
-  {"action": "FIX_PENDING", "attempt": 1}
-  {"action": "REVIEW_PENDING", "head": "2222222222222222222222222222222222222222"}
-  {"action": "COMPLETE", "head": "2222222222222222222222222222222222222222"}
-  {"task": "T", "status": "COMPLETE", "runs_used": 4.0, "run_budget": 8}
-  exit=0
-
-## the run cap is reserved BEFORE dispatch, so N means N
-  run_budget=1 -> runs started=1
-  run_budget=2 -> runs started=2
-  run_budget=3 -> runs started=3
-  run_budget=4 -> runs started=4
-
-## found by running it the way a trigger would, not by reading it:
-  replay mode was asking a real remote for the live head, so every tick after the
-  first failed with stale_head. The replay resolver is now wired into tick.py too.
+$ ... same --event again (redelivery)
+{"action": "NOOP", "reason": "duplicate"}
+{"task": "TICKDEMO", "status": "COMPLETE", "runs_used": 4.0, "run_budget": 8}
+exit=20
