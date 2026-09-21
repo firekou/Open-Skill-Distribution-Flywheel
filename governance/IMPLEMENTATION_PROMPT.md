@@ -1,4 +1,6 @@
 # Claude AI 治理導入工作包
+
+> 2026-09-21 現行 next_action：PR6 的 86421c90 已完成 G4 review，結論 BLOCKED。請先讀本檔末段「現行接續工作」與 PR6_R2_G4_REVIEW_86421c90；下方舊送審定位為歷史紀錄。此次更新是 review／規劃交付，不啟動 runner。
 版本 2，2026-09-19。取代本檔舊版派工順序。
 
 ## 使用方式與目前授權
@@ -126,3 +128,79 @@ Reviewer 從 GitHub 精確 SHA 另取工作區，不修改受審實作；重跑�
 Reviewer 先查 live head；同 SHA 且無新證據時只記錄查核，不冒稱新一輪修復通過。若新成果在其他 repo 或分支，先定位並讀其現行指示，再判斷依賴，不把另一個 worker 的成功當成本 controller ACTIVE。
 程式變更按差異及既有未完成驗收進行獨立測試；只有文件更新則核對主張與所引用原始證據。完成後將結果綁定精確 SHA，更新 state 與本入口的下一個 G 工作，不自動擴大。
 最近一次交付定位查核：reviews/GOVERNANCE_SUBMISSION_CHECK_c04ef465.md。該次仍取得舊 head，未取得新的治理送審版本；此紀錄不表示 executor 在其他環境沒有工作。
+
+## 2026-09-21 現行接續工作：PR6 G4 BLOCKED 後修復與雲端交接
+
+本節是目前 next_action；前文 G1–G7 的完整目標與階段條件保留。已收到 Claude 的 G1–G3/C0/C1 新交付，不能再把送審狀態寫成「沒有新成果」。本次 Planner 已完成 review 與接續規劃，未啟動 executor、模型或排程。
+
+審查：[PR6_R2_G4_REVIEW_86421c90.md](../reviews/PR6_R2_G4_REVIEW_86421c90.md)。
+程式 head：86421c903563a16ca888a4aed10bd614e223ca0e；政策 d92d082bfcee7002d737e2c3ee2914d2b1fa804c；審查時 live head 75976be1db636ef72d76206b387583fb3cc03443。
+決定 BLOCKED，runtime FOUNDATION_ONLY。後續開始時重新讀 live refs；本節沒有把 snapshot 變成永久 pin。
+
+### 可交給 Claude 的接續 Prompt
+
+你是本 repo 的 executor。目標是讓他人透過可靠的上游 AI 基礎完成真實工作，減少重複算力與人工交接。先讀治理入口、決策、state、本 review 及本節，沿用 PR6 的 claude/atk-governance-controller 分支。保留作者既有提交及失敗證據；不要改 PR5，不自我 APPROVED/CLOSED，不把測試替身寫成 runtime ACTIVE。
+
+本工作單只定義已準備好的接續工作，不因檔案被讀取自行喚起 agent。執行者依收到的有效實作指示執行 G2/G3 修復與 C0/C1 文件完善；Planner 此次只提交規劃與 review。G5、C2、G6 的啟動／支出條件不由本節推導授權。
+
+task_id: GOV-PR6-R2
+goal: 修復派工與恢復的已證實缺口，完成可獨立驗收的單 task 原型
+scope_paths:
+- governance/controller/
+- governance/CLOUD_HANDOFF_WIRING.md
+- governance/NEXT_STAGE_C2_C3_G5_G6.md
+- reviews/GOVERNANCE_EXECUTOR_RESPONSE.md（工作分支）
+decision_ids: GOV-01、GOV-PLAN-02、REVIEW-MAIN、GOAL-02、AGENT-HANDOFF-001
+trusted policy files: 只讀 main；需要變更請提供建議 diff，不由 executor 改可信政策
+command scope: 讀取 GitHub/git、工作分支編輯／提交、無模型且已隔離的本地測試；明列實際命令
+limits: 單 task、既有修復／時間上限、新增 API 支出 0；不 merge、不部署、不裝 trigger、不改 secrets
+deadline: 開始工作時填絕對期限並遵守既有每輪上限，禁止每 step 或重啟重設
+evidence: 每個 finding 對應命令、輸入版本、輸出、限制、新完整 SHA
+
+#### 第一批：修复實際接線
+
+1. GOV-R2-01：直接以 shipped live template 驅動無模型 stub，修正 JSON 大括號展開錯誤、CLI 包裝解析與 reviewer identity 傳遞。成功／非零退出／無效輸出均驗真實 adapter。
+2. GOV-R2-02：worker invocation 唯一身分、controller 持續續租／失租 fencing。同 config 的兩個程序及跨 TTL 工作只能有一個有效 dispatch。
+3. GOV-R2-03：將 durable intent、外部結果 reconciliation、原子 event+transition 與 drive 恢復真正接入。crash 發生在副作用或保存邊界時先查證，不盲重做。
+4. GOV-R2-04：live build 驗證可信政策版本及 checkout；把完整可信工作單交給 runner。PR 內 prompt 不得替代可信契約，錯配 policy 與 reviewer 必須拒收。
+5. GOV-R2-05：派工前持久預留 run，已開始但失敗／未知的呼叫仍受上限；保存跨 step／重啟的 round deadline。run、provider 用量／估算成本、實際帳單、支出授權分開。
+6. GOV-R1-03：提供實際隔離接線及合成秘密負控制，不能只增加 container 字串。若環境能力不足，完成可離線的程式／設計，列精確未驗證部分；不可在缺少隔離的宿主跑 PR code，也不再以真實模型探針證明秘密可達。
+
+每個項目的具體失敗位置及驗收見 review，無需重新列方向選項。沿用相關通過項，只有改動波及或有具體風險時擴測。不追求新的測試數或 mutation 數配額。
+
+#### 同批：C0/C1 修訂及可部署交接設計
+
+更新既有 CLOUD_HANDOFF_WIRING 與 NEXT_STAGE 文件，不建立另一套政策入口：
+
+- 每條能力填帳號／介面／觀測時間、證據、可用性及限制；作者看見的介面不代表平台全域能力。需要選型時最多兩條可補實際缺口的路徑，先查既有能力及官方文件。
+- 分清事件來源、持久 launcher、執行主機、durable state、模型認證、分支寫入、結果回填讀者。git 檔案與 GitHub labels/comments 的讀取路徑分别列明。
+- 工作結果寫批准分支；受限角色回填，Planner/Reviewer 依既有授權維護 main。禁止為了接力讓 executor 取得 main 政策寫入權。
+- runtime store 管 task/lease/event；main state 是摘要，標來源與觀測時間。
+- 提供 C2 的可審設定範本、部署前條件、啟用／停用／取消／回退命令與紀錄保存位置；設定預設禁用，部署權限未知就列未知，不直接斷言只有 owner 能操作。
+- 保留 5 分鐘補漏目標，若既有介面只有每小時則明列缺口。無新版本不啟動模型；不要擅自新增輪詢或以每小時宣稱達標。
+- 成本資料保留來源：total_cost_usd 記 provider_reported_cost_usd；actual_billed_usd 無帳單證據填 unknown。不得把任一值冒稱新增支出許可。
+- D1 已有答案：PR6。D3 已有答案：不同 run/session、隔離工作區與權限；同模型可以，但不能宣稱模型來源獨立。D4 記錄資料不需重問。D2 留給具體 C2 啟動條件，不阻塞本批修復。
+
+#### 第二批：送 G4
+
+追加 executor response，逐項回答六個 blocking findings，附新完整 SHA、可信 policy SHA、有效授權來源、命令與結果。作者可標 FIX_IMPLEMENTED / READY_FOR_REVIEW，不自行 CLOSED。
+reviewer 從精確 SHA 取資料到獨立隔離工作區，驗 shipped live stub、並行續租、crash recovery、契約綁定、限額與隔離。
+本次 reviewer 環境無法建立隔離；將可重現命令與 fixture 備好，交具備隔離能力的獨立 reviewer。不得以作者再自跑一次取代獨立驗收。
+真正達標後才由 reviewer 判 G4；不足時只針對影響本階段的 finding 修正，不建立無限 review 迴圈。
+
+#### 第三批：G5 與 C2/G6 的條件式接續
+
+| 階段 | 前提 | 具體工作與驗收 | 結束狀態 |
+|---|---|---|---|
+| G5 單次真實閉環 | G4 通過，指定 branch/task、認證與試行授權及用量條件可用 | 一次手動初始啟動後，executor commit → 獨立 reviewer → 如有真實 finding 才修復 → 精確 SHA 結案；保存 event/task/run IDs、policy、時間、用量與結果 | MANUAL_RUN_VERIFIED；不需 C2 先安裝 |
+| C2 持久接線 | 可審設定、停用與回退備妥，能力與啟動授權可用 | 安裝最小 launcher／接收端，能從 session 外取得新事件與啟動新工作；不以另一 repo routine 成功替代 | INSTALLED_PENDING_VERIFICATION，未 ACTIVE |
+| C3/G6 session 外閉環 | G5 通過，C2 可用 | 原聊天 session 不參與，重送／新 head／worker 重啟／取消情境有紀錄；不需 owner 搬 prompt；量實際事件及補漏延遲 | Reviewer 驗證後才可建議 ACTIVE |
+| C4 營運交接 | G6 證據完整 | 指定維運者、停止／恢復／撤銷外部憑證責任、狀態來源與證據保存；無變更不重跑模型 | 可維持的有限運行，原限額不擴大 |
+| G7 下游價值驗證 | 治理能力已驗證或明示有限人工模式 | 對既有 headroom 任務重新查 live review；記使用者成功、首次成果時間、成本、人工介入及外部回饋，沉澱 skill/routing/review 改善 | 助人成果與市場回收分開回報 |
+
+G5 不故意製造 review finding；失敗負控制在離線 fixture 驗證。若 C2 缺能力，仍完成 G5 準備與其餘離線成果。只在實際 gate 需要且尚無授權時提交具體待批准動作，不重問治理方向。
+
+#### 最後回報格式
+
+execution_mode、runtime_status、review_decision、submitted_head、reviewed_head、policy_sha、findings、evidence、limitations、next_role、next_action。
+一次指定一個 next_action，技術交接寫 repo。不要把「文件完成」「stub 通過」「模型單次成功」「真實手動閉環」「持久閉環」混為同一里程碑。
