@@ -123,6 +123,22 @@
         "算力投入須對應可觀察的任務成果，既有支出與執行授權不變",
         "NVIDIA/Jensen Huang 為負責人提出的定位類比，不作已核實引言或背書"
       ]
+    },
+    {
+      "id": "GOV-HANDOFF-TAKEOVER-20260921",
+      "status": "approved",
+      "source": "2026-09-21 使用者明確要求使用 @govern-github-agent-handoffs 接管本專案 GitHub 交接與獨立覆核",
+      "decision": "GPT 接管 live PR 取證、獨立 review、main 帳本、具體有限工作包及 GitHub 原生交接訊號；沿用並擴充本 repo reviewer 事件任務，無需負責人搬運報告。",
+      "supersedes": [
+        "GOV-PLAN-02 對本次 GitHub 交接與 reviewer 事件追蹤僅規劃不操作的限制"
+      ],
+      "limits": [
+        "保留產品採用主線，不重新啟動 benchmark、Freeze 或框架試點",
+        "不授權 merge、production 部署、秘密操作、上游發送或新增支出",
+        "不自動啟用本 repo 尚未驗收的 controller、Claude 持久 launcher 或新增輪詢",
+        "GitHub 留言/標籤不是啟動證據；接單、run、結果與獨立驗收分開",
+        "每輪一個內容 head、最多兩輪限定修復；GPT 不批准自己的實作"
+      ]
     }
   ]
 }
