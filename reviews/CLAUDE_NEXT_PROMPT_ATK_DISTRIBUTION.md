@@ -1,3 +1,13 @@
+# 現行產品交接：PR5 等待獨立隔離驗證
+
+2026-09-21 接管更新：先讀可信 main 的治理入口、decisions、state 與 reviews/STATUS.md，啟動時核對 live head。
+最新 review 為 reviews/PR5_R6_REVIEW_933446ab.md，綁定 933446ab230e6fb8b41d79b596ef3c19b721fb7a，NEEDS_INFORMATION。P5-R4-01 作者已修復並送證，剩下獨立隔離 reviewer 重放既有 reviews/evidence/pr5-r5/README.md 的證據，不再要求作者重複同類自跑證據。
+1A／2A／3A、免費技術資產、可選 ATK 接入、分發及採用主線維持；已有 headroom 小交付，不因舊三候選 prompt 重新造工具。治理 PR6 不作本產品驗收的額外前置門檻；通用 benchmark、Freeze 與框架試點不重開。
+新內容才重審；無新 head/證據安靜結束。通過後做既有入口發布準備與搜尋／採用驗證，對外送出、merge、部署遵守原授權。
+GitHub 交接已由 govern-github-agent-handoffs 接管。reviewer 事件登記涵蓋本 repo；Claude 新 session 持久 launcher 未驗證。報告與摘要仍寫 main。下列內容保留為歷史，不再重派。
+
+## 歷史 R4 工作單
+
 # 現行產品任務：PR #5 完成一項 R4 條件
 
 先讀可信 main 的 governance/OPERATING_RULES.md、decisions.json、state.json，核對 live PR #5。
