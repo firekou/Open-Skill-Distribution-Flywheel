@@ -46,3 +46,13 @@
 - [R5](PR5_R5_REVIEW_32ca53c.md) 對 `32ca53cd703efeb647ddb2d65168ba69f1e414d6` 的結論為 NEEDS_INFORMATION，原因是獨立隔離 runtime 不可用；R6 新增 executor 證據後結論未變。
 - PR #4 的 829c7e9 已完成約定 review，見 [R3 及追加結案](PR4_R3_REVIEW_328a33b.md)。
 - PR #1 benchmark 維持暫停，歷史 findings OPEN。
+
+## 2026-09-21：PR6 R5 scope reduction
+
+- Live head `7de3043938b4179f5011f82927aaeecc5b82cbd1` 相對 `e26aac4` 只有一份 171 行提案，`governance/controller/` 與 executor response 未變；R4 對程式 `25457fbd` 的 **BLOCKED** 結論維持。
+- [Planner review](PR6_R5_SCOPE_REDUCTION_7de3043.md)：**APPROVED_WITH_CONDITIONS**，只接受拆包作為規劃輸入，不構成第三輪修復、merge、部署或 runtime 啟動授權。
+- 包 A（R2-02／03／05 與兩項 P2）保存為 `BACKLOG_NOT_DISPATCHED`；包 B 等待可驗證的 trusted-wrapper／untrusted-source 隔離後端。原批兩輪上限不重置，不建立平行 controller。
+- 隔離驗收須分開可信 orchestration 與未信任 PR source：PR code 不直接取得 credential；必要模型連線經可信、可稽核、最小權限 wrapper/broker；GitHub write 另行綁定 work_id/result head；所有 denial claim 需要可工作的 unwrapped baseline。
+- Controller 維持 `FOUNDATION_ONLY`。主線 ATK 工具/skill、可選 Router／API／MCP 接入與實際採用不等待治理 ACTIVE；本輪沒有外部使用者成功證據。
+- Exact head 無 workflow runs 或 commit statuses；未執行 controller 測試，因為本輪沒有 implementation diff。
+
