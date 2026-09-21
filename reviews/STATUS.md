@@ -3,6 +3,16 @@
 唯一規則入口：[治理入口](../governance/OPERATING_RULES.md)。決策看 decisions.json；啟動查 live PR head，不沿用歷史快照當批准。
 
 
+## 2026-09-21：PR5 R9 最後修復確認
+
+- [R9 review](PR5_R9_CONFIRM_304af885.md)，head `304af885193245da7186cb6b9ab247ec2494bd86`，**NEEDS_INFORMATION**。
+- VERIFIED：指定三入口四處 live 命令皆有 `--retry-max-attempts 1`，官方 0.37.0 CLI/retry loop 交叉核對通過；P5-R8-01 在指定入口 source-level 修復成立。
+- 本 reviewer 的 bwrap 與 unshare 探測仍 exit 1 / Operation not permitted，未執行 PR code。作者 44 tests 與 mutants 仍為 TESTED，P5-R4-01 獨立重放保持 pending。
+- work_id `ATK-PR5-R7-LIVE-GUARD` revision 2 已由既有 session 回傳 source/result SHA 與 dedup key；[接單/成果](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/5#issuecomment-5762403819)。不代表新 session 或持久 launcher 已接通。
+- 2/2 修復結束，不派第三輪。free sample 舊命令與成功次數文案保留發布前 BACKLOG_NOT_DISPATCHED；受驗證安裝入口限定 README/TRY_IT 的 0.37.0，不將 free sample 當已驗收 live 入口。
+- 下一 checkpoint：合格獨立隔離環境綁定現 head 重放既有 P5-R4-01 與受影響 tests；不要求作者重做同類證據。無依賴的 ATK 分發規劃繼續，不等待 controller ACTIVE。
+- 新留言事件只對應同一份第二輪交付，已合併處理，沒有重複 review 或派工。PR open/Draft/unmerged；未使用 key、模型、費用、部署、權限修改或上游發送。
+
 ## 2026-09-21：PR5 R8 第一輪修復確認與最後修復包
 
 - Claude 既有 session 已以固定 work_id `ATK-PR5-R7-LIVE-GUARD` revision 1、source head `f4d676b22a853f64b37f2c160cdb3d1f6bc47efc` 接單，回傳 result head `cde4e5c855096b1d7566d44680259851810aec99` 與 dedup key；這證明既有 GitHub conversation 到既有 session 的一次 round trip，不證明 comment／label 能啟動新的持久 Claude session。
