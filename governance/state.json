@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 8,
+  "revision": 9,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -59,17 +59,17 @@
     {
       "task_id": "GOV-BOOTSTRAP",
       "status": "BLOCKED",
-      "next_action": "同批兩輪修復上限已到，不再自動重派。保留 FOUNDATION_ONLY，由 Planner 縮小交付；未來只在完整隔離與重新授權的最小 controller 工作包下重啟。產品採用工作不受阻。",
+      "next_action": "Controller 原批次停在 FOUNDATION_ONLY，不開第三輪。包 A（R2-02/R2-03/R2-05 與兩項 P2）保存為未派工 backlog；包 B 等待合格的 trusted-wrapper／untrusted-source 隔離後端與獨立證據。主線 ATK 工具/skill 採用工作以既有人工 GitHub 交接繼續，不等待治理 ACTIVE。",
       "prompt": "governance/IMPLEMENTATION_PROMPT.md",
       "pr": 6,
       "branch": "claude/atk-governance-controller",
       "submitted_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
       "executor_response": "reviews/GOVERNANCE_EXECUTOR_RESPONSE.md (on the PR branch)",
-      "note": "第二輪限定修復完成 source review；CLI envelope 與 guard ordering 關閉，但 lease-loss launch、effect binding、deadline launch gate 與 credentialed role isolation 仍阻擋。未獨立執行 PR code。",
+      "note": "R4 controller code review 仍為 BLOCKED。7de3043 僅新增 scope reduction 提案，無 controller 或 executor response 變更；Planner 已有條件接受拆包作為輸入，但未授權第三輪修復。",
       "last_reviewed_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
       "last_review_decision": "BLOCKED",
       "review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
-      "observed_head": "e26aac4eed0696cefa45b19aac46e7fc9c3da6e8",
+      "observed_head": "7de3043938b4179f5011f82927aaeecc5b82cbd1",
       "policy_sha": "38ee2303fd4c702af6d583a00dd9ed6f871ce54f",
       "blocking_findings": [
         "GOV-R2-02",
@@ -83,7 +83,32 @@
         "GOV-R2-04"
       ],
       "repair_rounds_used": 2,
-      "repair_rounds_limit": 2
+      "repair_rounds_limit": 2,
+      "planner_review": "reviews/PR6_R5_SCOPE_REDUCTION_7de3043.md",
+      "last_planner_reviewed_head": "7de3043938b4179f5011f82927aaeecc5b82cbd1",
+      "last_planner_decision": "APPROVED_WITH_CONDITIONS",
+      "scope_reduction": {
+        "proposal_head": "7de3043938b4179f5011f82927aaeecc5b82cbd1",
+        "controller_code_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
+        "package_a": {
+          "status": "BACKLOG_NOT_DISPATCHED",
+          "findings": [
+            "GOV-R2-02",
+            "GOV-R2-03",
+            "GOV-R2-05",
+            "P2-ISOLATION-BASELINE",
+            "P2-ATOMIC-SPEND-INTENT-TASK"
+          ]
+        },
+        "package_b": {
+          "status": "WAITING_QUALIFYING_ISOLATION_BACKEND",
+          "finding": "GOV-R1-03"
+        },
+        "repair_rounds_used": 2,
+        "repair_rounds_limit": 2,
+        "no_parallel_controller": true,
+        "product_adoption_blocked": false
+      }
     }
   ],
   "planning": {
