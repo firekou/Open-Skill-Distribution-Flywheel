@@ -3,6 +3,19 @@
 唯一規則入口：[治理入口](../governance/OPERATING_RULES.md)。決策看 decisions.json；啟動查 live PR head，不沿用歷史快照當批准。
 
 
+## 2026-09-21：PR5 R8 第一輪修復確認與最後修復包
+
+- Claude 既有 session 已以固定 work_id `ATK-PR5-R7-LIVE-GUARD` revision 1、source head `f4d676b22a853f64b37f2c160cdb3d1f6bc47efc` 接單，回傳 result head `cde4e5c855096b1d7566d44680259851810aec99` 與 dedup key；這證明既有 GitHub conversation 到既有 session 的一次 round trip，不證明 comment／label 能啟動新的持久 Claude session。
+- [R8 限定確認](PR5_R8_CONFIRM_cde4e5c.md)：**BLOCKED**。金鑰命令列範例、預設四次呼叫與未證實因果三項，在 app／文件層級已修正。
+- 新 P1 `P5-R8-01`：釘選的 Headroom 0.37.0 預設 `retry_max_attempts=3`，會對 429／529／其他 5xx／transport failure 重試。現行 live 命令未覆寫，因此 mock 只證明兩個 client requests，不能證明 provider attempts 上限為 2。
+- 已向 PR #5 傳送同一工作包 revision 2，也是 2／2 最後一輪；source head、dedup key、scope 與期限均已固定。修法限於 live 啟動加 `--retry-max-attempts 1`、對齊呼叫主張與聚焦離線測試。
+- 新留言事件經 readback 確認只是 revision 2 工作包本身；live head 仍為 `cde4e5c8`，尚無新 session 接單或成果 SHA，不重複派工。
+- Exact head 無 workflow runs、check runs 或 commit statuses；作者自報 40 tests 為 TESTED，本 reviewer 未在合格隔離 runtime 執行 PR code。
+- `P5-R4-01` 繼續等待獨立隔離重放，不重派作者。第三方採用仍為 0；ATK 採用主線不等待 controller ACTIVE。
+- PR #5 維持 Draft、未合併；本次 readback 顯示 mergeable false。未部署、未修改 secrets／權限、未呼叫模型、未新增費用、未送上游。
+
+
+
 ## 2026-09-21：PR6 第二輪限定修復覆核結案
 
 - 方法：govern-github-agent-handoffs；授權 GOV-HANDOFF-TAKEOVER-20260921。review 仍依 REVIEW-MAIN 存 main。
