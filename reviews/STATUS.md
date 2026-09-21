@@ -2,7 +2,18 @@
 唯一規則入口：[治理入口](../governance/OPERATING_RULES.md)。決策看 decisions.json；啟動查 live PR head，不沿用歷史快照當批准。
 
 
-## 2026-09-21：PR6 G4 獨立 review 與接續規劃
+## 2026-09-21：已接管 GitHub 交接與獨立覆核
+
+- 方法：govern-github-agent-handoffs；授權 GOV-HANDOFF-TAKEOVER-20260921。review 仍依 REVIEW-MAIN 存 main。
+- 既有 reviewer automation `6aae969a0ff8819193be09f165c31fd8` 已更新為「ATK 專案交接覆核」，監聽本 repo PR 新提交、review、留言；無新增輪詢。新範圍首次事件待驗。
+- 接管時已發現新程式 `c86b626c8666b563e9e10413c5a967a4f94328cb`，完成 [R3 獨立 review](PR6_R3_G4_REVIEW_c86b626c.md)：**BLOCKED**。live `a21fa1e21f4f361bd7df2d379c2711bd3ac28c7b` 無後續 controller 程式差異。
+- 同批第二次有限修復包已[直接送 PR6](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167)，work_id GOV-PR6-R2、revision 2。狀態 SIGNAL_SENT_RECEIPT_PENDING；尚不宣稱 Claude 已啟動。
+- 既有接單證據只支持「已在線 Claude session 可接收」，不支持「新 session 持久喚起」。完整端到端仍 NOT_VERIFIED，controller FOUNDATION_ONLY。
+- PR5 live `933446ab230e6fb8b41d79b596ef3c19b721fb7a` 未變，保留 R6 NEEDS_INFORMATION，等待獨立隔離重放；不重派作者同類修復。PR7 留存補充證據，不建立平行 controller。
+- repo API 讀取及 main 文件寫入已成功；未推論分支保護或 merge 權限。merge／部署／Secrets／新增費用不在此次授權。
+- 產品主線仍是有用工具/skill、ATK 接入、分享與採用，不以治理 ACTIVE 阻塞無依賴交付。不恢復 benchmark、Freeze 或框架試點。
+
+## 2026-09-21：PR6 G4 獨立 review 與接續規劃（R2 歷史）
 
 - 新完整報告已收到。程式 head `86421c903563a16ca888a4aed10bd614e223ca0e`，政策 `d92d082bfcee7002d737e2c3ee2914d2b1fa804c`。
 - 審查時 live head `75976be1db636ef72d76206b387583fb3cc03443`；與程式 head 淨差異只有送審文件，無程式變更。
