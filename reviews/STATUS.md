@@ -1,6 +1,17 @@
 # 當前交接狀態
 唯一規則入口：[治理入口](../governance/OPERATING_RULES.md)。決策看 decisions.json；啟動查 live PR head，不沿用歷史快照當批准。
 
+
+## 2026-09-21：PR6 G4 獨立 review 與接續規劃
+
+- 新完整報告已收到。程式 head `86421c903563a16ca888a4aed10bd614e223ca0e`，政策 `d92d082bfcee7002d737e2c3ee2914d2b1fa804c`。
+- 審查時 live head `75976be1db636ef72d76206b387583fb3cc03443`；與程式 head 淨差異只有送審文件，無程式變更。
+- [G4 review](PR6_R2_G4_REVIEW_86421c90.md)：**BLOCKED**。GOV-R2-01～05 與既有 GOV-R1-03 OPEN；runtime **FOUNDATION_ONLY**。
+- REPRODUCED：兩個 live command 範本在標準字串展開時拋 KeyError。VERIFIED：controller 未呼叫續租與 intent API；其餘 crash／限額／policy 接線缺口以原始碼證據標示。
+- 本 reviewer 的隔離工具被 OS 拒絕，未執行 PR tests/replay/mutation 或模型探針。作者自報 92 tests／26 mutants 不升格為獨立通過。
+- [完整接續 Prompt](../governance/IMPLEMENTATION_PROMPT.md) 已補齊修復、C0/C1 修訂、G4 重審、G5 單次試行、C2/C3/G6 持久交接、C4 維運及 G7 使用者成果驗證。D1 分支與 D3 reviewer 定義依既有決策，不重問。
+- 本次只寫 review／規劃／摘要，未啟動 runner、安裝 trigger、呼叫模型或合併 PR。PR5 與既有 reviewer trigger 本輪不變。
+
 ## 2026-09-19：PR5 最新獨立複核
 - 精確 live head `933446ab230e6fb8b41d79b596ef3c19b721fb7a`，Draft、未合併。
 - [GPT R6 review](PR5_R6_REVIEW_933446ab.md)：**NEEDS_INFORMATION**。新提交只含 executor 重放紀錄與回覆，0 產品程式變更，範圍不變。
