@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 10,
+  "revision": 11,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -31,43 +31,54 @@
       "task_id": "PR5",
       "status": "BLOCKED",
       "pr": 5,
-      "observed_head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
-      "last_reviewed_head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
+      "observed_head": "cde4e5c855096b1d7566d44680259851810aec99",
+      "last_reviewed_head": "cde4e5c855096b1d7566d44680259851810aec99",
       "last_review_decision": "BLOCKED",
-      "next_action": "等待 ATK-PR5-R7-LIVE-GUARD 限定修復：live 指令不得暴露 key、首次試行必須恰為兩次 provider calls、no-benefit 不得宣稱未證實根因。P5-R4-01 另行等待獨立隔離重放，不重派作者。",
+      "next_action": "等待 ATK-PR5-R7-LIVE-GUARD revision 2（最後一輪）：live Headroom 0.37.0 啟動必須以 --retry-max-attempts 1 關閉 upstream retry，並將 client request 與 provider attempt 上限主張對齊。P5-R4-01 另行等待獨立隔離重放，不重派作者。",
       "prompt": "reviews/PR5_R4_REVIEW_d1930e4.md",
-      "review": "reviews/PR5_R7_REVIEW_f4d676b.md",
+      "review": "reviews/PR5_R8_CONFIRM_cde4e5c.md",
       "last_head_verification": {
-        "verified_at": "2026-09-21T14:30:00Z",
-        "head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
-        "prior_head": "e8a15d7d2c012007a69ca69c7e4630c33147c4a6",
-        "classification": "NEW_PRODUCT_CONTENT_REVIEWED_BOUNDED_REPAIR_SIGNAL_SENT",
+        "verified_at": "2026-09-21T14:37:00Z",
+        "head": "cde4e5c855096b1d7566d44680259851810aec99",
+        "prior_head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
+        "classification": "BOUNDED_REPAIR_ROUND_1_REVIEWED_FINAL_ROUND_SIGNAL_SENT",
         "exact_head_checks": {
           "workflow_runs": 0,
           "commit_statuses": 0,
           "check_runs": 0
         },
         "decision": "BLOCKED",
-        "note": "Offline/live boundary and Quick Start progressed. Live guide contradicts secret handling and sends four calls while promising two; stable pass-through still asserts an unproven cause. Existing P5-R4-01 remains independent-runtime pending."
+        "note": "Key examples, default app task count and no-benefit causal wording are corrected. Pinned Headroom 0.37.0 still defaults to three upstream attempts, so the current live command does not enforce its two-provider-attempt/no-retry claim."
       },
       "active_claim": null,
       "bounded_repair": {
         "work_id": "ATK-PR5-R7-LIVE-GUARD",
-        "revision": 1,
-        "source_head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
-        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:5:ATK-PR5-R7-LIVE-GUARD:1:f4d676b22a853f64b37f2c160cdb3d1f6bc47efc:executor",
+        "revision": 2,
+        "source_head": "cde4e5c855096b1d7566d44680259851810aec99",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:5:ATK-PR5-R7-LIVE-GUARD:2:cde4e5c855096b1d7566d44680259851810aec99:executor",
         "scope_paths": [
+          "integrations/headroom-atk/README.md",
           "integrations/headroom-atk/TRY_IT.md",
           "integrations/headroom-atk/ab_test.py",
-          "integrations/headroom-atk/local_check.py",
           "integrations/headroom-atk/test_local_check.py"
         ],
         "deadline": "2026-09-22T14:30:00Z",
-        "repair_rounds_used": 0,
+        "repair_rounds_used": 1,
         "repair_rounds_limit": 2,
         "delivery_status": "SIGNAL_SENT_NO_RECEIPT",
-        "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/5#issuecomment-5762144046",
+        "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/5#issuecomment-5762346675",
         "receipt": null,
+        "prior_revision_result": {
+          "revision": 1,
+          "source_head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
+          "result_head": "cde4e5c855096b1d7566d44680259851810aec99",
+          "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+          "receipt_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/5#issuecomment-5762214662",
+          "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:5:ATK-PR5-R7-LIVE-GUARD:1:f4d676b22a853f64b37f2c160cdb3d1f6bc47efc:executor",
+          "review": "reviews/PR5_R8_CONFIRM_cde4e5c.md",
+          "decision": "BLOCKED",
+          "reviewed_at": "2026-09-21T14:37:00Z"
+        },
         "explicit_exclusions": [
           "P5-R4-01",
           "merge",
@@ -168,6 +179,19 @@
     "review_storage": "main per REVIEW-MAIN",
     "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
     "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167",
-    "next_checkpoint": "PLANNER_SCOPE_REDUCTION_NO_THIRD_REPAIR"
+    "next_checkpoint": "PLANNER_SCOPE_REDUCTION_NO_THIRD_REPAIR",
+    "manual_executor_roundtrip": {
+      "status": "VERIFIED_EXISTING_SESSION_NOT_PERSISTENT",
+      "repository": "firekou/Open-Skill-Distribution-Flywheel",
+      "pr": 5,
+      "work_id": "ATK-PR5-R7-LIVE-GUARD",
+      "revision": 1,
+      "source_head": "f4d676b22a853f64b37f2c160cdb3d1f6bc47efc",
+      "result_head": "cde4e5c855096b1d7566d44680259851810aec99",
+      "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+      "independent_review": "reviews/PR5_R8_CONFIRM_cde4e5c.md",
+      "decision": "BLOCKED",
+      "note": "證明既有 GitHub conversation 可由同一已存在 Claude session 接單並回傳 SHA；不證明 comment/label 可啟動新的或持久 session。"
+    }
   }
 }
