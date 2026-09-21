@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 7,
+  "revision": 8,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -31,12 +31,30 @@
       "task_id": "PR5",
       "status": "NEEDS_INFORMATION",
       "pr": 5,
-      "observed_head": "933446ab230e6fb8b41d79b596ef3c19b721fb7a",
+      "observed_head": "e8a15d7d2c012007a69ca69c7e4630c33147c4a6",
       "last_reviewed_head": "933446ab230e6fb8b41d79b596ef3c19b721fb7a",
       "last_review_decision": "NEEDS_INFORMATION",
-      "next_action": "等待具隔離能力的獨立 reviewer 重放既有 R5 證據；無新 head，不再請作者重修或搬運報告。",
+      "next_action": "等待具隔離能力、與作者獨立的 reviewer 重放既有 R5 content-addressed 證據包（runtime target 32ca53cd703efeb647ddb2d65168ba69f1e414d6）；不重派作者修復、不建立平行 controller。",
       "prompt": "reviews/PR5_R4_REVIEW_d1930e4.md",
-      "review": "reviews/PR5_R6_REVIEW_933446ab.md"
+      "review": "reviews/PR5_R6_REVIEW_933446ab.md",
+      "last_head_verification": {
+        "verified_at": "2026-09-21T13:39:43Z",
+        "head": "e8a15d7d2c012007a69ca69c7e4630c33147c4a6",
+        "prior_reviewed_head": "933446ab230e6fb8b41d79b596ef3c19b721fb7a",
+        "classification": "MAIN_MERGE_ONLY_NO_PRODUCT_OR_EXECUTOR_EVIDENCE_CHANGE",
+        "product_blobs_verified_unchanged": {
+          "integrations/headroom-atk/local_check.py": "3036418da9fccf40959d2b6f1efc67fa6db5cf85",
+          "integrations/headroom-atk/test_local_check.py": "c154649b2a9f9d779511625a85f4071c8fc84810",
+          "integrations/headroom-atk/ab_test.py": "6dd9e14728a4e69577ed3a1b270cd6766896031c",
+          "integrations/headroom-atk/README.md": "26f8c8b1fc0030fdac1021b2e4e04187e1ee0ed3"
+        },
+        "exact_head_checks": {
+          "workflow_runs": 0,
+          "commit_statuses": 0
+        },
+        "decision": "NO_CONTENT_REREVIEW_NO_REDISPATCH",
+        "note": "Merge main brought trusted review and governance files into the branch and removed the branch-owned state.json delta. Existing P5-R4-01 remains INDEPENDENT_RUNTIME_VERIFICATION_PENDING."
+      }
     },
     {
       "task_id": "GOV-BOOTSTRAP",
