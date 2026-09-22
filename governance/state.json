@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 13,
+  "revision": 14,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -178,7 +178,7 @@
       "task_id": "ATK-OPEN-ADOPTION-01",
       "work_id": "ATK-OPEN-ADOPTION-01",
       "revision": 1,
-      "status": "READY_FOR_EXECUTOR",
+      "status": "CONDITIONS_PENDING",
       "decision_id": "ATK-OPEN-ADOPTION-20260922",
       "prompt": "reviews/ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md",
       "phase": "A",
@@ -187,13 +187,63 @@
       "branch": "claude/atk-open-adoption-01",
       "executor_response": "reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md",
       "active_claim": null,
-      "receipt": null,
-      "delivery_status": "PACKET_PUBLISHED_RECEIPT_NOT_OBSERVED",
+      "receipt": {
+        "session_id": "session_016YNgsSCC2eV5sicob2f56f",
+        "work_id": "ATK-OPEN-ADOPTION-01",
+        "revision": 1,
+        "source_head": "304af885193245da7186cb6b9ab247ec2494bd86",
+        "content_head": "c3637c4dcf7a0ab86e884dfb6ba07054c93d873d",
+        "result_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-OPEN-ADOPTION-01:A:1:304af885193245da7186cb6b9ab247ec2494bd86:executor",
+        "pr_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8",
+        "received_at": "2026-09-22T19:24:40Z"
+      },
+      "delivery_status": "REVISION_2_SIGNAL_SENT_RECEIPT_NOT_OBSERVED",
       "repair_rounds_used": 0,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "Claude 核對 live main/PR 與 active claim，提交接單 session/run、固定 work_id、來源 SHA、dedup key 和期限，交付 A1-A5 Draft PR 與精確成果 SHA；GPT 獨立覆核。",
-      "next_checkpoint": "A_PACKAGE_DRAFT_PR_AND_INDEPENDENT_REVIEW"
+      "next_action": "等待 revision 2 固定接單證據與新 content/result SHA；只覆核五項條件。條件關閉前不發邀請、不套 PR5 patch。M1/P5-R4-01 仍待合格獨立隔離 runtime。",
+      "next_checkpoint": "REVISION_2_CONDITIONS_EXACT_HEAD_REVIEW",
+      "pr": 8,
+      "observed_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
+      "last_reviewed_content_head": "c3637c4dcf7a0ab86e884dfb6ba07054c93d873d",
+      "last_reviewed_live_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "review": "reviews/PR8_R1_ATK_OPEN_ADOPTION_c3637c4d.md",
+      "bounded_condition_repair": {
+        "work_id": "ATK-OPEN-ADOPTION-01",
+        "revision": 2,
+        "stage": "A-CONDITIONS",
+        "source_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
+        "reviewed_content_head": "c3637c4dcf7a0ab86e884dfb6ba07054c93d873d",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A-CONDITIONS:2:77a8200533c80bc288186f58c1d8ecb6d25d121d:executor",
+        "deadline": "2026-09-23T19:30:00Z",
+        "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5782770702",
+        "delivery_status": "SIGNAL_SENT_RECEIPT_NOT_OBSERVED",
+        "repair_rounds_dispatched": 1,
+        "repair_rounds_limit": 2,
+        "scope": [
+          "adoption/ATK-OPEN-ADOPTION-01/INVITATIONS.md",
+          "adoption/ATK-OPEN-ADOPTION-01/DISTRIBUTION_CHANNELS.md",
+          "adoption/ATK-OPEN-ADOPTION-01/pr5-doc-delta.patch",
+          "adoption/ATK-OPEN-ADOPTION-01/validate_records.py",
+          "adoption/ATK-OPEN-ADOPTION-01/test_fixtures/**",
+          "adoption/ATK-OPEN-ADOPTION-01/records/INT-2026-09-22-02.json",
+          "adoption/ATK-OPEN-ADOPTION-01/check_consistency.py",
+          "integrations/headroom-atk/AGENT_QUICKSTART.md",
+          "integrations/headroom-atk/agent-manifest.json",
+          "reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md"
+        ],
+        "findings": [
+          "A-R1-01",
+          "A-R1-02",
+          "A-R1-03",
+          "A-R1-04",
+          "A-R1-05"
+        ]
+      },
+      "independent_runtime_verified": false,
+      "external_adoption_count": 0
     }
   ],
   "planning": {
@@ -230,7 +280,7 @@
     "review_storage": "main per REVIEW-MAIN",
     "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
     "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167",
-    "next_checkpoint": "PLANNER_SCOPE_REDUCTION_NO_THIRD_REPAIR",
+    "next_checkpoint": "PR8_REVISION_2_CONDITIONS_RECEIPT_OR_RESULT",
     "manual_executor_roundtrip": {
       "status": "VERIFIED_EXISTING_SESSION_NOT_PERSISTENT",
       "repository": "firekou/Open-Skill-Distribution-Flywheel",
