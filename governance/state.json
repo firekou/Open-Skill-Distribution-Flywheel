@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 14,
+  "revision": 15,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -178,7 +178,7 @@
       "task_id": "ATK-OPEN-ADOPTION-01",
       "work_id": "ATK-OPEN-ADOPTION-01",
       "revision": 1,
-      "status": "CONDITIONS_PENDING",
+      "status": "EXECUTING",
       "decision_id": "ATK-OPEN-ADOPTION-20260922",
       "prompt": "reviews/ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md",
       "phase": "A",
@@ -186,7 +186,20 @@
       "packet_commit": "fa2ca785cd36e797ef79779b18b59fba3e48613d",
       "branch": "claude/atk-open-adoption-01",
       "executor_response": "reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md",
-      "active_claim": null,
+      "active_claim": {
+        "work_id": "ATK-OPEN-ADOPTION-01",
+        "revision": 2,
+        "stage": "A-CONDITIONS",
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "session_url": "https://claude.ai/code/session_01RFeCsTYkVywjHvXk7od7Ab",
+        "source_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
+        "reviewed_content_head": "c3637c4dcf7a0ab86e884dfb6ba07054c93d873d",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A-CONDITIONS:2:77a8200533c80bc288186f58c1d8ecb6d25d121d:executor",
+        "deadline": "2026-09-23T19:30:00Z",
+        "receipt_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5783362399",
+        "observed_at": "2026-09-22T20:10:38Z",
+        "note": "Different existing Claude session from r1. Claim is valid for this bounded scope; it does not prove persistent launcher or result delivery."
+      },
       "receipt": {
         "session_id": "session_016YNgsSCC2eV5sicob2f56f",
         "work_id": "ATK-OPEN-ADOPTION-01",
@@ -198,12 +211,12 @@
         "pr_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8",
         "received_at": "2026-09-22T19:24:40Z"
       },
-      "delivery_status": "REVISION_2_SIGNAL_SENT_RECEIPT_NOT_OBSERVED",
+      "delivery_status": "REVISION_2_CLAIM_RECEIVED",
       "repair_rounds_used": 0,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "等待 revision 2 固定接單證據與新 content/result SHA；只覆核五項條件。條件關閉前不發邀請、不套 PR5 patch。M1/P5-R4-01 仍待合格獨立隔離 runtime。",
-      "next_checkpoint": "REVISION_2_CONDITIONS_EXACT_HEAD_REVIEW",
+      "next_action": "等待 revision 2 新 content/result SHA 與 executor response；不得重派。新內容到達後只覆核 A-R1-01 至 A-R1-05。",
+      "next_checkpoint": "REVISION_2_RESULT_SHA",
       "pr": 8,
       "observed_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
       "last_reviewed_content_head": "c3637c4dcf7a0ab86e884dfb6ba07054c93d873d",
@@ -219,7 +232,7 @@
         "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A-CONDITIONS:2:77a8200533c80bc288186f58c1d8ecb6d25d121d:executor",
         "deadline": "2026-09-23T19:30:00Z",
         "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5782770702",
-        "delivery_status": "SIGNAL_SENT_RECEIPT_NOT_OBSERVED",
+        "delivery_status": "CLAIM_RECEIVED_EXECUTING",
         "repair_rounds_dispatched": 1,
         "repair_rounds_limit": 2,
         "scope": [
@@ -240,7 +253,21 @@
           "A-R1-03",
           "A-R1-04",
           "A-R1-05"
-        ]
+        ],
+        "receipt": {
+          "work_id": "ATK-OPEN-ADOPTION-01",
+          "revision": 2,
+          "stage": "A-CONDITIONS",
+          "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+          "session_url": "https://claude.ai/code/session_01RFeCsTYkVywjHvXk7od7Ab",
+          "source_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
+          "reviewed_content_head": "c3637c4dcf7a0ab86e884dfb6ba07054c93d873d",
+          "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A-CONDITIONS:2:77a8200533c80bc288186f58c1d8ecb6d25d121d:executor",
+          "deadline": "2026-09-23T19:30:00Z",
+          "receipt_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5783362399",
+          "observed_at": "2026-09-22T20:10:38Z",
+          "note": "Different existing Claude session from r1. Claim is valid for this bounded scope; it does not prove persistent launcher or result delivery."
+        }
       },
       "independent_runtime_verified": false,
       "external_adoption_count": 0
@@ -280,7 +307,7 @@
     "review_storage": "main per REVIEW-MAIN",
     "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
     "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167",
-    "next_checkpoint": "PR8_REVISION_2_CONDITIONS_RECEIPT_OR_RESULT",
+    "next_checkpoint": "PR8_REVISION_2_RESULT_SHA",
     "manual_executor_roundtrip": {
       "status": "VERIFIED_EXISTING_SESSION_NOT_PERSISTENT",
       "repository": "firekou/Open-Skill-Distribution-Flywheel",
