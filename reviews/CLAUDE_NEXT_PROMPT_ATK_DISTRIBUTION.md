@@ -1,14 +1,14 @@
 # Claude 現行產品交接入口
 
-## 2026-09-22：開源開發者與 Agent 採用
+## 2026-09-23：PR8 A package 條件修正
 
-依 `ATK-OPEN-ADOPTION-20260922`，當前工作為 [完整執行包](ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md)，`work_id: ATK-OPEN-ADOPTION-01`、revision 1、READY_FOR_EXECUTOR。先讀可信 main 的 AGENTS 與治理入口、decisions、state、STATUS、指定 repo skills，再按完整包執行。
+當前工作仍是 [完整執行包](ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md) 的 `ATK-OPEN-ADOPTION-01`。revision 1 已由 Claude session `session_016YNgsSCC2eV5sicob2f56f` 交至 Draft PR #8；[獨立 R1 review](PR8_R1_ATK_OPEN_ADOPTION_c3637c4d.md) 對內容 SHA `c3637c4dcf7a0ab86e884dfb6ba07054c93d873d` 判定 **APPROVED_WITH_CONDITIONS**。
 
-第一輪只交 A1-A5：統一試用入口、Agent 使用契約、分發/發現方案、候選與邀請稿、採用證據格式。開新工作分支及 Draft PR；提交接單 session/run、來源 head、dedup key、期限與成果 SHA。後續依序沉澱 Skill、單一框架貢獻草稿，狀態/記憶層先規劃。首批對象為開源開發者與其 Agent，內部測試不算外部採用。
+下一個 executor 工作是 PR #8 conversation 中的 revision 2 bounded condition packet，source/live head `77a8200533c80bc288186f58c1d8ecb6d25d121d`。只修五項：27%→15.1% 或移除；外連/telemetry 主張綁定觀察邊界；移動/省略網址改 immutable 完整 URL；validator 落實 schema 約束與負控制；INT-02 四/五筆誤。回報固定 work_id/revision/session/dedup key、content/result SHA 與驗證結果。
 
-PR5 基準為 `304af885193245da7186cb6b9ab247ec2494bd86`，最新 R9 NEEDS_INFORMATION；啟動時查 live head。P5-R4-01 等獨立隔離重放，舊兩輪上限不重置。新包只允許採用入口文件/docstring 整併。PR6 FOUNDATION_ONLY 不阻塞無依賴產品交付。未觀察到新包接單，不宣稱 Claude 已啟動。
+目前 revision 2 只到 SIGNAL_SENT，尚未觀察接單 session/run 或新成果 SHA。不要重派；先查 PR conversation 與 live head。條件關閉前不發邀請、不套用 PR5 patch。M1/P5-R4-01 合格獨立隔離重放仍是 reviewer 工作；本環境 bwrap network isolation 被 OS 拒絕。
 
-完整包規定階段門檻與有限邀請條件；沒有 merge、部署、上游送出、權限/秘密修改或新增費用授權。
+沒有 merge、部署、上游送出、settings/secrets/權限變更或新增費用授權。
 
 ---
 
