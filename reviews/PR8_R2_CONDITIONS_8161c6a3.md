@@ -16,7 +16,7 @@
 ## Review identity
 
 - Repository: `firekou/Open-Skill-Distribution-Flywheel`
-- PR: [#8](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8), Draft, open, unmerged, mergeable
+- PR: [#8](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8), Draft, open, unmerged；初次讀取 `mergeable: true`，main 寫入後最終回讀為 `false`，未嘗試 merge
 - PR base: `2a6becfa6fd792ede44a250171bbbdc93adbc4e3`
 - Revision 2 source head: `77a8200533c80bc288186f58c1d8ecb6d25d121d`
 - Immutable link target: `fb47e31b54b35518322254d0d69d7c7193dc2266`
@@ -62,6 +62,7 @@
 - 搜尋 `27%`、moving branch、`…/blob`、絕對 loopback／tracking 主張，全部 0 match。
 - `git diff --check 77a8200..8161c6a`：exit 0。
 - content → result head 的淨差異只含 executor response 與 controls。
+- PR mergeability 在本輪由 true 變為 false；因沒有 merge 授權且本輪只審內容，不把它解讀為內容通過或失敗，留待未來 merge gate 重新計算／排查。
 - 未執行 Headroom 第三方 runtime；沒有 secrets、provider call、費用、外部訊息、merge、部署或權限修改。
 
 ## Residual conditions
