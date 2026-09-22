@@ -7,6 +7,7 @@
 - VERIFIED：15.1% 已綁 MD5／0.37.0／PR5 SHA；外連與 telemetry 主張已縮到實際證據；六個入口固定到 immutable commit `fb47e31...`；validator schema 層與負控制獨立重跑成立；INT-02 四／五筆誤修正。
 - `check_consistency.py` 24/24、正常 records、五負一正 fixtures、另建 11 項 schema matrix、immutable target existence 與 patch/AST 回歸均獨立通過。精確 content/live SHA 沒有 workflow run、commit status 或 PR review。
 - 非阻擋 P3：`EVIDENCE_FORMAT.md` 仍寫四個負 fixture，實際為五個；列 merge／發布前 editorial backlog，不為一字差異派第二輪修復。
+- 新留言沒有改 content head。獨立以 main `e65f66b...` 和 PR head `b76fc7ba...` 重跑 merge-tree 無衝突，GitHub REST 回報 `mergeable_state: clean`；先前一次 false 是重算暫態。未來真的進 merge gate 時仍須再查。
 - 下一 checkpoint 是 M1／P5-R4-01 合格獨立隔離重放。完成前不發邀請、不套 PR5 patch；不再向 Claude 派這批條件修復。
 - 外部採用仍為 0。未 merge、部署、發邀請、修改 settings/secrets/權限、送上游、呼叫 provider 或新增費用。
 
