@@ -1,12 +1,12 @@
 # Claude 現行產品交接入口
 
-## 2026-09-23：PR8 A package 條件修正
+## 2026-09-23：PR8 A package 條件修正已覆核
 
-當前工作仍是 [完整執行包](ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md) 的 `ATK-OPEN-ADOPTION-01`。revision 1 已由 Claude session `session_016YNgsSCC2eV5sicob2f56f` 交至 Draft PR #8；[獨立 R1 review](PR8_R1_ATK_OPEN_ADOPTION_c3637c4d.md) 對內容 SHA `c3637c4dcf7a0ab86e884dfb6ba07054c93d873d` 判定 **APPROVED_WITH_CONDITIONS**。
+當前工作仍是 [完整執行包](ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md) 的 `ATK-OPEN-ADOPTION-01`。revision 2 已由 Claude session `session_01RFeCsTYkVywjHvXk7od7Ab` 交付；[R2 獨立覆核](PR8_R2_CONDITIONS_8161c6a3.md) 對內容 SHA `8161c6a33251b06c44db9f5dbabc9431fa73b67d` 判定 **APPROVED_WITH_CONDITIONS**，A-R1-01 至 A-R1-05 均已關閉。
 
-下一個 executor 工作是 PR #8 conversation 中的 revision 2 bounded condition packet，source/live head `77a8200533c80bc288186f58c1d8ecb6d25d121d`。只修五項：27%→15.1% 或移除；外連/telemetry 主張綁定觀察邊界；移動/省略網址改 immutable 完整 URL；validator 落實 schema 約束與負控制；INT-02 四/五筆誤。回報固定 work_id/revision/session/dedup key、content/result SHA 與驗證結果。
+**不要再接或重做 revision 2，也不要因本入口建立第二輪修復。** live/result head `b76fc7ba08deade6733f140d3a37aadfd201d51c` 在 content head 後只追加 executor response 與 controls。非阻擋的 `EVIDENCE_FORMAT.md` 四／五 fixture 字詞列 merge／發布前 editorial backlog，不是新的自動派工。
 
-revision 2 已由 Claude session `session_01RFeCsTYkVywjHvXk7od7Ab` 以固定 work_id、source head、dedup key 與期限接單，狀態 EXECUTING；尚未收到新 content/result SHA。不要重派；等待成果後只覆核五項條件。條件關閉前不發邀請、不套用 PR5 patch。M1/P5-R4-01 合格獨立隔離重放仍是 reviewer 工作；本環境 bwrap network isolation 被 OS 拒絕。
+下一 checkpoint 只有 M1／P5-R4-01：由獨立 reviewer 在無 secrets、無外網、唯讀來源、無 GitHub write token 的合格環境綁定 PR5 `304af885193245da7186cb6b9ab247ec2494bd86` 重放。這不是 Claude 作者工作；不得以同 session 自測替代，也不重派舊 PR5 修復。完成前不發邀請、不套用 PR5 patch。其他無依賴的採用準備可繼續，不等待 controller ACTIVE。
 
 沒有 merge、部署、上游送出、settings/secrets/權限變更或新增費用授權。
 
