@@ -29,7 +29,13 @@
 每輪最多一個未審內容 head，同 head 無新證據安靜結束。若需修復，先寫具體包，再發一次含 work_id／revision／source_head／dedup key 的 PR 交接；已有 active claim 不重複派工。接單與完成證據未出現前，僅記 SIGNAL_SENT，不宣稱 RUNNING。
 review 保存位置沿用 REVIEW-MAIN，優先於通用 skill 的 PR 分支預設。既有產品 PR 不因治理 runtime 未 ACTIVE 而停止。PR7 保留證據，不另建第二份 controller。
 
-## 目前工作範圍
+## 2026-09-22 產品採用執行補充
+
+依 ATK-OPEN-ADOPTION-20260922，現行產品任務見 reviews/ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md（ATK-OPEN-ADOPTION-01）。負責人已接受四方向，第一輪 Claude 在工作分支交 A 包與 Draft PR，不只再次規劃；後續依採用證據逐階段前進。下文 GOV-PLAN-02 的歷史只規劃限制不阻擋此產品包，亦不因此啟動舊 controller。
+首批對象為開源開發者與其 Agent。邀請依 A4 的資產驗收、固定入口、對象/渠道及帳號權限條件，最多三個相關對象各一次；首輪送審前不發送。這不包含上游貢獻送出、任意社群發布、merge、部署、秘密/權限修改或新增支出。
+PR5/PR6 舊修復上限不重置；僅允許新試用入口文件/docstring 整併，独立隔離重放仍由 reviewer 完成。新包接單與結果另記，不用文件上傳推定執行或採用成功。
+
+## 歷史治理導入工作範圍（產品任務以上方補充為準）
 依 GOV-PLAN-02，本輪交付是完整規劃文件，狀態 PLANNED_NOT_DISPATCHED。治理導入目標保留；本輪不啟動實作、runner 或排程。Claude 後續完整工作包與各階段驗收見 governance/IMPLEMENTATION_PROMPT.md。讀到文件、新 main commit 或 review 不自動構成啟動授權。規劃完成與 runtime ACTIVE 分開記錄。
 
 ## 讀取順序與唯一資料來源
