@@ -45,21 +45,23 @@ strings must survive the proxy: the migration name and the SQLSTATE code.
 
 | | offline trial (§4) | live step (§8, optional) |
 |---|---|---|
-| Network | PyPI + GitHub once, to install. The check itself talks only to `127.0.0.1` | the **compressed prompt is sent to the provider you name** |
+| Network | PyPI + GitHub once, to install. The check's own traffic then goes only to `127.0.0.1`. What the installed third-party packages do on a networked machine is **not tested** — see below | the **compressed prompt is sent to the provider you name** |
 | Installs | `headroom-ai[proxy]==0.37.0` and about 90 transitive packages into a venv (~750 MB) | same |
 | Writes in the work directory | `.venv/`, `deploy.log` | same |
 | Writes in `$HOME` | headroom state in `~/.headroom/` (`logs/proxy.log`, `savings_events.jsonl`, `proxy_savings.json`, `subscription_state.json`, `ccr_store.db` with its SQLite `-wal`/`-shm` side files); onnxruntime (a transitive dependency) creates `~/.cache/Microsoft/DeveloperTools/.onnxruntime/` with a `deviceid` file and `onnxruntime.db` (plus side files) | same |
 | Cost | none | real provider tokens |
 | Keys | none | a provider key, injected by the environment |
 
-What we checked (2026-09-22, `INTERNAL_AGENT_TEST`, run by us):
+What we checked (2026-09-22, `INTERNAL_AGENT_TEST`, run by us) — and what that does **not** cover:
 
 - the needle text was **not** found in any file under `$HOME` after the offline run;
 - `proxy.log` says `Local telemetry: DISABLED (off by default)`;
-- the onnxruntime event table was empty, and the run had no network beyond loopback, so
-  nothing could have been sent. **We did not test whether onnxruntime sends anything on a
-  networked machine.** If that matters to your operator, run the check without network access
-  (after installing) or treat it as unknown.
+- the onnxruntime event table was empty.
+- That run was inside a network namespace with loopback only, so nothing could have left it
+  **on that run**. That is evidence about one isolated run, not about your machine.
+- **On an ordinary machine with network access we have not measured what the installed
+  dependencies (onnxruntime in particular) send.** Treat it as unknown, or run the check itself
+  without network access after installing, and tell us what you see.
 
 Remove it all afterwards with: delete the work directory, `~/.headroom/`, and
 `~/.cache/Microsoft/DeveloperTools/.onnxruntime/` if nothing else of yours uses it.
@@ -143,8 +145,8 @@ path. **Do not add `--show-needles`** to anything you will report.
 
 ## 7. Report back (optional, voluntary)
 
-There is no telemetry in this asset. The only way we learn anything is if your operator chooses
-to tell us. Fields and what is safe to share:
+We have put no telemetry in our own files, and we make no claim about the third-party packages
+you install. The only way we learn anything is if your operator chooses to tell us. Fields and what is safe to share:
 [adoption/ATK-OPEN-ADOPTION-01/EVIDENCE_FORMAT.md](../../adoption/ATK-OPEN-ADOPTION-01/EVIDENCE_FORMAT.md).
 The short version, safe to paste into a public issue:
 

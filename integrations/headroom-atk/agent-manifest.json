@@ -94,13 +94,13 @@
   ],
   "network": {
     "install": ["github.com", "pypi.org / files.pythonhosted.org"],
-    "offline_trial": "127.0.0.1 only",
+    "offline_trial": "this check's own traffic: 127.0.0.1 only. What the installed third-party packages do on a networked machine: NOT TESTED",
     "live": "the compressed prompt is sent to the provider named in x-headroom-base-url"
   },
   "file_writes": {
     "work_directory": [".venv/", "deploy.log"],
     "home": ["~/.headroom/ (proxy.log, savings_events.jsonl, proxy_savings.json, subscription_state.json, ccr_store.db)", "~/.cache/Microsoft/DeveloperTools/.onnxruntime/ (deviceid, onnxruntime.db) — created by onnxruntime, a transitive dependency"],
-    "observed_2026_09_22": "needle text not found in any file under HOME after the offline run; headroom logs 'Local telemetry: DISABLED'; onnxruntime event table empty. Whether onnxruntime transmits on a networked machine: NOT TESTED."
+    "observed_2026_09_22": "needle text not found in any file under HOME after the offline run; headroom logs 'Local telemetry: DISABLED'; onnxruntime event table empty. That run was inside a loopback-only network namespace, so it evidences no egress for that run only. Whether onnxruntime or any other transitive dependency transmits on an ordinary networked machine: NOT TESTED."
   },
   "cost": {"offline": 0, "live": "real provider tokens; ceiling must be agreed before the first call"},
   "keys_required": {"offline": false, "live": true},
@@ -131,6 +131,6 @@
     "where": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/issues",
     "format": "adoption/ATK-OPEN-ADOPTION-01/EVIDENCE_FORMAT.md",
     "upstream_bugs": "https://github.com/headroomlabs-ai/headroom/issues",
-    "telemetry": "none in this asset"
+    "telemetry": "none added by us in this asset; no claim is made about the third-party packages it installs"
   }
 }

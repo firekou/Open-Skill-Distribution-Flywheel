@@ -1,0 +1,29 @@
+{
+ "record_id": "neg-5-lowercase",
+ "source_class": "UNVERIFIED",
+ "discovery_route": "UNKNOWN",
+ "operator_external": 1,
+ "agent_runtime": 7,
+ "asset_id": "headroom-atk-log-compression-check",
+ "code_sha": "304af885193245da7186cb6b9ab247ec2494bd86",
+ "headroom_version": "0.37.0",
+ "date_utc": "2026-9-22",
+ "task": "negative control: every violation here is a schema constraint the r1 validator did not enforce",
+ "input_md5": "0ad9194a489136baa931881b78374cf7",
+ "commands": [],
+ "exit_code": 0,
+ "result": "SUCCESS",
+ "success_criterion": "local_check.py exit 0 on the synthetic log with both needles present",
+ "success": true,
+ "human_help": "none",
+ "duration_minutes": -6,
+ "usage_cost": "0 (offline; no model call)",
+ "blockers": [],
+ "reuse_intent": "unknown",
+ "public_scope": "public",
+ "evidence_urls": [
+  "adoption/ATK-OPEN-ADOPTION-01/evidence/internal-2026-09-22/run_output.txt"
+ ],
+ "recorded_by": "Claude executor, ATK-OPEN-ADOPTION-01 r2",
+ "notes": "Fixture only; never a real trial. Six violations, each one the r1 validator accepted: record_id not matching ^[A-Z0-9-]+$; operator_external 1 instead of the boolean true; agent_runtime not a string; date_utc not matching the date pattern; commands empty against minItems 1; duration_minutes below minimum 0. Every semantic rule in this record is satisfied, so only the schema layer can reject it."
+}

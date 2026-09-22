@@ -18,7 +18,11 @@ written by us from what an operator chose to tell us, or by the operator themsel
 `discovery_route` is separate: `INTERNAL`, `DIRECT_INVITE`, `PUBLIC_DISCOVERY`,
 `DIRECTORY_DISCOVERY`, `UNKNOWN`.
 
-The validator enforces what a schema cannot:
+`validate_records.py` runs two blocking layers. The **schema layer** applies the schema itself —
+`required`, `additionalProperties`, `type`, `enum`, `const`, `pattern`, `items`, `minItems`,
+`minimum`, `anyOf` — as a small stdlib subset, so a bad date format, an empty `commands`, a
+negative duration or `operator_external: 1` in place of `true` is rejected, not just a missing
+field. The **semantic layer** then enforces what a schema cannot:
 
 1. `EXTERNAL_*` needs `operator_external: true` **and** `operator_evidence` (for example, the
    operator's own public issue comment). Missing either → the record must be `UNVERIFIED`.

@@ -28,7 +28,7 @@ Longer (for a README index or listing body):
 Fixed-version links (resolve only while the PR #5 branch exists — see MILESTONES risk):
 
 - Code: `https://github.com/firekou/Open-Skill-Distribution-Flywheel/tree/304af885193245da7186cb6b9ab247ec2494bd86/integrations/headroom-atk`
-- Human trial: `…/blob/304af885193245da7186cb6b9ab247ec2494bd86/integrations/headroom-atk/TRY_IT.md`
+- Human trial: `https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/304af885193245da7186cb6b9ab247ec2494bd86/integrations/headroom-atk/TRY_IT.md`
 - Agent contract: `integrations/headroom-atk/AGENT_QUICKSTART.md` and `agent-manifest.json` on this
   PR's result SHA (recorded in the executor response).
 

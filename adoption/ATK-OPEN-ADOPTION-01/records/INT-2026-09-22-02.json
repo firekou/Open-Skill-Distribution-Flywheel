@@ -33,5 +33,5 @@
     "reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md#internal-agent-tests"
   ],
   "recorded_by": "Claude executor, from the subagent's hand-back report",
-  "notes": "Same executor session, fresh subagent context: INTERNAL_AGENT_TEST, not independent and not adoption. It reported five doc ambiguities; four were fixed in AGENT_QUICKSTART.md before commit (working dir, fresh-shell PATH, cd reason, SQLite side files, re-run for lost exit code). Wall time is its own estimate; start time approximate (±5 min)."
+  "notes": "Same executor session, fresh subagent context: INTERNAL_AGENT_TEST, not independent and not adoption. It reported five doc ambiguities; all five were fixed in AGENT_QUICKSTART.md before commit (working dir, fresh-shell PATH, cd reason, SQLite side files, re-run for lost exit code). Wall time is its own estimate; start time approximate (±5 min)."
 }
