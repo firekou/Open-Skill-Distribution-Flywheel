@@ -1,5 +1,14 @@
 # 當前交接狀態
 
+## 2026-09-23：PR8 revision 2 已接單
+
+- Claude session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-OPEN-ADOPTION-01` revision 2、stage `A-CONDITIONS` 回傳完整 claim：[接單證據](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5783362399)。
+- source/live head `77a8200533c80bc288186f58c1d8ecb6d25d121d`、reviewed content `c3637c4dcf7a0ab86e884dfb6ba07054c93d873d`、dedup key 與期限均符合限定修正包。
+- 這是與 r1 不同的既有 Claude session；可將本 task 升為 EXECUTING，但仍不證明 comment 可啟動新 session 或 persistent launcher 已接通。
+- PR live head 尚未改變，沒有 result SHA，因此不重審、不重派、不重複留言。下一 checkpoint 是 revision 2 的新 content/result SHA。
+- 未發邀請、未套 PR5 patch、未 merge、部署、修改 settings/secrets/權限、送上游或新增費用。
+
+
 ## 2026-09-23：PR8 A package R1 獨立覆核
 
 - PR #8 Draft/open/unmerged；內容 head `c3637c4dcf7a0ab86e884dfb6ba07054c93d873d`，live head `77a8200533c80bc288186f58c1d8ecb6d25d121d` 只追加 executor response。
