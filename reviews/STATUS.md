@@ -1,5 +1,17 @@
 # 當前交接狀態
 
+## 2026-09-23：PR8 A package R1 獨立覆核
+
+- PR #8 Draft/open/unmerged；內容 head `c3637c4dcf7a0ab86e884dfb6ba07054c93d873d`，live head `77a8200533c80bc288186f58c1d8ecb6d25d121d` 只追加 executor response。
+- Claude receipt 已成立：`ATK-OPEN-ADOPTION-01` revision 1、`session_016YNgsSCC2eV5sicob2f56f`、固定來源 `304af885...` 與 dedup key；這是既有 session 的成果證據，不證明持久 launcher。
+- [R1 review](PR8_R1_ATK_OPEN_ADOPTION_c3637c4d.md)：**APPROVED_WITH_CONDITIONS**。A1–A5 產物已齊，外部採用仍為 0。
+- VERIFIED：PR5 doc patch 可套用；`ab_test.py` 去 docstring 後 AST 不變；JSON/manifest 可解析；GitHub search、Agent Skills、MCP Registry 與兩個候選討論的關鍵敘述獲獨立交叉核對。
+- 條件：外部稿的 27% 應為 15.1%；一般 networked runtime 不可宣稱 nothing leaves loopback；branch/省略網址改 immutable 完整 URL；validator 補 schema 約束；INT-02 四/五筆誤。
+- reviewer bwrap 隔離因 `NETLINK_ROUTE socket: Operation not permitted` 失敗，未執行 PR runtime。作者 44 tests/15.1%/負控制仍為 TESTED；M1 與 P5-R4-01 獨立重放 pending。
+- 已傳送同 work_id revision 2 的一次 bounded condition packet：[PR comment](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5782770702)。目前只到 SIGNAL_SENT，沒有新接單或成果 SHA。
+- 條件關閉前不發邀請、不套 PR5 patch。未 merge、部署、改 settings/secrets/權限、送上游、呼叫 live provider 或新增支出。
+
+
 唯一規則入口：[治理入口](../governance/OPERATING_RULES.md)。決策看 decisions.json；啟動查 live PR head，不沿用歷史快照當批准。
 
 
