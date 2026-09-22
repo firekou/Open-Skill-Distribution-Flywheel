@@ -6,7 +6,7 @@
 
 下一個 executor 工作是 PR #8 conversation 中的 revision 2 bounded condition packet，source/live head `77a8200533c80bc288186f58c1d8ecb6d25d121d`。只修五項：27%→15.1% 或移除；外連/telemetry 主張綁定觀察邊界；移動/省略網址改 immutable 完整 URL；validator 落實 schema 約束與負控制；INT-02 四/五筆誤。回報固定 work_id/revision/session/dedup key、content/result SHA 與驗證結果。
 
-目前 revision 2 只到 SIGNAL_SENT，尚未觀察接單 session/run 或新成果 SHA。不要重派；先查 PR conversation 與 live head。條件關閉前不發邀請、不套用 PR5 patch。M1/P5-R4-01 合格獨立隔離重放仍是 reviewer 工作；本環境 bwrap network isolation 被 OS 拒絕。
+revision 2 已由 Claude session `session_01RFeCsTYkVywjHvXk7od7Ab` 以固定 work_id、source head、dedup key 與期限接單，狀態 EXECUTING；尚未收到新 content/result SHA。不要重派；等待成果後只覆核五項條件。條件關閉前不發邀請、不套用 PR5 patch。M1/P5-R4-01 合格獨立隔離重放仍是 reviewer 工作；本環境 bwrap network isolation 被 OS 拒絕。
 
 沒有 merge、部署、上游送出、settings/secrets/權限變更或新增費用授權。
 
