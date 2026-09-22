@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 12,
+  "revision": 13,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -34,7 +34,7 @@
       "observed_head": "304af885193245da7186cb6b9ab247ec2494bd86",
       "last_reviewed_head": "304af885193245da7186cb6b9ab247ec2494bd86",
       "last_review_decision": "NEEDS_INFORMATION",
-      "next_action": "兩輪修復已結束，不重派第三輪。指定入口 P5-R8-01 source-level 修復成立；等待合格獨立隔離 runtime 對現 head 重放 P5-R4-01 與受影響 tests。free sample 舊命令及 P5-R9-01 文案列未派工發布前 backlog，不能作已驗收 live 入口。",
+      "next_action": "P5-R4-01 與受影響 tests 等合格獨立隔離重放，舊修復 2/2 不重派。發布前文件 backlog 由 ATK-OPEN-ADOPTION-01 在新入口範圍整併，不改實作邏輯。",
       "prompt": "reviews/PR5_R4_REVIEW_d1930e4.md",
       "review": "reviews/PR5_R9_CONFIRM_304af885.md",
       "last_head_verification": {
@@ -110,13 +110,14 @@
         "current-head affected tests independent replay"
       ],
       "publication_backlog": {
-        "status": "BACKLOG_NOT_DISPATCHED",
+        "status": "DOCUMENTATION_SCOPE_ASSIGNED_TO_ATK_OPEN_ADOPTION_01",
         "items": [
           "free sample retry flag or replace duplicate instructions with TRY_IT link",
           "P5-R9-01 successful run attempt wording",
           "standalone ab_test docstring unpinned dependency"
         ],
-        "not_new_repair_authorization": true
+        "not_new_repair_authorization": true,
+        "note": "依最新負責人指示，只在新採用入口做文件/docstring 整併；不重開舊程式修復。"
       }
     },
     {
@@ -172,6 +173,27 @@
         "no_parallel_controller": true,
         "product_adoption_blocked": false
       }
+    },
+    {
+      "task_id": "ATK-OPEN-ADOPTION-01",
+      "work_id": "ATK-OPEN-ADOPTION-01",
+      "revision": 1,
+      "status": "READY_FOR_EXECUTOR",
+      "decision_id": "ATK-OPEN-ADOPTION-20260922",
+      "prompt": "reviews/ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md",
+      "phase": "A",
+      "source_head": "304af885193245da7186cb6b9ab247ec2494bd86",
+      "packet_commit": "fa2ca785cd36e797ef79779b18b59fba3e48613d",
+      "branch": "claude/atk-open-adoption-01",
+      "executor_response": "reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md",
+      "active_claim": null,
+      "receipt": null,
+      "delivery_status": "PACKET_PUBLISHED_RECEIPT_NOT_OBSERVED",
+      "repair_rounds_used": 0,
+      "repair_rounds_limit": 2,
+      "additional_api_budget_usd": 0,
+      "next_action": "Claude 核對 live main/PR 與 active claim，提交接單 session/run、固定 work_id、來源 SHA、dedup key 和期限，交付 A1-A5 Draft PR 與精確成果 SHA；GPT 獨立覆核。",
+      "next_checkpoint": "A_PACKAGE_DRAFT_PR_AND_INDEPENDENT_REVIEW"
     }
   ],
   "planning": {
