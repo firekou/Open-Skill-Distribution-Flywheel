@@ -139,6 +139,26 @@
         "GitHub 留言/標籤不是啟動證據；接單、run、結果與獨立驗收分開",
         "每輪一個內容 head、最多兩輪限定修復；GPT 不批准自己的實作"
       ]
+    },
+    {
+      "id": "ATK-OPEN-ADOPTION-20260922",
+      "status": "approved",
+      "source": "2026-09-22 負責人明確接受方向一二三四，指定開源開發者與其 Agent 為首批使用者，要求執行工作包上傳 GitHub 供 Claude 接手。",
+      "decision": "依序推進 Routing 範例、可重用 Skill、既有 Framework 整合貢獻、任務狀態/記憶接入。立即工作包 A 為既有 Headroom 資產的開源/Agent 試用準備與 Draft PR 交付；後續依採用證據與階段 gate 接續。",
+      "supersedes": [
+        "歷史產品 prompt 對本工作包僅規劃不交付的解讀",
+        "1A 不擴工具限制僅在本包後續階段明定的 Skill/單一框架適配範圍內調整",
+        "舊外部邀請一律未授權限制，僅依本包 A4 條件允許有限定向試用邀請"
+      ],
+      "limits": [
+        "第一輪只完成 A 包送審，不同時開四線；方向四先規劃",
+        "既有 PR5/PR6 兩輪上限不重置；P5-R4-01 等独立隔離重放",
+        "僅允許新採用入口所需文件/docstring 整併，不授權舊程式第三輪修復",
+        "邀請須資產驗收、固定入口、確認收件人/渠道與帳號權限；最多三個相關對象各一次，首輪送審前不發送",
+        "上游貢獻先可審草稿，不送出；不 merge、部署、改 secrets/權限或新增付費",
+        "內部 Agent 測試、外部受邀採用及公開發現採用分開；不宣稱 launcher 或 runtime 已接通"
+      ],
+      "packet": "reviews/ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md"
     }
   ]
 }
