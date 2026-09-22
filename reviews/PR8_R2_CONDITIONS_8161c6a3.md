@@ -16,7 +16,7 @@
 ## Review identity
 
 - Repository: `firekou/Open-Skill-Distribution-Flywheel`
-- PR: [#8](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8), Draft, open, unmerged；初次讀取 `mergeable: true`，main 寫入後最終回讀為 `false`，未嘗試 merge
+- PR: [#8](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8), Draft, open, unmerged；2026-09-23 05:10（Asia/Taipei）回讀 `mergeable: true`、`mergeable_state: clean`
 - PR base: `2a6becfa6fd792ede44a250171bbbdc93adbc4e3`
 - Revision 2 source head: `77a8200533c80bc288186f58c1d8ecb6d25d121d`
 - Immutable link target: `fb47e31b54b35518322254d0d69d7c7193dc2266`
@@ -62,7 +62,7 @@
 - 搜尋 `27%`、moving branch、`…/blob`、絕對 loopback／tracking 主張，全部 0 match。
 - `git diff --check 77a8200..8161c6a`：exit 0。
 - content → result head 的淨差異只含 executor response 與 controls。
-- PR mergeability 在本輪由 true 變為 false；因沒有 merge 授權且本輪只審內容，不把它解讀為內容通過或失敗，留待未來 merge gate 重新計算／排查。
+- 對當時 main `e65f66b12b72221890d32b245ddf14e9d559c0b9` 與 PR head `b76fc7ba08deade6733f140d3a37aadfd201d51c` 獨立執行 `git merge-tree --write-tree --name-only`：exit 0、無衝突路徑；GitHub REST 同時回報 `mergeable: true`、`mergeable_state: clean`。先前一次 `false` 是重算中的暫態，不是已證實的內容衝突；真正 merge gate 仍須重新回讀。
 - 未執行 Headroom 第三方 runtime；沒有 secrets、provider call、費用、外部訊息、merge、部署或權限修改。
 
 ## Residual conditions
