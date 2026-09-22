@@ -10,8 +10,8 @@ index d811fb8..87cc2db 100644
 +Claude plugin directory, Smithery, MCP Registry, Hugging Face, awesome-lists — checked
 +2026-09-22), the problem-first description, the three discovery tests and the invitation drafts
 +are in the adoption package, not repeated here:
-+[DISTRIBUTION_CHANNELS.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/adoption/ATK-OPEN-ADOPTION-01/DISTRIBUTION_CHANNELS.md) ·
-+[TRIAL_TASK.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/adoption/ATK-OPEN-ADOPTION-01/TRIAL_TASK.md) · [INVITATIONS.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/adoption/ATK-OPEN-ADOPTION-01/INVITATIONS.md) (none sent).
++[DISTRIBUTION_CHANNELS.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/fb47e31b54b35518322254d0d69d7c7193dc2266/adoption/ATK-OPEN-ADOPTION-01/DISTRIBUTION_CHANNELS.md) ·
++[TRIAL_TASK.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/fb47e31b54b35518322254d0d69d7c7193dc2266/adoption/ATK-OPEN-ADOPTION-01/TRIAL_TASK.md) · [INVITATIONS.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/fb47e31b54b35518322254d0d69d7c7193dc2266/adoption/ATK-OPEN-ADOPTION-01/INVITATIONS.md) (none sent).
 +One finding changes the priority below: **GitHub's default repository search matches only the
 +name, About and topics** — README text only with `in:readme` — so item 4 is the change that can
 +affect search at all.
@@ -29,8 +29,8 @@ index 54c8f3b..1612076 100644
  **New here? [TRY_IT.md](TRY_IT.md) is the ten-minute version**: one task, offline first, with a
 -record template for a live run if you decide to do one.
 +record template for a live run if you decide to do one. **Handing this to an agent?** Give it
-+[AGENT_QUICKSTART.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/integrations/headroom-atk/AGENT_QUICKSTART.md) and [agent-manifest.json](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/integrations/headroom-atk/agent-manifest.json)
-+(on the adoption PR's Draft branch until merged): the same path, with stop conditions and what it
++[AGENT_QUICKSTART.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/fb47e31b54b35518322254d0d69d7c7193dc2266/integrations/headroom-atk/AGENT_QUICKSTART.md) and [agent-manifest.json](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/fb47e31b54b35518322254d0d69d7c7193dc2266/integrations/headroom-atk/agent-manifest.json)
++(pinned to that adoption PR commit, not a branch): the same path, with stop conditions and what it
 +must not do. TRY_IT is the one command source; every other
 +page links to it rather than repeating the live commands.
  
@@ -86,7 +86,7 @@ index 600f0d9..c1e38ed 100644
  
  Anything else: <https://github.com/firekou/Open-Skill-Distribution-Flywheel/issues>.
 +If you ran it — whether it worked, did not help, or you stopped — the adoption report fields are in
-+[EVIDENCE_FORMAT.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/adoption/ATK-OPEN-ADOPTION-01/EVIDENCE_FORMAT.md) (Draft branch of the adoption PR; it moves to `main` only if that is merged); paste
++[EVIDENCE_FORMAT.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/fb47e31b54b35518322254d0d69d7c7193dc2266/adoption/ATK-OPEN-ADOPTION-01/EVIDENCE_FORMAT.md) (pinned adoption PR commit; the files move to `main` only if that PR is merged); paste
 +only what that page marks as shareable.
  **Third-party reports to date: none.** There is no telemetry here, so an issue is the only way we
  would ever learn this helped or failed.
