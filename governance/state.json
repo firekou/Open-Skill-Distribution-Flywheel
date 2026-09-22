@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 15,
+  "revision": 16,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -177,8 +177,8 @@
     {
       "task_id": "ATK-OPEN-ADOPTION-01",
       "work_id": "ATK-OPEN-ADOPTION-01",
-      "revision": 1,
-      "status": "EXECUTING",
+      "revision": 2,
+      "status": "CONDITIONS_PENDING",
       "decision_id": "ATK-OPEN-ADOPTION-20260922",
       "prompt": "reviews/ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md",
       "phase": "A",
@@ -186,20 +186,7 @@
       "packet_commit": "fa2ca785cd36e797ef79779b18b59fba3e48613d",
       "branch": "claude/atk-open-adoption-01",
       "executor_response": "reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md",
-      "active_claim": {
-        "work_id": "ATK-OPEN-ADOPTION-01",
-        "revision": 2,
-        "stage": "A-CONDITIONS",
-        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
-        "session_url": "https://claude.ai/code/session_01RFeCsTYkVywjHvXk7od7Ab",
-        "source_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
-        "reviewed_content_head": "c3637c4dcf7a0ab86e884dfb6ba07054c93d873d",
-        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A-CONDITIONS:2:77a8200533c80bc288186f58c1d8ecb6d25d121d:executor",
-        "deadline": "2026-09-23T19:30:00Z",
-        "receipt_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5783362399",
-        "observed_at": "2026-09-22T20:10:38Z",
-        "note": "Different existing Claude session from r1. Claim is valid for this bounded scope; it does not prove persistent launcher or result delivery."
-      },
+      "active_claim": null,
       "receipt": {
         "session_id": "session_016YNgsSCC2eV5sicob2f56f",
         "work_id": "ATK-OPEN-ADOPTION-01",
@@ -211,18 +198,32 @@
         "pr_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8",
         "received_at": "2026-09-22T19:24:40Z"
       },
-      "delivery_status": "REVISION_2_CLAIM_RECEIVED",
-      "repair_rounds_used": 0,
+      "revision_2_receipt": {
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "work_id": "ATK-OPEN-ADOPTION-01",
+        "revision": 2,
+        "stage": "A-CONDITIONS",
+        "source_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
+        "immutable_link_target": "fb47e31b54b35518322254d0d69d7c7193dc2266",
+        "content_head": "8161c6a33251b06c44db9f5dbabc9431fa73b67d",
+        "result_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A-CONDITIONS:2:77a8200533c80bc288186f58c1d8ecb6d25d121d:executor",
+        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5783362399",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5783517419",
+        "received_at": "2026-09-22T20:20:36Z"
+      },
+      "delivery_status": "REVISION_2_RESULT_RECEIVED_REVIEWED",
+      "repair_rounds_used": 1,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "等待 revision 2 新 content/result SHA 與 executor response；不得重派。新內容到達後只覆核 A-R1-01 至 A-R1-05。",
-      "next_checkpoint": "REVISION_2_RESULT_SHA",
+      "next_action": "不再派 Claude 修復。等待合格獨立隔離 reviewer 綁定 PR5 304af885 重放 M1/P5-R4-01；完成前不發邀請、不套 PR5 patch。EVIDENCE_FORMAT fixture 四/五筆誤列 merge 前非阻擋 backlog。",
+      "next_checkpoint": "M1_P5_R4_01_INDEPENDENT_ISOLATED_REPLAY",
       "pr": 8,
-      "observed_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
-      "last_reviewed_content_head": "c3637c4dcf7a0ab86e884dfb6ba07054c93d873d",
-      "last_reviewed_live_head": "77a8200533c80bc288186f58c1d8ecb6d25d121d",
+      "observed_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
+      "last_reviewed_content_head": "8161c6a33251b06c44db9f5dbabc9431fa73b67d",
+      "last_reviewed_live_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
-      "review": "reviews/PR8_R1_ATK_OPEN_ADOPTION_c3637c4d.md",
+      "review": "reviews/PR8_R2_CONDITIONS_8161c6a3.md",
       "bounded_condition_repair": {
         "work_id": "ATK-OPEN-ADOPTION-01",
         "revision": 2,
@@ -232,7 +233,7 @@
         "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A-CONDITIONS:2:77a8200533c80bc288186f58c1d8ecb6d25d121d:executor",
         "deadline": "2026-09-23T19:30:00Z",
         "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5782770702",
-        "delivery_status": "CLAIM_RECEIVED_EXECUTING",
+        "delivery_status": "RESULT_RECEIVED_REVIEWED",
         "repair_rounds_dispatched": 1,
         "repair_rounds_limit": 2,
         "scope": [
@@ -267,8 +268,26 @@
           "receipt_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5783362399",
           "observed_at": "2026-09-22T20:10:38Z",
           "note": "Different existing Claude session from r1. Claim is valid for this bounded scope; it does not prove persistent launcher or result delivery."
-        }
+        },
+        "immutable_link_target": "fb47e31b54b35518322254d0d69d7c7193dc2266",
+        "content_head": "8161c6a33251b06c44db9f5dbabc9431fa73b67d",
+        "result_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5783517419",
+        "review": "reviews/PR8_R2_CONDITIONS_8161c6a3.md",
+        "decision": "APPROVED_WITH_CONDITIONS"
       },
+      "source_findings_closed": [
+        "A-R1-01",
+        "A-R1-02",
+        "A-R1-03",
+        "A-R1-04",
+        "A-R1-05"
+      ],
+      "pending_conditions": [
+        "M1/P5-R4-01 independent isolated replay",
+        "day-of A4 recipient/channel/account and immutable URL check before invitation",
+        "EVIDENCE_FORMAT negative fixture count editorial correction before merge/publication"
+      ],
       "independent_runtime_verified": false,
       "external_adoption_count": 0
     }
