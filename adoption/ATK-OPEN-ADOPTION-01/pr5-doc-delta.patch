@@ -1,0 +1,147 @@
+diff --git a/integrations/headroom-atk/DISTRIBUTION.md b/integrations/headroom-atk/DISTRIBUTION.md
+index d811fb8..87cc2db 100644
+--- a/integrations/headroom-atk/DISTRIBUTION.md
++++ b/integrations/headroom-atk/DISTRIBUTION.md
+@@ -5,6 +5,16 @@ upstream project was contacted, no directory was submitted to. Publication needs
+ authorisation. This file is the prepared material and the checklist, which is what the work
+ package asked for — it is not evidence of distribution.
+ 
++**Channel rules and the fit decision per channel** (GitHub, headroom Discussions, Agent Skills,
++Claude plugin directory, Smithery, MCP Registry, Hugging Face, awesome-lists — checked
++2026-09-22), the problem-first description, the three discovery tests and the invitation drafts
++are in the adoption package, not repeated here:
++[DISTRIBUTION_CHANNELS.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/adoption/ATK-OPEN-ADOPTION-01/DISTRIBUTION_CHANNELS.md) ·
++[TRIAL_TASK.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/adoption/ATK-OPEN-ADOPTION-01/TRIAL_TASK.md) · [INVITATIONS.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/adoption/ATK-OPEN-ADOPTION-01/INVITATIONS.md) (none sent).
++One finding changes the priority below: **GitHub's default repository search matches only the
++name, About and topics** — README text only with `in:readme` — so item 4 is the change that can
++affect search at all.
++
+ Channel doctrine reused from [CONTENT_DISTRIBUTION.md](../../CONTENT_DISTRIBUTION.md); not
+ reinvented here. This asset lands on its Beat 2 ("we ran it, here is what broke") and Beat 5
+ ("real before/after numbers"), which that document requires to carry real measurements — it does.
+diff --git a/integrations/headroom-atk/README.md b/integrations/headroom-atk/README.md
+index 54c8f3b..1612076 100644
+--- a/integrations/headroom-atk/README.md
++++ b/integrations/headroom-atk/README.md
+@@ -31,7 +31,11 @@ What headroom sends upstream is the rewritten prompt, and `local_check.py` measu
+ body, so you can read what would go out before you send anything to anyone.
+ 
+ **New here? [TRY_IT.md](TRY_IT.md) is the ten-minute version**: one task, offline first, with a
+-record template for a live run if you decide to do one.
++record template for a live run if you decide to do one. **Handing this to an agent?** Give it
++[AGENT_QUICKSTART.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/integrations/headroom-atk/AGENT_QUICKSTART.md) and [agent-manifest.json](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/integrations/headroom-atk/agent-manifest.json)
++(on the adoption PR's Draft branch until merged): the same path, with stop conditions and what it
++must not do. TRY_IT is the one command source; every other
++page links to it rather than repeating the live commands.
+ 
+ ## The whole integration
+ 
+@@ -252,7 +256,7 @@ Check that branch out explicitly; a default `git clone` will not contain these f
+ ```bash
+ git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel
+ cd Open-Skill-Distribution-Flywheel
+-git checkout claude/atk-headroom-adoption          # NOT on main yet — PR #5, Draft
++git checkout 304af885193245da7186cb6b9ab247ec2494bd86   # pinned code SHA · PR #5 Draft, not on main
+ 
+ python3 -m venv .venv && . .venv/bin/activate      # Python 3.11 is what we ran
+ pip install "headroom-ai[proxy]==0.37.0"
+@@ -279,8 +283,10 @@ python3 ab_test.py                                    # 2 client requests; --tas
+ **Client requests are not provider attempts.** `ab_test.py` sends each request once and never
+ retries, so the default run is 2 client requests. What reaches ATK depends on the proxy: started
+ as above the ceiling is **2 provider attempts**; started with 0.37.0's default of 3 it is **4**.
+-A successful run makes two attempts either way. `ab_test.py` prints this before its first request
+-and states plainly that it cannot see how your proxy was started.
++A run in which no request is retried and both succeed makes exactly two attempts; with the
++0.37.0 default, a request that fails once and then succeeds can still use three or four.
++`ab_test.py` prints this before its first request and states plainly that it cannot see how your
++proxy was started.
+ 
+ `ab_test.py` refuses to run without `ATK_API_KEY` and substitutes no mock. Put the key in the
+ environment the way you handle every other secret — **never on the command line** (including as a
+@@ -357,7 +363,8 @@ Install it from PyPI. Its own docs: <https://docs.headroomlabs.ai/docs>.
+ 
+ | File | |
+ |---|---|
+-| `TRY_IT.md` | the ten-minute trial: one task, offline first, plus the record template for a live run |
++| `TRY_IT.md` | the ten-minute trial: one task, offline first, plus the record template for a live run — **the single source for trial commands** |
++| `AGENT_QUICKSTART.md`, `agent-manifest.json` | the same trial as a contract for an agent — delivered by the adoption PR (ATK-OPEN-ADOPTION-01), linked above |
+ | `make_log.py` | deterministic log generator (stdlib only) |
+ | `local_check.py` | offline verification **and preflight for your own log** (`--log`, `--needle`): proxy routing, compression, needle survival — no key |
+ | `ab_test.py` | the live A/B against ATK — needs `ATK_API_KEY` |
+diff --git a/integrations/headroom-atk/TRY_IT.md b/integrations/headroom-atk/TRY_IT.md
+index 600f0d9..c1e38ed 100644
+--- a/integrations/headroom-atk/TRY_IT.md
++++ b/integrations/headroom-atk/TRY_IT.md
+@@ -26,7 +26,7 @@ reach a third party at all, stop after step 1 — it is a preflight, not a way t
+ ```bash
+ git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel
+ cd Open-Skill-Distribution-Flywheel
+-git checkout claude/atk-headroom-adoption      # NOT on main yet — PR #5, Draft
++git checkout 304af885193245da7186cb6b9ab247ec2494bd86   # pinned code SHA · PR #5 Draft, not on main
+ 
+ python3 -m venv .venv && . .venv/bin/activate
+ pip install "headroom-ai[proxy]==0.37.0"       # the version every number here was measured on
+@@ -186,5 +186,8 @@ Three failures we hit, in the order people hit them, are written up with the exa
+    `~/.headroom/logs/proxy.log` — not on stderr and not in `--log-file`.
+ 
+ Anything else: <https://github.com/firekou/Open-Skill-Distribution-Flywheel/issues>.
++If you ran it — whether it worked, did not help, or you stopped — the adoption report fields are in
++[EVIDENCE_FORMAT.md](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/claude/atk-open-adoption-01-teua0c/adoption/ATK-OPEN-ADOPTION-01/EVIDENCE_FORMAT.md) (Draft branch of the adoption PR; it moves to `main` only if that is merged); paste
++only what that page marks as shareable.
+ **Third-party reports to date: none.** There is no telemetry here, so an issue is the only way we
+ would ever learn this helped or failed.
+diff --git a/integrations/headroom-atk/ab_test.py b/integrations/headroom-atk/ab_test.py
+index 0927f51..91a5194 100644
+--- a/integrations/headroom-atk/ab_test.py
++++ b/integrations/headroom-atk/ab_test.py
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env python3
+ """A/B the same prompt against ATK directly and through the headroom proxy.
+ 
+-    pip install "headroom-ai[proxy]"
++    pip install "headroom-ai[proxy]==0.37.0"   # the only version this was checked against
+     headroom proxy --port 8787 --no-http2 --retry-max-attempts 1 &
+     python3 make_log.py > deploy.log
+ 
+@@ -35,8 +35,10 @@ So the ceiling depends on how YOUR proxy was started:
+     started as documented (--retry-max-attempts 1)   ceiling 2 provider attempts
+     started with the 0.37.0 default (3)              ceiling 4 provider attempts
+ 
+-A successful default run makes two provider attempts either way. **This script
+-cannot see how your proxy was started and does not claim to verify it.**
++A run in which no request is retried and both succeed makes exactly two provider
++attempts; with the 0.37.0 default, one that fails once and then succeeds can use
++three or four. **This script cannot see how your proxy was started and does not
++claim to verify it.**
+ 
+ Every number comes from ATK's own `usage` field in the response — nothing here
+ estimates.
+diff --git a/integrations/headroom-atk/offering/SERVICE_SAMPLE_FREE.md b/integrations/headroom-atk/offering/SERVICE_SAMPLE_FREE.md
+index a99e907..38fa2e0 100644
+--- a/integrations/headroom-atk/offering/SERVICE_SAMPLE_FREE.md
++++ b/integrations/headroom-atk/offering/SERVICE_SAMPLE_FREE.md
+@@ -23,9 +23,14 @@ localhost URL; nothing about your provider setup has to change.
+ 
+ ```bash
+ pip install "headroom-ai[proxy]==0.37.0"
+-headroom proxy --port 8787 --no-http2
++headroom proxy --port 8787 --no-http2 --retry-max-attempts 1
+ ```
+ 
++`--retry-max-attempts 1` matters: 0.37.0 defaults to 3 and re-sends on 429/529, 5xx and transport
++errors, so without it one request can become three upstream. **This sample is not a verified live
++entry point** — the one command source for a trial, offline first, is
++[TRY_IT.md](../TRY_IT.md); follow that rather than copying from here.
++
+ Then send to the proxy **and name your upstream on each request**:
+ 
+ ```bash
+@@ -72,7 +77,7 @@ fault, but it is the result and we are not hiding it.
+ ```bash
+ git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel
+ cd Open-Skill-Distribution-Flywheel
+-git checkout claude/atk-headroom-adoption     # not merged to main yet (PR #5, Draft)
++git checkout 304af885193245da7186cb6b9ab247ec2494bd86   # pinned code SHA · PR #5 Draft, not on main
+ python3 -m venv .venv && . .venv/bin/activate
+ pip install "headroom-ai[proxy]==0.37.0"
+ cd integrations/headroom-atk

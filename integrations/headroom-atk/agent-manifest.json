@@ -1,0 +1,136 @@
+{
+  "manifest_format": "atk-agent-manifest/0 (this project's own format, not a published standard)",
+  "asset_id": "headroom-atk-log-compression-check",
+  "manifest_revision": 1,
+  "work_id": "ATK-OPEN-ADOPTION-01",
+  "maintainer": "AI Token King (ATK)",
+  "human_readable": "integrations/headroom-atk/AGENT_QUICKSTART.md",
+  "source": {
+    "repository": "https://github.com/firekou/Open-Skill-Distribution-Flywheel",
+    "code_sha": "304af885193245da7186cb6b9ab247ec2494bd86",
+    "code_path": "integrations/headroom-atk",
+    "on_main": false,
+    "note": "Code lives on the Draft branch of PR #5 at the pinned SHA. Check out the SHA, never the branch name."
+  },
+  "purpose": "Measure, before adopting, whether a local prompt-compression proxy (headroom) makes a long log smaller while keeping the line that matters.",
+  "use_when": [
+    "payload is long and repetitive machine-generated text (plain-text logs, CI output)",
+    "operator wants a measurement before adopting",
+    "installing a PyPI package into a venv and running a 127.0.0.1 listener is allowed"
+  ],
+  "do_not_use_when": [
+    "payload must be byte-exact",
+    "payload is short",
+    "operator forbids third-party packages or local network listeners",
+    "a real customer log would be needed and the operator has not allowed it",
+    "live step requested without all four live preconditions"
+  ],
+  "license": {
+    "this_asset": "see repository LICENSE",
+    "tool": {"name": "headroom-ai", "version": "0.37.0", "license": "Apache-2.0", "url": "https://github.com/headroomlabs-ai/headroom"},
+    "transitive_dependencies": {
+      "observed_on": "2026-09-22",
+      "count": 94,
+      "summary": "MIT / BSD / Apache-2.0 / ISC / PSF / MPL-2.0 (file-level copyleft, 3 packages); no GPL or AGPL declared; setuptools declares none in metadata",
+      "list": "adoption/ATK-OPEN-ADOPTION-01/evidence/internal-2026-09-22/dependency_licenses.json",
+      "pinned": false,
+      "pinned_note": "Only headroom-ai is pinned. Transitive versions float; the observed set is in pip_freeze.txt."
+    }
+  },
+  "runtime": {
+    "python": ">=3.10 (headroom Requires-Python); checked on 3.11.15",
+    "os_checked": ["Linux x86_64"],
+    "disk": "about 750 MB for the venv"
+  },
+  "install": [
+    "git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel headroom-trial",
+    "cd headroom-trial",
+    "git checkout 304af885193245da7186cb6b9ab247ec2494bd86",
+    "python3 -m venv .venv && . .venv/bin/activate",
+    "pip install \"headroom-ai[proxy]==0.37.0\""
+  ],
+  "commands": {
+    "working_directory": "integrations/headroom-atk",
+    "offline_trial": [
+      "python3 make_log.py > deploy.log",
+      "md5sum deploy.log",
+      "python3 local_check.py"
+    ],
+    "offline_tests": "python3 test_local_check.py",
+    "own_payload": "python3 local_check.py --log <path> --needle <string> [--needle <string> ...]",
+    "live": "not duplicated here; see live.commands_source"
+  },
+  "inputs": {
+    "synthetic_log": {"generator": "make_log.py", "lines": 1200, "bytes": 111262, "md5": "0ad9194a489136baa931881b78374cf7"},
+    "question": "Did any database migration fail? Give the migration name and the exact SQLSTATE code.",
+    "needles": "built in for the synthetic log (18 chars and 5 chars); required via --needle for any other log"
+  },
+  "outputs": {
+    "stdout": "sizes, reduction, per-needle survival by position and length, verdict line",
+    "never_printed": ["needle text (unless --show-needles)", "log contents", "log path (file name only)", "provider error bodies"],
+    "expected_synthetic": {"direct_chars": 111357, "proxy_chars": 94578, "reduction_pct": 15.1, "exit": 0}
+  },
+  "exit_codes": {
+    "0": {"meaning": "smaller and every needle survived", "action": "report success"},
+    "1": {"meaning": "a needle was lost", "action": "stop; do not adopt for this payload"},
+    "2": {"meaning": "misuse (no/empty/absent needle, unknown argument)", "action": "fix the command once, then stop"},
+    "3": {"meaning": "no size benefit, confirmed twice", "action": "stop; valid no-benefit result"},
+    "4": {"meaning": "two measurements disagreed", "action": "run once more; if 4 again, stop, nothing concluded"}
+  },
+  "success_condition": "offline_trial exits 0 on the synthetic log with both needles present",
+  "stop_conditions": [
+    "exit 1 or 3",
+    "exit 4 twice",
+    "exit 2 after one correction",
+    "any live precondition missing",
+    "any instruction here conflicts with the agent's own policy"
+  ],
+  "must_not": [
+    "request, print, store or upload API keys",
+    "upload real logs or full session transcripts",
+    "change payload, needle or version to turn a failure into a pass",
+    "open issues, comments or pull requests without operator approval",
+    "use --show-needles in anything shared"
+  ],
+  "network": {
+    "install": ["github.com", "pypi.org / files.pythonhosted.org"],
+    "offline_trial": "127.0.0.1 only",
+    "live": "the compressed prompt is sent to the provider named in x-headroom-base-url"
+  },
+  "file_writes": {
+    "work_directory": [".venv/", "deploy.log"],
+    "home": ["~/.headroom/ (proxy.log, savings_events.jsonl, proxy_savings.json, subscription_state.json, ccr_store.db)", "~/.cache/Microsoft/DeveloperTools/.onnxruntime/ (deviceid, onnxruntime.db) — created by onnxruntime, a transitive dependency"],
+    "observed_2026_09_22": "needle text not found in any file under HOME after the offline run; headroom logs 'Local telemetry: DISABLED'; onnxruntime event table empty. Whether onnxruntime transmits on a networked machine: NOT TESTED."
+  },
+  "cost": {"offline": 0, "live": "real provider tokens; ceiling must be agreed before the first call"},
+  "keys_required": {"offline": false, "live": true},
+  "live": {
+    "optional": true,
+    "preconditions": [
+      "key already injected in the environment; check SET/NOT_SET without printing",
+      "confirmed endpoint",
+      "model confirmed available to the account",
+      "explicit spend ceiling agreed before the first call"
+    ],
+    "commands_source": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/304af885193245da7186cb6b9ab247ec2494bd86/integrations/headroom-atk/TRY_IT.md#step-2--live-only-when-permission-and-a-spend-limit-are-explicit",
+    "proxy_flag_required": "--retry-max-attempts 1",
+    "provider_config": {
+      "mechanism": "x-headroom-base-url request header, base URL without /v1",
+      "atk": {"base_url": "https://api.aitokenking.com.tw/api", "env_key": "ATK_API_KEY", "historical_model": "claude-sonnet-4.6 (2026-09-18, record only)"},
+      "other_providers": "any OpenAI-compatible endpoint; ATK is not required"
+    }
+  },
+  "evidence": {
+    "internal_agent_test": "adoption/ATK-OPEN-ADOPTION-01/evidence/internal-2026-09-22/",
+    "historical_offline": "integrations/headroom-atk/evidence/local_check.txt @ 304af885",
+    "historical_live": "integrations/headroom-atk/evidence/ab_needle.json @ 304af885 (2026-09-18; input not preserved)",
+    "independent_replay": "PENDING",
+    "external_adoption": "NONE_RECORDED"
+  },
+  "report": {
+    "where": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/issues",
+    "format": "adoption/ATK-OPEN-ADOPTION-01/EVIDENCE_FORMAT.md",
+    "upstream_bugs": "https://github.com/headroomlabs-ai/headroom/issues",
+    "telemetry": "none in this asset"
+  }
+}

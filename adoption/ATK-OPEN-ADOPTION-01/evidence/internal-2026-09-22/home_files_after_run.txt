@@ -1,0 +1,7 @@
+./.cache/Microsoft/DeveloperTools/.onnxruntime/deviceid
+./.cache/Microsoft/DeveloperTools/.onnxruntime/onnxruntime.db
+./.headroom/ccr_store.db
+./.headroom/logs/proxy.log
+./.headroom/proxy_savings.json
+./.headroom/savings_events.jsonl
+./.headroom/subscription_state.json

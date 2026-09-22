@@ -1,0 +1,37 @@
+{
+  "record_id": "INT-2026-09-22-02",
+  "source_class": "INTERNAL_AGENT_TEST",
+  "discovery_route": "INTERNAL",
+  "operator_external": false,
+  "agent_runtime": "Claude Code subagent in a fresh context, given only AGENT_QUICKSTART.md; Linux x86_64, Python 3.11.15",
+  "asset_id": "headroom-atk-log-compression-check",
+  "code_sha": "304af885193245da7186cb6b9ab247ec2494bd86",
+  "headroom_version": "0.37.0",
+  "date_utc": "2026-09-22T19:30Z",
+  "task": "follow AGENT_QUICKSTART.md from git clone to verdict on the synthetic log; no live step",
+  "input_md5": "0ad9194a489136baa931881b78374cf7",
+  "commands": [
+    "git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel headroom-trial",
+    "git checkout 304af885193245da7186cb6b9ab247ec2494bd86",
+    "python3 -m venv .venv",
+    "pip install \"headroom-ai[proxy]==0.37.0\"",
+    "iso wrapper: python3 make_log.py > deploy.log; md5sum deploy.log; python3 local_check.py; python3 test_local_check.py"
+  ],
+  "exit_code": 0,
+  "result": "SUCCESS",
+  "success_criterion": "local_check.py exit 0 on the synthetic log with both needles present",
+  "success": true,
+  "human_help": "none (isolation wrapper supplied by the operator, which is us)",
+  "duration_minutes": 1.5,
+  "usage_cost": "0 (offline; no model call)",
+  "blockers": [
+    "own shell quoting lost the first exit code; re-ran local_check.py once only to capture it (identical output)"
+  ],
+  "reuse_intent": "unknown",
+  "public_scope": "public",
+  "evidence_urls": [
+    "reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md#internal-agent-tests"
+  ],
+  "recorded_by": "Claude executor, from the subagent's hand-back report",
+  "notes": "Same executor session, fresh subagent context: INTERNAL_AGENT_TEST, not independent and not adoption. It reported five doc ambiguities; four were fixed in AGENT_QUICKSTART.md before commit (working dir, fresh-shell PATH, cd reason, SQLite side files, re-run for lost exit code). Wall time is its own estimate."
+}
