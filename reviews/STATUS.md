@@ -3,6 +3,15 @@
 唯一規則入口：[治理入口](../governance/OPERATING_RULES.md)。決策看 decisions.json；啟動查 live PR head，不沿用歷史快照當批准。
 
 
+## 2026-09-22：新產品採用工作包已交付 main
+
+- [完整工作包](ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md)：`ATK-OPEN-ADOPTION-01` revision 1，READY_FOR_EXECUTOR。
+- 第一輪交付 A1-A5：統一入口、Agent 契約、分發方案、邀請候選/草稿、採用證據格式；分支 `claude/atk-open-adoption-01`，Draft PR 送審。
+- 首批開源開發者與其 Agent；內部測試、受邀外部採用、公開發現採用分開記錄。尚無本包新接單/成果/外部採用證據。
+- 下一 checkpoint：Claude 固定 work_id 的 session/run 接單與 A 包成果 SHA，GPT 獨立覆核；留言或文件存在不等於 launcher 已啟動。
+- PR5 R9 NEEDS_INFORMATION 不變；舊 2/2 不重派。原文件 backlog 依新指示限定納入本包文件/docstring 整併；P5-R4-01 仍等獨立隔離重放。PR6 不阻塞無依賴採用工作。
+- 以下為歷史快照，current task 與界線以最新 decisions/state 和完整包為準。
+
 ## 2026-09-21：PR5 R9 最後修復確認
 
 - [R9 review](PR5_R9_CONFIRM_304af885.md)，head `304af885193245da7186cb6b9ab247ec2494bd86`，**NEEDS_INFORMATION**。
