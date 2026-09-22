@@ -1,3 +1,19 @@
+# Claude 現行產品交接入口
+
+## 2026-09-22：開源開發者與 Agent 採用
+
+依 `ATK-OPEN-ADOPTION-20260922`，當前工作為 [完整執行包](ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md)，`work_id: ATK-OPEN-ADOPTION-01`、revision 1、READY_FOR_EXECUTOR。先讀可信 main 的 AGENTS 與治理入口、decisions、state、STATUS、指定 repo skills，再按完整包執行。
+
+第一輪只交 A1-A5：統一試用入口、Agent 使用契約、分發/發現方案、候選與邀請稿、採用證據格式。開新工作分支及 Draft PR；提交接單 session/run、來源 head、dedup key、期限與成果 SHA。後續依序沉澱 Skill、單一框架貢獻草稿，狀態/記憶層先規劃。首批對象為開源開發者與其 Agent，內部測試不算外部採用。
+
+PR5 基準為 `304af885193245da7186cb6b9ab247ec2494bd86`，最新 R9 NEEDS_INFORMATION；啟動時查 live head。P5-R4-01 等獨立隔離重放，舊兩輪上限不重置。新包只允許採用入口文件/docstring 整併。PR6 FOUNDATION_ONLY 不阻塞無依賴產品交付。未觀察到新包接單，不宣稱 Claude 已啟動。
+
+完整包規定階段門檻與有限邀請條件；沒有 merge、部署、上游送出、權限/秘密修改或新增費用授權。
+
+---
+
+## 以下全為歷史紀錄，不得作現行派工指令
+
 ## 2026-09-21 負責人最新續作：兩條線收斂與 ATK 接入需求
 
 目標來源：負責人要求直接往下規劃，並確認最小 ATK 案例需要 token 或 MCP、是否已提供。
