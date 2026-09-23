@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 17,
+  "revision": 18,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -29,28 +29,29 @@
   "tasks": [
     {
       "task_id": "PR5",
-      "status": "NEEDS_INFORMATION",
+      "status": "APPROVED_WITH_CONDITIONS",
       "pr": 5,
       "observed_head": "304af885193245da7186cb6b9ab247ec2494bd86",
       "last_reviewed_head": "304af885193245da7186cb6b9ab247ec2494bd86",
-      "last_review_decision": "NEEDS_INFORMATION",
-      "next_action": "P5-R4-01 與受影響 tests 等合格獨立隔離重放，舊修復 2/2 不重派。發布前文件 backlog 由 ATK-OPEN-ADOPTION-01 在新入口範圍整併，不改實作邏輯。",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "next_action": "M1 / P5-R4-01 已由獨立隔離重放關閉。PR5 僅在此窄範圍升為 APPROVED_WITH_CONDITIONS；仍不構成 merge、發布或 live provider 授權。文件 backlog 續由 ATK-OPEN-ADOPTION-01 在發布前處理。",
       "prompt": "reviews/PR5_R4_REVIEW_d1930e4.md",
-      "review": "reviews/PR5_R9_CONFIRM_304af885.md",
+      "review": "reviews/PR10_R1_M1_REPLAY_cf37880b.md",
       "last_head_verification": {
-        "date": "2026-09-21",
+        "date": "2026-09-23",
         "head": "304af885193245da7186cb6b9ab247ec2494bd86",
-        "prior_head": "cde4e5c855096b1d7566d44680259851810aec99",
-        "classification": "FINAL_BOUNDED_REPAIR_REVIEWED",
-        "decision": "NEEDS_INFORMATION",
+        "evidence_head": "cf37880bb90d6f646591588f39de91df67d7923c",
+        "classification": "INDEPENDENT_ISOLATED_REPLAY_APPROVED",
+        "decision": "APPROVED_WITH_CONDITIONS",
         "exact_head_checks": {
           "workflow_runs": 0,
+          "check_runs": 0,
           "commit_statuses": 0,
-          "check_runs": "NOT_FETCHED",
           "pr_reviews": 0
         },
-        "independent_runtime_verified": false,
-        "review": "reviews/PR5_R9_CONFIRM_304af885.md"
+        "independent_runtime_verified": true,
+        "runner_id": "bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763",
+        "review": "reviews/PR10_R1_M1_REPLAY_cf37880b.md"
       },
       "active_claim": null,
       "bounded_repair": {
@@ -103,12 +104,10 @@
         "no_third_round": true
       },
       "source_findings_closed": [
-        "P5-R8-01 (specified entry points, source-level only)"
+        "P5-R8-01 (specified entry points, source-level only)",
+        "P5-R4-01 (independent isolated replay)"
       ],
-      "pending_evidence": [
-        "P5-R4-01 independent isolated replay",
-        "current-head affected tests independent replay"
-      ],
+      "pending_evidence": [],
       "publication_backlog": {
         "status": "DOCUMENTATION_SCOPE_ASSIGNED_TO_ATK_OPEN_ADOPTION_01",
         "items": [
@@ -118,6 +117,17 @@
         ],
         "not_new_repair_authorization": true,
         "note": "依最新負責人指示，只在新採用入口做文件/docstring 整併；不重開舊程式修復。"
+      },
+      "independent_replay": {
+        "status": "APPROVED",
+        "pr": 10,
+        "head": "cf37880bb90d6f646591588f39de91df67d7923c",
+        "source_pr": 5,
+        "source_head": "304af885193245da7186cb6b9ab247ec2494bd86",
+        "runner_id": "bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763",
+        "image": "python@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9",
+        "review": "reviews/PR10_R1_M1_REPLAY_cf37880b.md",
+        "scope_limit": "P5-R4-01 only; not release, merge, live provider, adoption, licence, clean install, or persistent automation"
       }
     },
     {
@@ -216,8 +226,8 @@
       "repair_rounds_used": 1,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "PR9 plan/probe 已獨立覆核為 NEEDS_INFORMATION；無合格 isolation runtime，且執行前須修正 Git blob NUL、evidence output mount、durable path 與 evidence level。完成合格重放前不發邀請、不套 PR5 patch；不向 Claude 重派舊修復。",
-      "next_checkpoint": "M1_P5_R4_01_QUALIFYING_RUNTIME_AND_PRE_RUN_PLAN_CORRECTION",
+      "next_action": "M1 / P5-R4-01 已由 PR10 獨立隔離重放關閉。下一步只做 A4 發送當日 recipient、channel、account permission 與 immutable URL 預檢；通過後最多發 3 份精準邀請。實際外部使用前 adoption count 維持 0。",
+      "next_checkpoint": "PR8_DAY_OF_A4_INVITATION_PRECHECK",
       "pr": 8,
       "observed_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
       "last_reviewed_content_head": "8161c6a33251b06c44db9f5dbabc9431fa73b67d",
@@ -284,11 +294,10 @@
         "A-R1-05"
       ],
       "pending_conditions": [
-        "M1/P5-R4-01 independent isolated replay",
         "day-of A4 recipient/channel/account and immutable URL check before invitation",
         "EVIDENCE_FORMAT negative fixture count editorial correction before merge/publication"
       ],
-      "independent_runtime_verified": false,
+      "independent_runtime_verified": true,
       "external_adoption_count": 0,
       "independent_replay_planning": {
         "pr": 9,
@@ -316,32 +325,41 @@
           "replace /workspace/qa-plans paths with immutable repository paths",
           "select evidence level from actual run"
         ]
+      },
+      "independent_replay_result": {
+        "pr": 10,
+        "head": "cf37880bb90d6f646591588f39de91df67d7923c",
+        "runner_id": "bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763",
+        "image": "python@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9",
+        "decision": "APPROVED",
+        "review": "reviews/PR10_R1_M1_REPLAY_cf37880b.md",
+        "completed_at": "2026-09-23"
       }
     },
     {
       "task_id": "M1_P5_R4_01",
       "work_id": "M1_P5_R4_01",
-      "status": "NEEDS_INFORMATION",
-      "pr": 9,
-      "branch": "cursor/m1-p5-r4-qa-plan-bfd3",
-      "observed_head": "ba3f9ae3bce04d72f4afaa6f9e935c112661fca2",
-      "last_reviewed_head": "ba3f9ae3bce04d72f4afaa6f9e935c112661fca2",
-      "last_review_decision": "NEEDS_INFORMATION",
+      "status": "COMPLETE",
+      "pr": 10,
+      "branch": "cursor/m1-p5-r4-01-isolated-replay-b763",
+      "observed_head": "cf37880bb90d6f646591588f39de91df67d7923c",
+      "last_reviewed_head": "cf37880bb90d6f646591588f39de91df67d7923c",
+      "last_review_decision": "APPROVED",
       "source_pr": 5,
       "source_head": "304af885193245da7186cb6b9ab247ec2494bd86",
-      "scope": "review-only isolation replay plan and runtime probe",
+      "scope": "independent isolated replay evidence for P5-R4-01",
       "active_claim": null,
-      "pr_code_executed": false,
-      "independent_runtime_verified": false,
+      "pr_code_executed": true,
+      "independent_runtime_verified": true,
       "exact_head_checks": {
         "workflow_runs": 0,
         "check_runs": 0,
         "commit_statuses": 0,
         "pr_reviews": 0
       },
-      "review": "reviews/PR9_R1_M1_PLAN_ba3f9ae3.md",
-      "next_action": "Provide/designate a qualifying network-none independent runner; before execution correct the blob NUL formula, evidence output path, durable repository paths, and evidence label. Then replay G0-G7 at exact PR5 head.",
-      "next_checkpoint": "M1_P5_R4_01_QUALIFYING_RUNTIME_AND_PRE_RUN_PLAN_CORRECTION",
+      "review": "reviews/PR10_R1_M1_REPLAY_cf37880b.md",
+      "next_action": "Proceed to PR8 day-of A4 invitation precheck; do not claim adoption until external use evidence exists.",
+      "next_checkpoint": "PR8_DAY_OF_A4_INVITATION_PRECHECK",
       "exclusions": [
         "merge",
         "deployment",
@@ -350,7 +368,22 @@
         "secrets/permissions",
         "provider calls",
         "new spending without owner approval"
-      ]
+      ],
+      "planning_pr": 9,
+      "result": {
+        "runner_id": "bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763",
+        "image": "python@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9",
+        "network": "none",
+        "read_only_root": true,
+        "source_mount": "read-only",
+        "evidence_mount": "read-only",
+        "git_blob_matches": "6/6",
+        "json_lines": "19/19 parsed; no passed:false",
+        "unit_tests": "44/44",
+        "decision": "APPROVED",
+        "highest_evidence_allowed": "REPRODUCED",
+        "scope_limit": "P5-R4-01 only"
+      }
     }
   ],
   "planning": {
@@ -387,7 +420,7 @@
     "review_storage": "main per REVIEW-MAIN",
     "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
     "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167",
-    "next_checkpoint": "M1_P5_R4_01_QUALIFYING_RUNTIME_AND_PRE_RUN_PLAN_CORRECTION",
+    "next_checkpoint": "PR8_DAY_OF_A4_INVITATION_PRECHECK",
     "manual_executor_roundtrip": {
       "status": "VERIFIED_EXISTING_SESSION_NOT_PERSISTENT",
       "repository": "firekou/Open-Skill-Distribution-Flywheel",
@@ -400,6 +433,14 @@
       "independent_review": "reviews/PR5_R9_CONFIRM_304af885.md",
       "decision": "NEEDS_INFORMATION",
       "note": "證明既有 GitHub conversation 可由同一已存在 Claude session 接單並回傳 SHA；不證明 comment/label 可啟動新的或持久 session。"
+    },
+    "manual_independent_runtime_replay": {
+      "status": "VERIFIED_ONE_SHOT_NOT_PERSISTENT",
+      "pr": 10,
+      "head": "cf37880bb90d6f646591588f39de91df67d7923c",
+      "runner_id": "bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763",
+      "review": "reviews/PR10_R1_M1_REPLAY_cf37880b.md",
+      "note": "證明一次性的獨立隔離重放成立；不證明 Claude persistent launcher、controller 或完整端到端自動化已接通。"
     }
   }
 }
