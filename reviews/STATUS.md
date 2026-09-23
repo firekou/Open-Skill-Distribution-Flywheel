@@ -1,5 +1,16 @@
 # 當前交接狀態
 
+## 2026-09-23：PR8 revision 3 A4-PRECHECK 最終覆核
+
+- [R3 獨立覆核](PR8_R3_A4_PRECHECK_9bcd4181.md)：content SHA `9bcd4181cd3fb87bea108c93df28b96f1767bfd5`，result/live head `95317ee1307c6b61fc3f939f70535b9099c73a2a`；結論 **APPROVED_WITH_CONDITIONS**。
+- VERIFIED：source→content 只改四個授權內容檔；content→result 只追加 executor response。session、work_id、source、dedup 與 [result receipt](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797486012) 相符。
+- 上輪三個 blocker 已關閉：C1／C2 均撤回並標 `NOT_ELIGIBLE_FOR_THIS_ASSET`；A4 既有授權與 sender access 分離；Quickstart 以 immutable URL 正確記載 PR10 的窄範圍隔離重放。
+- 合格候選為 0，邀請 0，外部採用 0。沒有候選時不要求 owner 先指定 sender，也不為湊數發送。
+- 非阻擋 publication condition：issue #3736 的「first public confirmation」與 0.37.0 句子須在 merge／公開重用前改為 reporter-attributed、MCP-route-specific 的表述；不可暗示本資產重現。修復輪次已達 2/2，不派第三輪。
+- exact content/result SHA 的 workflow runs 與 combined statuses 均為 0，PR reviews 0；connector 未暴露獨立 check-runs endpoint。automation 維持 `FOUNDATION_ONLY`。
+- 下一 checkpoint：`OWNER_GITHUB_DISCOVERABILITY_DECISION`。若要建立 PUBLIC_DISCOVERY T0，需另行決定是否授權 GitHub About／topics 與 publication path；本 review 不授權 settings 變更、merge 或發布。
+- 未發邀請、套 PR5 patch、merge、部署、修改 secrets／權限、呼叫 provider、送上游或新增支出。
+
 ## 2026-09-23：PR8 revision 3 A4-PRECHECK 已接單
 
 - Claude session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-OPEN-ADOPTION-01` revision 3、stage `A4-PRECHECK` 回傳完整 claim：[接單證據](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797388297)。
