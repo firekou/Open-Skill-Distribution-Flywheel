@@ -1,5 +1,7 @@
 # Invitation drafts (A4) — NOT SENT
 
+URL filled 2026-09-23 under owner authorization for draft-only; send still forbidden.
+
 **Nothing below has been posted, and as of 2026-09-23 there is nobody eligible to post it to.**
 Both drafted recipients were withdrawn: see the fit test in [CANDIDATES.md](CANDIDATES.md). The
 sender account is separately `BLOCKED_ACCESS`. Either one alone stops a send.
@@ -7,8 +9,9 @@ sender account is separately `BLOCKED_ACCESS`. Either one alone stops a send.
 The A4 limited-send authorisation already exists and is not in question here — direction is not
 what is missing.
 
-`<QUICKSTART_URL>` is replaced on the day with the pinned blob URL of
-`integrations/headroom-atk/AGENT_QUICKSTART.md` at the reviewed content SHA; never a branch URL.
+The pinned blob URL, filled 2026-09-23, is
+https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/8161c6a33251b06c44db9f5dbabc9431fa73b67d/integrations/headroom-atk/AGENT_QUICKSTART.md
+(`integrations/headroom-atk/AGENT_QUICKSTART.md` at reviewed content SHA `8161c6a33251b06c44db9f5dbabc9431fa73b67d`; never a branch URL).
 The current one is recorded in
 [reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md](../../reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md).
 
@@ -45,7 +48,7 @@ compression effectiveness: the measured figures, bound to their source.
 > that has network access. Its output shows sizes and needle positions only, so it is safe to paste
 > back here.
 >
-> `<QUICKSTART_URL>` — about 10 minutes including install. It is written so you can hand it to your
+> https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/8161c6a33251b06c44db9f5dbabc9431fa73b67d/integrations/headroom-atk/AGENT_QUICKSTART.md — about 10 minutes including install. It is written so you can hand it to your
 > coding agent as-is. Known limits: checked on Linux/Python 3.11 with headroom 0.37.0 only, and only
 > the OpenAI chat-completions route. If you try it, the result either way (including "no benefit")
 > would be useful to us, as a reply here or an issue on our repo.
@@ -78,13 +81,13 @@ not an invitation.
 
 ## 3. Task text to hand to the developer's own agent
 
-Give this to your agent together with `<QUICKSTART_URL>`. It is written to stop rather than
+Give this to your agent together with https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/8161c6a33251b06c44db9f5dbabc9431fa73b67d/integrations/headroom-atk/AGENT_QUICKSTART.md. It is written to stop rather than
 improvise.
 
 ```text
 Task: evaluate a local prompt-compression proxy (headroom 0.37.0) before adopting it.
 
-1. Read the document at <QUICKSTART_URL>. Follow only its offline trial (sections 4 and 5).
+1. Read the document at https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/8161c6a33251b06c44db9f5dbabc9431fa73b67d/integrations/headroom-atk/AGENT_QUICKSTART.md. Follow only its offline trial (sections 4 and 5).
    Do not run the live step (section 8).
 2. Work in a new empty directory. You may install the pinned PyPI package into a venv.
    If my rules forbid that, or running a listener on 127.0.0.1, stop and tell me.
