@@ -9,7 +9,7 @@
 **目前進度：** P5-R4-01 已在 PR #5 head `304af885…` 結案；邀請本身尚未授權、尚未送出。
 **本輪成果：** 五個候選都做了當日 live 讀取；C1、C2 仍可作為既有 Q&A 回覆對象；Quickstart 檔案在三個不可變 SHA 上是同一個 blob。最高證據等級 VERIFIED（GitHub API）。
 **還有什麼風險：** 把本頁當成可以發送；用會移動的分支網址；用本席位的 Cursor 整合 token 發文。
-**需要負責人決定：** 要不要另准發送，以及用哪一個已批准的 GitHub 帳號貼出。沒有這兩項，仍然不能送。
+**需要負責人決定：** 只剩要不要另准發送。帳號已指定。邀請審議延期，須另一次指令。本頁不是發送授權。
 **下一步與停止點：** 本頁交付後停止。發送、套 patch、merge 都不在本輪。
 **審查結論：** APPROVED_WITH_CONDITIONS
 
@@ -61,11 +61,11 @@ P5-R4-01 的結案只綁 PR #5 head `304af885193245da7186cb6b9ab247ec2494bd86`�
 
 ## 3. Sending account
 
-**應使用的帳號：** CANDIDATES 第 4 步寫的 owner-approved GitHub account。executor response 仍把「哪一個 GitHub 帳號貼邀請」列為負責人決定，A4 檔沒有寫死 login。
+**2026-09-23 更正（愛莎／Frank）：發送帳號已指定。** GitHub login 是 `firekou`（type=User；repo admin；顯示名稱 "AI Token King Open Source"）。Frank 選擇「firekou 組織身份」。Cursor 連接的 GitHub login 與 `firekou` 一致。帳號指定不再是未填缺口。
 
-**文件沒有要求必須用某個名為 Frank 的個人帳號，也沒有要求必須用 ATK 組織帳號。** 稿內的「AI Token King」是作者揭露，不是 GitHub login。現有 Draft PR 的作者 login 是 `firekou`，repo 是 `firekou/Open-Skill-Distribution-Flywheel`。若要發送，仍須負責人指定並使用那個已批准帳號。
+**URL 填入 C1／C2 草稿已授權。發送未授權。** 邀請審議延期，須另一次指令。
 
-**本席位沒有發送。** 本環境的 `gh` 身分是 GitHub App 帳號 `cursor`（`ghs_` 整合 token）。`GET /user` 回 403。這個 token 只用於讀取，沒有被用來開邀請、留言、私訊或寄信，也不是獲准的發送帳號。
+**本席位沒有發送。** 沒有在 headroom 的 discussion 或 issue 留言，沒有私訊或寄信，沒有把邀請標成已送。PR #8 上的 URL 填寫只改 repo 內草稿。
 
 ## 4. Immutable Quickstart URL
 
@@ -96,7 +96,11 @@ https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/fb47e31b54b3551
 
 ## 5. Draft messages
 
-`INVITATIONS.md` 維持 **NOT SENT**。兩則英文回覆、給對方 Agent 的任務稿，以及同意範圍說明都還是草稿。本輪沒有把 `<QUICKSTART_URL>` 填進該檔，也沒有把狀態改成已送。
+`INVITATIONS.md` 維持 **NOT SENT**，內文仍有 “Nothing below has been posted.” 2026-09-23 依負責人對「只填 URL、不發送」的授權，在 PR #8 分支把當時剩下的 4 個 `<QUICKSTART_URL>` 換成 reviewed content SHA 的 blob URL。C2 引文在 live head `95317ee1` 已沒有該佔位符，沒有把 URL 加回被撤回的句子。狀態沒有改成已送。
+
+## 2026-09-23 更正
+
+愛莎／Frank 指定發送帳號為 `firekou`（「firekou 組織身份」）。填入 Quickstart URL 已授權；發送未授權；邀請審議延期。PR #8 live head 在填寫前是 `95317ee1307c6b61fc3f939f70535b9099c73a2a`（r3 已把 C1、C2 標成 WITHDRAWN）。填寫 commit 是 `a74fe9348ba1f72bcf015697ebe988aa44f4b64d`。這次更正不恢復收件人資格，也不授權發送。
 
 ## 6. Hard gates
 
@@ -119,14 +123,14 @@ review_gate:
   blocking_findings: []
   conditions:
     - "this precheck is not invitation authorization"
-    - "owner must name the GitHub account and separately authorize any send"
-    - "no merge of #5 #8 #9 #10 #11"
+    - "sending account is firekou; URL fill is authorized; send is not authorized"
+    - "invite deliberation is deferred pending a separate order"
+    - "no merge of #5 #8 #9 #10 #11 #12"
     - "no PR5 patch application"
     - "C3 remains BLOCK for invitation; C4 and C5 stay out of A4"
   owner_decisions:
-    - "whether to authorize sending the C1 and C2 drafts"
-    - "which owner-approved GitHub account posts them"
-  next_checkpoint: "OWNER_INVITE_SEND_DECISION"
+    - "whether to authorize send only"
+  next_checkpoint: "OWNER_SEND_AUTHORIZATION_DEFERRED"
   invalidates_when:
     - "PR #8 head leaves b76fc7ba08deade6733f140d3a37aadfd201d51c"
     - "C1 or C2 is locked, closed, or answered"
@@ -136,4 +140,4 @@ review_gate:
 
 precheck_decision: READY_FOR_OWNER_INVITE_APPROVAL
 
-C1 與 C2 仍開放且未鎖、A4 授權渠道是既有 Q&A 回覆、Quickstart 已核到同一 blob 的不可變 URL，邀請稿仍是 NOT SENT；這只表示負責人可以決定要不要另准發送以及用哪個 GitHub 帳號，不是發送授權。
+帳號已指定為 `firekou`，Quickstart URL 已依授權填入仍為 NOT SENT 的草稿；發送未授權，邀請審議延期，這不是發送授權。
