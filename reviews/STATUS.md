@@ -1,5 +1,14 @@
 # 當前交接狀態
 
+## 2026-09-23：PR8 post-review closure head R4 覆核
+
+- [R4 獨立覆核](PR8_R4_CLOSURE_9ab2cbb0.md)：精確 head `9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34`，相對已審 result `95317ee1…` 前進 2 commits，只改 `CANDIDATES.md` 與 `INVITATIONS.md`；結論 **APPROVED_WITH_CONDITIONS — closure record only**。
+- VERIFIED：C1／C2 仍為 WITHDRAWN／`NOT_ELIGIBLE_FOR_THIS_ASSET`；合格候選 0、邀請 0、外部採用 0；A4 round 明確 CLOSED／do not send。
+- exact-head checks：workflow runs 0、commit statuses 0、PR reviews 0；PR conversation 共 8 筆，沒有綁定 `9ab2cbb…` 的新 session/run、work packet 或 result receipt。GitHub `mergeable=true` 不代表治理批准。
+- 條件：邀請內容仍固定到舊 `8161c6a…` Quickstart，不得據此發送／公開重用；`firekou` 的 owner designation 沒有可追溯授權與 target-channel capability evidence，視為 **UNVERIFIED FOR SEND**；issue #3736 的「first public confirmation」與版本／route 措辭仍須在公開重用前修正。
+- 修復已達 2/2，不派第三輪。PR12 `a76588e…` 與 PR13 `389ee002…` 仍為 blocked side artifacts；下一 checkpoint 維持 `OWNER_GITHUB_DISCOVERABILITY_DECISION`。
+- 未發邀請、merge、發布、修改 repository settings／secrets／權限、呼叫 provider、送上游或新增支出。
+
 ## 2026-09-23：PR13 現行 ledger head R2 與 PR12 搜尋 R4 覆核
 
 - [PR13 R2](PR13_R2_LEDGER_389ee002.md)：精確 head `389ee0020b36d063058171dd0af6b51024343d66`，結論 **BLOCKED**。此 head 雖補列 PR12 R4 與 live head，仍沒有可追溯 owner instruction、固定 work_id 或 executor receipt，不能把 canonical checkpoint 改成 `A4_ELIGIBLE_CANDIDATE_SEARCH`。
