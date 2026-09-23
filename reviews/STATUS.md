@@ -1,5 +1,15 @@
 # 當前交接狀態
 
+## 2026-09-23：P5-R4-01 僅綁定 head 結案（帳本）
+
+- 目標來源：愛莎經飛輪長於 2026-09-23（Asia/Taipei）授權，只更新帳本。本輪交付是可追查的 finding 結案，讓採用 precheck 不再停在已完成的隔離重放。
+- **P5-R4-01 CLOSED**，只綁定 PR#5 head `304af885193245da7186cb6b9ab247ec2494bd86`。品保 ACCEPT_PASS；技審 close pending 已由負責人接受。最高證據 REPRODUCED，範圍只限本 finding。
+- 證據：Draft PR [#10](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/10)，路徑 `reviews/evidence/pr5-m1-304af885/RESULT.json`（PASS，G0–G7）。Runner `bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763`。本輪未重跑 Docker，也未改寫該證據目錄。
+- `next_checkpoint`：`PR8_DAY_OF_A4_INVITATION_PRECHECK`。這是邀請前的 day-of 收件人／渠道／帳號與 immutable URL 檢查。**precheck ≠ 邀請已授權**；邀請仍須另准。仍不發送、不套 PR5 patch、不 merge。
+- 授權 A 表已存檔：setuptools 79.0.1 UNKNOWN→MIT。A 表完成 ≠ 捆包 PASS，也 ≠ 邀請／外發 PASS。授權 B 書面邊界仍生效。
+- PR #9 與 PR #10 維持 Draft、未合併。PR5 整體仍非 APPROVED／不可合併；`current-head affected tests` 獨立重放仍列 pending。`automation.status` 維持 FOUNDATION_ONLY。`independent_runtime_verified` 未改成全域 true。
+- 主線仍是可選 ATK 試用準備。刪掉這筆帳本，下一席會把已驗收的重放再當成未完成。本輪沒有新產品方向、依賴或對外發送。
+
 ## 2026-09-23：PR9 M1 隔離計畫獨立覆核
 
 - PR #9 Draft/open/unmerged；精確 head `ba3f9ae3bce04d72f4afaa6f9e935c112661fca2`，只有 6 個 `reviews/` 計畫、狀態與 probe 檔，沒有產品程式變更。
