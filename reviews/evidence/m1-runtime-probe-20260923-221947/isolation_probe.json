@@ -1,0 +1,43 @@
+{
+  "probed_at": "2026-09-23T22:19:47+08:00",
+  "host": "grok-bot-vm-449719704",
+  "python": "3.13.5",
+  "tools": {
+    "docker": false,
+    "docker_sock": false,
+    "podman": false,
+    "bwrap": false,
+    "firejail": false
+  },
+  "capabilities": {
+    "CapPrm": "0",
+    "CapEff": "0",
+    "unshare_network": false,
+    "unshare_user_mount": true,
+    "note": "unshare -n Operation not permitted; CapEff=0"
+  },
+  "network": {
+    "default_egress": true,
+    "interfaces": [
+      "lo",
+      "enp0s3 UP",
+      "docker0 DOWN no-carrier"
+    ],
+    "network_none_achievable": false
+  },
+  "secrets_in_env_names": [
+    "CURSOR_CONVERSATION_ID",
+    "CURSOR_RIPGREP_PATH",
+    "CURSOR_AGENT_SOCKET",
+    "CURSOR_AGENT",
+    "CURSOR_REQUEST_ID"
+  ],
+  "verdict": "NOT_CAPABLE",
+  "blocking_gaps": [
+    "no docker/podman CLI and no docker.sock",
+    "cannot create network namespace (unshare -n denied)",
+    "no bwrap/firejail",
+    "host has live egress on enp0s3; cannot prove network-none for PR code execution",
+    "CapEff=0 prevents privileged isolation helpers"
+  ]
+}

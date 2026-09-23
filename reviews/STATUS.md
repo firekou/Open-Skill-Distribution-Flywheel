@@ -1,5 +1,22 @@
 # 當前交接狀態
 
+## 2026-09-23：PLAN_ONLY / BLOCKER：ISOLATION_RUNTIME=NOT_CAPABLE
+
+- 主跑假設：[M1_P5_R4_01_RUNTIME_ASSUMPTIONS.md](M1_P5_R4_01_RUNTIME_ASSUMPTIONS.md)。Blocker：[M1_P5_R4_01_BLOCKER.md](M1_P5_R4_01_BLOCKER.md)。探測：[evidence/m1-runtime-probe-20260923-221947/probe.txt](evidence/m1-runtime-probe-20260923-221947/probe.txt)、[isolation_probe.json](evidence/m1-runtime-probe-20260923-221947/isolation_probe.json)。
+- **BLOCKER：** `ISOLATION_RUNTIME=NOT_CAPABLE`，`pr_code_executed=false`。判定是 `BLOCKED_NO_RUNTIME`。隔離重放尚未執行。P5-R4-01 維持待獨立隔離重放。
+- `independent_runtime_verified` 維持 false。`governance/state.json` 未修改。文件用語仍是 `M1_P5_R4_01_PLAN_READY_AWAITING_ISOLATION_RUNTIME`；state 的 `next_checkpoint` 仍是 `M1_P5_R4_01_INDEPENDENT_ISOLATED_REPLAY`。
+- 本段的授權範圍是 review 文件。merge、邀請、套用 PR5 patch、部署與執行 PR code 都不在本段。
+
+
+## 2026-09-23：PLAN_ONLY / awaiting isolation runtime
+
+- 品保一頁已落入 [M1_P5_R4_01_ISOLATED_REPLAY_QA_PLAN.md](M1_P5_R4_01_ISOLATED_REPLAY_QA_PLAN.md)。性質是 **PLAN_ONLY**，等待隔離 runtime。
+- 截至 2026-09-23，`ISOLATION_RUNTIME` 尚未可用。隔離重放尚未執行。本段只登記計畫落地，重放證據尚未產生。P5-R4-01 維持待獨立隔離重放。
+- 文件用語（僅供人讀，未寫入 state）：`M1_P5_R4_01_PLAN_READY_AWAITING_ISOLATION_RUNTIME`。`governance/state.json` 維持原樣：`next_checkpoint` 仍是 `M1_P5_R4_01_INDEPENDENT_ISOLATED_REPLAY`，`independent_runtime_verified` 仍是 false。
+- 2026-09-23 live 讀取（非重放）：PR#5 draft head `304af885193245da7186cb6b9ab247ec2494bd86`；PR#8 draft head `b76fc7ba08deade6733f140d3a37aadfd201d51c`。兩者皆未 merge。
+- 本段的授權範圍是 review 文件。merge、邀請、套用 PR5 patch、部署與執行 PR code 都不在本段。
+
+
 ## 2026-09-23：PR8 revision 2 五項條件已關閉
 
 - [R2 獨立覆核](PR8_R2_CONDITIONS_8161c6a3.md)：內容 SHA `8161c6a33251b06c44db9f5dbabc9431fa73b67d`，live/result head `b76fc7ba08deade6733f140d3a37aadfd201d51c`；結論 **APPROVED_WITH_CONDITIONS**。
