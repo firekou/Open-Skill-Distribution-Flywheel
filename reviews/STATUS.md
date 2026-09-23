@@ -1,5 +1,7 @@
 # 當前交接狀態
 
+A4 day-of precheck（2026-09-23）：[A4_DAY_OF_INVITATION_PRECHECK_2026-09-23.md](A4_DAY_OF_INVITATION_PRECHECK_2026-09-23.md)；帳號已指定為 `firekou`，`READY_FOR_OWNER_INVITE_APPROVAL`，發送仍延期。
+
 ## 2026-09-23：PR8 revision 3 A4-PRECHECK 最終覆核
 
 - [R3 獨立覆核](PR8_R3_A4_PRECHECK_9bcd4181.md)：content SHA `9bcd4181cd3fb87bea108c93df28b96f1767bfd5`，result/live head `95317ee1307c6b61fc3f939f70535b9099c73a2a`；結論 **APPROVED_WITH_CONDITIONS**。
