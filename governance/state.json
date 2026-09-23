@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 23,
+  "revision": 24,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -222,18 +222,18 @@
         "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5783517419",
         "received_at": "2026-09-22T20:20:36Z"
       },
-      "delivery_status": "REVISION_3_RESULT_RECEIVED_REVIEWED",
+      "delivery_status": "REVISION_3_POST_REVIEW_CLOSURE_REVIEWED",
       "repair_rounds_used": 2,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "Canonical PR8 R3 remains APPROVED_WITH_CONDITIONS. PR8 live head 9ab2cbb is newer and UNREVIEWED_NOT_APPROVED. PR12 search head a76588e is BLOCKED under R4; its search counts are not independently replayable. PR13 current ledger head 389ee002 is BLOCKED under R2 and cannot override REVIEW-MAIN. Eligible candidates, invitations and external adoption remain 0. Do not send, merge, dispatch a third repair or change repository settings. Next owner decision remains GitHub discoverability/publication path.",
+      "next_action": "PR8 post-review closure head 9ab2cbb is APPROVED_WITH_CONDITIONS for closure-record use only: eligible candidates, invitations and external adoption remain 0. Do not send or publish from the stale 8161c6a link; firekou sender designation is not traceably verified for send; issue #3736 wording remains a publication condition. PR12 a76588e and PR13 389ee002 remain blocked side artifacts. No third repair. Next owner decision remains GitHub discoverability/publication path.",
       "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
       "pr": 8,
       "observed_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
-      "last_reviewed_content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
-      "last_reviewed_live_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+      "last_reviewed_content_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+      "last_reviewed_live_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
-      "review": "reviews/PR8_R3_A4_PRECHECK_9bcd4181.md",
+      "review": "reviews/PR8_R4_CLOSURE_9ab2cbb0.md",
       "bounded_condition_repair": {
         "work_id": "ATK-OPEN-ADOPTION-01",
         "revision": 2,
@@ -431,18 +431,6 @@
         "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797486012",
         "received_at": "2026-09-23T15:16:53Z"
       },
-      "unreviewed_live_head": {
-        "pr": 8,
-        "head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
-        "status": "UNREVIEWED_NOT_APPROVED",
-        "compared_from": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
-        "commits_ahead": 2,
-        "changed_paths": [
-          "adoption/ATK-OPEN-ADOPTION-01/CANDIDATES.md",
-          "adoption/ATK-OPEN-ADOPTION-01/INVITATIONS.md"
-        ],
-        "note": "C1/C2 remain withdrawn and eligible count remains 0, but invitation links still pin stale reviewed content 8161c6a instead of canonical 9bcd418. Not reviewed in PR12 R3 turn."
-      },
       "pr13_ledger_side_artifact": {
         "pr": 13,
         "prior_reviewed_head": "b139304eeaac334086a77e07f31a5606a42156a5",
@@ -467,6 +455,40 @@
         "proposed_checkpoint": "A4_ELIGIBLE_CANDIDATE_SEARCH",
         "adopted": false,
         "no_repair_dispatch": true
+      },
+      "post_review_closure": {
+        "pr": 8,
+        "head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+        "compared_from": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+        "commits_ahead": 2,
+        "changed_paths": [
+          "adoption/ATK-OPEN-ADOPTION-01/CANDIDATES.md",
+          "adoption/ATK-OPEN-ADOPTION-01/INVITATIONS.md"
+        ],
+        "decision": "APPROVED_WITH_CONDITIONS",
+        "scope": "CLOSURE_RECORD_ONLY",
+        "review": "reviews/PR8_R4_CLOSURE_9ab2cbb0.md",
+        "exact_head_checks": {
+          "workflow_runs": 0,
+          "commit_statuses": 0,
+          "pr_reviews": 0,
+          "pr_conversation_entries": 8
+        },
+        "verified": {
+          "eligible_candidate_count": 0,
+          "invitations_sent": 0,
+          "external_adoption_count": 0,
+          "c1_c2": "WITHDRAWN_NOT_ELIGIBLE",
+          "invite_round": "A4_INVITE_ROUND_CLOSED"
+        },
+        "conditions": [
+          "future send/public reuse must replace stale 8161c6a Quickstart target with the then-current independently reviewed immutable target",
+          "firekou owner designation is not traceably verified for send and target-channel capability evidence is absent",
+          "issue #3736 novelty/version statement remains subject to reporter-attributed route-specific correction before public reuse"
+        ],
+        "new_executor_receipt": false,
+        "no_third_repair": true,
+        "reviewed_at": "2026-09-23T23:56:26+08:00"
       }
     },
     {
@@ -525,20 +547,20 @@
       "pr": 12,
       "branch": "cursor/a4-invitation-precheck-e6a3",
       "observed_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
-      "last_reviewed_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
+      "last_reviewed_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
       "bound_adoption_pr": 8,
-      "bound_adoption_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
-      "review": "reviews/PR8_R3_A4_PRECHECK_9bcd4181.md",
+      "bound_adoption_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+      "review": "reviews/PR8_R4_CLOSURE_9ab2cbb0.md",
       "blocking_findings": [],
       "invitation_authorization": "EXISTING_LIMITED_A4_AUTHORIZATION",
       "invitation_sent": false,
       "external_adoption_count": 0,
-      "next_action": "Canonical result remains PR8 R3 with zero eligible candidates, zero invitations and zero external adoption. PR12 a76588e search result is BLOCKED because authorization and replayable raw search evidence are absent and stale anchors remain. PR13 389ee002 ledger override is separately BLOCKED. Do not send, merge or dispatch another repair.",
+      "next_action": "PR8 9ab2cbb closure head is reviewed APPROVED_WITH_CONDITIONS for closure-record use only. Eligible candidates, invitations and external adoption remain 0. Do not send or publish from stale 8161c6a links; sender designation is unverified for send; no third repair.",
       "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
       "active_claim": null,
-      "last_reviewed_content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
-      "last_reviewed_live_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+      "last_reviewed_content_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+      "last_reviewed_live_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
       "closed_findings": [
         "A4-R1-01",
         "A4-R1-02",
@@ -611,6 +633,40 @@
         "proposed_checkpoint": "A4_ELIGIBLE_CANDIDATE_SEARCH",
         "adopted": false,
         "no_repair_dispatch": true
+      },
+      "post_review_closure": {
+        "pr": 8,
+        "head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+        "compared_from": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+        "commits_ahead": 2,
+        "changed_paths": [
+          "adoption/ATK-OPEN-ADOPTION-01/CANDIDATES.md",
+          "adoption/ATK-OPEN-ADOPTION-01/INVITATIONS.md"
+        ],
+        "decision": "APPROVED_WITH_CONDITIONS",
+        "scope": "CLOSURE_RECORD_ONLY",
+        "review": "reviews/PR8_R4_CLOSURE_9ab2cbb0.md",
+        "exact_head_checks": {
+          "workflow_runs": 0,
+          "commit_statuses": 0,
+          "pr_reviews": 0,
+          "pr_conversation_entries": 8
+        },
+        "verified": {
+          "eligible_candidate_count": 0,
+          "invitations_sent": 0,
+          "external_adoption_count": 0,
+          "c1_c2": "WITHDRAWN_NOT_ELIGIBLE",
+          "invite_round": "A4_INVITE_ROUND_CLOSED"
+        },
+        "conditions": [
+          "future send/public reuse must replace stale 8161c6a Quickstart target with the then-current independently reviewed immutable target",
+          "firekou owner designation is not traceably verified for send and target-channel capability evidence is absent",
+          "issue #3736 novelty/version statement remains subject to reporter-attributed route-specific correction before public reuse"
+        ],
+        "new_executor_receipt": false,
+        "no_third_repair": true,
+        "reviewed_at": "2026-09-23T23:56:26+08:00"
       }
     }
   ],
