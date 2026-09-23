@@ -1,5 +1,14 @@
 # 當前交接狀態
 
+## 2026-09-23：PR13 現行 ledger head R2 與 PR12 搜尋 R4 覆核
+
+- [PR13 R2](PR13_R2_LEDGER_389ee002.md)：精確 head `389ee0020b36d063058171dd0af6b51024343d66`，結論 **BLOCKED**。此 head 雖補列 PR12 R4 與 live head，仍沒有可追溯 owner instruction、固定 work_id 或 executor receipt，不能把 canonical checkpoint 改成 `A4_ELIGIBLE_CANDIDATE_SEARCH`。
+- PR13 精確 SHA checks：comments 0、workflow runs 0、commit statuses 0、PR reviews 0；mergeable=true 只代表 Git 可合併，不代表治理批准。
+- [PR12 R4](PR12_R4_SEARCH_a76588e6.md)：精確 head `a76588e6b6fd954b0f7057c6b6b89295e4c74fcb`，結論 **BLOCKED**。文件列出的搜尋數量與 0-candidate 結論缺 raw queries、pagination、result snapshot／hash 與有效 owner authorization，只能保留為未驗證 supplemental evidence。
+- Canonical PR8 R3 `9bcd4181…` 仍為 **APPROVED_WITH_CONDITIONS**；PR8 live `9ab2cbb0…` 仍為 **UNREVIEWED_NOT_APPROVED**，未混入本輪批准。
+- Canonical checkpoint 維持 `OWNER_GITHUB_DISCOVERABILITY_DECISION`。合格候選 0、邀請 0、外部採用 0；修復已達 2/2，不派第三輪。
+- 未 merge、未發邀請／外部留言、未發布、未改 repository settings／權限、未呼叫 provider、未新增費用。
+
 ## 2026-09-23：PR12 A4 關閉紀錄 R3 覆核
 
 - [R3 獨立覆核](PR12_R3_CLOSURE_488b74f4.md)：PR #12 精確 head `488b74f448e0de3c589b148f5179c055ec24f694`，結論 **BLOCKED**。
