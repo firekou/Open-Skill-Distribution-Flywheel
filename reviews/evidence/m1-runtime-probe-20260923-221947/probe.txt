@@ -1,0 +1,36 @@
+probed_at=2026-09-23T22:19:47+08:00
+hostname=grok-bot-vm-449719704
+uname=Linux grok-bot-vm-449719704 6.12.94+ #1 SMP PREEMPT_DYNAMIC Mon Sep 21 15:10:15 UTC 2026 x86_64 GNU/Linux
+python=Python 3.13.5
+which_docker=NONE
+docker_sock=ls: cannot access '/var/run/docker.sock': No such file or directory
+which_bwrap=NONE
+which_podman=NONE
+which_firejail=NONE
+cap_sh=CapPrm:	0000000000000000
+CapEff:	0000000000000000
+CapBnd:	000001ffffffffff
+--- unshare -n ---
+unshare: unshare failed: Operation not permitted
+unshare_exit=1
+--- unshare -Urm ---
+--- network interfaces ---
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP> 
+enp0s3           UP             82:2b:38:3d:bc:d0 <BROADCAST,MULTICAST,UP,LOWER_UP> 
+docker0          DOWN           aa:1d:4a:7b:ca:87 <NO-CARRIER,BROADCAST,MULTICAST,UP> 
+--- env secret-like keys (names only) ---
+CURSOR_CONVERSATION_ID
+CURSOR_RIPGREP_PATH
+CURSOR_AGENT_SOCKET
+CURSOR_AGENT
+CURSOR_REQUEST_ID
+=== unshare -Urm detail ===
+urm_exit=0
+=== unshare -n again ===
+n_exit=1
+=== can we drop network another way? ===
+/usr/bin/nsenter
+/usr/bin/ip
+--: line 13: systemctl: command not found
+uid=1000(box) gid=1000(box) groups=1000(box)
+0::/system.slice/pod-pmtjlcwx2ndiplrh6wbqssyosm-f449ea31
