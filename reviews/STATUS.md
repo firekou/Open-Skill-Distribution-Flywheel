@@ -1,5 +1,17 @@
 # 當前交接狀態
 
+## 2026-09-23：PR9 M1 隔離計畫獨立覆核
+
+- PR #9 Draft/open/unmerged；精確 head `ba3f9ae3bce04d72f4afaa6f9e935c112661fca2`，只有 6 個 `reviews/` 計畫、狀態與 probe 檔，沒有產品程式變更。
+- [R1 獨立覆核](PR9_R1_M1_PLAN_ba3f9ae3.md)：**NEEDS_INFORMATION**。PR #9 是 PLAN_ONLY／blocker evidence，不是 M1 replay 成果。
+- VERIFIED：PR #5 live head 仍為 `304af885...`；計畫引用的 current／previous 共 6 個 Git blob SHA 均與精確 refs 相符；probe JSON 可解析。
+- OBSERVED：PR #9 probe 顯示其環境無 Docker／Podman／bwrap／firejail，`unshare -n` 被拒，且 `pr_code_executed=false`。本 reviewer 環境也在 bwrap 建立 network namespace 時被 OS 拒絕，因此沒有執行 PR code。
+- 執行前必要修正：Git blob header 必須用 NUL byte，不是字面 `\\0`；唯讀 evidence input 與可寫 result output 必須分離；作者本機 `/workspace/qa-plans` 改成固定 repository path；evidence level 依實際 run 擇一。
+- Exact head 的 workflow runs、check runs、commit statuses、PR reviews 均為 0；PR 沒有 comment 或固定 executor response。這不提高 persistent launcher／executor 接線狀態。
+- 下一 checkpoint：`M1_P5_R4_01_QUALIFYING_RUNTIME_AND_PRE_RUN_PLAN_CORRECTION`。真正權限缺口是具 network-none、唯讀來源、無 secrets／寫 token、pinned image 的獨立 runner。
+- 完成前不發邀請、不套 PR5 patch；外部採用仍為 0。未 merge、部署、呼叫 provider、修改 secrets／權限或新增支出。
+
+
 ## 2026-09-23：PR8 revision 2 五項條件已關閉
 
 - [R2 獨立覆核](PR8_R2_CONDITIONS_8161c6a3.md)：內容 SHA `8161c6a33251b06c44db9f5dbabc9431fa73b67d`，live/result head `b76fc7ba08deade6733f140d3a37aadfd201d51c`；結論 **APPROVED_WITH_CONDITIONS**。
