@@ -1,5 +1,17 @@
 # 當前交接狀態
 
+## 2026-09-23：A4 邀請輪關閉（帳本，revision 24）
+
+- 目標來源：愛莎於 2026-09-23 授權，只更新治理帳本。本輪交付是把已關閉的零合格邀請輪寫進現行帳本，並把下一關設為搜尋。
+- **A4 邀請輪 2026-09-23 CLOSED。** Eligible=0。decision=do not send。`precheck_decision`=`BLOCKED_NO_ELIGIBLE_CANDIDATES`。sender `firekou` 僅 DESIGNATED。邀請維持 **NOT SENT**。
+- 證據 head：Draft PR #12 `488b74f448e0de3c589b148f5179c055ec24f694`；PR #8 close alignment `9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34`。
+- `governance/state.json` revision 22→24。現行 `next_checkpoint`：`A4_ELIGIBLE_CANDIDATE_SEARCH`。這是負責人本次帳本指示，取代先前現行關卡 `OWNER_GITHUB_DISCOVERABILITY_DECISION`。下方 R3／R4 小節保留那些覆核當時的結論。
+- 關閉紙本仍引用 Draft PR #12 `488b74f448e0de3c589b148f5179c055ec24f694`。寫入時 PR #12 live head 已是 `a76588e6b6fd954b0f7057c6b6b89295e4c74fcb`；[R4](PR12_R4_SEARCH_a76588e6.md) 為 BLOCKED，本帳本不採納該搜尋結果為已批准搜尋。
+- **搜尋關不是發送授權。** 本輪不執行搜尋、不發送、不在 headroom 留言、不套 PR #5 patch。不 merge #5／#8／#9／#10／#11／#12。
+- 此帳本移動不清除 [PR12 R3](PR12_R3_CLOSURE_488b74f4.md) 的 BLOCKED：過期證據錨點、sender capability evidence 仍無、不派第三輪。`9ab2cbb…` 維持 UNREVIEWED／NOT APPROVED。Canonical PR8 R3 `9bcd418…` 的 `APPROVED_WITH_CONDITIONS` 仍留在 `last_review_decision`。
+- M1／P5-R4-01 結案綁定不變：只對 PR #5 head `304af885193245da7186cb6b9ab247ec2494bd86`，狀態維持 COMPLETE。`automation.status` 維持 `FOUNDATION_ONLY`。
+- 主線仍是可選 ATK 試用準備。刪掉這筆帳本，下一席會繼續停在 discoverability，而不是已授權的搜尋關。本輪沒有新產品方向、產品碼或對外發送。
+
 ## 2026-09-23：PR12 A4 關閉紀錄 R3 覆核
 
 - [R3 獨立覆核](PR12_R3_CLOSURE_488b74f4.md)：PR #12 精確 head `488b74f448e0de3c589b148f5179c055ec24f694`，結論 **BLOCKED**。

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 22,
+  "revision": 24,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -226,8 +226,8 @@
       "repair_rounds_used": 2,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "Canonical PR8 R3 remains APPROVED_WITH_CONDITIONS. PR8 live head 9ab2cbb is newer and unreviewed; it preserves zero eligible candidates but still uses stale Quickstart SHA 8161c6a, so it is not approved. PR12 current head 488b74f is independently BLOCKED as a stale-authority side artifact. Do not send, do not dispatch a third repair. Next owner decision remains GitHub discoverability/publication path.",
-      "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
+      "next_action": "2026-09-23 A4 邀請輪 CLOSED（愛莎授權的帳本更新）：Eligible=0；decision=do not send；precheck_decision=BLOCKED_NO_ELIGIBLE_CANDIDATES；sender firekou 僅 DESIGNATED；invitations NOT SENT。證據紙本：Draft PR #12 head 488b74f448e0de3c589b148f5179c055ec24f694；PR #8 close alignment head 9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34。現行 next_checkpoint=A4_ELIGIBLE_CANDIDATE_SEARCH。搜尋關不是發送授權。此帳本移動不清除 PR12 R3 的 BLOCKED（過期錨點、sender capability evidence 仍無、不派第三輪），也不把 9ab2cbb 升為已審批准。不 merge #5/#8–#12，不套 PR5 patch，不在 headroom 留言。M1／P5-R4-01 仍只綁 304af885193245da7186cb6b9ab247ec2494bd86。",
+      "next_checkpoint": "A4_ELIGIBLE_CANDIDATE_SEARCH",
       "pr": 8,
       "observed_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
       "last_reviewed_content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
@@ -377,7 +377,19 @@
         ],
         "eligible_candidate_count": 0,
         "invitation_sent": false,
-        "external_adoption_count": 0
+        "external_adoption_count": 0,
+        "round_status": "CLOSED",
+        "precheck_decision": "BLOCKED_NO_ELIGIBLE_CANDIDATES",
+        "sender": {
+          "login": "firekou",
+          "status": "DESIGNATED"
+        },
+        "invitations": "NOT_SENT",
+        "close_paperwork_pr": 12,
+        "close_paperwork_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+        "close_alignment_pr": 8,
+        "close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+        "live_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb"
       },
       "a4_precheck_repair": {
         "work_id": "ATK-OPEN-ADOPTION-01",
@@ -442,6 +454,47 @@
           "adoption/ATK-OPEN-ADOPTION-01/INVITATIONS.md"
         ],
         "note": "C1/C2 remain withdrawn and eligible count remains 0, but invitation links still pin stale reviewed content 8161c6a instead of canonical 9bcd418. Not reviewed in PR12 R3 turn."
+      },
+      "a4_invite_round": {
+        "date": "2026-09-23",
+        "status": "CLOSED",
+        "label": "A4_INVITE_ROUND_CLOSED",
+        "eligible_candidate_count": 0,
+        "decision": "do not send",
+        "precheck_decision": "BLOCKED_NO_ELIGIBLE_CANDIDATES",
+        "sender": {
+          "login": "firekou",
+          "status": "DESIGNATED"
+        },
+        "invitations": "NOT_SENT",
+        "evidence": {
+          "precheck_close_pr": 12,
+          "precheck_close_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+          "adoption_close_alignment_pr": 8,
+          "adoption_close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+          "precheck_live_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
+          "precheck_live_review": "reviews/PR12_R4_SEARCH_a76588e6.md",
+          "precheck_live_review_decision": "BLOCKED"
+        },
+        "gates": {
+          "search_gate_is_not_send_authorization": true,
+          "no_merge_prs": [
+            5,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "invitations": "NOT_SENT",
+          "pr5_patch": "NOT_APPLIED",
+          "headroom_comments": "NOT_SENT"
+        },
+        "does_not_clear": [
+          "PR12 R3 blockers PR12-R3-01 PR12-R3-02 PR12-R3-03 at 488b74f448e0de3c589b148f5179c055ec24f694",
+          "PR8 live head 9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34 remains UNREVIEWED_NOT_APPROVED",
+          "no third repair round"
+        ]
       }
     },
     {
@@ -499,7 +552,7 @@
       "status": "APPROVED_WITH_CONDITIONS",
       "pr": 12,
       "branch": "cursor/a4-invitation-precheck-e6a3",
-      "observed_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+      "observed_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
       "last_reviewed_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
       "bound_adoption_pr": 8,
@@ -509,8 +562,8 @@
       "invitation_authorization": "EXISTING_LIMITED_A4_AUTHORIZATION",
       "invitation_sent": false,
       "external_adoption_count": 0,
-      "next_action": "Canonical result remains PR8 R3 with zero eligible candidates, zero invitations and zero external adoption. PR12 head 488b74f correctly closes C1/C2 eligibility but is blocked by stale evidence anchors, unsupported sender-authority claims and an unauthorized checkpoint fork. Do not send and do not dispatch another repair.",
-      "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
+      "next_action": "2026-09-23 A4 邀請輪 CLOSED（愛莎授權的帳本更新）：Eligible=0；decision=do not send；precheck_decision=BLOCKED_NO_ELIGIBLE_CANDIDATES；sender firekou 僅 DESIGNATED；invitations NOT SENT。證據紙本：Draft PR #12 head 488b74f448e0de3c589b148f5179c055ec24f694；PR #8 close alignment head 9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34。現行 next_checkpoint=A4_ELIGIBLE_CANDIDATE_SEARCH。搜尋關不是發送授權。此帳本移動不清除 PR12 R3 的 BLOCKED（過期錨點、sender capability evidence 仍無、不派第三輪），也不把 9ab2cbb 升為已審批准。不 merge #5/#8–#12，不套 PR5 patch，不在 headroom 留言。M1／P5-R4-01 仍只綁 304af885193245da7186cb6b9ab247ec2494bd86。",
+      "next_checkpoint": "A4_ELIGIBLE_CANDIDATE_SEARCH",
       "active_claim": null,
       "last_reviewed_content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
       "last_reviewed_live_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
@@ -560,6 +613,62 @@
         "repair_rounds_used": 2,
         "repair_rounds_limit": 2,
         "no_third_repair": true
+      },
+      "a4_invite_round": {
+        "date": "2026-09-23",
+        "status": "CLOSED",
+        "label": "A4_INVITE_ROUND_CLOSED",
+        "eligible_candidate_count": 0,
+        "decision": "do not send",
+        "precheck_decision": "BLOCKED_NO_ELIGIBLE_CANDIDATES",
+        "sender": {
+          "login": "firekou",
+          "status": "DESIGNATED"
+        },
+        "invitations": "NOT_SENT",
+        "evidence": {
+          "precheck_close_pr": 12,
+          "precheck_close_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+          "adoption_close_alignment_pr": 8,
+          "adoption_close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+          "precheck_live_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
+          "precheck_live_review": "reviews/PR12_R4_SEARCH_a76588e6.md",
+          "precheck_live_review_decision": "BLOCKED"
+        },
+        "gates": {
+          "search_gate_is_not_send_authorization": true,
+          "no_merge_prs": [
+            5,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "invitations": "NOT_SENT",
+          "pr5_patch": "NOT_APPLIED",
+          "headroom_comments": "NOT_SENT"
+        },
+        "does_not_clear": [
+          "PR12 R3 blockers PR12-R3-01 PR12-R3-02 PR12-R3-03 at 488b74f448e0de3c589b148f5179c055ec24f694",
+          "PR8 live head 9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34 remains UNREVIEWED_NOT_APPROVED",
+          "no third repair round"
+        ]
+      },
+      "precheck_decision": "BLOCKED_NO_ELIGIBLE_CANDIDATES",
+      "sender": {
+        "login": "firekou",
+        "status": "DESIGNATED"
+      },
+      "invitations": "NOT_SENT",
+      "close_paperwork_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+      "later_side_review": {
+        "pr": 12,
+        "head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
+        "review": "reviews/PR12_R4_SEARCH_a76588e6.md",
+        "decision": "BLOCKED",
+        "adopted": false,
+        "note": "Live PR #12 head at ledger write is a76588e6b6fd954b0f7057c6b6b89295e4c74fcb. Owner-cited close paperwork remains 488b74f448e0de3c589b148f5179c055ec24f694. Main review reviews/PR12_R4_SEARCH_a76588e6.md is BLOCKED and is not adopted as an approved search."
       }
     }
   ],
@@ -597,7 +706,7 @@
     "review_storage": "main per REVIEW-MAIN",
     "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
     "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167",
-    "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
+    "next_checkpoint": "A4_ELIGIBLE_CANDIDATE_SEARCH",
     "manual_executor_roundtrip": {
       "status": "VERIFIED_EXISTING_SESSION_NOT_PERSISTENT",
       "repository": "firekou/Open-Skill-Distribution-Flywheel",
@@ -618,6 +727,7 @@
       "runner_id": "bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763",
       "review": "reviews/PR10_R1_M1_REPLAY_cf37880b.md",
       "note": "證明一次性的獨立隔離重放成立；不證明 Claude persistent launcher、controller 或完整端到端自動化已接通。"
-    }
+    },
+    "prior_next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION"
   }
 }
