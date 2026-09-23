@@ -1,0 +1,80 @@
+{
+  "checked_at_utc": "2026-09-23T14:29:31Z",
+  "reviewer_run_id": "bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763",
+  "reviewer_run_url": "https://cursor.com/agents/bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763",
+  "author_sessions_not_used": [
+    "session_01RFeCsTYkVywjHvXk7od7Ab",
+    "session_016YNgsSCC2eV5sicob2f56f"
+  ],
+  "docker": {
+    "client_version": "29.1.3",
+    "server_version": "29.1.3",
+    "storage_driver": "vfs",
+    "storage_note": "The first dockerd used the containerd overlay snapshotter and failed inside this VM with overlay mount invalid argument. Prep restarted dockerd with vfs and containerd-snapshotter disabled, then re-pulled the same registry digest. The probe and the replay both used this vfs daemon."
+  },
+  "image": "python@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9",
+  "image_id": "sha256:9e87977b867847e186d066f531ef783b006d582a985c341c269446088d90f2c4",
+  "registry_digest": "sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9",
+  "pull_policy": "never",
+  "python_in_container": "3.12.14",
+  "flags": [
+    "--rm",
+    "--pull=never",
+    "--network",
+    "none",
+    "--read-only",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--user",
+    "65534:65534",
+    "--pids-limit",
+    "64",
+    "--memory",
+    "512m",
+    "--cpus",
+    "1",
+    "--tmpfs",
+    "/tmp:rw,nosuid,nodev,size=64m,mode=1777",
+    "--env",
+    "HOME=/tmp",
+    "--env",
+    "PYTHONDONTWRITEBYTECODE=1"
+  ],
+  "probe": {
+    "pr_code_executed": false,
+    "exit": 0,
+    "uid": 65534,
+    "network": "BLOCKED OSError to 1.1.1.1:443",
+    "input_mount": "READONLY",
+    "docker_sock_present": false,
+    "git_dir_present": false,
+    "home": "/tmp",
+    "env_names": [
+      "GPG_KEY",
+      "HOME",
+      "HOSTNAME",
+      "LANG",
+      "PATH",
+      "PYTHONDONTWRITEBYTECODE",
+      "PYTHON_SHA256",
+      "PYTHON_VERSION"
+    ],
+    "stdout_path": "reviews/evidence/pr5-m1-304af885/probe_stdout.txt"
+  },
+  "image_baked_env": {
+    "names": ["GPG_KEY", "PYTHON_SHA256", "PYTHON_VERSION"],
+    "injected_by_runner": false,
+    "values_recorded": false,
+    "note": "Official library/python image ENV. Not an ATK, provider, or GitHub token. Values were not copied into this evidence."
+  },
+  "secrets_injected": false,
+  "github_write_token_in_container": false,
+  "host_git_credential_mounted": false,
+  "replay": {
+    "pr_code_executed": true,
+    "exit": 0,
+    "command": "sudo -n timeout 180 docker run --rm --pull=never --network none --read-only --cap-drop ALL --security-opt no-new-privileges --user 65534:65534 --pids-limit 64 --memory 512m --cpus 1 --tmpfs /tmp:rw,nosuid,nodev,size=64m,mode=1777 --mount type=bind,src=/tmp/m1-iso/input,dst=/input,readonly --mount type=bind,src=/workspace/reviews/evidence/pr5-m1-304af885,dst=/evidence,readonly --env HOME=/tmp --env PYTHONDONTWRITEBYTECODE=1 --entrypoint python3 python@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 /evidence/reviewer_checks.py /input /evidence/manifest.json"
+  }
+}

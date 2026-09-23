@@ -1,5 +1,13 @@
 # 當前交接狀態
 
+## 2026-09-23：M1／P5-R4-01 雲端 Docker 隔離重放
+
+- Cursor cloud runner `bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763` 在 Docker（`--network none`、`--pull=never`、唯讀掛載、uid 65534）重放 PR#5 `304af885193245da7186cb6b9ab247ec2494bd86`。結束時 live head 仍是這個 SHA。
+- 證據：[`reviews/evidence/pr5-m1-304af885/`](evidence/pr5-m1-304af885/STATUS.md)。`RESULT.json` decision 為 **PASS**；G0–G7 全過。最高證據只限本 finding 的 **REPRODUCED**。不是 license PASS，不是乾淨安裝、live provider 或採用證明。
+- 觀察到的套件結果是 exit 0，README 宣稱數與 `TestLoader.countTestCases()` 都是 44。腳本沒有把次數寫死。
+- 沒有發邀請、沒有套 PR5 patch、沒有 merge、沒有改 `state.json`。`independent_runtime_verified` 維持原帳本值。
+
+
 ## 2026-09-23：PR8 revision 2 五項條件已關閉
 
 - [R2 獨立覆核](PR8_R2_CONDITIONS_8161c6a3.md)：內容 SHA `8161c6a33251b06c44db9f5dbabc9431fa73b67d`，live/result head `b76fc7ba08deade6733f140d3a37aadfd201d51c`；結論 **APPROVED_WITH_CONDITIONS**。

@@ -1,0 +1,13 @@
+{
+  "reviewed_head": "304af885193245da7186cb6b9ab247ec2494bd86",
+  "comparison_head": "d1930e4696f11cfb3cdae2f59d1b3692b68ee127",
+  "pr8_live_at_plan": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
+  "files": {
+    "current/local_check.py": "07f7fd15964da5cb363086327b05fa1d1f2b7153",
+    "current/test_local_check.py": "4fe0411306d7e0fcae114575e460a4d768c2623f",
+    "current/ab_test.py": "0927f51c2a2443117fa6942b29f32529f7557a1f",
+    "current/README.md": "54c8f3bc056d76831db515f1f79236dc66f4b4e6",
+    "current/TRY_IT.md": "600f0d912311c32317622c26fd26c783097d87cf",
+    "previous/local_check.py": "ec66c5ea914fe62d8ec24ab65c3a221f2aacab76"
+  }
+}

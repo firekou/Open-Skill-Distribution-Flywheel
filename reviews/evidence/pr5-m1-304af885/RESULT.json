@@ -1,0 +1,64 @@
+{
+  "work_id": "M1_P5_R4_01",
+  "finding": "P5-R4-01",
+  "reviewed_head": "304af885193245da7186cb6b9ab247ec2494bd86",
+  "comparison_head": "d1930e4696f11cfb3cdae2f59d1b3692b68ee127",
+  "pr8_live_at_plan": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
+  "pr5_live_head_after_replay": "304af885193245da7186cb6b9ab247ec2494bd86",
+  "pr8_live_head_after_replay": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
+  "head_still_bound": true,
+  "checked_at_utc": "2026-09-23T14:29:31Z",
+  "reviewer_run_id": "bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763",
+  "isolation": {
+    "runtime": "docker",
+    "network": "none",
+    "secrets": false,
+    "github_write_token": false,
+    "pr_code_executed": true,
+    "image": "python@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9",
+    "pull": "never",
+    "image_baked_env_names_not_injected": ["GPG_KEY", "PYTHON_SHA256", "PYTHON_VERSION"]
+  },
+  "checks": {
+    "G0": "PASS",
+    "G1": "PASS",
+    "G2": "PASS",
+    "G3": "PASS",
+    "G4": "PASS",
+    "G5": "PASS",
+    "G6": "PASS",
+    "G7": "PASS"
+  },
+  "g5_observed": {
+    "suite_exit": 0,
+    "readme_claimed": [44],
+    "loader_count": 44,
+    "hardcoded_expected_total": false
+  },
+  "highest_evidence_allowed": "REPRODUCED",
+  "highest_evidence_scope": "P5-R4-01 isolated replay only",
+  "not_claimed": [
+    "license_pass",
+    "clean_headroom_install",
+    "live_provider",
+    "adoption",
+    "release_verified",
+    "automation_active"
+  ],
+  "decision": "PASS",
+  "state_json_updated": false,
+  "independent_runtime_verified_left_unchanged": true,
+  "invitations_sent": false,
+  "pr5_patch_applied": false,
+  "merged": false,
+  "replay_exit": 0,
+  "evidence_paths": [
+    "reviews/evidence/pr5-m1-304af885/manifest.json",
+    "reviews/evidence/pr5-m1-304af885/reviewer_checks.py",
+    "reviews/evidence/pr5-m1-304af885/stdout.txt",
+    "reviews/evidence/pr5-m1-304af885/stderr.txt",
+    "reviews/evidence/pr5-m1-304af885/isolation_probe.json",
+    "reviews/evidence/pr5-m1-304af885/probe_stdout.txt",
+    "reviews/evidence/pr5-m1-304af885/RESULT.json"
+  ]
+}
