@@ -104,7 +104,7 @@ URL 填入仍只是草稿。`a74fe9348ba1f72bcf015697ebe988aa44f4b64d` 把當時
 
 `A4_INVITE_ROUND_CLOSED`。愛莎／Frank 關閉這一輪：合格候選 0，決定是 **do not send**。發送審議結束，不是停在「只差准發」。邀請維持 NOT SENT。不 merge，不套 PR #5 patch，不在 headroom 留言。
 
-下一關是 `A4_ELIGIBLE_CANDIDATE_SEARCH`，範圍頁是草案，核定前不執行搜尋。那一關不是發送授權。
+搜尋結果頁：[A4_ELIGIBLE_CANDIDATE_SEARCH_2026-09-23.md](A4_ELIGIBLE_CANDIDATE_SEARCH_2026-09-23.md)。`Eligible_count` 仍是 0，本輪維持關閉，不是發送授權。
 
 ## 6. Hard gates
 
