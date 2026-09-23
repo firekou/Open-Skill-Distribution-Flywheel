@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 23,
+  "revision": 24,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -388,7 +388,8 @@
         "close_paperwork_pr": 12,
         "close_paperwork_head": "488b74f448e0de3c589b148f5179c055ec24f694",
         "close_alignment_pr": 8,
-        "close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34"
+        "close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+        "live_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb"
       },
       "a4_precheck_repair": {
         "work_id": "ATK-OPEN-ADOPTION-01",
@@ -470,7 +471,10 @@
           "precheck_close_pr": 12,
           "precheck_close_head": "488b74f448e0de3c589b148f5179c055ec24f694",
           "adoption_close_alignment_pr": 8,
-          "adoption_close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34"
+          "adoption_close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+          "precheck_live_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
+          "precheck_live_review": "reviews/PR12_R4_SEARCH_a76588e6.md",
+          "precheck_live_review_decision": "BLOCKED"
         },
         "gates": {
           "search_gate_is_not_send_authorization": true,
@@ -548,7 +552,7 @@
       "status": "APPROVED_WITH_CONDITIONS",
       "pr": 12,
       "branch": "cursor/a4-invitation-precheck-e6a3",
-      "observed_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+      "observed_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
       "last_reviewed_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
       "bound_adoption_pr": 8,
@@ -626,7 +630,10 @@
           "precheck_close_pr": 12,
           "precheck_close_head": "488b74f448e0de3c589b148f5179c055ec24f694",
           "adoption_close_alignment_pr": 8,
-          "adoption_close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34"
+          "adoption_close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+          "precheck_live_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
+          "precheck_live_review": "reviews/PR12_R4_SEARCH_a76588e6.md",
+          "precheck_live_review_decision": "BLOCKED"
         },
         "gates": {
           "search_gate_is_not_send_authorization": true,
@@ -653,7 +660,16 @@
         "login": "firekou",
         "status": "DESIGNATED"
       },
-      "invitations": "NOT_SENT"
+      "invitations": "NOT_SENT",
+      "close_paperwork_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+      "later_side_review": {
+        "pr": 12,
+        "head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
+        "review": "reviews/PR12_R4_SEARCH_a76588e6.md",
+        "decision": "BLOCKED",
+        "adopted": false,
+        "note": "Live PR #12 head at ledger write is a76588e6b6fd954b0f7057c6b6b89295e4c74fcb. Owner-cited close paperwork remains 488b74f448e0de3c589b148f5179c055ec24f694. Main review reviews/PR12_R4_SEARCH_a76588e6.md is BLOCKED and is not adopted as an approved search."
+      }
     }
   ],
   "planning": {
