@@ -301,3 +301,154 @@ the executor (`findings_closed_by_executor: []`).
 
 Stopping here for the second independent review of content SHA
 `8161c6a33251b06c44db9f5dbabc9431fa73b67d`.
+
+---
+
+# Revision 3 — A4 precheck, the last bounded round
+
+Status: **REVIEW_PENDING.** Not self-approved. **Nothing was sent.** Revisions 1 and 2 above are
+left as written; they were true when written.
+
+## Claim
+
+| field | value |
+|---|---|
+| work_id / revision / stage | ATK-OPEN-ADOPTION-01 / 3 / A4-PRECHECK |
+| review answered | [PR12_R1_A4_PRECHECK_707dc26d.md](PR12_R1_A4_PRECHECK_707dc26d.md) — BLOCKED |
+| executor session | `session_01RFeCsTYkVywjHvXk7od7Ab` (same session as revision 2) |
+| source head at claim | `b76fc7ba08deade6733f140d3a37aadfd201d51c` |
+| reviewed precheck head | `707dc26d15d8b0a2a6a34cb0364fd73f68e397d8` |
+| **content SHA for review** | `9bcd4181cd3fb87bea108c93df28b96f1767bfd5` |
+| dedup key | `firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A4-PRECHECK:3:b76fc7ba08deade6733f140d3a37aadfd201d51c:executor` |
+| claimed / deadline | 2026-09-23T15:1xZ / 2026-09-24T14:46:00Z |
+| repair round | **2 of 2 — the last one** |
+| budget spent | 0. No key, no model call, no provider endpoint. |
+
+Pre-claim check: `governance/state.json` revision 19 had `a4_precheck_repair.delivery_status:
+SIGNAL_SENT_NO_RECEIPT` and `active_claim: null`, and PR #8's head had not moved from `b76fc7b`.
+No other session had taken it.
+
+## The three blocking findings
+
+### A4-R1-01 — the two recipients do not match the asset
+
+Both withdrawn as **`NOT_ELIGIBLE_FOR_THIS_ASSET`**.
+
+| | C1 (#2732) | C2 (#973) |
+|---|---|---|
+| what they asked | why Command Code's request shape is rejected; then whether **9router** changes shapes or headers | how to point **Anthropic** requests at a custom upstream, "like I can in case of OpenAI" |
+| what the asset does | measures bytes reaching the upstream and whether a needle survives, on the OpenAI chat-completions route | the same, on the same route |
+| where it stops | never runs Command Code, never runs 9router, **never captures a request schema at all** | **has never been run against `/v1/messages`** |
+
+The C1 draft opened with a router "can" change what headroom does. **Removed, not softened** — we
+have no evidence for it. An unevidenced causal sentence is precisely the defect this loop keeps
+catching, and softening the wording would have preserved it.
+
+The C2 draft was already honest that we have not tested `/v1/messages`. That honesty is the
+disqualification: a reply whose first substantive line is "I cannot answer your question, but here
+is our tool" is off-topic promotion however politely it is written.
+
+**Why they were ranked 1st and 2nd before.** They were scored on topic adjacency — they are about
+routing and compression, we measure routing and compression — instead of on whether our output
+answers their sentence. `CANDIDATES.md` now forces the three columns above for every candidate,
+and a candidate fails unless columns 1 and 2 are the same question.
+
+### A4-R1-01 (second half) — looking for a candidate that does fit
+
+Searched the public headroom Q&A (open and unanswered) and the issue tracker for anyone asking
+whether their own long logs shrink, or how to tell whether a critical line survived.
+
+| looked at | result |
+|---|---|
+| Q&A, open and unanswered | thread safety, Redis for CCR, desktop integration, deployment, ToS, assorted errors. Nothing about payload compressibility or verifying a critical line |
+| issue #2050 "0% savings wrapping Codex" | **closed**; `wrap`/Codex and savings accounting |
+| issue #2248 "no compressed/saved tokens after upgrade" | **closed**; dashboard accounting after a version change |
+| issue #3736 (open, 2026-09-23) ISO-8601 logs folded lossily in 0.38.0 | closest public match — 5 of 2,000 lines survive, timestamps rewritten. **Still not a candidate:** bug tracker, not an invitation channel; the reporter already wrote their own reproduction and root-caused it; and it is 0.38.0 while this asset pins 0.37.0 |
+
+**Result: 0 eligible candidates. The three-recipient allowance stays unused.**
+
+Delivering zero is what the gate is for. The temptation here was real and worth naming: #3736 is
+so close to our question that sending something would have felt justified — and it would still
+have been us answering a question nobody asked us.
+
+Worth recording as evidence about the asset rather than about outreach: #3736 is the first public
+confirmation that "did the line that matters survive?" is a question real users hit in production,
+and that **a minor version bump can change the answer**. Our pinned 0.37.0 does not exhibit it.
+That is a statement about what we pinned, not a claim about 0.38.0.
+
+### A4-R1-02 — the authorisation was not the gap; the account is
+
+Recorded as two separate things, because the precheck had collapsed them into one:
+
+| | |
+|---|---|
+| A4 limited-send authorisation | **EXISTS** — up to three recipients, one message each. **Not re-asked.** |
+| owner-approved sender login | **not recorded** |
+| capability evidence (can reply in the target Discussion under that login) | **none** |
+| status | **`BLOCKED_ACCESS`** |
+
+The only thing needed from the owner is *which account*. No test comment was posted to find out:
+posting to check whether we can post is itself a send.
+
+### A4-R1-03 — the pinned external document was out of date
+
+Quickstart §9 said an independent isolated replay was pending. It is not: PR #10 closed
+`P5-R4-01`. §9 now says what was replayed (the unknown-argument case, including the dash-leading
+one), under what conditions (`--network none`, read-only source, no secrets, no write token), that
+the reviewer also confirmed the old build still fails it, and links the review at an immutable
+`main` SHA.
+
+It then says, in the same breath, what the replay is **not**: not a clean install, not a license
+review, not a live provider run, not a release, not adoption — and that it binds to that exact PR
+#5 SHA, so if the code moves the replay does not move with it.
+
+### Also in this round
+
+`EVIDENCE_FORMAT.md` said `test_fixtures/` holds "four records that must fail". It holds five —
+my own omission in revision 2, when I added the fifth fixture and updated the prose above it but
+not the count below it. Corrected. Validator logic untouched.
+
+## The immutable entry URL
+
+Read back after pushing, not assumed:
+
+```
+https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/9bcd4181cd3fb87bea108c93df28b96f1767bfd5/integrations/headroom-atk/AGENT_QUICKSTART.md
+```
+
+Blob `503136498e9de7c76bb9ac4f59f714dc7270427d` — the local object id at the content commit and
+the id GitHub served back are the same, and the served §9 is the corrected text.
+
+This is the URL `<QUICKSTART_URL>` resolves to. It is not in use, because there is nobody eligible
+to send it to.
+
+## Commands and results
+
+| command | result |
+|---|---|
+| `check_consistency.py` | **24/24 PASS, exit 0** |
+| `validate_records.py records/*.json` | exit 0 |
+| the 5 negative fixtures / the positive fixture | exit 1 each / exit 0 |
+| `grep -rni` for `27%`, `blob/claude/atk-open-adoption`, `…/blob`, `nothing leaves`, `leaves loopback`, `no tracking` | **0 each** — revision 2's closures did not regress |
+| `grep` for the withdrawn `it can, and the only…` sentence | **0** |
+| GitHub read-back of the Quickstart at the content SHA | blob id matches the local object id |
+
+Public pages re-read on 2026-09-23 (read-only, no posts): discussions #2732 and #973 (both open,
+both still Unanswered), issues #2050, #2248, #3736, and the open/unanswered Q&A list.
+
+## Still not established
+
+- **External adoption: 0.** Nothing was sent, so nothing could have been adopted.
+- **Sender account:** `BLOCKED_ACCESS`.
+- **Eligible recipients:** 0.
+- The live path, onnxruntime on a networked machine, and anything but Linux / Python 3.11 —
+  unchanged and still stated as unknown in the documents.
+
+## Not done
+
+No invitation or comment sent to any third party · PR #5 patch still **not applied** · no merge ·
+no deploy · no settings, secrets or permissions change · nothing sent upstream · no spend · no
+validator logic change · `findings_closed_by_executor: []`.
+
+Stopping here for the final independent review of content SHA
+`9bcd4181cd3fb87bea108c93df28b96f1767bfd5`.
