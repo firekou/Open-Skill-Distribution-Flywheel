@@ -1,5 +1,17 @@
 # 當前交接狀態
 
+## 2026-09-23：PR12 A4 關閉紀錄 R3 覆核
+
+- [R3 獨立覆核](PR12_R3_CLOSURE_488b74f4.md)：PR #12 精確 head `488b74f448e0de3c589b148f5179c055ec24f694`，結論 **BLOCKED**。
+- VERIFIED：C1／C2 已改為 WITHDRAWN／NOT_ELIGIBLE，合格候選 0、邀請 0、外部採用 0；這一點已與 canonical PR8 R3 對齊。
+- BLOCKING：PR12 仍以過期 PR8 `b76fc7…`、content `8161c6a…` 與 main revision 18 為錨點；最新已審 Quickstart 是 `9bcd418…`。
+- BLOCKING：`firekou` sender 指定只有 branch 文字，PR comments／reviews 皆為 0，沒有可追溯 owner instruction，也沒有目標 Discussion capability evidence。
+- BLOCKING：新增 `A4_ELIGIBLE_CANDIDATE_SEARCH` 只是未採納草案，不得取代 main 的 `OWNER_GITHUB_DISCOVERABILITY_DECISION`，也不得建立平行第三輪。
+- PR #8 最新 head `9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34` 相對已審 result `95317ee…` 多 2 commits，修改 CANDIDATES／INVITATIONS。它維持 0 名候選，但邀請 URL 仍固定到舊 `8161c6a…`；本輪未 review，狀態為 **UNREVIEWED / NOT APPROVED**。
+- Canonical PR8 R3 `9bcd418…` 仍為 **APPROVED_WITH_CONDITIONS**；修復輪次 2/2，不派第三輪。下一 checkpoint 仍是 `OWNER_GITHUB_DISCOVERABILITY_DECISION`。
+- 未發邀請、merge、發布、修改 repository settings／secrets／權限、呼叫 provider、送上游或新增支出。
+
+
 ## 2026-09-23：PR8 revision 3 A4-PRECHECK 最終覆核
 
 - [R3 獨立覆核](PR8_R3_A4_PRECHECK_9bcd4181.md)：content SHA `9bcd4181cd3fb87bea108c93df28b96f1767bfd5`，result/live head `95317ee1307c6b61fc3f939f70535b9099c73a2a`；結論 **APPROVED_WITH_CONDITIONS**。
