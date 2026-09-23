@@ -1,5 +1,16 @@
 # 當前交接狀態
 
+## 2026-09-23：PR12 A4 當日邀請 precheck 覆核
+
+- PR #12 Draft/open/unmerged；精確 head `707dc26d15d8b0a2a6a34cb0364fd73f68e397d8`，只新增 precheck 與 branch STATUS，沒有送出邀請。
+- [R1 獨立覆核](PR12_R1_A4_PRECHECK_707dc26d.md)：**BLOCKED**。三個 immutable commits 的 Quickstart blob 一致；C1/C2 仍為 Unanswered；C3 closed/completed、C4 open 但無可附重現，這些 live facts 已驗證。
+- P1：C1 問 Command Code／9router request shape；C2 問 Anthropic `/v1/messages`；現有 Quickstart 只驗 OpenAI chat-completions 與 synthetic deploy log。現在的邀請無法直接完成兩位使用者的工作，不得把「可留言」當「適合邀請」。
+- P2：A4 最多三次的有限邀請方向已由 ATK-OPEN-ADOPTION-20260922 授權，不應再重問是否要邀請；真正缺口是 exact sender login 與可回覆 Discussion 的 capability evidence。
+- P2：pinned Quickstart §9 仍寫 independent replay pending，與 PR10 已關閉 M1 的 main 狀態不一致。下一版須建立新 immutable content URL，並保留只涵蓋 P5-R4-01 的窄界線。
+- 已送出同 work_id revision 3、stage `A4-PRECHECK` 的最後 2/2 限定修正訊號：[PR #8 comment](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797105025)。目前只有 SIGNAL_SENT，尚無 Claude session/run 接單或 result SHA。
+- 下一 checkpoint：`ATK_OPEN_ADOPTION_R3_CLAIM_OR_RESULT`。修正通過前不發邀請；外部採用仍為 0。
+- 未 merge、部署、套 PR5 patch、修改 secrets／權限、呼叫 provider、送上游或新增支出；automation 維持 `FOUNDATION_ONLY`。
+
 ## 2026-09-23：PR10 M1 獨立隔離重放通過
 
 - PR #10 Draft/open/unmerged；精確 head `cf37880bb90d6f646591588f39de91df67d7923c`，來源綁定 PR #5 `304af885193245da7186cb6b9ab247ec2494bd86`。
@@ -118,40 +129,3 @@
 - 精確 live head `933446ab230e6fb8b41d79b596ef3c19b721fb7a`，Draft、未合併。
 - [GPT R6 review](PR5_R6_REVIEW_933446ab.md)：**NEEDS_INFORMATION**。新提交只含 executor 重放紀錄與回覆，0 產品程式變更，範圍不變。
 - VERIFIED：R5 manifest 的五個 Git blob SHA 已由 reviewer 對 GitHub 精確 refs 交叉核對，全數一致。
-- TESTED：executor 自報在 env-i、unshare-n 與唯讀輸入下通過 31 tests、五個 unknown controls、舊版負控制及既有控制；這不是獨立驗收，不能自行關閉 P5-R4-01。
-- VERIFIED probe：本 reviewer 環境的 bwrap、unshare、user namespace 均被 OS 拒絕，Docker 不存在；依安全門檻未執行 PR code。見 [R6 隔離探測](evidence/pr5-r6/isolation_probe.json)。
-- 下一步只需另一個可提供無秘密、無外網、唯讀來源、無寫入 token 的獨立 reviewer 重放既有 [R5 證據包](evidence/pr5-r5/README.md)。Claude 不需重寫修復或再補同類自跑證據。
-- P5-R4-01 維持 `INDEPENDENT_RUNTIME_VERIFICATION_PENDING`。同一 head 無新獨立證據不重複 review、不寫空提交。
-- 第三方採用 0、搜尋 T0 未執行仍為既有記錄；本輪未重測。1A／2A／3A 有效，上游仍未批准送出。
-- PR6／GOV-BOOTSTRAP 不在本任務範圍，不更動其狀態。
-
-## 持續檢查
-- 已註冊「ATK PR5 提交複核」，PR #5 新 commit 事件可喚醒 GPT reviewer；沒有 5／10 分鐘輪詢，也沒有每小時替代排程。
-- 本輪 webhook 已成功取得事件、查 live head、去重並形成綁定完整 SHA 的 review，表示 reviewer 事件路徑已有一次實際紀錄；不等於 executor 已接通或整套治理 ACTIVE。
-- 報告／狀態寫 main，不用被審分支記帳 commit 撞掉 review。
-- GOV-BOOTSTRAP 仍須驗證持久控制、實際 runtime 與停止／去重；不要再建重複 PR5 reviewer 排程，也不要把 reviewer 事件成功當完整閉環驗收。見[原導入交辦](../governance/IMPLEMENTATION_PROMPT.md)。
-
-## 歷史
-- [R5](PR5_R5_REVIEW_32ca53c.md) 對 `32ca53cd703efeb647ddb2d65168ba69f1e414d6` 的結論為 NEEDS_INFORMATION，原因是獨立隔離 runtime 不可用；R6 新增 executor 證據後結論未變。
-- PR #4 的 829c7e9 已完成約定 review，見 [R3 及追加結案](PR4_R3_REVIEW_328a33b.md)。
-- PR #1 benchmark 維持暫停，歷史 findings OPEN。
-
-## 2026-09-21：PR6 R5 scope reduction
-
-- Live head `7de3043938b4179f5011f82927aaeecc5b82cbd1` 相對 `e26aac4` 只有一份 171 行提案，`governance/controller/` 與 executor response 未變；R4 對程式 `25457fbd` 的 **BLOCKED** 結論維持。
-- [Planner review](PR6_R5_SCOPE_REDUCTION_7de3043.md)：**APPROVED_WITH_CONDITIONS**，只接受拆包作為規劃輸入，不構成第三輪修復、merge、部署或 runtime 啟動授權。
-- 包 A（R2-02／03／05 與兩項 P2）保存為 `BACKLOG_NOT_DISPATCHED`；包 B 等待可驗證的 trusted-wrapper／untrusted-source 隔離後端。原批兩輪上限不重置，不建立平行 controller。
-- 隔離驗收須分開可信 orchestration 與未信任 PR source：PR code 不直接取得 credential；必要模型連線經可信、可稽核、最小權限 wrapper/broker；GitHub write 另行綁定 work_id/result head；所有 denial claim 需要可工作的 unwrapped baseline。
-- Controller 維持 `FOUNDATION_ONLY`。主線 ATK 工具/skill、可選 Router／API／MCP 接入與實際採用不等待治理 ACTIVE；本輪沒有外部使用者成功證據。
-- Exact head 無 workflow runs 或 commit statuses；未執行 controller 測試，因為本輪沒有 implementation diff。
-
-## 2026-09-21：PR5 R7 採用準備覆核
-
-- Live head `f4d676b22a853f64b37f2c160cdb3d1f6bc47efc` 相對 `e8a15d7d` 有一個新內容 commit，含 preflight 修正、3 個新測試、TRY_IT 與 executor response；不是 reviewer-only 或 main merge。
-- [R7 review](PR5_R7_REVIEW_f4d676b.md)：**BLOCKED**。離線／live 外送邊界、最小試用入口及歷史資料標示有進展，但 live 指令仍有兩個 P1。
-- VERIFIED：TRY_IT 宣稱首次 live 為一個任務、direct／proxy 各一次；實際 `ab_test.py` 會跑 summary 與 needle，合計四次 provider calls。TRY_IT 同時禁止命令列放 key，卻示範 `ATK_API_KEY=...`。
-- VERIFIED：兩次 pass-through 只能證明觀察重複，`local_check.py` 仍將其解釋成 payload 沒有冗餘，與 executor「根因未建立」矛盾。
-- 作者自報 34 tests 與 controls 為 TESTED；exact head 無 workflow run、check run 或 commit status。本 reviewer 沒有合格隔離 runtime，未執行 PR code。
-- 已向 PR #5 留下一次限定修復包 `ATK-PR5-R7-LIVE-GUARD`，source head 與 dedup key 固定；目前僅為 `SIGNAL_SENT_NO_RECEIPT`，不代表 Claude session 已啟動。
-- `P5-R4-01` 繼續等待獨立隔離重放，不重派作者、不因 R7 修復關閉。第三方採用仍為 0。
-- 未 merge、未部署、未修改 secrets／權限、未呼叫模型、未新增費用、未送上游。
