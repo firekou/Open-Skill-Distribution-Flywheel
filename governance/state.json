@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 22,
+  "revision": 23,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -226,7 +226,7 @@
       "repair_rounds_used": 2,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "Canonical PR8 R3 remains APPROVED_WITH_CONDITIONS. PR8 live head 9ab2cbb is newer and unreviewed; it preserves zero eligible candidates but still uses stale Quickstart SHA 8161c6a, so it is not approved. PR12 current head 488b74f is independently BLOCKED as a stale-authority side artifact. Do not send, do not dispatch a third repair. Next owner decision remains GitHub discoverability/publication path.",
+      "next_action": "Canonical PR8 R3 remains APPROVED_WITH_CONDITIONS. PR8 live head 9ab2cbb is newer and UNREVIEWED_NOT_APPROVED. PR12 search head a76588e is BLOCKED under R4; its search counts are not independently replayable. PR13 current ledger head 389ee002 is BLOCKED under R2 and cannot override REVIEW-MAIN. Eligible candidates, invitations and external adoption remain 0. Do not send, merge, dispatch a third repair or change repository settings. Next owner decision remains GitHub discoverability/publication path.",
       "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
       "pr": 8,
       "observed_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
@@ -442,6 +442,31 @@
           "adoption/ATK-OPEN-ADOPTION-01/INVITATIONS.md"
         ],
         "note": "C1/C2 remain withdrawn and eligible count remains 0, but invitation links still pin stale reviewed content 8161c6a instead of canonical 9bcd418. Not reviewed in PR12 R3 turn."
+      },
+      "pr13_ledger_side_artifact": {
+        "pr": 13,
+        "prior_reviewed_head": "b139304eeaac334086a77e07f31a5606a42156a5",
+        "current_reviewed_head": "389ee0020b36d063058171dd0af6b51024343d66",
+        "decision": "BLOCKED",
+        "review": "reviews/PR13_R2_LEDGER_389ee002.md",
+        "prior_review": "reviews/PR13_R1_LEDGER_b139304e.md",
+        "exact_head_checks": {
+          "comments": 0,
+          "workflow_runs": 0,
+          "commit_statuses": 0,
+          "pr_reviews": 0
+        },
+        "blocking_findings": [
+          "PR13-R2-01",
+          "PR13-R2-02",
+          "PR13-R2-03"
+        ],
+        "non_blocking_findings": [
+          "PR13-R2-04"
+        ],
+        "proposed_checkpoint": "A4_ELIGIBLE_CANDIDATE_SEARCH",
+        "adopted": false,
+        "no_repair_dispatch": true
       }
     },
     {
@@ -499,7 +524,7 @@
       "status": "APPROVED_WITH_CONDITIONS",
       "pr": 12,
       "branch": "cursor/a4-invitation-precheck-e6a3",
-      "observed_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+      "observed_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
       "last_reviewed_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
       "bound_adoption_pr": 8,
@@ -509,7 +534,7 @@
       "invitation_authorization": "EXISTING_LIMITED_A4_AUTHORIZATION",
       "invitation_sent": false,
       "external_adoption_count": 0,
-      "next_action": "Canonical result remains PR8 R3 with zero eligible candidates, zero invitations and zero external adoption. PR12 head 488b74f correctly closes C1/C2 eligibility but is blocked by stale evidence anchors, unsupported sender-authority claims and an unauthorized checkpoint fork. Do not send and do not dispatch another repair.",
+      "next_action": "Canonical result remains PR8 R3 with zero eligible candidates, zero invitations and zero external adoption. PR12 a76588e search result is BLOCKED because authorization and replayable raw search evidence are absent and stale anchors remain. PR13 389ee002 ledger override is separately BLOCKED. Do not send, merge or dispatch another repair.",
       "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
       "active_claim": null,
       "last_reviewed_content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
@@ -533,33 +558,59 @@
       ],
       "pr12_side_artifact": {
         "pr": 12,
-        "prior_reviewed_head": "a137f194083a8acb6615e824b5558104b44a5ad9",
-        "current_reviewed_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+        "prior_reviewed_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+        "current_reviewed_head": "a76588e6b6fd954b0f7057c6b6b89295e4c74fcb",
         "branch": "cursor/a4-invitation-precheck-e6a3",
         "decision": "BLOCKED",
-        "review": "reviews/PR12_R3_CLOSURE_488b74f4.md",
-        "highest_evidence": "VERIFIED",
+        "review": "reviews/PR12_R4_SEARCH_a76588e6.md",
+        "prior_review": "reviews/PR12_R3_CLOSURE_488b74f4.md",
+        "highest_evidence": "OBSERVED",
         "exact_head_checks": {
           "workflow_runs": 0,
           "commit_statuses": 0,
-          "pr_comments": 0,
+          "pr_comments": 1,
           "pr_reviews": 0
         },
-        "closed_prior_finding": [
-          "PR12-R2-01"
-        ],
         "blocking_findings": [
-          "PR12-R3-01",
-          "PR12-R3-02",
-          "PR12-R3-03"
+          "PR12-R4-01",
+          "PR12-R4-02",
+          "PR12-R4-03"
         ],
         "non_blocking_findings": [
-          "PR12-R3-04"
+          "PR12-R4-04"
         ],
-        "search_scope_status": "DRAFT_NOT_AUTHORIZED",
+        "eligible_candidate_count": 0,
+        "invitations_sent": 0,
+        "external_adoption_count": 0,
+        "search_evidence": "UNVERIFIED_SUPPLEMENTAL_ONLY",
         "repair_rounds_used": 2,
         "repair_rounds_limit": 2,
         "no_third_repair": true
+      },
+      "pr13_ledger_side_artifact": {
+        "pr": 13,
+        "prior_reviewed_head": "b139304eeaac334086a77e07f31a5606a42156a5",
+        "current_reviewed_head": "389ee0020b36d063058171dd0af6b51024343d66",
+        "decision": "BLOCKED",
+        "review": "reviews/PR13_R2_LEDGER_389ee002.md",
+        "prior_review": "reviews/PR13_R1_LEDGER_b139304e.md",
+        "exact_head_checks": {
+          "comments": 0,
+          "workflow_runs": 0,
+          "commit_statuses": 0,
+          "pr_reviews": 0
+        },
+        "blocking_findings": [
+          "PR13-R2-01",
+          "PR13-R2-02",
+          "PR13-R2-03"
+        ],
+        "non_blocking_findings": [
+          "PR13-R2-04"
+        ],
+        "proposed_checkpoint": "A4_ELIGIBLE_CANDIDATE_SEARCH",
+        "adopted": false,
+        "no_repair_dispatch": true
       }
     }
   ],
