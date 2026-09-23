@@ -2,12 +2,14 @@
 
 URL filled 2026-09-23 under owner authorization for draft-only; send still forbidden.
 
-**Nothing below has been posted, and as of 2026-09-23 there is nobody eligible to post it to.**
-Both drafted recipients were withdrawn: see the fit test in [CANDIDATES.md](CANDIDATES.md). The
-sender account is separately `BLOCKED_ACCESS`. Either one alone stops a send.
+**Nothing below has been posted.** Eligible candidates = **0**. This A4 invite round is
+**CLOSED** (`A4_INVITE_ROUND_CLOSED`): do not send. C1 and C2 stay **WITHDRAWN** /
+`NOT_ELIGIBLE_FOR_THIS_ASSET`; see [CANDIDATES.md](CANDIDATES.md). They are not restored.
 
-The A4 limited-send authorisation already exists and is not in question here — direction is not
-what is missing.
+Sender login `firekou` is owner-designated (User, repo admin, display name "AI Token King Open
+Source", 2026-09-23). That designation is recorded. It is not send authorization, and there is
+no capability evidence. The earlier `BLOCKED_ACCESS` note meant the login was unrecorded; the
+round is closed because nobody is eligible, not because the login is still unnamed.
 
 The pinned blob URL, filled 2026-09-23, is
 https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/8161c6a33251b06c44db9f5dbabc9431fa73b67d/integrations/headroom-atk/AGENT_QUICKSTART.md

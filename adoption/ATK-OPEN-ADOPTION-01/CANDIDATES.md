@@ -5,9 +5,9 @@ file as it stands.**
 
 Re-checked **2026-09-23** against the live public pages. The A4 limited-send authorisation
 already exists (execution package; decision ATK-OPEN-ADOPTION-20260922) — at most three
-recipients, one message each, no follow-up to anyone who does not reply. **That authorisation is
-not what is missing.** What is missing is a recipient whose question this asset can actually
-answer, and a sender account we can evidence. Both are below.
+recipients, one message each, no follow-up to anyone who does not reply. **This invite round is
+CLOSED** (`A4_INVITE_ROUND_CLOSED`): eligible candidates = 0, decision = do not send. The sender
+login is recorded below; that designation is not send authorization.
 
 Only public GitHub handles the authors used themselves; no other personal data collected.
 
@@ -63,20 +63,26 @@ Previously considered and rejected, unchanged: headroom issue #3598 (non-Claude 
 Claude Code — the opposite direction to our setup); agentscope-ai/QwenPaw #5063 (closed as not
 planned; a request to the project, not a user's need).
 
-## Sender account — `BLOCKED_ACCESS`
+## Sender account — owner-designated `firekou`
 
-Separate from the direction, which is already authorised and is **not** being re-asked here.
+Designated 2026-09-23 by 愛莎／Frank. Status = **DESIGNATED / recorded**. This is not send
+authorization, and it is not empirical proof that the login can post in a target Discussion.
+No test comment was posted.
 
 | | |
 |---|---|
-| A4 limited-send authorisation | **EXISTS** (execution package, decision ATK-OPEN-ADOPTION-20260922): up to three recipients, one message each |
-| owner-approved sender login | **not recorded** |
-| capability evidence (can post a reply in the target Discussion under that login) | **none** |
-| status | **`BLOCKED_ACCESS`** |
+| login | **`firekou`** |
+| type | User |
+| repo role | admin of `firekou/Open-Skill-Distribution-Flywheel` |
+| display name | AI Token King Open Source |
+| designation | 2026-09-23, 愛莎／Frank, 「firekou 組織身份」 |
+| capability evidence (a reply posted under that login) | **none** |
+| this A4 invite round | **CLOSED** (`A4_INVITE_ROUND_CLOSED`). Eligible = 0. Do not send. |
 
-The only thing needed from the owner is *which account*. A precheck run under some other
-automation's token does not evidence an approved sender, and no test comment was or will be
-posted to find out — posting to check whether we can post is itself a send.
+The earlier `BLOCKED_ACCESS` line meant the login had not been recorded. That recording gap is
+closed. Posting a test to see whether the account can reply would itself be a send, and it was
+not done. Account designation ≠ send authorization. See also
+[INVITATIONS.md](INVITATIONS.md), which stays **NOT SENT**.
 
 ## Before sending anything, once a candidate and an account exist
 
