@@ -129,3 +129,9 @@ Canonical disposition:
 - PR12 `a137f194…` is BLOCKED and must not override main.
 - PR8 `a74fe934…` is a separate unreviewed content head and receives no approval in this review.
 - No invitation, merge, publication, repository-setting change, provider call, permission change or spend is authorized.
+
+## Post-review live-head verification
+
+Webhook 後 PR #12 被 force rebase 到 `5820405704e57b0d58697285663bd8c725f470ee`。該 head 與 `a137f194…` 已 diverge，因為分支帶入最新 main review／state；但核心 `reviews/A4_DAY_OF_INVITATION_PRECHECK_2026-09-23.md` blob 在兩個 head 都是 `af7baaee43bb16a76c0991134c333be3e77560b6`，內容完全相同。branch `reviews/STATUS.md` 因 main 同步而變，但沒有關閉本 review findings。
+
+因此沒有第二個內容 head需要 review；`58204057…` 不獲新批准，BLOCKED disposition 不變。精確審查身份仍綁 `a137f194…`，此段只記錄內容等價與 live head。
