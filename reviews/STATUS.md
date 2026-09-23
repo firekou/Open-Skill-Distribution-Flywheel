@@ -1,5 +1,16 @@
 # 當前交接狀態
 
+## 2026-09-23：PR10 M1 獨立隔離重放通過
+
+- PR #10 Draft/open/unmerged；精確 head `cf37880bb90d6f646591588f39de91df67d7923c`，來源綁定 PR #5 `304af885193245da7186cb6b9ab247ec2494bd86`。
+- [R1 獨立覆核](PR10_R1_M1_REPLAY_cf37880b.md)：**APPROVED**。M1／P5-R4-01 在限定範圍內關閉，PR #5 升為 **APPROVED_WITH_CONDITIONS**；這不是 merge、發布或 live provider 授權。
+- 獨立 runner `bc-5b9148f9-3253-5b1a-8a1c-79147a5cb763` 使用 pinned image `python@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9`，具 `--network none`、唯讀 root、唯讀來源與 evidence mount、drop capabilities、no-new-privileges 與資源上限。
+- VERIFIED：來源／前版共 6 個 Git blob SHA 全部與精確 refs 相符；19/19 JSONL 可解析且無 `passed:false`；44/44 unit tests 通過；未知參數控制與舊版會回顯 synthetic secret 的負控制成立。
+- 證據上限為 **REPRODUCED**，只涵蓋 P5-R4-01。它不證明 license、clean install、live provider、外部採用、發布或 persistent launcher/controller。
+- Exact evidence head 的 workflow runs、check runs、commit statuses、PR reviews 均為 0；這不影響已直接審核的 evidence，但不提高持久自動化狀態。Controller 維持 `FOUNDATION_ONLY`。
+- 外部採用仍為 0。下一 checkpoint：`PR8_DAY_OF_A4_INVITATION_PRECHECK`，只核對 recipient、channel、account permission 與 immutable URL；通過後才可依既有授權最多發 3 份邀請。
+- 尚未 merge、部署、發送邀請、呼叫 provider、修改 secrets／權限、送上游或新增支出。
+
 ## 2026-09-23：PR9 M1 隔離計畫獨立覆核
 
 - PR #9 Draft/open/unmerged；精確 head `ba3f9ae3bce04d72f4afaa6f9e935c112661fca2`，只有 6 個 `reviews/` 計畫、狀態與 probe 檔，沒有產品程式變更。
