@@ -6,14 +6,14 @@
 
 **整體目標：** 讓開源開發者與其 Agent 能依已驗收的 Headroom 試用資產完成真實離線檢查，ATK 只是可選上游。
 **本輪處理：** 只核對 A4 當日四項：收件人、渠道、發送帳號、不可變 Quickstart URL。
-**目前進度：** P5-R4-01 已在 PR #5 head `304af885…` 結案；邀請本身尚未授權、尚未送出。
-**本輪成果：** 五個候選都做了當日 live 讀取；C1、C2 仍可作為既有 Q&A 回覆對象；Quickstart 檔案在三個不可變 SHA 上是同一個 blob。最高證據等級 VERIFIED（GitHub API）。
-**還有什麼風險：** 把本頁當成可以發送；用會移動的分支網址；用本席位的 Cursor 整合 token 發文。
-**需要負責人決定：** 只剩要不要另准發送。帳號已指定。邀請審議延期，須另一次指令。本頁不是發送授權。
-**下一步與停止點：** 本頁交付後停止。發送、套 patch、merge 都不在本輪。
-**審查結論：** APPROVED_WITH_CONDITIONS
+**目前進度：** 本輪 A4 邀請已關閉。合格候選 0。C1、C2 為 WITHDRAWN。帳號 `firekou` 已指定。邀請仍是 NOT SENT。
+**本輪成果：** 紙本與 PR #8 live `CANDIDATES.md`／`INVITATIONS.md` 對齊。先前把 C1、C2 寫成可發，是主題相鄰排名，資產答不了他們的原問題。最高證據等級 OBSERVED（PR #8 檔案）加上先前 VERIFIED 的 Quickstart blob。
+**還有什麼風險：** 把帳號指定、URL 已填或下一關搜尋範圍當成可以發送。
+**需要負責人決定：** 本輪不發送，審議已結束。下一關搜尋範圍仍是草案，要不要執行另准；那不是發送授權。
+**下一步與停止點：** `A4_ELIGIBLE_CANDIDATE_SEARCH`。本輪在關閉紀錄寫上後停止。不發送、不套 patch、不 merge。
+**審查結論：** BLOCKED
 
-方向對齊：目標來源是 2026-09-23 的 A4 PRECHECK 指示與已批准決策 ATK-OPEN-ADOPTION-20260922／GOAL-02。本輪交付是負責人可據以決定要不要另准發送的核對頁。沒有這頁，採用主線會停在「資產已驗、邀請還不能審」。驗證到 live head、討論串與 blob URL 為止。沒有新增產品方向、支出、發送或 merge。
+方向對齊：目標來源是 2026-09-23 愛莎／Frank 關閉本輪 A4 邀請的指示，以及 ATK-OPEN-ADOPTION-20260922／GOAL-02。本輪交付是一份與 live 檔一致的關閉紀錄，加上下一關搜尋範圍草案。沒有這份對齊，紙本仍會把不能回答的 C1、C2 留成可發。沒有新增產品方向、支出、發送或 merge。下一關見 [A4_ELIGIBLE_CANDIDATE_SEARCH_SCOPE_2026-09-23.md](A4_ELIGIBLE_CANDIDATE_SEARCH_SCOPE_2026-09-23.md)。
 
 ## 讀取錨點
 
@@ -35,21 +35,21 @@ P5-R4-01 的結案只綁 PR #5 head `304af885193245da7186cb6b9ab247ec2494bd86`�
 
 | id | venue | URL | live 狀態（2026-09-23） | 邀請資格 |
 |---|---|---|---|---|
-| C1 | headroom GitHub Discussion，Q&A，#2732，作者 `timedr128` | https://github.com/headroomlabs-ai/headroom/discussions/2732 | `state=open`，`locked=false`，`answer_html_url=null`。2 則留言。最後一則是作者 2026-08-29 詢問 9router 是否改變 request shape，其後沒有新回覆。 | **ELIGIBLE**。仍是第一順位。不是消失、鎖定或已被同一修正回答。 |
-| C2 | headroom GitHub Discussion，Q&A，#973，作者 `kulig1985` | https://github.com/headroomlabs-ai/headroom/discussions/973 | `state=open`，`locked=false`，`answer_html_url=null`。1 則 2026-08-29 留言，只要求版本與最小重現，沒有回答 Anthropic `/v1/messages` 自訂上游。 | **ELIGIBLE**，且必須沿用稿內限制：未測過 `/v1/messages`。第二順位。 |
+| C1 | headroom GitHub Discussion，Q&A，#2732，作者 `timedr128` | https://github.com/headroomlabs-ai/headroom/discussions/2732 | 串仍 open、未鎖。對方問的是 Command Code request shape，以及 9router 會不會改 shape／header。 | **WITHDRAWN**／`NOT_ELIGIBLE_FOR_THIS_ASSET`。 |
+| C2 | headroom GitHub Discussion，Q&A，#973，作者 `kulig1985` | https://github.com/headroomlabs-ai/headroom/discussions/973 | 串仍 open、未鎖。對方問的是 Anthropic `/v1/messages` 如何改自訂上游。 | **WITHDRAWN**／`NOT_ELIGIBLE_FOR_THIS_ASSET`。 |
 | C3 | headroom GitHub Issue #3242 | https://github.com/headroomlabs-ai/headroom/issues/3242 | `state=closed`，`state_reason=completed`，`locked=false`，關閉於 2026-08-24。 | **BLOCK**。已關閉，且 CANDIDATES 本來就不是邀請渠道。 |
 | C4 | headroom GitHub Issue #3198 | https://github.com/headroomlabs-ai/headroom/issues/3198 | `state=open`，`locked=false`，0 則留言，更新時間仍是 2026-08-22。 | **NOT_ELIGIBLE**。串還在，但沒有可附上的重現；CANDIDATES 規定不發。 |
 | C5 | headroom Discussions 分類 Show and tell | https://github.com/headroomlabs-ai/headroom/discussions/categories/show-and-tell | GraphQL：分類 `Show and tell`（slug `show-and-tell`）仍存在，`isAnswerable=false`。 | **NOT_AN_A4_INVITATION**。社群貼文要另一次負責人授權。 |
 
-授權內最多三則、各一次。當日仍只有 C1 與 C2 兩則可進草稿。第三個名額保持空著。C3 的 BLOCK 只取消該筆，不取消 C1／C2。
+**Eligible candidates = 0。** 早上把 C1、C2 排成可發，是依主題相鄰：他們在談 routing，我們也量 routing。那個排名是錯的。資產只能回答「這一則純文字 payload，在 headroom 0.37.0 的 OpenAI chat-completions 路由上，上游收到的 body 有沒有變小、關鍵那一行還在不在」。C1 要的是 request schema；C2 要的是 Anthropic 路由。兩則都答不了，所以撤回，不恢復。
 
-當日另讀 headroom `CONTRIBUTING.md`（blob `775dc16916886333e1127ac4bcb1c9ceed91d343`）與 `CODE_OF_CONDUCT.md`（blob `a90652cf779f63e6c16408cf55788ac8c706b823`），兩份都還在 `main`。CONTRIBUTING 仍寫新問題去 Discord `#help`。這不關閉已經存在的 Q&A 串；A4 稿若獲准，只能回在 C1、C2 這兩條既有串上。
+對齊來源是 PR #8 `adoption/ATK-OPEN-ADOPTION-01/CANDIDATES.md` 與 `INVITATIONS.md`。關閉紀錄寫入前的 live head 是 `a74fe9348ba1f72bcf015697ebe988aa44f4b64d`；本輪關閉 commit 是 `9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34`。
 
 ## 2. Channel
 
 來源：同一 PR #8 head 的 `adoption/ATK-OPEN-ADOPTION-01/DISTRIBUTION_CHANNELS.md`（blob `b3ef50c698ad61b1c465ecdd82d3ee606b7729fe`）。該檔寫明截至當時沒有任何渠道被提交、張貼或改設定。
 
-**A4 草稿獲准使用的渠道：** headroom Discussions 的既有 Q&A 串回覆。先回答對方的問題，並表明維護者是 AI Token King。對應 C1、C2。
+**A4 若將來另有合格對象，渠道仍是** headroom Discussions 的既有 Q&A 串回覆。本輪沒有合格收件人，所以不回 C1、C2，也不另開帖。
 
 **這次 A4 發送禁止使用：**
 
@@ -61,11 +61,11 @@ P5-R4-01 的結案只綁 PR #5 head `304af885193245da7186cb6b9ab247ec2494bd86`�
 
 ## 3. Sending account
 
-**2026-09-23 更正（愛莎／Frank）：發送帳號已指定。** GitHub login 是 `firekou`（type=User；repo admin；顯示名稱 "AI Token King Open Source"）。Frank 選擇「firekou 組織身份」。Cursor 連接的 GitHub login 與 `firekou` 一致。帳號指定不再是未填缺口。
+**狀態：DESIGNATED / recorded。** GitHub login `firekou`（type=User；repo admin；顯示名稱 “AI Token King Open Source”）。2026-09-23 由愛莎／Frank 指定，選擇「firekou 組織身份」。Cursor 連接的 GitHub login 與 `firekou` 一致。
 
-**URL 填入 C1／C2 草稿已授權。發送未授權。** 邀請審議延期，須另一次指令。
+這只記錄指定。**沒有實證這個帳號能在目標 Discussion 回覆。** 沒有發測試留言。帳號指定不是發送授權。
 
-**本席位沒有發送。** 沒有在 headroom 的 discussion 或 issue 留言，沒有私訊或寄信，沒有把邀請標成已送。PR #8 上的 URL 填寫只改 repo 內草稿。
+**本席位沒有發送。** 沒有在 headroom 留言、私訊或寄信，沒有把邀請標成已送。
 
 ## 4. Immutable Quickstart URL
 
@@ -98,9 +98,13 @@ https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/fb47e31b54b3551
 
 `INVITATIONS.md` 維持 **NOT SENT**，內文仍有 “Nothing below has been posted.” 2026-09-23 依負責人對「只填 URL、不發送」的授權，在 PR #8 分支把當時剩下的 4 個 `<QUICKSTART_URL>` 換成 reviewed content SHA 的 blob URL。C2 引文在 live head `95317ee1` 已沒有該佔位符，沒有把 URL 加回被撤回的句子。狀態沒有改成已送。
 
-## 2026-09-23 更正
+URL 填入仍只是草稿。`a74fe9348ba1f72bcf015697ebe988aa44f4b64d` 把當時剩下的佔位符換成上面的 blob URL；C2 被撤回的引文沒有把網址加回去。那次填寫不是發送。
 
-愛莎／Frank 指定發送帳號為 `firekou`（「firekou 組織身份」）。填入 Quickstart URL 已授權；發送未授權；邀請審議延期。PR #8 live head 在填寫前是 `95317ee1307c6b61fc3f939f70535b9099c73a2a`（r3 已把 C1、C2 標成 WITHDRAWN）。填寫 commit 是 `a74fe9348ba1f72bcf015697ebe988aa44f4b64d`。這次更正不恢復收件人資格，也不授權發送。
+## 本輪關閉
+
+`A4_INVITE_ROUND_CLOSED`。愛莎／Frank 關閉這一輪：合格候選 0，決定是 **do not send**。發送審議結束，不是停在「只差准發」。邀請維持 NOT SENT。不 merge，不套 PR #5 patch，不在 headroom 留言。
+
+下一關是 `A4_ELIGIBLE_CANDIDATE_SEARCH`，範圍頁是草案，核定前不執行搜尋。那一關不是發送授權。
 
 ## 6. Hard gates
 
@@ -116,28 +120,28 @@ https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/fb47e31b54b3551
 
 ```yaml
 review_gate:
-  decision: APPROVED_WITH_CONDITIONS
-  reviewed_base: "f22e99d78d3940a6da00cb0f25778b06701ce4c7"
-  reviewed_head: "b76fc7ba08deade6733f140d3a37aadfd201d51c"
-  highest_evidence: VERIFIED
-  blocking_findings: []
+  decision: BLOCKED
+  reviewed_base: "9ce89a252f98c7d9f883588cfea07ba0ed7c6493"
+  reviewed_head: "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34"
+  highest_evidence: OBSERVED
+  blocking_findings:
+    - "Eligible candidates = 0; C1 and C2 are WITHDRAWN / NOT_ELIGIBLE_FOR_THIS_ASSET"
   conditions:
-    - "this precheck is not invitation authorization"
-    - "sending account is firekou; URL fill is authorized; send is not authorized"
-    - "invite deliberation is deferred pending a separate order"
+    - "A4_INVITE_ROUND_CLOSED; decision is do not send"
+    - "sender firekou is DESIGNATED / recorded; capability evidence is none; no test comment"
+    - "URL fill was draft-only; invitations remain NOT SENT"
     - "no merge of #5 #8 #9 #10 #11 #12"
     - "no PR5 patch application"
-    - "C3 remains BLOCK for invitation; C4 and C5 stay out of A4"
+    - "no headroom comments"
   owner_decisions:
-    - "whether to authorize send only"
-  next_checkpoint: "OWNER_SEND_AUTHORIZATION_DEFERRED"
+    - "whether to approve executing A4_ELIGIBLE_CANDIDATE_SEARCH; that approval is not send authorization"
+  next_checkpoint: "A4_ELIGIBLE_CANDIDATE_SEARCH"
   invalidates_when:
-    - "PR #8 head leaves b76fc7ba08deade6733f140d3a37aadfd201d51c"
-    - "C1 or C2 is locked, closed, or answered"
-    - "Quickstart blob 8849f87dce6042a41eef6e8141816f61cce0489e changes"
+    - "a later order reopens this invite round"
+    - "C1 or C2 eligibility text on PR #8 changes"
     - "a send, PR5 patch, or merge occurs"
 ```
 
-precheck_decision: READY_FOR_OWNER_INVITE_APPROVAL
+precheck_decision: BLOCKED_NO_ELIGIBLE_CANDIDATES
 
-帳號已指定為 `firekou`，Quickstart URL 已依授權填入仍為 NOT SENT 的草稿；發送未授權，邀請審議延期，這不是發送授權。
+合格候選是 0，C1 與 C2 維持 WITHDRAWN；帳號 `firekou` 只是已指定，本輪 `A4_INVITE_ROUND_CLOSED`，決定是不發送，邀請仍是 NOT SENT。
