@@ -1,23 +1,41 @@
 # Invitation drafts (A4) — NOT SENT
 
-Status: drafts for review. Nothing below has been posted. Sending follows the conditions in
-[CANDIDATES.md](CANDIDATES.md). `<QUICKSTART_URL>` is replaced on the day with the pinned blob URL
-of `integrations/headroom-atk/AGENT_QUICKSTART.md` at the reviewed result SHA; never a branch URL.
+**Nothing below has been posted, and as of 2026-09-23 there is nobody eligible to post it to.**
+Both drafted recipients were withdrawn: see the fit test in [CANDIDATES.md](CANDIDATES.md). The
+sender account is separately `BLOCKED_ACCESS`. Either one alone stops a send.
+
+The A4 limited-send authorisation already exists and is not in question here — direction is not
+what is missing.
+
+`<QUICKSTART_URL>` is replaced on the day with the pinned blob URL of
+`integrations/headroom-atk/AGENT_QUICKSTART.md` at the reviewed content SHA; never a branch URL.
+The current one is recorded in
+[reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md](../../reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md).
 
 Each message: answers the person's question first, says who we are, says what it costs (nothing),
 what it does not do, and what we do and do not know about what it sends. No follow-up if there is
 no reply.
 
-## 1. Developer reply — C1 (headroom discussion #2732)
+## 1. Developer reply — C1 (headroom discussion #2732) — **WITHDRAWN**
 
-> On whether routing through your own router changes what headroom does: it can, and the only
-> reliable way we found to tell is to measure the body the upstream actually receives rather than
-> trusting the proxy's own stats. We hit a version of this ourselves, on one synthetic 1,200-line
-> deploy log (md5 `0ad9194a489136baa931881b78374cf7`): headroom 0.37.0 took the 111,357 characters
-> that reach the upstream down to 94,578, a 15.1% reduction — while the same records as JSON lines
-> went through byte for byte, no reduction at all. Both figures are from
-> `evidence/local_check.txt` at commit `304af885193245da7186cb6b9ab247ec2494bd86`, and they are
-> one payload on one version, not a rate you should expect.
+**`NOT_ELIGIBLE_FOR_THIS_ASSET`. Do not send this, edited or otherwise.**
+
+They asked why Command Code's request shape is rejected, and whether **9router** changes request
+shapes or headers. The draft opened by answering that a router "can" change what headroom does.
+**We have no evidence for that.** We have never run Command Code, never run 9router, and never
+captured a request schema — the check measures body size and needle survival, not shape. That
+sentence is removed rather than softened, because an unevidenced causal claim is the failure this
+whole review loop exists to catch, and softening it would have kept it.
+
+What was correct in the draft and is worth keeping for a recipient who actually asks about
+compression effectiveness: the measured figures, bound to their source.
+
+> On one synthetic 1,200-line deploy log (md5 `0ad9194a489136baa931881b78374cf7`), headroom
+> 0.37.0 took the 111,357 characters that reach the upstream down to 94,578, a 15.1% reduction —
+> while the same records as JSON lines went through byte for byte, no reduction at all. Both
+> figures are from `evidence/local_check.txt` at commit
+> `304af885193245da7186cb6b9ab247ec2494bd86`, and they are one payload on one version, not a rate
+> you should expect.
 >
 > We (AI Token King, disclosure: we maintain it) wrote a small offline check for exactly this: it
 > starts `headroom proxy` and a stub upstream on 127.0.0.1, sends your payload both ways, and exits
@@ -32,7 +50,18 @@ no reply.
 > the OpenAI chat-completions route. If you try it, the result either way (including "no benefit")
 > would be useful to us, as a reply here or an issue on our repo.
 
-## 2. Developer reply — C2 (headroom discussion #973)
+That paragraph is **reusable text, not an approved message**. It only becomes one when it is the
+answer to what somebody actually asked.
+
+## 2. Developer reply — C2 (headroom discussion #973) — **WITHDRAWN**
+
+**`NOT_ELIGIBLE_FOR_THIS_ASSET`. Do not send this, edited or otherwise.**
+
+They asked how to point **Anthropic** requests at a custom upstream. The draft already admitted,
+honestly, that we have never tested `/v1/messages` — and that admission is exactly why this is not
+a fit. A reply whose first substantive line is "I cannot answer your question, but here is our
+tool" is the off-topic promotion the channel rules forbid, however politely it is phrased. The
+draft is kept only as the record of what was withdrawn and why.
 
 > For the OpenAI-compatible route, headroom takes the upstream per request in the
 > `x-headroom-base-url` header — the base **without** `/v1`, since it appends the path. Two traps
@@ -41,12 +70,11 @@ no reply.
 > (`HEADROOM_ALLOWED_BASE_URLS` allowlists it).
 >
 > **I have not tested this on the Anthropic `/v1/messages` route you asked about**, so I can't tell
-> you it applies there. What we do have (disclosure: we maintain it, AI Token King) is an offline
-> check for the OpenAI route that shows whether your override took effect and whether compression
-> kept your critical line — no key, and the check's own traffic goes only to 127.0.0.1 (installing
-> it uses the network, and we have not tested its dependencies on a networked machine):
-> `<QUICKSTART_URL>`. If you get the
-> Anthropic route working, that is the answer this thread is missing.
+> you it applies there.
+
+If someone later asks the OpenAI-route version of this question, that first paragraph answers it
+on its own, with no mention of our asset at all. That would be a genuinely useful reply, and it is
+not an invitation.
 
 ## 3. Task text to hand to the developer's own agent
 

@@ -73,5 +73,5 @@ what can be shared and note that the rest was withheld.
 | external human, either route | **0** |
 | public discovery trials run | **0** (protocol in [TRIAL_TASK.md](TRIAL_TASK.md); T0 has not occurred) |
 
-`test_fixtures/` holds four records that must fail and one that must pass; they are the
+`test_fixtures/` holds five records that must fail and one that must pass; they are the
 negative controls for the validator, not real trials.

@@ -191,9 +191,20 @@ base `https://api.aitokenking.com.tw/api` (without `/v1`). Historical model `cla
 
 ## 9. What is and is not established
 
+- **Independently replayed (2026-09-23), for one finding only:** a reviewer who did not write
+  this code re-ran the `P5-R4-01` case — an unknown argument, including one that starts with a
+  dash, must not be echoed back — against the pinned SHA `304af885…`, inside a container with
+  `--network none`, a read-only source, no secrets and no write token, and the affected suite
+  passed. The reviewer also checked the old build still fails it, so the control can tell the
+  difference. Review:
+  <https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/1784520b43fd4e08c1169bcbb4676edd44ccd5e6/reviews/PR10_R1_M1_REPLAY_cf37880b.md>
+
+  **Read that narrowly.** It is not a clean-install check, not a license review, not a live
+  provider run, not a release, and not adoption. It is bound to that exact SHA: if the code moves,
+  the replay does not move with it.
 - **Established by us, internally:** the offline trial at the pinned SHA runs in a fresh
   environment with no keys and no network beyond loopback, and gives the output in §5
-  (2026-09-22). This is our own test, not independent verification and not adoption.
-- **Pending:** an independent isolated replay by a reviewer; any live re-run (the 2026-09-18 live
-  figures in the README are a historical case whose exact input was not preserved).
+  (2026-09-22). This is our own test.
+- **Pending:** any live re-run (the 2026-09-18 live figures in the README are a historical case
+  whose exact input was not preserved).
 - **None recorded:** use by anyone outside this project.
