@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 21,
+  "revision": 22,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -226,10 +226,10 @@
       "repair_rounds_used": 2,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "Revision 3 A4 precheck 已獨立覆核為 APPROVED_WITH_CONDITIONS：C1/C2 撤回、0 名合格候選、Quickstart immutable 狀態更新成立。2/2 已用完，不派第三輪；沒有匹配候選時不要求先指定 sender。M2 外部採用仍為 0。下一步由 owner 決定是否另行授權 GitHub About/topics 與 publication path，建立 PUBLIC_DISCOVERY T0。",
-      "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
+      "next_action": "2026-09-23 A4 邀請輪 CLOSED：Eligible=0；decision=do not send；precheck_decision=BLOCKED_NO_ELIGIBLE_CANDIDATES；sender firekou 僅 DESIGNATED；invitations NOT SENT。證據：Draft PR #12 head 488b74f448e0de3c589b148f5179c055ec24f694；PR #8 close alignment head 9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34。next_checkpoint=A4_ELIGIBLE_CANDIDATE_SEARCH。搜尋關不是發送授權。不 merge #5/#8–#12，不套 PR5 patch，不在 headroom 留言。M1／P5-R4-01 仍只綁 304af885193245da7186cb6b9ab247ec2494bd86。",
+      "next_checkpoint": "A4_ELIGIBLE_CANDIDATE_SEARCH",
       "pr": 8,
-      "observed_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+      "observed_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
       "last_reviewed_content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
       "last_reviewed_live_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
@@ -343,7 +343,7 @@
       },
       "a4_precheck": {
         "pr": 12,
-        "observed_head": "707dc26d15d8b0a2a6a34cb0364fd73f68e397d8",
+        "observed_head": "488b74f448e0de3c589b148f5179c055ec24f694",
         "status": "APPROVED_WITH_CONDITIONS",
         "artifact": "reviews/A4_DAY_OF_INVITATION_PRECHECK_2026-09-23.md",
         "review": "reviews/PR12_R1_A4_PRECHECK_707dc26d.md",
@@ -377,7 +377,17 @@
         ],
         "eligible_candidate_count": 0,
         "invitation_sent": false,
-        "external_adoption_count": 0
+        "external_adoption_count": 0,
+        "prior_observed_head": "707dc26d15d8b0a2a6a34cb0364fd73f68e397d8",
+        "round_status": "CLOSED",
+        "precheck_decision": "BLOCKED_NO_ELIGIBLE_CANDIDATES",
+        "sender": {
+          "login": "firekou",
+          "status": "DESIGNATED"
+        },
+        "invitations": "NOT_SENT",
+        "close_alignment_pr": 8,
+        "close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34"
       },
       "a4_precheck_repair": {
         "work_id": "ATK-OPEN-ADOPTION-01",
@@ -430,6 +440,39 @@
         "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797388297",
         "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797486012",
         "received_at": "2026-09-23T15:16:53Z"
+      },
+      "a4_invite_round": {
+        "date": "2026-09-23",
+        "status": "CLOSED",
+        "label": "A4_INVITE_ROUND_CLOSED",
+        "eligible_candidate_count": 0,
+        "decision": "do not send",
+        "precheck_decision": "BLOCKED_NO_ELIGIBLE_CANDIDATES",
+        "sender": {
+          "login": "firekou",
+          "status": "DESIGNATED"
+        },
+        "invitations": "NOT_SENT",
+        "evidence": {
+          "precheck_close_pr": 12,
+          "precheck_close_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+          "adoption_close_alignment_pr": 8,
+          "adoption_close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34"
+        },
+        "gates": {
+          "search_gate_is_not_send_authorization": true,
+          "no_merge_prs": [
+            5,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "invitations": "NOT_SENT",
+          "pr5_patch": "NOT_APPLIED",
+          "headroom_comments": "NOT_SENT"
+        }
       }
     },
     {
@@ -484,10 +527,10 @@
     {
       "task_id": "A4_INVITATION_PRECHECK",
       "work_id": "ATK-OPEN-ADOPTION-01",
-      "status": "APPROVED_WITH_CONDITIONS",
+      "status": "CLOSED",
       "pr": 12,
       "branch": "cursor/a4-invitation-precheck-e6a3",
-      "observed_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+      "observed_head": "488b74f448e0de3c589b148f5179c055ec24f694",
       "last_reviewed_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
       "bound_adoption_pr": 8,
@@ -497,8 +540,8 @@
       "invitation_authorization": "EXISTING_LIMITED_A4_AUTHORIZATION",
       "invitation_sent": false,
       "external_adoption_count": 0,
-      "next_action": "A4 precheck 已完成但合格候選為 0；不發邀請，也不為湊數擴大資產問題。待 owner 決定 GitHub discoverability；未來出現匹配候選時，再做 sender capability 的 day-of precheck。",
-      "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
+      "next_action": "2026-09-23 A4 邀請輪 CLOSED：Eligible=0；decision=do not send；precheck_decision=BLOCKED_NO_ELIGIBLE_CANDIDATES；sender firekou 僅 DESIGNATED；invitations NOT SENT。證據：Draft PR #12 head 488b74f448e0de3c589b148f5179c055ec24f694；PR #8 close alignment head 9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34。next_checkpoint=A4_ELIGIBLE_CANDIDATE_SEARCH。搜尋關不是發送授權。不 merge #5/#8–#12，不套 PR5 patch，不在 headroom 留言。M1／P5-R4-01 仍只綁 304af885193245da7186cb6b9ab247ec2494bd86。",
+      "next_checkpoint": "A4_ELIGIBLE_CANDIDATE_SEARCH",
       "active_claim": null,
       "last_reviewed_content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
       "last_reviewed_live_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
@@ -518,7 +561,48 @@
       "publication_conditions": [
         "issue #3736 wording must be reporter-attributed and route-specific before public reuse",
         "sender login/capability is required only before an actual matched invitation"
-      ]
+      ],
+      "status_note": "2026-09-23 A4 invite round CLOSED. Eligible=0; decision=do not send; precheck_decision=BLOCKED_NO_ELIGIBLE_CANDIDATES; sender firekou DESIGNATED only; invitations NOT SENT. Prior r3 content review remains last_review_decision APPROVED_WITH_CONDITIONS at 9bcd4181/95317ee. This close is not send authorization.",
+      "close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34",
+      "precheck_decision": "BLOCKED_NO_ELIGIBLE_CANDIDATES",
+      "sender": {
+        "login": "firekou",
+        "status": "DESIGNATED"
+      },
+      "invitations": "NOT_SENT",
+      "a4_invite_round": {
+        "date": "2026-09-23",
+        "status": "CLOSED",
+        "label": "A4_INVITE_ROUND_CLOSED",
+        "eligible_candidate_count": 0,
+        "decision": "do not send",
+        "precheck_decision": "BLOCKED_NO_ELIGIBLE_CANDIDATES",
+        "sender": {
+          "login": "firekou",
+          "status": "DESIGNATED"
+        },
+        "invitations": "NOT_SENT",
+        "evidence": {
+          "precheck_close_pr": 12,
+          "precheck_close_head": "488b74f448e0de3c589b148f5179c055ec24f694",
+          "adoption_close_alignment_pr": 8,
+          "adoption_close_alignment_head": "9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34"
+        },
+        "gates": {
+          "search_gate_is_not_send_authorization": true,
+          "no_merge_prs": [
+            5,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "invitations": "NOT_SENT",
+          "pr5_patch": "NOT_APPLIED",
+          "headroom_comments": "NOT_SENT"
+        }
+      }
     }
   ],
   "planning": {
@@ -555,7 +639,7 @@
     "review_storage": "main per REVIEW-MAIN",
     "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
     "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167",
-    "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
+    "next_checkpoint": "A4_ELIGIBLE_CANDIDATE_SEARCH",
     "manual_executor_roundtrip": {
       "status": "VERIFIED_EXISTING_SESSION_NOT_PERSISTENT",
       "repository": "firekou/Open-Skill-Distribution-Flywheel",

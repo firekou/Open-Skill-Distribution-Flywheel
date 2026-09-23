@@ -1,5 +1,15 @@
 # 當前交接狀態
 
+## 2026-09-23：A4 邀請輪關閉（帳本）
+
+- 目標來源：愛莎於 2026-09-23 授權，只更新治理帳本。本輪交付是讓下一席讀到邀請輪已關閉，以及下一關是搜尋，不是發送。
+- **A4 邀請輪 2026-09-23 CLOSED。** Eligible=0。decision=do not send。`precheck_decision`=`BLOCKED_NO_ELIGIBLE_CANDIDATES`。sender `firekou` 僅 DESIGNATED。邀請維持 **NOT SENT**。
+- 證據（本輪讀取，未改那些 PR）：Draft PR #12 head `488b74f448e0de3c589b148f5179c055ec24f694`（關閉紙本）；PR #8 close alignment head `9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34`。
+- `governance/state.json` revision 21→22。現行 `next_checkpoint`：`A4_ELIGIBLE_CANDIDATE_SEARCH`。先前帳本上的 `OWNER_GITHUB_DISCOVERABILITY_DECISION` 不再是現行關卡；下方 R3 小節保留該次覆核當時的紀錄。
+- **搜尋關不是發送授權。** 本輪不執行搜尋、不發送、不在 headroom 留言、不套 PR #5 patch。不 merge #5／#8／#9／#10／#11／#12。
+- M1／P5-R4-01 的結案綁定不變：仍只對 PR #5 head `304af885193245da7186cb6b9ab247ec2494bd86`，任務狀態維持 COMPLETE。`automation.status` 維持 `FOUNDATION_ONLY`。
+- 主線仍是可選 ATK 試用準備。刪掉這筆帳本，下一席會把已關閉的零合格邀請輪當成還在等 discoverability 決定。本輪沒有新產品方向、產品碼或對外發送。
+
 ## 2026-09-23：PR8 revision 3 A4-PRECHECK 最終覆核
 
 - [R3 獨立覆核](PR8_R3_A4_PRECHECK_9bcd4181.md)：content SHA `9bcd4181cd3fb87bea108c93df28b96f1767bfd5`，result/live head `95317ee1307c6b61fc3f939f70535b9099c73a2a`；結論 **APPROVED_WITH_CONDITIONS**。
