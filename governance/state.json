@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 20,
+  "revision": 21,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -188,7 +188,7 @@
       "task_id": "ATK-OPEN-ADOPTION-01",
       "work_id": "ATK-OPEN-ADOPTION-01",
       "revision": 3,
-      "status": "EXECUTING",
+      "status": "APPROVED_WITH_CONDITIONS",
       "decision_id": "ATK-OPEN-ADOPTION-20260922",
       "prompt": "reviews/ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md",
       "phase": "A",
@@ -196,20 +196,7 @@
       "packet_commit": "fa2ca785cd36e797ef79779b18b59fba3e48613d",
       "branch": "claude/atk-open-adoption-01",
       "executor_response": "reviews/ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md",
-      "active_claim": {
-        "work_id": "ATK-OPEN-ADOPTION-01",
-        "revision": 3,
-        "stage": "A4-PRECHECK",
-        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
-        "session_url": "https://claude.ai/code/session_01RFeCsTYkVywjHvXk7od7Ab",
-        "source_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
-        "reviewed_precheck_head": "707dc26d15d8b0a2a6a34cb0364fd73f68e397d8",
-        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A4-PRECHECK:3:b76fc7ba08deade6733f140d3a37aadfd201d51c:executor",
-        "deadline": "2026-09-24T14:46:00Z",
-        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797388297",
-        "claimed_at": "2026-09-23T15:10:38Z",
-        "note": "Valid claim from the same existing Claude session used for revision 2. This proves receipt and scoped execution only; it does not prove a persistent launcher or completed result."
-      },
+      "active_claim": null,
       "receipt": {
         "session_id": "session_016YNgsSCC2eV5sicob2f56f",
         "work_id": "ATK-OPEN-ADOPTION-01",
@@ -235,18 +222,18 @@
         "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5783517419",
         "received_at": "2026-09-22T20:20:36Z"
       },
-      "delivery_status": "REVISION_3_CLAIM_RECEIVED_EXECUTING",
+      "delivery_status": "REVISION_3_RESULT_RECEIVED_REVIEWED",
       "repair_rounds_used": 2,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "Claude revision 3 已以固定 session/work_id/source head/dedup key 接單。等待五個限定路徑的新 content/result SHA 與 executor response；收到後只對該 exact head 做最後獨立覆核。未有 result 前不視為修正完成，不發邀請。",
-      "next_checkpoint": "ATK_OPEN_ADOPTION_R3_RESULT_SHA",
+      "next_action": "Revision 3 A4 precheck 已獨立覆核為 APPROVED_WITH_CONDITIONS：C1/C2 撤回、0 名合格候選、Quickstart immutable 狀態更新成立。2/2 已用完，不派第三輪；沒有匹配候選時不要求先指定 sender。M2 外部採用仍為 0。下一步由 owner 決定是否另行授權 GitHub About/topics 與 publication path，建立 PUBLIC_DISCOVERY T0。",
+      "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
       "pr": 8,
-      "observed_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
-      "last_reviewed_content_head": "8161c6a33251b06c44db9f5dbabc9431fa73b67d",
-      "last_reviewed_live_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
+      "observed_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+      "last_reviewed_content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
+      "last_reviewed_live_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
-      "review": "reviews/PR8_R2_CONDITIONS_8161c6a3.md",
+      "review": "reviews/PR8_R3_A4_PRECHECK_9bcd4181.md",
       "bounded_condition_repair": {
         "work_id": "ATK-OPEN-ADOPTION-01",
         "revision": 2,
@@ -304,13 +291,17 @@
         "A-R1-02",
         "A-R1-03",
         "A-R1-04",
-        "A-R1-05"
+        "A-R1-05",
+        "A4-R1-01",
+        "A4-R1-02",
+        "A4-R1-03"
       ],
       "pending_conditions": [
-        "A4 candidate must directly match the offline log/compression-fit asset",
-        "exact owner-approved sender login and target-Discussion reply capability evidence",
-        "fresh immutable Quickstart URL reflecting PR10 narrow replay approval",
-        "EVIDENCE_FORMAT negative fixture count editorial correction before merge/publication"
+        "eligible candidate count is 0; do not send an invitation until a directly matched public need exists",
+        "before any send, record owner-approved exact sender login and verify target-channel reply capability",
+        "before merge/public reuse, rephrase issue #3736 as reporter-attributed MCP-route evidence and remove unsupported first-public-confirmation wording",
+        "external adoption remains 0; do not claim M2 complete",
+        "GitHub About/topics and publication path require a separate owner decision"
       ],
       "independent_runtime_verified": true,
       "external_adoption_count": 0,
@@ -353,7 +344,7 @@
       "a4_precheck": {
         "pr": 12,
         "observed_head": "707dc26d15d8b0a2a6a34cb0364fd73f68e397d8",
-        "status": "BLOCKED",
+        "status": "APPROVED_WITH_CONDITIONS",
         "artifact": "reviews/A4_DAY_OF_INVITATION_PRECHECK_2026-09-23.md",
         "review": "reviews/PR12_R1_A4_PRECHECK_707dc26d.md",
         "decision": "BLOCKED",
@@ -374,11 +365,19 @@
           ],
           "quickstart_blob": "8849f87dce6042a41eef6e8141816f61cce0489e at 8161c6a, b76fc7b, fb47e31"
         },
-        "blocking_findings": [
+        "blocking_findings": [],
+        "corrective_content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
+        "corrective_result_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+        "corrective_review": "reviews/PR8_R3_A4_PRECHECK_9bcd4181.md",
+        "corrective_decision": "APPROVED_WITH_CONDITIONS",
+        "corrected_findings": [
           "A4-R1-01",
           "A4-R1-02",
           "A4-R1-03"
-        ]
+        ],
+        "eligible_candidate_count": 0,
+        "invitation_sent": false,
+        "external_adoption_count": 0
       },
       "a4_precheck_repair": {
         "work_id": "ATK-OPEN-ADOPTION-01",
@@ -390,22 +389,9 @@
         "deadline": "2026-09-24T14:46:00Z",
         "repair_round": 2,
         "repair_rounds_limit": 2,
-        "delivery_status": "CLAIM_RECEIVED_EXECUTING",
+        "delivery_status": "RESULT_RECEIVED_REVIEWED",
         "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797105025",
-        "active_claim": {
-          "work_id": "ATK-OPEN-ADOPTION-01",
-          "revision": 3,
-          "stage": "A4-PRECHECK",
-          "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
-          "session_url": "https://claude.ai/code/session_01RFeCsTYkVywjHvXk7od7Ab",
-          "source_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
-          "reviewed_precheck_head": "707dc26d15d8b0a2a6a34cb0364fd73f68e397d8",
-          "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A4-PRECHECK:3:b76fc7ba08deade6733f140d3a37aadfd201d51c:executor",
-          "deadline": "2026-09-24T14:46:00Z",
-          "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797388297",
-          "claimed_at": "2026-09-23T15:10:38Z",
-          "note": "Valid claim from the same existing Claude session used for revision 2. This proves receipt and scoped execution only; it does not prove a persistent launcher or completed result."
-        },
+        "active_claim": null,
         "scope_paths": [
           "adoption/ATK-OPEN-ADOPTION-01/CANDIDATES.md",
           "adoption/ATK-OPEN-ADOPTION-01/INVITATIONS.md",
@@ -422,7 +408,28 @@
           "provider calls",
           "new spending"
         ],
-        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797388297"
+        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797388297",
+        "content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
+        "result_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797486012",
+        "review": "reviews/PR8_R3_A4_PRECHECK_9bcd4181.md",
+        "decision": "APPROVED_WITH_CONDITIONS",
+        "no_third_round": true,
+        "publication_condition": "Before merge/public reuse, attribute issue #3736 to its reporter and MCP route; remove unsupported novelty wording."
+      },
+      "revision_3_receipt": {
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "work_id": "ATK-OPEN-ADOPTION-01",
+        "revision": 3,
+        "stage": "A4-PRECHECK",
+        "source_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
+        "reviewed_precheck_head": "707dc26d15d8b0a2a6a34cb0364fd73f68e397d8",
+        "content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
+        "result_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A4-PRECHECK:3:b76fc7ba08deade6733f140d3a37aadfd201d51c:executor",
+        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797388297",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797486012",
+        "received_at": "2026-09-23T15:16:53Z"
       }
     },
     {
@@ -477,39 +484,41 @@
     {
       "task_id": "A4_INVITATION_PRECHECK",
       "work_id": "ATK-OPEN-ADOPTION-01",
-      "status": "BLOCKED",
+      "status": "APPROVED_WITH_CONDITIONS",
       "pr": 12,
       "branch": "cursor/a4-invitation-precheck-e6a3",
-      "observed_head": "707dc26d15d8b0a2a6a34cb0364fd73f68e397d8",
-      "last_reviewed_head": "707dc26d15d8b0a2a6a34cb0364fd73f68e397d8",
-      "last_review_decision": "BLOCKED",
+      "observed_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+      "last_reviewed_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
       "bound_adoption_pr": 8,
       "bound_adoption_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
-      "review": "reviews/PR12_R1_A4_PRECHECK_707dc26d.md",
-      "blocking_findings": [
+      "review": "reviews/PR8_R3_A4_PRECHECK_9bcd4181.md",
+      "blocking_findings": [],
+      "invitation_authorization": "EXISTING_LIMITED_A4_AUTHORIZATION",
+      "invitation_sent": false,
+      "external_adoption_count": 0,
+      "next_action": "A4 precheck 已完成但合格候選為 0；不發邀請，也不為湊數擴大資產問題。待 owner 決定 GitHub discoverability；未來出現匹配候選時，再做 sender capability 的 day-of precheck。",
+      "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
+      "active_claim": null,
+      "last_reviewed_content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
+      "last_reviewed_live_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
+      "closed_findings": [
         "A4-R1-01",
         "A4-R1-02",
         "A4-R1-03"
       ],
-      "invitation_authorization": "EXISTING_LIMITED_A4_AUTHORIZATION",
-      "invitation_sent": false,
-      "external_adoption_count": 0,
-      "next_action": "Revision 3 valid claim received. Wait for exact content/result SHA, then independently review candidate fit, sender capability and fresh immutable URL. Do not send before approval.",
-      "next_checkpoint": "ATK_OPEN_ADOPTION_R3_RESULT_SHA",
-      "active_claim": {
-        "work_id": "ATK-OPEN-ADOPTION-01",
-        "revision": 3,
-        "stage": "A4-PRECHECK",
+      "eligible_candidate_count": 0,
+      "result_receipt": {
         "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
-        "session_url": "https://claude.ai/code/session_01RFeCsTYkVywjHvXk7od7Ab",
-        "source_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
-        "reviewed_precheck_head": "707dc26d15d8b0a2a6a34cb0364fd73f68e397d8",
+        "content_head": "9bcd4181cd3fb87bea108c93df28b96f1767bfd5",
+        "result_head": "95317ee1307c6b61fc3f939f70535b9099c73a2a",
         "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:8:ATK-OPEN-ADOPTION-01:A4-PRECHECK:3:b76fc7ba08deade6733f140d3a37aadfd201d51c:executor",
-        "deadline": "2026-09-24T14:46:00Z",
-        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797388297",
-        "claimed_at": "2026-09-23T15:10:38Z",
-        "note": "Valid claim from the same existing Claude session used for revision 2. This proves receipt and scoped execution only; it does not prove a persistent launcher or completed result."
-      }
+        "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797486012"
+      },
+      "publication_conditions": [
+        "issue #3736 wording must be reporter-attributed and route-specific before public reuse",
+        "sender login/capability is required only before an actual matched invitation"
+      ]
     }
   ],
   "planning": {
@@ -546,7 +555,7 @@
     "review_storage": "main per REVIEW-MAIN",
     "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
     "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167",
-    "next_checkpoint": "ATK_OPEN_ADOPTION_R3_CLAIM_OR_RESULT",
+    "next_checkpoint": "OWNER_GITHUB_DISCOVERABILITY_DECISION",
     "manual_executor_roundtrip": {
       "status": "VERIFIED_EXISTING_SESSION_NOT_PERSISTENT",
       "repository": "firekou/Open-Skill-Distribution-Flywheel",
