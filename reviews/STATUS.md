@@ -1,5 +1,15 @@
 # 當前交接狀態
 
+## 2026-09-23：PR8 revision 3 A4-PRECHECK 已接單
+
+- Claude session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-OPEN-ADOPTION-01` revision 3、stage `A4-PRECHECK` 回傳完整 claim：[接單證據](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5797388297)。
+- source head `b76fc7ba08deade6733f140d3a37aadfd201d51c`、reviewed precheck head `707dc26d15d8b0a2a6a34cb0364fd73f68e397d8`、dedup key、2/2 最後修復輪與期限均符合限定修正包。
+- PR #8 live head 尚未改變，沒有新的 content/result SHA；因此本輪只把狀態升為 `EXECUTING`，沒有重複 review、派工或宣稱修正完成。
+- 這是 revision 2 使用過的既有 Claude session，證明本次訊號被該 session 收到，不證明 comment 能啟動新 session 或 persistent launcher 已接通；automation 維持 `FOUNDATION_ONLY`。
+- 下一 checkpoint：`ATK_OPEN_ADOPTION_R3_RESULT_SHA`。收到成果後，獨立覆核候選適配、sender capability、新 immutable Quickstart URL 與五個限定路徑。
+- 外部採用仍為 0；未發邀請、套 PR5 patch、merge、部署、修改 secrets／權限、呼叫 provider 或新增支出。
+
+
 ## 2026-09-23：PR12 A4 當日邀請 precheck 覆核
 
 - PR #12 Draft/open/unmerged；精確 head `707dc26d15d8b0a2a6a34cb0364fd73f68e397d8`，只新增 precheck 與 branch STATUS，沒有送出邀請。
@@ -88,44 +98,3 @@
 - 2/2 修復結束，不派第三輪。free sample 舊命令與成功次數文案保留發布前 BACKLOG_NOT_DISPATCHED；受驗證安裝入口限定 README/TRY_IT 的 0.37.0，不將 free sample 當已驗收 live 入口。
 - 下一 checkpoint：合格獨立隔離環境綁定現 head 重放既有 P5-R4-01 與受影響 tests；不要求作者重做同類證據。無依賴的 ATK 分發規劃繼續，不等待 controller ACTIVE。
 - 新留言事件只對應同一份第二輪交付，已合併處理，沒有重複 review 或派工。PR open/Draft/unmerged；未使用 key、模型、費用、部署、權限修改或上游發送。
-
-## 2026-09-21：PR5 R8 第一輪修復確認與最後修復包
-
-- Claude 既有 session 已以固定 work_id `ATK-PR5-R7-LIVE-GUARD` revision 1、source head `f4d676b22a853f64b37f2c160cdb3d1f6bc47efc` 接單，回傳 result head `cde4e5c855096b1d7566d44680259851810aec99` 與 dedup key；這證明既有 GitHub conversation 到既有 session 的一次 round trip，不證明 comment／label 能啟動新的持久 Claude session。
-- [R8 限定確認](PR5_R8_CONFIRM_cde4e5c.md)：**BLOCKED**。金鑰命令列範例、預設四次呼叫與未證實因果三項，在 app／文件層級已修正。
-- 新 P1 `P5-R8-01`：釘選的 Headroom 0.37.0 預設 `retry_max_attempts=3`，會對 429／529／其他 5xx／transport failure 重試。現行 live 命令未覆寫，因此 mock 只證明兩個 client requests，不能證明 provider attempts 上限為 2。
-- 已向 PR #5 傳送同一工作包 revision 2，也是 2／2 最後一輪；source head、dedup key、scope 與期限均已固定。修法限於 live 啟動加 `--retry-max-attempts 1`、對齊呼叫主張與聚焦離線測試。
-- 新留言事件經 readback 確認只是 revision 2 工作包本身；live head 仍為 `cde4e5c8`，尚無新 session 接單或成果 SHA，不重複派工。
-- Exact head 無 workflow runs、check runs 或 commit statuses；作者自報 40 tests 為 TESTED，本 reviewer 未在合格隔離 runtime 執行 PR code。
-- `P5-R4-01` 繼續等待獨立隔離重放，不重派作者。第三方採用仍為 0；ATK 採用主線不等待 controller ACTIVE。
-- PR #5 維持 Draft、未合併；本次 readback 顯示 mergeable false。未部署、未修改 secrets／權限、未呼叫模型、未新增費用、未送上游。
-
-
-
-## 2026-09-21：PR6 第二輪限定修復覆核結案
-
-- 方法：govern-github-agent-handoffs；授權 GOV-HANDOFF-TAKEOVER-20260921。review 仍依 REVIEW-MAIN 存 main。
-- GPT reviewer webhook 已由 PR #6 的 synchronize 事件實際驗證，精確 live head e26aac4eed0696cefa45b19aac46e7fc9c3da6e8；這只證明 reviewer event path，不證明 Claude persistent launcher 或完整端到端接通。
-- Claude 既有 session session_01RFeCsTYkVywjHvXk7od7Ab 已交付 work_id GOV-PR6-R2、revision 2。程式 head 25457fbd2ff02a900d55538eb4e2fa0893663c31；live head 其後只追加 executor response，沒有 controller 程式差異。
-- [R4 獨立 review](PR6_R4_G4_REVIEW_25457fbd.md)：**BLOCKED**。CLI success envelope 與 guard ordering 在 source 層級關閉；lease-loss launch、effect binding、deadline launch gate 與 credentialed executor/reviewer isolation 仍阻擋。
-- 作者自報 146 tests、50/51 mutants 與 replay／recovery／isolation evidence；本 reviewer 沒有合格隔離 runtime，因此不升格為獨立通過。精確程式與 live SHA 都沒有 commit status 或 workflow run。
-- 同批限定修復已達兩輪上限，不再向 Claude 自動重派第三輪，也不改名規避。next checkpoint 改為 Planner scope reduction：保留 GitHub durable ledger、人工 bounded handoff 與已驗證 reviewer event；controller 維持 FOUNDATION_ONLY / 非 ACTIVE。
-- Claude persistent launcher、executor 接線、真實隔離 runtime 與完整閉環仍為 NOT_VERIFIED。沒有因留言送出或舊 session 回覆而提高這些狀態。
-- PR5 live 933446ab230e6fb8b41d79b596ef3c19b721fb7a 未變，P5-R4-01 繼續等待獨立隔離重放，不重派作者修復。PR7 只保留補充證據，不建立平行 controller。
-- repo API 讀取及 main review／ledger 寫入已成功；未合併、未部署、未修改 Secrets／權限、未新增費用、未送上游。
-- 產品主線仍是有用工具/skill、可選 ATK Router/API/MCP 接入、技術分享與實際採用；不以治理 ACTIVE 阻塞無依賴交付，不恢復 benchmark、Freeze 或框架試點。
-
-## 2026-09-21：PR6 G4 獨立 review 與接續規劃（R2 歷史）
-
-- 新完整報告已收到。程式 head `86421c903563a16ca888a4aed10bd614e223ca0e`，政策 `d92d082bfcee7002d737e2c3ee2914d2b1fa804c`。
-- 審查時 live head `75976be1db636ef72d76206b387583fb3cc03443`；與程式 head 淨差異只有送審文件，無程式變更。
-- [G4 review](PR6_R2_G4_REVIEW_86421c90.md)：**BLOCKED**。GOV-R2-01～05 與既有 GOV-R1-03 OPEN；runtime **FOUNDATION_ONLY**。
-- REPRODUCED：兩個 live command 範本在標準字串展開時拋 KeyError。VERIFIED：controller 未呼叫續租與 intent API；其餘 crash／限額／policy 接線缺口以原始碼證據標示。
-- 本 reviewer 的隔離工具被 OS 拒絕，未執行 PR tests/replay/mutation 或模型探針。作者自報 92 tests／26 mutants 不升格為獨立通過。
-- [完整接續 Prompt](../governance/IMPLEMENTATION_PROMPT.md) 已補齊修復、C0/C1 修訂、G4 重審、G5 單次試行、C2/C3/G6 持久交接、C4 維運及 G7 使用者成果驗證。D1 分支與 D3 reviewer 定義依既有決策，不重問。
-- 本次只寫 review／規劃／摘要，未啟動 runner、安裝 trigger、呼叫模型或合併 PR。PR5 與既有 reviewer trigger 本輪不變。
-
-## 2026-09-19：PR5 最新獨立複核
-- 精確 live head `933446ab230e6fb8b41d79b596ef3c19b721fb7a`，Draft、未合併。
-- [GPT R6 review](PR5_R6_REVIEW_933446ab.md)：**NEEDS_INFORMATION**。新提交只含 executor 重放紀錄與回覆，0 產品程式變更，範圍不變。
-- VERIFIED：R5 manifest 的五個 Git blob SHA 已由 reviewer 對 GitHub 精確 refs 交叉核對，全數一致。
