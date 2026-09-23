@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 16,
+  "revision": 17,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -216,8 +216,8 @@
       "repair_rounds_used": 1,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "不再派 Claude 修復。等待合格獨立隔離 reviewer 綁定 PR5 304af885 重放 M1/P5-R4-01；完成前不發邀請、不套 PR5 patch。EVIDENCE_FORMAT fixture 四/五筆誤列 merge 前非阻擋 backlog。",
-      "next_checkpoint": "M1_P5_R4_01_INDEPENDENT_ISOLATED_REPLAY",
+      "next_action": "PR9 plan/probe 已獨立覆核為 NEEDS_INFORMATION；無合格 isolation runtime，且執行前須修正 Git blob NUL、evidence output mount、durable path 與 evidence level。完成合格重放前不發邀請、不套 PR5 patch；不向 Claude 重派舊修復。",
+      "next_checkpoint": "M1_P5_R4_01_QUALIFYING_RUNTIME_AND_PRE_RUN_PLAN_CORRECTION",
       "pr": 8,
       "observed_head": "b76fc7ba08deade6733f140d3a37aadfd201d51c",
       "last_reviewed_content_head": "8161c6a33251b06c44db9f5dbabc9431fa73b67d",
@@ -289,7 +289,68 @@
         "EVIDENCE_FORMAT negative fixture count editorial correction before merge/publication"
       ],
       "independent_runtime_verified": false,
-      "external_adoption_count": 0
+      "external_adoption_count": 0,
+      "independent_replay_planning": {
+        "pr": 9,
+        "observed_head": "ba3f9ae3bce04d72f4afaa6f9e935c112661fca2",
+        "status": "NEEDS_INFORMATION",
+        "artifact_type": "PLAN_AND_RUNTIME_PROBE_ONLY",
+        "pr_code_executed": false,
+        "qualifying_runtime": false,
+        "reviewed_at": "2026-09-23T22:24:43+08:00",
+        "review": "reviews/PR9_R1_M1_PLAN_ba3f9ae3.md",
+        "exact_head_checks": {
+          "workflow_runs": 0,
+          "check_runs": 0,
+          "commit_statuses": 0,
+          "pr_reviews": 0
+        },
+        "verified": [
+          "PR5 live head unchanged",
+          "six referenced Git blob SHAs match exact refs",
+          "probe JSON parses"
+        ],
+        "pre_run_corrections": [
+          "Git blob header must use NUL byte",
+          "separate read-only evidence input from writable output or use trusted host capture",
+          "replace /workspace/qa-plans paths with immutable repository paths",
+          "select evidence level from actual run"
+        ]
+      }
+    },
+    {
+      "task_id": "M1_P5_R4_01",
+      "work_id": "M1_P5_R4_01",
+      "status": "NEEDS_INFORMATION",
+      "pr": 9,
+      "branch": "cursor/m1-p5-r4-qa-plan-bfd3",
+      "observed_head": "ba3f9ae3bce04d72f4afaa6f9e935c112661fca2",
+      "last_reviewed_head": "ba3f9ae3bce04d72f4afaa6f9e935c112661fca2",
+      "last_review_decision": "NEEDS_INFORMATION",
+      "source_pr": 5,
+      "source_head": "304af885193245da7186cb6b9ab247ec2494bd86",
+      "scope": "review-only isolation replay plan and runtime probe",
+      "active_claim": null,
+      "pr_code_executed": false,
+      "independent_runtime_verified": false,
+      "exact_head_checks": {
+        "workflow_runs": 0,
+        "check_runs": 0,
+        "commit_statuses": 0,
+        "pr_reviews": 0
+      },
+      "review": "reviews/PR9_R1_M1_PLAN_ba3f9ae3.md",
+      "next_action": "Provide/designate a qualifying network-none independent runner; before execution correct the blob NUL formula, evidence output path, durable repository paths, and evidence label. Then replay G0-G7 at exact PR5 head.",
+      "next_checkpoint": "M1_P5_R4_01_QUALIFYING_RUNTIME_AND_PRE_RUN_PLAN_CORRECTION",
+      "exclusions": [
+        "merge",
+        "deployment",
+        "invitations",
+        "PR5 patch application",
+        "secrets/permissions",
+        "provider calls",
+        "new spending without owner approval"
+      ]
     }
   ],
   "planning": {
@@ -326,7 +387,7 @@
     "review_storage": "main per REVIEW-MAIN",
     "failure_visibility": "GitHub readback failure or missing receipt is reported in ChatGPT; failure of both channels remains unverified",
     "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5759340167",
-    "next_checkpoint": "PR8_REVISION_2_RESULT_SHA",
+    "next_checkpoint": "M1_P5_R4_01_QUALIFYING_RUNTIME_AND_PRE_RUN_PLAN_CORRECTION",
     "manual_executor_roundtrip": {
       "status": "VERIFIED_EXISTING_SESSION_NOT_PERSISTENT",
       "repository": "firekou/Open-Skill-Distribution-Flywheel",
