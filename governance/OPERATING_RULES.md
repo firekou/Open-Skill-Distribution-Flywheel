@@ -118,3 +118,7 @@ state.json 的 automation.status 只有 runtime 實測後才能升格。prefligh
 ## GPT／Claude 訂閱雲端接力方法
 
 本次使用者要求同步方法並 push main，採用 [共用方法](../AGENT_OPERATING_METHOD.md) 與 [本專案接合](../AGENT_METHOD_APPLICATION.md)。此為規劃與交接補充；GOV-PLAN-02、原狀態與權限不變，C0–C4 僅為既有導入包的接線驗收補充，不替代其 G1–G7。
+
+## 2026-09-24 成果與信心驗證
+
+依 OUTCOME-CONFIDENCE-20260924，規劃、執行、review 與主管回報共同套用 [成果與信心準則](OUTCOME_CONFIDENCE.md)。每輪以可親自確認的新增成果為交付，分開提出運作、使用價值、經濟成果的證明。未取得證據就保留未知；文件、mock、CI、邀請不代替真實運作或外部採用。將最小證據追加至既有工作單與 executor response，不新增審批平台。已授權且無依賴工作繼續，沿用停止點與兩輪修復上限。本次只落實準則，不升級 runtime、採用或發布狀態。
