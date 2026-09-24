@@ -159,6 +159,20 @@
         "內部 Agent 測試、外部受邀採用及公開發現採用分開；不宣稱 launcher 或 runtime 已接通"
       ],
       "packet": "reviews/ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md"
+    },
+    {
+      "id": "OUTCOME-CONFIDENCE-20260924",
+      "status": "approved",
+      "source": "2026-09-24 負責人要求將信心的支撐、效果的驗證全部 push 到本 repository main；承接『驗證成果建立信心』之實際運作與成果要求。",
+      "decision": "採用 governance/OUTCOME_CONFIDENCE.md：每輪以可親自確認的新增成果支撐信心，分開記錄運作、使用價值與經濟成果，將準則接入治理入口、Claude 入口和工作模板。",
+      "supersedes": [],
+      "limits": [
+        "本次授權為 main 文件與交接準則更新，不冒充新 runtime 或採用成果",
+        "保留有用工具、可選 ATK 接入、技術分發及實際採用主線；不重開 benchmark／Freeze／框架試點",
+        "既有兩輪上限不重置，不新派第三輪；既有 active claim 不重複派工",
+        "不新增 merge、發布、部署、外部發送、secrets／權限修改或支出授權"
+      ],
+      "document": "governance/OUTCOME_CONFIDENCE.md"
     }
   ]
 }
