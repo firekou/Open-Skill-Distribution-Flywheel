@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 31,
+  "revision": 32,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -672,8 +672,8 @@
     {
       "task_id": "ATK-AIDER-FIRST-USE-01",
       "work_id": "ATK-AIDER-FIRST-USE-01",
-      "revision": 1,
-      "status": "CONDITIONS_PENDING",
+      "revision": 2,
+      "status": "APPROVED_WITH_CONDITIONS",
       "decision_id": "ATK-EXTERNAL-VALUE-CONTINUE-20260924",
       "packet": "reviews/ATK_AIDER_FIRST_USE_PACKET.md",
       "source_head": "251f9755ed5c1b4fd260b23b622e8ba5fad278eb",
@@ -683,7 +683,7 @@
       "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-FIRST-USE-01:1:251f9755ed5c1b4fd260b23b622e8ba5fad278eb:executor",
       "deadline": "2026-09-25T18:30:00Z",
       "active_claim": null,
-      "delivery_status": "REVISION_2_SIGNAL_SENT",
+      "delivery_status": "REVISION_2_RESULT_REVIEWED",
       "repair_rounds_used": 1,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
@@ -691,26 +691,27 @@
         "integrations/aider-atk/**",
         "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md"
       ],
-      "next_checkpoint": "PR14_R2_CLAIM_OR_RESULT",
+      "next_checkpoint": "ATK_AIDER_REAL_PROVIDER_OR_EXTERNAL_USE_AUTHORIZATION",
       "runtime_verified": false,
       "external_adoption_verified": false,
       "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5819867533",
       "signaled_at": "2026-09-24T18:30:00Z",
       "signaled_at_precision": "approximate minute; exact timestamp is authoritative in GitHub comment",
       "pr": 14,
-      "observed_head": "e828965585a1b9ee0cf33a4c5a868f62d5942aa5",
-      "last_reviewed_head": "e828965585a1b9ee0cf33a4c5a868f62d5942aa5",
-      "last_review_decision": "APPROVED_WITH_CONDITIONS",
-      "review": "reviews/PR14_R1_AIDER_e8289655.md",
+      "observed_head": "d1474670db12934c80caa05674c8e4320cbad312",
+      "last_reviewed_head": "d1474670db12934c80caa05674c8e4320cbad312",
+      "last_review_decision": "APPROVED",
+      "review": "reviews/PR14_R2_CONDITIONS_d1474670.md",
       "result_receipt": {
         "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
         "work_id": "ATK-AIDER-FIRST-USE-01",
-        "revision": 1,
-        "source_head": "251f9755ed5c1b4fd260b23b622e8ba5fad278eb",
-        "result_head": "e828965585a1b9ee0cf33a4c5a868f62d5942aa5",
-        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-FIRST-USE-01:1:251f9755ed5c1b4fd260b23b622e8ba5fad278eb:executor",
-        "pr_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/14",
-        "receipt_kind": "draft_pr_and_executor_response; no prior conversation claim receipt",
+        "revision": 2,
+        "source_head": "e828965585a1b9ee0cf33a4c5a868f62d5942aa5",
+        "result_head": "d1474670db12934c80caa05674c8e4320cbad312",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-FIRST-USE-01:2:e828965585a1b9ee0cf33a4c5a868f62d5942aa5:conditions",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/14#issuecomment-5821493137",
+        "received_at": "2026-09-24T20:12:34Z",
+        "receipt_kind": "result comment and exact result head; no separately observed pre-result claim",
         "persistent_launcher_proven": false
       },
       "condition_repair": {
@@ -731,10 +732,21 @@
           "AIDER-R1-03 direct URLs for two external reports"
         ],
         "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/14#issuecomment-5820714720",
-        "delivery_status": "SIGNAL_SENT",
+        "delivery_status": "RESULT_RECEIVED_REVIEWED",
         "active_claim": null,
         "repair_round": 1,
-        "repair_rounds_limit": 2
+        "repair_rounds_limit": 2,
+        "result_head": "d1474670db12934c80caa05674c8e4320cbad312",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/14#issuecomment-5821493137",
+        "decision": "APPROVED",
+        "review": "reviews/PR14_R2_CONDITIONS_d1474670.md",
+        "conditions_closed": [
+          "AIDER-R1-01",
+          "AIDER-R1-02",
+          "AIDER-R1-03"
+        ],
+        "non_blocking_scope_note": "QUICKSTART.md was outside the revision-2 enumerated list but inside the parent integrations/aider-atk/** task scope; reviewed as documentation consistency, no further repair.",
+        "reviewed_at": "2026-09-24T20:14:00Z"
       }
     }
   ],
