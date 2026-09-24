@@ -1,3 +1,7 @@
+## 2026-09-24：外部研究證據卡限定覆核
+[PR1 研究覆核](PR1_EXTERNAL_VALUE_01647fe3.md)，head `01647fe3…`，**NEEDS_INFORMATION**。只審新研究卡，不重啟舊 benchmark。獨立確認 srt CLI 子命令與 #576 回報存在；Agent Scan 仍接受 issue 回饋，原文「沒有回饋路徑」須修正。srt 的通用缺口與比較優勢尚未成立，先查 #581 等重疊與版本來源。沒有新 sandbox 實作派工。
+Aider 工作包維持 SIGNAL_SENT，PR8 的新留言為已登記訊號本身，尚無新接單／成果；不重派。Aider 不受本研究待辦阻擋。作者證據原樣保留，沒有新增 runtime、採用或發布批准。
+
 ## 2026-09-24：三候選已比較，Aider小交付工作包已就緒
 
 [外部價值初評](../research/ATK_THREE_TOOL_VALUE_REVIEW_2026-09-24.md)已完成，Aider優先、Continue候補、Open WebUI暫不實作。[執行包](ATK_AIDER_FIRST_USE_PACKET.md)為新work_id ATK-AIDER-FIRST-USE-01，先原生設定與局部任務，不建adapter。未收到新接單或成果，不宣稱已運行。live與外部採用尚未驗證。舊PR結論保留。
