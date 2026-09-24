@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 24,
+  "revision": 25,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -726,5 +726,16 @@
       "review": "reviews/PR10_R1_M1_REPLAY_cf37880b.md",
       "note": "證明一次性的獨立隔離重放成立；不證明 Claude persistent launcher、controller 或完整端到端自動化已接通。"
     }
+  },
+  "outcome_confidence": {
+    "decision_id": "OUTCOME-CONFIDENCE-20260924",
+    "document": "governance/OUTCOME_CONFIDENCE.md",
+    "status": "DOCUMENTATION_ADOPTED",
+    "adopted_at": "2026-09-24",
+    "scope": "planner/executor/reviewer outcome evidence and owner reporting",
+    "runtime_state_promoted": false,
+    "new_external_adoption_evidence": false,
+    "repair_limits_reset": false,
+    "next_action": "Apply evidence requirements to the next valid authorized batch; preserve current operational checkpoint and live-head review requirements."
   }
 }
