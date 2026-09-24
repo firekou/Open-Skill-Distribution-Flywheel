@@ -1,3 +1,7 @@
+## 2026-09-24：三候選已比較，Aider小交付工作包已就緒
+
+[外部價值初評](../research/ATK_THREE_TOOL_VALUE_REVIEW_2026-09-24.md)已完成，Aider優先、Continue候補、Open WebUI暫不實作。[執行包](ATK_AIDER_FIRST_USE_PACKET.md)為新work_id ATK-AIDER-FIRST-USE-01，先原生設定與局部任務，不建adapter。未收到新接單或成果，不宣稱已運行。live與外部採用尚未驗證。舊PR結論保留。
+
 > 2026-09-24 最新排序校正：先交外部價值證據與增量差距裁決（EXTERNAL_VALUE_EVIDENCE_AND_INCREMENTAL_GAP），再決定是否需要評估工具。stars／引用是線索，需追查第三方實證、使用效果與上游需求；不得把方法建設當成新增社會價值。詳見研究文件末節。
 
 ## 2026-09-24：補足外部貢獻、學習與整合研究
