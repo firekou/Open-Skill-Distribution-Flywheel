@@ -1,5 +1,19 @@
 # Claude 現行產品交接入口
 
+## 2026-09-24：依可確認成果續作
+
+先讀可信 main 的 governance/OPERATING_RULES.md、decisions.json、state.json、reviews/STATUS.md，以及 [成果與信心準則](../governance/OUTCOME_CONFIDENCE.md)。每輪先說明如何推進有用工具／skill、可選 ATK Router／API／MCP、技術分發與實際採用。
+
+main revision 24 已記錄：M1／P5-R4-01 由 PR10 完成獨立隔離重放；不要重跑舊等待指令。PR8 R4 對 9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34 僅接受 closure record，仍有公開入口、sender 證據與 issue #3736 措辭條件。啟動時重新查 live head 與最新 review，不能沿用舊批准。
+
+本次新增的是交付準則，不是新 repair packet。既有修復已達 2/2，不開第三輪、不重做三候選篩選或已完成的 Headroom 範例。下一 checkpoint 維持 state.json 的 OWNER_GITHUB_DISCOVERABILITY_DECISION。無依賴且已授權的工作直接完成到可用小交付與必要驗證，不只寫下一份計畫，也不把本文件視為額外部署／發布／費用授權。
+
+後續有效工作包須指定：誰使用、完成什麼真實任務、成功條件、最小成果、證據取得方法及停止點。執行結果在既有工作包指定的 executor response 追加；distribution 任務使用 ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md，adoption 任務沿用 ATK_OPEN_ADOPTION_EXECUTOR_RESPONSE.md，不重複另建帳本。每次記錄新增成果、固定 SHA、重播方法、效果及未知，向負責人提供可親自確認的連結。內部測試與外部採用分開，不用 mock 或歷史 live 紀錄冒充本輪成功。
+
+---
+
+## 以下為歷史快照，停止點已由上方入口與最新 main 帳本取代
+
 ## 2026-09-23：PR8 A package 條件修正已覆核
 
 當前工作仍是 [完整執行包](ATK_OPEN_ADOPTION_EXECUTION_PACKAGE.md) 的 `ATK-OPEN-ADOPTION-01`。revision 2 已由 Claude session `session_01RFeCsTYkVywjHvXk7od7Ab` 交付；[R2 獨立覆核](PR8_R2_CONDITIONS_8161c6a3.md) 對內容 SHA `8161c6a33251b06c44db9f5dbabc9431fa73b67d` 判定 **APPROVED_WITH_CONDITIONS**，A-R1-01 至 A-R1-05 均已關閉。
