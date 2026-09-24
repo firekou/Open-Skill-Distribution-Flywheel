@@ -122,3 +122,6 @@ state.json 的 automation.status 只有 runtime 實測後才能升格。prefligh
 ## 2026-09-24 成果與信心驗證
 
 依 OUTCOME-CONFIDENCE-20260924，規劃、執行、review 與主管回報共同套用 [成果與信心準則](OUTCOME_CONFIDENCE.md)。每輪以可親自確認的新增成果為交付，分開提出運作、使用價值、經濟成果的證明。未取得證據就保留未知；文件、mock、CI、邀請不代替真實運作或外部採用。將最小證據追加至既有工作單與 executor response，不新增審批平台。已授權且無依賴工作繼續，沿用停止點與兩輪修復上限。本次只落實準則，不升級 runtime、採用或發布狀態。
+
+## 2026-09-24 外部貢獻與研究職責
+依 LAB-EXTERNAL-CONTRIBUTIONS-20260924，套用 [研究與引入方法](../research/AI_LAB_EXTERNAL_CONTRIBUTIONS_2026-09-24.md)。先研究原作、需求與維護者方法，重現並比較後決定直接採用、薄接入或不改造；必須指出自身新增價值。三個評估專案的初評僅為來源審讀，不等於實測。此研究支線不等待 OWNER_GITHUB_DISCOVERABILITY_DECISION；該 checkpoint 仍只約束既有產品對外路徑。不得將本規劃稱為第三方重現、採用或上游貢獻已完成。
