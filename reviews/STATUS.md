@@ -1,3 +1,5 @@
+> 2026-09-24 最新排序校正：先交外部價值證據與增量差距裁決（EXTERNAL_VALUE_EVIDENCE_AND_INCREMENTAL_GAP），再決定是否需要評估工具。stars／引用是線索，需追查第三方實證、使用效果與上游需求；不得把方法建設當成新增社會價值。詳見研究文件末節。
+
 ## 2026-09-24：補足外部貢獻、學習與整合研究
 已將 [來源初評與研究方法](../research/AI_LAB_EXTERNAL_CONTRIBUTIONS_2026-09-24.md)寫入 main：Inspect、HELM、Pydantic Evals 三個官方來源與 LICENSE 已審讀；HELM 維護模式納入選擇。尚未執行三者的獨立重現，沒有新增採用證據。研究下一 checkpoint 為固定版本原作最小重現與差距裁決；研究支線不等待產品公開發現決策。原 PR 判定、兩輪上限與外部採用計數不變。
 
