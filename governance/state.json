@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 29,
+  "revision": 30,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -784,5 +784,19 @@
     ],
     "new_adoption_evidence": false,
     "external_impact_verified": false
+  },
+  "supplemental_external_research_review": {
+    "work_id": "LAB-EXTERNAL-METHOD-01",
+    "pr": 1,
+    "head": "01647fe31f1eac231806e99c570721d8e309b2c8",
+    "scope": "research/EXTERNAL_VALUE_EVIDENCE_CARDS_2026-09-24.md",
+    "decision": "NEEDS_INFORMATION",
+    "review": "reviews/PR1_EXTERNAL_VALUE_01647fe3.md",
+    "next_checkpoint": "TARGETED_UPSTREAM_OVERLAP_AND_CLAIM_CORRECTION",
+    "dispatch_status": "NOT_DISPATCHED",
+    "runtime_executed": false,
+    "benchmark_reopened": false,
+    "aider_blocked": false,
+    "observed_at": "2026-09-24"
   }
 }
