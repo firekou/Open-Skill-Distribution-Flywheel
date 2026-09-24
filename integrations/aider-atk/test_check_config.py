@@ -38,6 +38,26 @@ class ReportTest(unittest.TestCase):
         self.assertEqual(code, 3)
         self.assertIn("openai/some-model", "\n".join(lines))
 
+    def test_another_providers_prefix_is_caught(self):
+        # Found by review: a slash alone used to be enough, so anthropic/model
+        # passed while the documented promise was openai/ only.
+        for model in ("anthropic/model", "gemini/some-model", "ollama/llama3"):
+            with self.subTest(model=model):
+                code, lines = report(with_change(AIDER_MODEL=model))
+                self.assertEqual(code, 3)
+                self.assertIn("OPENAI_API_BASE", "\n".join(lines))
+
+    def test_prefix_with_no_model_name_is_caught(self):
+        code, lines = report(with_change(AIDER_MODEL="openai/"))
+        self.assertEqual(code, 3)
+        self.assertIn("no model", "\n".join(lines))
+
+    def test_a_model_name_containing_slashes_still_passes(self):
+        # Several OpenAI-compatible endpoints serve names like
+        # meta-llama/Llama-3, so only the first segment is the prefix.
+        code, _ = report(with_change(AIDER_MODEL="openai/meta-llama/Llama-3"))
+        self.assertEqual(code, 0)
+
     def test_base_ending_in_a_route_is_caught(self):
         code, lines = report(
             with_change(OPENAI_API_BASE="https://endpoint.example.com/v1/chat/completions")

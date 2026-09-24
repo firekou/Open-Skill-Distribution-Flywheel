@@ -7,7 +7,8 @@
 ```
 da2b54d995a08cdbb84f157587f82f1d  sample/import_contacts.py
 2952746b8e56b5a35fdb02949bcdabe1  sample/test_import_contacts.py
-c87c2a16cf5f9861902fc1cbd1d773c2  check_config.py
+d467ecfd7b391d71f2851014872ab5b0  check_config.py
+602246801de2f2adcc9c2f9f8aa5c004  test_check_config.py
 ```
 
 ## 五欄分開，不互相代替
@@ -52,10 +53,10 @@ exit=1
 
 金鑰那一行在**每一條路徑**都只印 `SET` / `NOT_SET`。
 
-自身測試：
+自身測試（revision 2 後為 11 項）：
 ```
 $ python3.11 -m unittest test_check_config
-Ran 8 tests in 0.007s
+Ran 11 tests in 0.010s
 OK        exit=0
 ```
 
@@ -70,7 +71,9 @@ OK        exit=0
 
 exit code 是在指令之後**立刻**用 `rc=$?` 取的，沒有被命令替換洗掉。
 
-另有一個結構性測試 `test_it_makes_no_network_call`：用 AST 解析 `check_config.py` 的 import，斷言除了 `os`、`sys` 之外沒有別的。之後誰想在這支裡加一個 HTTP client，這個測試會先擋下來。
+另有一個結構性測試 `test_it_makes_no_network_call`：用 AST 解析 `check_config.py` 的 import，斷言除了 `os`、`sys` 之外沒有別的。
+
+**這個測試的效力比它的名字聽起來小，先講清楚。** 目前的 `check_config.py` 經逐行檢視確實沒有任何連網行為——這是**現在這份原始碼**的事實。那個測試只看 import 集合，擋不住 `os.system("curl ...")` 這類走既有 import 的路徑。所以它是一個**低成本的回歸提示**，不是網路隔離，也不是完整的防護邊界。R1 覆核指出我上一版把它講得太強，這裡改正。
 
 ## C. 協定錄製（OFFLINE_PROTOCOL_ONLY）
 
@@ -104,3 +107,50 @@ exit code 是在指令之後**立刻**用 `rc=$?` 取的，沒有被命令替換
 
 ## 本輪未做
 未安裝指定的 `5dc9490` dev commit（只讀原始碼）· 未做任何真實供應商呼叫 · 未 merge · 未部署 · 未送上游 · 未邀請任何人 · 未新增費用 · 未讀寫任何 secret · Windows/macOS 未測 · 未比對 `0.86.1` 與 `5dc9490` 的差異。
+
+
+---
+
+# revision 2：R1 三個條件的處置
+
+覆核：`reviews/PR14_R1_AIDER_e8289655.md`，`APPROVED_WITH_CONDITIONS`，`blocking_findings: []`。三項我都同意，沒有一項爭議。
+
+## 條件一（P1）：`openai/` 前綴是假通過 —— REPRODUCED，已修
+
+先重現，再改：
+
+```
+$ AIDER_MODEL=anthropic/model  python3.11 check_config.py -> exit 0     ← 應該是 3
+$ AIDER_MODEL=openai/          python3.11 check_config.py -> exit 0     ← 應該是 3
+$ AIDER_MODEL=some-model       python3.11 check_config.py -> exit 3
+```
+
+覆核點名的是 `anthropic/model`。我重現時**多發現一個**：`openai/`（前綴對但模型名是空的）同樣漏過。舊條件是 `if "/" not in model`——它問的是「有沒有斜線」，不是「是不是 openai/」。**這又是同一個形狀的錯誤**：拿一個好觀察的訊號，代替我真正想確認的那件事。
+
+改後：
+
+| `AIDER_MODEL` | exit |
+|---|---|
+| `anthropic/model` | 3 |
+| `openai/` | 3 |
+| `some-model` | 3 |
+| `openai/good-model` | 0 |
+| `openai/meta-llama/Llama-3` | 0 |
+
+最後一列是刻意的：有些 OpenAI 相容端點的模型名本身就含斜線，所以只有**第一段**算前綴。這條寫進測試，也寫進 Quick Start。
+
+新增負測試三項（別家前綴三例、前綴後空白、含斜線的模型名仍通過），測試總數 8 → 11，`exit=0`。
+
+**負控制**：把條件改回舊的 `if "/" not in model`，`unittest exit=1`、`FAILED (failures=4)`。修好的版本 `exit=0`。所以是這個修法在擋，不是運氣。
+
+## 條件二（P2）：結構測試的安全主張過強 —— 已縮小
+上面 B 段已改寫。結論改為：目前原始碼無連網行為（逐行檢視），import 測試只是低成本回歸提示，**不是網路隔離、不是完整防護**。沒有為此新增 sandbox、HTTP 攔截或任何框架。
+
+## 條件三（P2）：外部報告缺來源網址 —— 已補
+`AIDER_WHAT_WE_LEARNED.md` 兩份第一手敘述都補上直接 URL，「個人經驗、非受控比較」的界線原樣保留，沒有新增任何效果主張。
+
+## P3：期限記錄不一致
+main 的固定 deadline 是 `2026-09-25T18:30:00Z`，我 revision 1 的 executor response 寫成 `19:20Z`。是我寫錯，已在 executor response 更正。revision 2 沿 main 的期限，未自行延長。
+
+## revision 2 沒有改變的事
+真模型 **NOT TESTED** · 外部使用 **0** · 未 merge · 未部署 · 未送上游 · 未呼叫任何真實供應商 · 未新增費用 · 未讀寫 secret · 未新增 adapter 或平台 · 假端點與任務 fixture 未動（`import_contacts.py`、`test_import_contacts.py` 的 md5 不變）。

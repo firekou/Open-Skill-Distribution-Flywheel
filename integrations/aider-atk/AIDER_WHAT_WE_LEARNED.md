@@ -10,7 +10,9 @@
 ## 外部使用者怎麼講
 兩份第一手敘述，都不是我們做的：
 - Chrissy LeMaire（2024-10-18 發表，頁面標示 2025-11-02 更新）：實際用它做測試框架遷移，寫了命令、失敗經驗與自述的花費。
+  <https://blog.netnerds.net/2024/10/aider-is-awesome/>
 - Sem Sinchenko（2026-03-10）：講小範圍 patch、人工 review，以及「程式還是要自己掌握」。
+  <https://semyonsinchenko.github.io/ssinchenko/post/aider_2026_and_other_topics/>
 
 **這兩份支持的是「真的有人拿它做過維護工作」。** 它們不支持任何當前的模型、價格或效果主張——那是個人經驗，不是受控比較，我們也沒有重現。
 

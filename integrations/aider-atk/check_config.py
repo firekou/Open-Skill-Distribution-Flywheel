@@ -50,15 +50,34 @@ def report(env):
     base = env["OPENAI_API_BASE"].rstrip("/")
     model = env["AIDER_MODEL"]
 
-    if "/" not in model:
+    prefix, _, remainder = model.partition("/")
+    if not remainder or prefix != "openai":
         lines.append("")
-        lines.append(f"The model name {model!r} carries no provider prefix.")
-        lines.append(
-            "For an OpenAI-compatible endpoint aider expects openai/<model>, so"
-            f" this is most likely meant to be 'openai/{model}'. Without the"
-            " prefix the request is routed by aider's own model registry"
-            " instead of to your endpoint."
-        )
+        if not prefix or "/" not in model:
+            lines.append(f"The model name {model!r} carries no provider prefix.")
+            lines.append(
+                "For an OpenAI-compatible endpoint aider expects openai/<model>,"
+                f" so this is most likely meant to be 'openai/{model}'. Without"
+                " the prefix the request is routed by aider's own model registry"
+                " instead of to your endpoint."
+            )
+        elif not remainder:
+            lines.append(f"The model name {model!r} has the prefix but no model.")
+            lines.append(
+                "Put the provider's own model name after the slash. What follows"
+                " openai/ is what actually goes on the wire."
+            )
+        else:
+            lines.append(f"The model name {model!r} names the {prefix!r} provider.")
+            lines.append(
+                "This check is for OpenAI-compatible endpoints, which aider"
+                f" reaches through the openai/ prefix. With {prefix}/ the request"
+                " goes to that provider's own route instead of to the endpoint in"
+                " OPENAI_API_BASE, so the base you set here would not be used."
+                f" If you meant your OpenAI-compatible endpoint, this is"
+                f" 'openai/{remainder}'; if you really did mean {prefix},"
+                " configure it the way that provider documents, not here."
+            )
         return 3, lines
 
     for tail in ENDPOINT_TAILS:
