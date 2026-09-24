@@ -1,5 +1,12 @@
 # 當前交接狀態
 
+## 2026-09-24：負責人成果與信心準則已採用
+
+- [成果與信心準則](../governance/OUTCOME_CONFIDENCE.md) 已依明確指示寫 main，決策 OUTCOME-CONFIDENCE-20260924；治理入口、Claude 入口與工作模板同步。
+- 每輪提供負責人可親自確認的新成果，分清運作、使用價值、經濟成果；無證據不宣稱成功，無新增成果如實說明阻礙。
+- 修正 Claude 入口仍等待已完成 M1 的過期指示；歷史內容保留並標示失效。本次是文件交付，沒有新產品實跑、live 接入、外部採用或收入證據。
+- 執行狀態與原有 review 結論維持；下一 checkpoint 仍為 OWNER_GITHUB_DISCOVERABILITY_DECISION，未重置修復輪數、未派新工作或授權發布／部署／費用。
+
 ## 2026-09-23：PR8 post-review closure head R4 覆核
 
 - [R4 獨立覆核](PR8_R4_CLOSURE_9ab2cbb0.md)：精確 head `9ab2cbb09f44a94a0e52d8e8c4d6bbb9de2d6b34`，相對已審 result `95317ee1…` 前進 2 commits，只改 `CANDIDATES.md` 與 `INVITATIONS.md`；結論 **APPROVED_WITH_CONDITIONS — closure record only**。
