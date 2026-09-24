@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 27,
+  "revision": 28,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -668,6 +668,32 @@
         "no_third_repair": true,
         "reviewed_at": "2026-09-23T23:56:26+08:00"
       }
+    },
+    {
+      "task_id": "ATK-AIDER-FIRST-USE-01",
+      "work_id": "ATK-AIDER-FIRST-USE-01",
+      "revision": 1,
+      "status": "READY",
+      "decision_id": "ATK-EXTERNAL-VALUE-CONTINUE-20260924",
+      "packet": "reviews/ATK_AIDER_FIRST_USE_PACKET.md",
+      "source_head": "251f9755ed5c1b4fd260b23b622e8ba5fad278eb",
+      "packet_commit": "f07ac0098241aae2c876e40279dd23157748f0ba",
+      "upstream_head": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+      "branch": "claude/atk-aider-first-use-01",
+      "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-FIRST-USE-01:1:251f9755ed5c1b4fd260b23b622e8ba5fad278eb:executor",
+      "deadline": "2026-09-25T18:30:00Z",
+      "active_claim": null,
+      "delivery_status": "PACKET_READY_NOT_SENT",
+      "repair_rounds_used": 0,
+      "repair_rounds_limit": 2,
+      "additional_api_budget_usd": 0,
+      "scope_paths": [
+        "integrations/aider-atk/**",
+        "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md"
+      ],
+      "next_checkpoint": "EXECUTOR_RECEIPT_THEN_DRAFT_PR",
+      "runtime_verified": false,
+      "external_adoption_verified": false
     }
   ],
   "planning": {
@@ -741,13 +767,13 @@
   "research_program": {
     "decision_id": "LAB-EXTERNAL-CONTRIBUTIONS-20260924",
     "document": "research/AI_LAB_EXTERNAL_CONTRIBUTIONS_2026-09-24.md",
-    "status": "SOURCE_REVIEW_AND_METHOD_DESIGN_COMPLETE",
+    "status": "THREE_CANDIDATES_REVIEWED_PACKET_READY",
     "work_id": "LAB-EXTERNAL-METHOD-01",
     "active_claim": null,
     "execution_dispatched": false,
     "third_party_reproduction_completed": false,
-    "next_checkpoint": "EXTERNAL_VALUE_EVIDENCE_AND_INCREMENTAL_GAP",
-    "next_action": "先選三個有外部需求與使用證據的工具/skill，區分關注、獨立檢驗、實際效果與我們的增量；再選一個具體缺口，必要時借用現有評估工具。",
+    "next_checkpoint": "AIDER_FIRST_USE_DRAFT_DELIVERY",
+    "next_action": "執行ATK-AIDER-FIRST-USE-01原生設定與任務小交付；檢查接單及Draft PR，不重派、不等待About決策。",
     "external_projects_read": [
       "Inspect AI",
       "HELM",
