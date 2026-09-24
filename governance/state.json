@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 30,
+  "revision": 31,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -673,7 +673,7 @@
       "task_id": "ATK-AIDER-FIRST-USE-01",
       "work_id": "ATK-AIDER-FIRST-USE-01",
       "revision": 1,
-      "status": "READY",
+      "status": "CONDITIONS_PENDING",
       "decision_id": "ATK-EXTERNAL-VALUE-CONTINUE-20260924",
       "packet": "reviews/ATK_AIDER_FIRST_USE_PACKET.md",
       "source_head": "251f9755ed5c1b4fd260b23b622e8ba5fad278eb",
@@ -683,20 +683,59 @@
       "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-FIRST-USE-01:1:251f9755ed5c1b4fd260b23b622e8ba5fad278eb:executor",
       "deadline": "2026-09-25T18:30:00Z",
       "active_claim": null,
-      "delivery_status": "SIGNAL_SENT",
-      "repair_rounds_used": 0,
+      "delivery_status": "REVISION_2_SIGNAL_SENT",
+      "repair_rounds_used": 1,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
       "scope_paths": [
         "integrations/aider-atk/**",
         "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md"
       ],
-      "next_checkpoint": "EXECUTOR_RECEIPT_THEN_DRAFT_PR",
+      "next_checkpoint": "PR14_R2_CLAIM_OR_RESULT",
       "runtime_verified": false,
       "external_adoption_verified": false,
       "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5819867533",
       "signaled_at": "2026-09-24T18:30:00Z",
-      "signaled_at_precision": "approximate minute; exact timestamp is authoritative in GitHub comment"
+      "signaled_at_precision": "approximate minute; exact timestamp is authoritative in GitHub comment",
+      "pr": 14,
+      "observed_head": "e828965585a1b9ee0cf33a4c5a868f62d5942aa5",
+      "last_reviewed_head": "e828965585a1b9ee0cf33a4c5a868f62d5942aa5",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "review": "reviews/PR14_R1_AIDER_e8289655.md",
+      "result_receipt": {
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "work_id": "ATK-AIDER-FIRST-USE-01",
+        "revision": 1,
+        "source_head": "251f9755ed5c1b4fd260b23b622e8ba5fad278eb",
+        "result_head": "e828965585a1b9ee0cf33a4c5a868f62d5942aa5",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-FIRST-USE-01:1:251f9755ed5c1b4fd260b23b622e8ba5fad278eb:executor",
+        "pr_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/14",
+        "receipt_kind": "draft_pr_and_executor_response; no prior conversation claim receipt",
+        "persistent_launcher_proven": false
+      },
+      "condition_repair": {
+        "revision": 2,
+        "source_head": "e828965585a1b9ee0cf33a4c5a868f62d5942aa5",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-FIRST-USE-01:2:e828965585a1b9ee0cf33a4c5a868f62d5942aa5:conditions",
+        "deadline": "2026-09-25T19:30:00Z",
+        "scope_paths": [
+          "integrations/aider-atk/check_config.py",
+          "integrations/aider-atk/test_check_config.py",
+          "integrations/aider-atk/EVIDENCE.md",
+          "integrations/aider-atk/AIDER_WHAT_WE_LEARNED.md",
+          "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md"
+        ],
+        "findings": [
+          "AIDER-R1-01 exact openai/ prefix gate",
+          "AIDER-R1-02 narrow no-network regression claim",
+          "AIDER-R1-03 direct URLs for two external reports"
+        ],
+        "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/14#issuecomment-5820714720",
+        "delivery_status": "SIGNAL_SENT",
+        "active_claim": null,
+        "repair_round": 1,
+        "repair_rounds_limit": 2
+      }
     }
   ],
   "planning": {
