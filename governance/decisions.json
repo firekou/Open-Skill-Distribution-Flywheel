@@ -185,6 +185,21 @@
         "不恢復舊 benchmark/Freeze/框架優先試點，不重置舊修復輪次",
         "不新增外部發送、合併、部署、權限或付費授權"
       ]
+    },
+    {
+      "id": "ATK-EXTERNAL-VALUE-CONTINUE-20260924",
+      "status": "approved",
+      "source": "負責人要求方向修正後直接繼續延展規劃、討論、搜尋；承接既有三候選、選一個接點、小交付與GitHub交接指示。",
+      "decision": "完成Aider/Continue/Open WebUI初評，選Aider原生設定小交付；由既有conversation交接新work_id，不再讓舊公開發現checkpoint阻擋。",
+      "packet": "reviews/ATK_AIDER_FIRST_USE_PACKET.md",
+      "supersedes": [
+        "舊入口對所有新工具一律不得挑選的解讀，僅放行本包Aider單一小交付"
+      ],
+      "limits": [
+        "不重開舊PR修復",
+        "新增費用0；不live、不部署、不merge、不發邀請、不送上游",
+        "實作在工作分支送Draft PR，獨立review才判定，方法與規劃不是採用證據"
+      ]
     }
   ]
 }
