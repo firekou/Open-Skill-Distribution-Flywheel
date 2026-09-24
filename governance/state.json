@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 26,
+  "revision": 27,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -746,13 +746,14 @@
     "active_claim": null,
     "execution_dispatched": false,
     "third_party_reproduction_completed": false,
-    "next_checkpoint": "PINNED_UPSTREAM_MINIMAL_REPRODUCTION_AND_GAP_DECISION",
-    "next_action": "先重現外部方法最小案例並裁決其用途；後續工具候選先查原作與需求，再選一個最小接入。研究不依賴產品發布授權。",
+    "next_checkpoint": "EXTERNAL_VALUE_EVIDENCE_AND_INCREMENTAL_GAP",
+    "next_action": "先選三個有外部需求與使用證據的工具/skill，區分關注、獨立檢驗、實際效果與我們的增量；再選一個具體缺口，必要時借用現有評估工具。",
     "external_projects_read": [
       "Inspect AI",
       "HELM",
       "Pydantic Evals"
     ],
-    "new_adoption_evidence": false
+    "new_adoption_evidence": false,
+    "external_impact_verified": false
   }
 }
