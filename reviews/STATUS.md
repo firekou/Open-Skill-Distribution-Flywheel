@@ -1,3 +1,13 @@
+## 2026-09-24：PR14 Aider 首次交付 R1 覆核
+
+- [R1 獨立覆核](PR14_R1_AIDER_e8289655.md)：精確 head `e828965585a1b9ee0cf33a4c5a868f62d5942aa5`，結論 **APPROVED_WITH_CONDITIONS**。
+- VERIFIED／REPRODUCED：15 個變更檔均在允許範圍；baseline 5 項為 3 pass、1 failure、1 error；設定檢查器原 8/8 通過；三個 MD5 與 evidence 一致。指定 dev source 與 0.86.1 release 的相關 `args.py`／`main.py` Git blob 完全相同。
+- 作者的 Aider request、模型前綴與價格表外連紀錄維持 TESTED／OFFLINE_PROTOCOL_ONLY；reviewer 未執行 Aider、真模型或 provider。
+- 條件：`anthropic/model` 會被檢查器錯判 exit 0；無網路結構測試的未來保證過強；兩份外部報告需補直接 URL。
+- 已送 revision 2、repair 1/2 的一次限定修正訊號：[PR14 comment](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/14#issuecomment-5820714720)。目前只是 SIGNAL_SENT，尚無新 session/claim/result。
+- PR body／executor response 已提供既有 session、固定 work/source/dedup 與 result head，證明成果回傳；沒有先行 claim receipt，不證明 persistent launcher。automation 維持 FOUNDATION_ONLY。
+- 真模型、live endpoint、外部使用皆未驗證；外部使用者 0。未 merge、部署、送上游／邀請、改 secrets／權限或新增費用。
+
 ## 2026-09-24：外部研究證據卡限定覆核
 [PR1 研究覆核](PR1_EXTERNAL_VALUE_01647fe3.md)，head `01647fe3…`，**NEEDS_INFORMATION**。只審新研究卡，不重啟舊 benchmark。獨立確認 srt CLI 子命令與 #576 回報存在；Agent Scan 仍接受 issue 回饋，原文「沒有回饋路徑」須修正。srt 的通用缺口與比較優勢尚未成立，先查 #581 等重疊與版本來源。沒有新 sandbox 實作派工。
 Aider 工作包維持 SIGNAL_SENT，PR8 的新留言為已登記訊號本身，尚無新接單／成果；不重派。Aider 不受本研究待辦阻擋。作者證據原樣保留，沒有新增 runtime、採用或發布批准。
