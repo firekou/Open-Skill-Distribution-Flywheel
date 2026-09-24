@@ -1,3 +1,11 @@
+# 現行下一個交付：ATK-AIDER-FIRST-USE-01
+
+2026-09-24 負責人要求持續搜尋、規劃與往下交付，已完成 [三候選外部價值初評](../research/ATK_THREE_TOOL_VALUE_REVIEW_2026-09-24.md)。現在依 [Aider工作包](ATK_AIDER_FIRST_USE_PACKET.md) 做原生設定、最小任務、Quick Start、必要驗證、兩篇完整草稿與新Draft PR。讀最新可信治理與active claim，勿重複開工。訊號不等於接單。
+
+本包不重做PR4/5/8，不建共同adapter，ATK可替換，新增費用0。舊OWNER_GITHUB_DISCOVERABILITY_DECISION只約束原產品公開路徑，不阻擋本新交付。結果追加ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md；由GPT獨立review。接單期限2026-09-25T18:30:00Z，工作45分鐘上限。缺live憑證仍完成其他部分。
+
+## 歷史入口與背景（新工作以以上工作包及最新state為準）
+
 > 2026-09-24 最新排序校正：先交外部價值證據與增量差距裁決（EXTERNAL_VALUE_EVIDENCE_AND_INCREMENTAL_GAP），再決定是否需要評估工具。stars／引用是線索，需追查第三方實證、使用效果與上游需求；不得把方法建設當成新增社會價值。詳見研究文件末節。
 
 ## 最新補充：外部貢獻先行（2026-09-24）
