@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 28,
+  "revision": 29,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -683,7 +683,7 @@
       "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-FIRST-USE-01:1:251f9755ed5c1b4fd260b23b622e8ba5fad278eb:executor",
       "deadline": "2026-09-25T18:30:00Z",
       "active_claim": null,
-      "delivery_status": "PACKET_READY_NOT_SENT",
+      "delivery_status": "SIGNAL_SENT",
       "repair_rounds_used": 0,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
@@ -693,7 +693,10 @@
       ],
       "next_checkpoint": "EXECUTOR_RECEIPT_THEN_DRAFT_PR",
       "runtime_verified": false,
-      "external_adoption_verified": false
+      "external_adoption_verified": false,
+      "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/8#issuecomment-5819867533",
+      "signaled_at": "2026-09-24T18:30:00Z",
+      "signaled_at_precision": "approximate minute; exact timestamp is authoritative in GitHub comment"
     }
   ],
   "planning": {
