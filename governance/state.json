@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 25,
+  "revision": 26,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -737,5 +737,22 @@
     "new_external_adoption_evidence": false,
     "repair_limits_reset": false,
     "next_action": "Apply evidence requirements to the next valid authorized batch; preserve current operational checkpoint and live-head review requirements."
+  },
+  "research_program": {
+    "decision_id": "LAB-EXTERNAL-CONTRIBUTIONS-20260924",
+    "document": "research/AI_LAB_EXTERNAL_CONTRIBUTIONS_2026-09-24.md",
+    "status": "SOURCE_REVIEW_AND_METHOD_DESIGN_COMPLETE",
+    "work_id": "LAB-EXTERNAL-METHOD-01",
+    "active_claim": null,
+    "execution_dispatched": false,
+    "third_party_reproduction_completed": false,
+    "next_checkpoint": "PINNED_UPSTREAM_MINIMAL_REPRODUCTION_AND_GAP_DECISION",
+    "next_action": "先重現外部方法最小案例並裁決其用途；後續工具候選先查原作與需求，再選一個最小接入。研究不依賴產品發布授權。",
+    "external_projects_read": [
+      "Inspect AI",
+      "HELM",
+      "Pydantic Evals"
+    ],
+    "new_adoption_evidence": false
   }
 }
