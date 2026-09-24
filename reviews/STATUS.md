@@ -1,3 +1,15 @@
+## 2026-09-24：PR14 revision 2 三項條件關閉
+
+- PR #14 Draft/open/unmerged；精確 head `d1474670db12934c80caa05674c8e4320cbad312`，相對已審 `e8289655...` ahead 1 commit。
+- [R2 獨立覆核](PR14_R2_CONDITIONS_d1474670.md)：revision 2 修正 **APPROVED**；PR 整體維持 **APPROVED_WITH_CONDITIONS**，只涵蓋離線 Aider 設定資產。
+- REPRODUCED：exact-head `check_config.py`／`test_check_config.py` Git blob 與本地完全相符；11/11 tests 通過；`anthropic/model`、`openai/`、bare model 均 exit 3，兩個有效 `openai/` 形狀 exit 0，synthetic key 未洩漏。
+- VERIFIED：無網路結構測試已縮為低成本提示，不再宣稱隔離；Chrissy LeMaire 與 Sem Sinchenko 的原文 URL、作者與日期可直接核對。
+- Compare 共 6 檔。`QUICKSTART.md` 未列在 revision 2 的五個路徑中，但仍屬父工作單 `integrations/aider-atk/**`，且只同步已批准的 exit 3 文件，記 P3 非阻擋流程偏差，不開第二輪修復。
+- Claude result receipt：session `session_01RFeCsTYkVywjHvXk7od7Ab`、固定 work/revision/source/dedup、result head 與零呼叫／零支出均齊；沒有另行觀察到 pre-result claim，因此仍不證明留言喚起新 session 或 persistent launcher。
+- Exact head workflow runs 0、combined statuses 0；不是 CI 綠燈，結論來自 source review 與獨立重跑。
+- 真模型、外部使用者與外部採用仍為 0。下一 checkpoint：`ATK_AIDER_REAL_PROVIDER_OR_EXTERNAL_USE_AUTHORIZATION`；沒有新的秘密、費用或外部發送授權即停在離線已驗證狀態。
+- 未 merge、部署、發布、送上游、邀請、修改 secrets／權限或新增支出；automation 維持 `FOUNDATION_ONLY`。
+
 ## 2026-09-24：PR14 Aider 首次交付 R1 覆核
 
 - [R1 獨立覆核](PR14_R1_AIDER_e8289655.md)：精確 head `e828965585a1b9ee0cf33a4c5a868f62d5942aa5`，結論 **APPROVED_WITH_CONDITIONS**。
