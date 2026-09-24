@@ -1,0 +1,43 @@
+# offline trial, synthetic log (run 2026-09-22T19:13Z)
+$ python3 local_check.py
+log        : deploy.log — 1200 lines, 111262 bytes
+direct     : 111357 chars reached the upstream
+via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+needle #1 (18 chars): present after the proxy
+needle #2 (5 chars): present after the proxy
+PASS: 16779 fewer characters (15.1%) and every needle survived
+exit=0
+
+# negative control: same records as JSON lines
+$ python3 local_check.py --log deploy.jsonl --needle <migration name>
+NO BENEFIT: no size benefit was observed, twice. The payload came back unchanged, byte for byte, on both measurements against the same proxy. Nothing was lost and nothing was gained. This says what was measured and not why: two matching observations do not establish that your payload lacks the redundancy headroom factors out, and do not rule out the proxy not compressing on this run. If it matters, try a different payload shape, run it again, and check ~/.headroom/logs/proxy.log.
+log        : deploy.jsonl — 1200 lines, 124464 bytes
+direct     : 124559 chars reached the upstream
+via proxy  : 124559 chars reached the upstream  (identical size)
+needle #1 (18 chars): present after the proxy
+exit=3
+
+# misuse control: needle not in log
+$ python3 local_check.py --log deploy.log --needle NOT_IN_THE_LOG_xyz
+needle #1 is not in the log to begin with — nothing to preserve. Check the string. (Re-run with --show-needles to see which one, on a terminal you are happy to have it on.)
+exit=2
+
+# unknown argument is not echoed
+$ python3 local_check.py --bogus
+usage: local_check.py [-h] [--log LOG] [--needle TEXT] [--question QUESTION]
+                      [--show-needles]
+local_check.py: error: 1 unrecognized argument(s). They are not shown, because an unrecognised token can be a value rather than a flag and this output is meant to be safe to paste. Run with --help for the accepted options.
+exit=2
+
+# live script without key
+$ python3 ab_test.py
+ATK_API_KEY is not set; refusing to run. No mock is substituted.
+exit=2
+
+# offline unit tests
+$ python3 test_local_check.py
+----------------------------------------------------------------------
+Ran 44 tests in 0.076s
+
+OK
+exit=0

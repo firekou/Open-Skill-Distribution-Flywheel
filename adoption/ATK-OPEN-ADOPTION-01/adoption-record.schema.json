@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/adoption/ATK-OPEN-ADOPTION-01/adoption-record.schema.json",
+  "title": "ATK adoption record (minimal, one trial per record)",
+  "description": "One record per trial attempt. Unknown values are the string \"unknown\", never 0 or empty. See EVIDENCE_FORMAT.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id", "source_class", "discovery_route", "operator_external", "agent_runtime",
+    "asset_id", "code_sha", "date_utc", "task", "input_md5", "commands", "exit_code",
+    "result", "success_criterion", "success", "human_help", "duration_minutes", "usage_cost",
+    "blockers", "reuse_intent", "public_scope", "evidence_urls", "recorded_by"
+  ],
+  "properties": {
+    "record_id": {"type": "string", "pattern": "^[A-Z0-9-]+$"},
+    "source_class": {
+      "enum": ["INTERNAL_AGENT_TEST", "EXTERNAL_INVITED_AGENT", "EXTERNAL_DISCOVERED_AGENT", "EXTERNAL_INVITED_HUMAN", "EXTERNAL_DISCOVERED_HUMAN", "UNVERIFIED"]
+    },
+    "discovery_route": {
+      "enum": ["INTERNAL", "DIRECT_INVITE", "PUBLIC_DISCOVERY", "DIRECTORY_DISCOVERY", "UNKNOWN"]
+    },
+    "discovery_detail": {
+      "type": "string",
+      "description": "For PUBLIC_DISCOVERY / DIRECTORY_DISCOVERY: the query or directory entry, the result position, and why it was chosen."
+    },
+    "operator_external": {"enum": [true, false, "unknown"]},
+    "operator_evidence": {"type": "string", "description": "What shows who controlled the agent (e.g. their own public issue comment). Required for any EXTERNAL_* class."},
+    "agent_runtime": {"type": "string"},
+    "asset_id": {"type": "string"},
+    "code_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "headroom_version": {"type": "string"},
+    "date_utc": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}(T\\d{2}:\\d{2}(:\\d{2})?Z)?$"},
+    "task": {"type": "string"},
+    "input_md5": {"type": "string", "description": "md5 of the synthetic input, or \"own-payload-not-shared\"."},
+    "commands": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "exit_code": {"anyOf": [{"type": "integer"}, {"const": "unknown"}]},
+    "result": {"enum": ["SUCCESS", "NO_BENEFIT", "NEEDLE_LOST", "MISUSE", "INCONCLUSIVE", "ENV_FAILURE", "STOPPED_BY_POLICY", "NOT_ATTEMPTED"]},
+    "success_criterion": {"type": "string"},
+    "success": {"enum": [true, false, "unknown"]},
+    "human_help": {"type": "string", "description": "\"none\" or what help was needed and from whom."},
+    "duration_minutes": {"anyOf": [{"type": "number", "minimum": 0}, {"const": "unknown"}]},
+    "usage_cost": {"type": "string", "description": "\"0 (offline)\", provider usage figures, or \"unknown\"."},
+    "blockers": {"type": "array", "items": {"type": "string"}},
+    "reuse_intent": {"enum": ["yes", "no", "maybe", "unknown"]},
+    "public_scope": {"enum": ["public", "summary-only", "private"]},
+    "evidence_urls": {"type": "array", "items": {"type": "string"}},
+    "recorded_by": {"type": "string"},
+    "notes": {"type": "string"}
+  }
+}

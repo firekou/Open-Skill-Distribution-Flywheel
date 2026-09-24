@@ -1,0 +1,71 @@
+# ATK-OPEN-ADOPTION-01 revision 2 — condition controls
+# content SHA under review: 8161c6a33251b06c44db9f5dbabc9431fa73b67d
+# immutable link target (commit A): fb47e31b54b35518322254d0d69d7c7193dc2266
+# source head at claim: 77a8200533c80bc288186f58c1d8ecb6d25d121d
+# offline only; no key, no model call, no spend. python 3.11.15
+
+=== A-R1-04 control: the r1 validator accepts the new fixture, this one does not ===
+$ python3 <validate_records.py @ 77a8200> test_fixtures/bad_schema_constraints.json
+exit=0   <- 0: r1 wrongly accepted it
+
+$ python3 validate_records.py test_fixtures/bad_schema_constraints.json   (revision 2)
+test_fixtures/bad_schema_constraints.json: schema: record_id='neg-5-lowercase' does not match ^[A-Z0-9-]+$
+test_fixtures/bad_schema_constraints.json: schema: operator_external=1 not in [True, False, 'unknown']
+test_fixtures/bad_schema_constraints.json: schema: agent_runtime=7 must be string
+test_fixtures/bad_schema_constraints.json: schema: date_utc='2026-9-22' does not match ^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?Z)?$
+test_fixtures/bad_schema_constraints.json: schema: commands needs at least 1 item(s), has 0
+test_fixtures/bad_schema_constraints.json: schema: duration_minutes=-6 matches none of the allowed forms
+exit=1   <- 1 required
+
+=== records and every fixture ===
+records/*.json -> exit 0   (0 required)
+test_fixtures/bad_discovery_no_query.json -> exit 1
+test_fixtures/bad_external_no_evidence.json -> exit 1
+test_fixtures/bad_internal_claims_discovery.json -> exit 1
+test_fixtures/bad_schema_constraints.json -> exit 1
+test_fixtures/bad_short_sha_and_zero_unknown.json -> exit 1
+test_fixtures/ok_unverified.json -> exit 0
+
+=== mutation control: remove the schema layer, the fixture stops failing ===
+mutant (schema layer removed) -> exit 0   <- 0: the fixture fails only because of the new layer
+
+=== required searches over the delivered tree (adoption/ and integrations/) ===
+grep -rni '27%' -> 0 match(es)   (0 required)
+grep -rni 'blob/claude/atk-open-adoption' -> 0 match(es)   (0 required)
+grep -rni '…/blob' -> 0 match(es)   (0 required)
+grep -rni 'nothing leaves' -> 0 match(es)   (0 required)
+grep -rni 'leaves loopback' -> 0 match(es)   (0 required)
+grep -rni 'no tracking' -> 0 match(es)   (0 required)
+
+=== every JSON parses ===
+OK: 0 unparseable of 11 JSON files
+
+=== full package consistency (includes the PR5 patch apply and the ab_test.py AST) ===
+$ python3 adoption/ATK-OPEN-ADOPTION-01/check_consistency.py
+PASS manifest code_sha is a full SHA
+PASS quickstart checks out the manifest SHA
+PASS same headroom version in both
+PASS same synthetic log md5 in both
+PASS same expected numbers in both
+PASS same exit codes in both
+PASS quickstart does not copy the live commands
+PASS live commands link is pinned to the SHA
+PASS pinned SHA present locally
+PASS make_log.py exists at pinned SHA
+PASS local_check.py exists at pinned SHA
+PASS test_local_check.py exists at pinned SHA
+PASS TRY_IT.md exists at pinned SHA
+PASS ab_test.py exists at pinned SHA
+PASS patch touches only ['DISTRIBUTION.md', 'README.md', 'TRY_IT.md', 'ab_test.py', 'offering/SERVICE_SAMPLE_FREE.md']: ['DISTRIBUTION.md', 'README.md', 'TRY_IT.md', 'ab_test.py', 'offering/SERVICE_SAMPLE_FREE.md']
+PASS patch applies cleanly to pinned SHA
+PASS ab_test.py executable code unchanged
+PASS 2 record(s) validate
+PASS fixture bad_discovery_no_query.json -> exit 1
+PASS fixture bad_external_no_evidence.json -> exit 1
+PASS fixture bad_internal_claims_discovery.json -> exit 1
+PASS fixture bad_schema_constraints.json -> exit 1
+PASS fixture bad_short_sha_and_zero_unknown.json -> exit 1
+PASS fixture ok_unverified.json -> exit 0
+
+OK: 0 failure(s)
+exit=0
