@@ -173,6 +173,18 @@
         "不新增 merge、發布、部署、外部發送、secrets／權限修改或支出授權"
       ],
       "document": "governance/OUTCOME_CONFIDENCE.md"
+    },
+    {
+      "id": "LAB-EXTERNAL-CONTRIBUTIONS-20260924",
+      "status": "approved",
+      "source": "2026-09-24 負責人明確要求研究外部 AI 貢獻、方法與治理，規劃引入、進化、整合並驗證自身新增價值；承接將研究準則 push main 的指示。",
+      "decision": "研究從外部已有成果與真實需求開始，先審讀、重現、比較，再選擇直接採用、薄接入或不改造；研究支線不等待產品公開發現決策。",
+      "document": "research/AI_LAB_EXTERNAL_CONTRIBUTIONS_2026-09-24.md",
+      "limits": [
+        "本輪僅完成來源審讀與方法設計，未執行第三方重現或證明新增採用",
+        "不恢復舊 benchmark/Freeze/框架優先試點，不重置舊修復輪次",
+        "不新增外部發送、合併、部署、權限或付費授權"
+      ]
     }
   ]
 }
