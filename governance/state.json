@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 33,
+  "revision": 34,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -752,7 +752,7 @@
     {
       "task_id": "PR15_ATK_ORG_STATUS",
       "work_id": null,
-      "status": "BLOCKED",
+      "status": "MERGED_GOVERNANCE_BLOCKED",
       "pr": 15,
       "branch": "cursor/add-atk-org-status-skill-1754",
       "base_head": "fc0b3054b5eeb23441f017ea795d1378a2735d6b",
@@ -790,10 +790,28 @@
         "ATK-OPEN-ADOPTION-20260922",
         "ATK-EXTERNAL-VALUE-CONTINUE-20260924"
       ],
-      "next_action": "Do not merge or use as an authority. A new head requires a repo-visible owner decision and bounded work packet; repository-qualified immutable evidence for retained cross-project claims; explicit reconciliation of the Open-Skill hard gate; and a derived-index design with precedence/staleness rules.",
+      "next_action": "Merged presence does not grant operational authority. Owner must choose a bounded, repo-visible remedy: remove/quarantine the skill, replace it with a sourced non-authoritative index, or explicitly supersede conflicting Open-Skill decisions. Any content change needs a new work_id, exact result head, and independent review.",
       "active_claim": null,
       "no_repair_dispatch": true,
-      "reviewed_at": "2026-09-25T10:32:01+08:00"
+      "reviewed_at": "2026-09-25T10:32:01+08:00",
+      "merged": true,
+      "merge_commit": "252bf6dcd8de7bd3072ad044143fa4304bc7622f",
+      "merged_at": "2026-09-25T05:39:02Z",
+      "main_blob": "cc4c98e85080e9f4bf6a3f97582b1a0e00ce9132",
+      "operational_authority": false,
+      "post_merge_review": "reviews/PR15_POST_MERGE_GOVERNANCE_252bf6dc.md",
+      "post_merge_exact_checks": {
+        "pr_reviews": 0,
+        "pr_conversation_entries": 1,
+        "head_workflow_runs": 0,
+        "head_commit_statuses": 0,
+        "merge_workflow_runs": 0,
+        "merge_commit_statuses": 0,
+        "main_branch_protected": false,
+        "required_status_checks": 0
+      },
+      "next_checkpoint": "OWNER_PR15_REMEDIATION_DECISION",
+      "post_merge_verified_at": "2026-09-25T13:39:29+08:00"
     }
   ],
   "planning": {
