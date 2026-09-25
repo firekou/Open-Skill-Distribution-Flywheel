@@ -1,3 +1,11 @@
+## 2026-09-26：Aider live 決策準備包已正式接單
+
+- Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-AIDER-LIVE-PREP-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837692492)。
+- claim 固定 source main `b0770499...`、readiness `1dcd625d...`、資產 `d1474670...`、branch、dedup、scope 與期限，均符合上一則工作包；狀態升為 `EXECUTING`，沒有重複派工。
+- PR16 live head 仍是已審的 `1dcd625d...`，本事件沒有新 content head 或 result SHA，因此不重做 content review、不宣稱工作完成。
+- Exact-head workflow runs 0、commit statuses 0、PR reviews 0；這不是 CI 證明。既有 session 接單證明訊號被讀取，但不證明 comment 能啟動新 session 或 persistent launcher。
+- state revision 40；next checkpoint `ATK_AIDER_LIVE_PREP_RESULT_SHA`。live、secrets、建立 key/project、招募、發布、merge、部署、settings／權限、送上游、支出與 polling 仍未授權。
+
 ## 2026-09-26：Aider live 決策準備包已交接
 
 - PR16 revision 2 通過後，依完整執行 Prompt 自動接續 `ATK-AIDER-LIVE-PREP-01` revision 1；[固定工作包](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837510459) 已送既有 PR conversation。
