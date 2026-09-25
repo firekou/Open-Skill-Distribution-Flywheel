@@ -109,3 +109,17 @@ FIRST-USE-PREP 交付內容：
 - 驗證腳本 42/42 通過。
 
 還欠的權限：發布渠道與發送身分、PR14 合併、live 選項（`OWNER_ATK_AIDER_LIVE_DECISION`），以及是否把兩份上游草稿送出。
+
+---
+
+## 追加（2026-09-25T22:20Z）：PR19 R1 被擋下，已完成修復
+
+| work_id / revision | Draft PR | 精確 result head | 複核 |
+|---|---|---|---|
+| ATK-FIRST-USE-PREP-01 r1 | #19 | `12b807bcbbd15f3ab156248e980f3ddde3a6b5f0` | [R1](PR19_R1_FIRST_USE_PREP_12b807bc.md) BLOCKED（P1-01、P1-02，都是回饋 schema 的漏洞） |
+| ATK-FIRST-USE-PREP-01 r2（repair 1/2） | #19 | `a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41` | 待複核；收據見 [PR19 留言](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5840366827) |
+
+- 兩個 finding 都先重現成立，才動手修。
+- 修正方式：回饋紀錄不再能自己填「通過」，改由測試結果推出來；來源版本只認網址裡的那組 SHA。
+- 驗證：新寫的 17 個正／負控制全部通過，原本的驗證腳本也仍然通過。
+- 這次只改了 `FEEDBACK_SCHEMA.json`。沒有聯絡任何人，也沒有發布。
