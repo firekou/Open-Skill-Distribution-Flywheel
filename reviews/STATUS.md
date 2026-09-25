@@ -1,3 +1,11 @@
+## 2026-09-26：完整藍圖與 Claude 入口已整理
+- 負責人要求先完整規劃終點；[端到端藍圖](ATK_END_TO_END_BLUEPRINT.md) 已交付：研究/引入/接入/分發/首次使用/增量價值/開源貢獻/持續回收，含依賴、退出、90天管理目標與全部後續工作包。
+- [Claude 入口](CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md) 改為單一現行入口，舊文封存；不再指向已完成的 Aider 首輪或 M1 等待。
+- 下一包 ATK-VALUE-READINESS-01 r1 已定五項成果、允許路徑、驗收、期限規則與停止點；PLANNED_NOT_DISPATCHED，未宣稱 Claude 啟動。
+- live PR14 head d1474670db12934c80caa05674c8e4320cbad312 仍 Draft/open；PR15 仍 merged。既有獨立review結論不變，本輪未重跑技術驗證。
+- 這是 Planner 規劃成果，非獨立review或新外部採用。90天數量是探索目標，非成果/發送額度。
+- state revision 35；未新增支出、發布、邀請、merge、部署或權限操作。
+
 ## 2026-09-25：PR15 已合併但治理結論仍為 BLOCKED
 
 - [Post-merge addendum](PR15_POST_MERGE_GOVERNANCE_252bf6dc.md)：PR #15 已於 `2026-09-25T05:39:02Z` 合併，merge commit `252bf6dcd8de7bd3072ad044143fa4304bc7622f`；main 現在包含先前判定 BLOCKED 的同一 blob `cc4c98e85080e9f4bf6a3f97582b1a0e00ce9132`。
