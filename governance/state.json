@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 36,
+  "revision": 37,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -819,7 +819,7 @@
       "revision": 1,
       "status": "FIX_PENDING",
       "goal": "Turn reviewed Aider offline assets into a concrete external-value trial and release/access packet",
-      "prompt": "reviews/ATK_END_TO_END_BLUEPRINT.md#8-下一個包完整契約atk-value-readiness-01-r1",
+      "prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md#3-現在立即執行pr16-revision-2",
       "scope_paths": [
         "research/adoption/aider/**",
         "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
@@ -993,6 +993,16 @@
     "next_work_id": "ATK-VALUE-READINESS-01",
     "next_checkpoint": "PR16_R2_REPAIR_RESULT",
     "execution_status": "FIX_PENDING",
-    "note": "Full lifecycle planned; local access/publication gates do not stop unrelated preparation. No outcome or launcher promotion."
+    "note": "Full lifecycle planned; local access/publication gates do not stop unrelated preparation. No outcome or launcher promotion.",
+    "execution_prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
+    "prompt_version": "2.0",
+    "prompt_delivery": {
+      "commit": "61bb912c775ff26ab6775bce8f943f81536beb0b",
+      "status": "SIGNAL_SENT",
+      "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5836978595",
+      "dedup_key": "ATK-FULL-EXECUTION-PROMPT-20260926:61bb912c775ff26ab6775bce8f943f81536beb0b",
+      "source": "Owner requested complete executable prompt for all stages, 2026-09-26",
+      "new_claim_observed": false
+    }
   }
 }
