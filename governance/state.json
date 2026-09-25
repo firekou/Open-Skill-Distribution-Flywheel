@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 42,
+  "revision": 43,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1011,37 +1011,18 @@
     {
       "task_id": "ATK-UPSTREAM-01",
       "work_id": "ATK-UPSTREAM-01",
-      "revision": 1,
-      "status": "EXECUTING",
+      "revision": 2,
+      "status": "FIX_PENDING",
       "goal": "Read-only upstream deduplication and maintainer-ready draft preparation for Aider/LiteLLM 402/403 retry and misleading exit-0 behavior",
       "source_main": "efe20e67d1f96092b00e2154f3ff2712e256fab7",
       "source_result_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
       "branch": "claude/atk-aider-upstream-01",
       "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-UPSTREAM-01:1:efe20e67d1f96092b00e2154f3ff2712e256fab7:executor",
       "deadline": "2026-09-26T19:30:00Z",
-      "repair_rounds_used": 0,
+      "repair_rounds_used": 1,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "active_claim": {
-        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
-        "work_id": "ATK-UPSTREAM-01",
-        "revision": 1,
-        "claim_at": "2026-09-25T19:27:00Z",
-        "deadline": "2026-09-26T19:30:00Z",
-        "source_main": "efe20e67d1f96092b00e2154f3ff2712e256fab7",
-        "source_result_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
-        "branch": "claude/atk-aider-upstream-01",
-        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-UPSTREAM-01:1:efe20e67d1f96092b00e2154f3ff2712e256fab7:executor",
-        "scope_paths": [
-          "research/adoption/aider/upstream/UPSTREAM_DEDUP_REPORT.md",
-          "research/adoption/aider/upstream/DRAFT_AIDER_ISSUE.md",
-          "research/adoption/aider/upstream/DRAFT_LITELLM_ISSUE.md",
-          "research/adoption/aider/upstream/evidence/**",
-          "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
-        ],
-        "receipt_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838315225",
-        "note": "Valid claim from the same existing Claude session. This proves the fixed packet was received by that session, not that a persistent launcher or comment-triggered new session exists."
-      },
+      "active_claim": null,
       "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838137130",
       "scope_paths": [
         "research/adoption/aider/upstream/UPSTREAM_DEDUP_REPORT.md",
@@ -1061,13 +1042,84 @@
         "settings/permissions",
         "polling"
       ],
-      "next_checkpoint": "ATK_UPSTREAM_01_RESULT_SHA",
+      "next_checkpoint": "PR18_R2_38318_STATUS_CORRECTION",
       "results_digest": {
         "commit": "d4bb22be97c02fb1031bcd419c5e0c1851ea3150",
         "path": "reviews/CLAUDE_EXECUTOR_RESULTS_2026-09-25.md",
         "classification": "INDEX_ONLY_VERIFIED",
         "policy_changed": false,
         "state_changed": false
+      },
+      "observed_head": "48ea4decb3920b8a1d1fcacb92442b7a94376353",
+      "result_head": "48ea4decb3920b8a1d1fcacb92442b7a94376353",
+      "last_reviewed_head": "48ea4decb3920b8a1d1fcacb92442b7a94376353",
+      "last_review_decision": "BLOCKED",
+      "review": "reviews/PR18_R1_UPSTREAM_48ea4dec.md",
+      "result_receipt": {
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "work_id": "ATK-UPSTREAM-01",
+        "revision": 1,
+        "source_main": "efe20e67d1f96092b00e2154f3ff2712e256fab7",
+        "source_result_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+        "result_head": "48ea4decb3920b8a1d1fcacb92442b7a94376353",
+        "pr": 18,
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838541738",
+        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838315225"
+      },
+      "exact_head_checks": {
+        "workflow_runs": 0,
+        "commit_statuses": 0,
+        "pr_reviews": 0,
+        "check_runs": "NOT_EXPOSED_BY_CONNECTOR"
+      },
+      "changed_paths_count": 59,
+      "evidence_verification": {
+        "evidence_files_fetched": 55,
+        "raw_artifact_sha256_checked": 51,
+        "raw_artifact_sha256_matched": 51,
+        "script_sha256_checked": 2,
+        "script_sha256_matched": 2,
+        "manifest_index_sha256_checked": 2,
+        "manifest_index_sha256_matched": 2,
+        "authored_case_matrices_checked": {
+          "aider_cases": 14,
+          "litellm_versions": 3
+        },
+        "reviewer_runtime_replay": false,
+        "level": "AUTHOR_TESTED_WITH_INDEPENDENT_INTEGRITY_AND_OFFICIAL_SOURCE_VERIFICATION"
+      },
+      "blocking_findings": [
+        "P1-01 PR38318_STATE_MISMATCH"
+      ],
+      "bounded_repair": {
+        "work_id": "ATK-UPSTREAM-01",
+        "revision": 2,
+        "repair_round": 1,
+        "repair_rounds_limit": 2,
+        "source_head": "48ea4decb3920b8a1d1fcacb92442b7a94376353",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-UPSTREAM-01:2:48ea4decb3920b8a1d1fcacb92442b7a94376353:conditions",
+        "deadline": "2026-09-26T19:30:00Z",
+        "status": "SIGNAL_SENT",
+        "active_claim": null,
+        "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838602710",
+        "scope_paths": [
+          "research/adoption/aider/upstream/UPSTREAM_DEDUP_REPORT.md",
+          "research/adoption/aider/upstream/DRAFT_LITELLM_ISSUE.md",
+          "PR #18 body matching status lines only",
+          "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
+        ],
+        "finding": "LiteLLM PR #38318 is merged into litellm_internal_staging, not open; its OpenAI 403 path remains explicitly out of scope.",
+        "explicit_exclusions": [
+          "raw evidence, manifests and scripts",
+          "DRAFT_AIDER_ISSUE.md",
+          "unrelated conclusions",
+          "upstream submission",
+          "live provider calls",
+          "secrets/billing/account operations",
+          "merge/deployment",
+          "settings/permissions",
+          "polling"
+        ]
       }
     }
   ],
@@ -1076,11 +1128,11 @@
     "decision_id": "GOV-PLAN-02",
     "prompt": "governance/IMPLEMENTATION_PROMPT.md",
     "scope": "G1-G7",
-    "note": "ATK-UPSTREAM-01 revision 1 has a valid claim from the existing Claude session. No result SHA or new Draft PR has been observed. Owner authorization remains required for any live call, credential operation, or spend.",
+    "note": "ATK-UPSTREAM-01 revision 1 result at PR18 head 48ea4dec is technically evidenced but BLOCKED for maintainer-ready/upstream use because LiteLLM PR #38318 is incorrectly described as open; bounded revision 2 repair 1/2 has been sent. No upstream submission or live operation is authorized.",
     "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
     "next_work_id": "ATK-UPSTREAM-01",
-    "next_checkpoint": "ATK_UPSTREAM_01_RESULT_SHA",
-    "execution_status": "UPSTREAM_EXECUTING_OWNER_LIVE_GATED"
+    "next_checkpoint": "PR18_R2_38318_STATUS_CORRECTION",
+    "execution_status": "UPSTREAM_FIX_PENDING_OWNER_LIVE_GATED"
   },
   "handoff": {
     "method": "govern-github-agent-handoffs",

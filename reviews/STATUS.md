@@ -1,3 +1,12 @@
+## 2026-09-26：PR18 上游研究 R1 覆核，狀態修正待處理
+
+- PR #18 Draft/open/unmerged，精確 head `48ea4decb3920b8a1d1fcacb92442b7a94376353`；[R1 獨立覆核](PR18_R1_UPSTREAM_48ea4dec.md) 為 **BLOCKED**，只阻擋 maintainer-ready／上游使用。
+- 技術證據完整性通過：55/55 evidence files 已由精確 head 取得；51/51 raw artifact、2/2 script 與 2/2 manifest/index SHA-256 全部相符；14 個 Aider cases 與 3 個 LiteLLM 版本矩陣對得上作者表格。
+- blocker：LiteLLM PR #38318 實際已於 2026-08-26 合併到 `litellm_internal_staging`，不是 open；dedup report、LiteLLM draft 與 PR body 的即時狀態不正確。#38318 同時明確排除 OpenAI branch 的 403 路徑，因此修正狀態後，新 issue 方向仍可能成立。
+- 已送 `ATK-UPSTREAM-01` revision 2、repair 1/2 的[限定修復包](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838602710)；只允許改 #38318 狀態與相應措辭，不得動 raw evidence、manifests、scripts 或 Aider draft。
+- state revision 43；next checkpoint `PR18_R2_38318_STATUS_CORRECTION`。目前只有 SIGNAL_SENT，尚無 revision 2 的新 claim、session/run 或 result SHA。
+- 兩份 issue 草稿均未送出；未進行 live provider 呼叫、付費、merge、部署、發布、修改 secrets／settings／權限或新增 polling。
+
 ## 2026-09-26：ATK-UPSTREAM-01 已正式接單
 
 - Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-UPSTREAM-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838315225)。
