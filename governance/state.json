@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 39,
+  "revision": 40,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -928,7 +928,7 @@
       "task_id": "ATK-AIDER-LIVE-PREP-01",
       "work_id": "ATK-AIDER-LIVE-PREP-01",
       "revision": 1,
-      "status": "SIGNAL_SENT",
+      "status": "EXECUTING",
       "goal": "Prepare a no-cost, no-secret owner decision packet for one bounded Aider live run",
       "prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md#s3-真實接入atk-aider-live-01",
       "source_main": "b0770499cbef3f5917bd3505433924e0edbb8b27",
@@ -940,7 +940,27 @@
       "repair_rounds_used": 0,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "active_claim": null,
+      "active_claim": {
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "work_id": "ATK-AIDER-LIVE-PREP-01",
+        "revision": 1,
+        "claim_at": "2026-09-25T18:41:57Z",
+        "deadline": "2026-09-26T18:25:31Z",
+        "source_main": "b0770499cbef3f5917bd3505433924e0edbb8b27",
+        "source_readiness_head": "1dcd625df3bde48b13b91abb3b03eb7e19371558",
+        "source_asset_head": "d1474670db12934c80caa05674c8e4320cbad312",
+        "branch": "claude/atk-aider-live-prep-01",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-LIVE-PREP-01:1:b0770499cbef3f5917bd3505433924e0edbb8b27:executor",
+        "scope_paths": [
+          "research/adoption/aider/LIVE_PROVIDER_OPTIONS.md",
+          "research/adoption/aider/LIVE_EXECUTION_PLAN.md",
+          "research/adoption/aider/LIVE_OWNER_APPROVAL_MATRIX.md",
+          "research/adoption/aider/evidence/live-prep/**",
+          "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
+        ],
+        "receipt_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837692492",
+        "note": "Valid claim from the same existing Claude session. This proves the packet was received by that session, not that a persistent launcher or comment-triggered new session exists."
+      },
       "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837510459",
       "scope_paths": [
         "research/adoption/aider/LIVE_PROVIDER_OPTIONS.md",
@@ -961,7 +981,7 @@
         "spend",
         "polling"
       ],
-      "next_checkpoint": "ATK_AIDER_LIVE_PREP_CLAIM_OR_RESULT",
+      "next_checkpoint": "ATK_AIDER_LIVE_PREP_RESULT_SHA",
       "receipt": null,
       "result_head": null
     }
@@ -1071,9 +1091,9 @@
     "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
     "status": "PLANNING_DELIVERED",
     "next_work_id": "ATK-AIDER-LIVE-PREP-01",
-    "next_checkpoint": "ATK_AIDER_LIVE_PREP_CLAIM_OR_RESULT",
-    "execution_status": "SIGNAL_SENT",
-    "note": "PR16 readiness approved. A separate no-cost live preparation packet was signaled; no claim or result has yet been observed. Live calls and every external action remain gated.",
+    "next_checkpoint": "ATK_AIDER_LIVE_PREP_RESULT_SHA",
+    "execution_status": "EXECUTING",
+    "note": "ATK-AIDER-LIVE-PREP-01 revision 1 has a valid claim from the existing Claude session. No result SHA has been observed. Live calls and every external action remain gated.",
     "execution_prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
     "prompt_version": "2.0",
     "prompt_delivery": {
@@ -1082,14 +1102,15 @@
       "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5836978595",
       "dedup_key": "ATK-FULL-EXECUTION-PROMPT-20260926:61bb912c775ff26ab6775bce8f943f81536beb0b",
       "source": "Owner requested complete executable prompt for all stages, 2026-09-26",
-      "new_claim_observed": false
+      "new_claim_observed": true
     },
     "live_prep_signal": {
       "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837510459",
       "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-LIVE-PREP-01:1:b0770499cbef3f5917bd3505433924e0edbb8b27:executor",
       "source_main": "b0770499cbef3f5917bd3505433924e0edbb8b27",
-      "status": "SIGNAL_SENT",
-      "new_claim_observed": false
+      "status": "CLAIM_RECEIVED",
+      "new_claim_observed": true,
+      "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837692492"
     }
   }
 }
