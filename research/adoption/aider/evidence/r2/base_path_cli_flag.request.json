@@ -1,0 +1,9 @@
+[
+  {
+    "path": "/v1/chat/completions",
+    "host_header": "127.0.0.1:8852",
+    "model": "local-test-model",
+    "stream": true,
+    "authorization_header_present": true
+  }
+]

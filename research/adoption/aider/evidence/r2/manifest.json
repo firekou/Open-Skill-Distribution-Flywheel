@@ -1,0 +1,317 @@
+{
+  "generated_utc": "2026-09-25T18:16:18.041+00:00",
+  "harness": "r2_harness.py",
+  "harness_sha256": "085ee1ed3156cb72ddedfa0527e2c47f49bb4c0f6ceee7fc4a7a0831a0a1fbf6",
+  "versions": {
+    "aider --version": "aider 0.86.1",
+    "packages": {
+      "aider-chat": "0.86.1",
+      "httpx": "0.28.1",
+      "litellm": "1.75.0",
+      "openai": "1.99.1"
+    },
+    "python": "Python 3.11.15",
+    "aider_source_read_for_code_claims": "Aider-AI/aider@5dc9490bb35f9729ef2c95d00a19ccd30c26339c"
+  },
+  "fixtures": {
+    "harness-owned host_logging_server.py": {
+      "from_commit": null,
+      "sha256": "166a86ddec2c964a0de3ba035418d8f842236561485f98a6e64251c45b6ee222",
+      "why": "PR14's stand-in logs path and model but not the port, so three configuration sources produced byte-identical logs. This one also records the Host header the client sent, which makes each run distinguishable from raw data rather than from this harness's own record."
+    },
+    "integrations/aider-atk/fake_openai_server.py": {
+      "from_commit": "d1474670db12934c80caa05674c8e4320cbad312",
+      "md5": "a26adf4c894b2c693da7e0e40a588b97",
+      "sha256": "77c7c1a8c870887b8f947cb1b44a934dfc0d00eea568f856083728d46528470d"
+    },
+    "integrations/aider-atk/sample/import_contacts.py": {
+      "from_commit": "d1474670db12934c80caa05674c8e4320cbad312",
+      "md5": "da2b54d995a08cdbb84f157587f82f1d",
+      "sha256": "2dc27bf7868338c6ea4ef2cd29628078aa1346b471bdfb176073f0ddc21c0336"
+    },
+    "integrations/aider-atk/check_config.py": {
+      "from_commit": "d1474670db12934c80caa05674c8e4320cbad312",
+      "md5": "d467ecfd7b391d71f2851014872ab5b0",
+      "sha256": "1de20fdc9b8d64ba83cce6862944990841c065796fe0bfd7d327d37e47e21394"
+    }
+  },
+  "cases": [
+    {
+      "case_id": "base_path_env_var",
+      "config_source": "environment variable OPENAI_API_BASE",
+      "port": 8851,
+      "command": [
+        "/home/user/aider-venv/bin/aider",
+        "--model",
+        "openai/local-test-model",
+        "--no-git",
+        "--yes",
+        "--no-check-update",
+        "--no-analytics",
+        "--no-show-model-warnings",
+        "--exit",
+        "--message",
+        "ok",
+        "import_contacts.py"
+      ],
+      "environment": {
+        "PATH": "/home/user/aider-venv/bin:/usr/bin:/bin",
+        "HOME": "/tmp",
+        "OPENAI_API_KEY": "<PLACEHOLDER_KEY>",
+        "OPENAI_API_BASE": "http://127.0.0.1:8851/v1"
+      },
+      "config_file_content": null,
+      "server_expected": true,
+      "server_ready_before_run": {
+        "tcp_connect_127.0.0.1": true,
+        "server_pid_alive": true
+      },
+      "valid": true,
+      "start_utc": "2026-09-25T18:14:49.011+00:00",
+      "duration_monotonic_s": 3.015,
+      "end_utc": "2026-09-25T18:14:52.027+00:00",
+      "exit_code": 0,
+      "stdout_file": "r2/base_path_env_var.stdout.txt",
+      "stdout_sha256": "2fa99c1cae67efdb9eb1573b537fd31231b5e909c8ac7e4ade3004ddafab87d6",
+      "stderr_file": "r2/base_path_env_var.stderr.txt",
+      "stderr_sha256": "dd7e4edb84ed0988e73d9fef5f031910be61df17b9bc3ca63a7eac522f1e5a4d",
+      "request_file": "r2/base_path_env_var.request.json",
+      "request_sha256": "637de80020a91d120183c27a16fcc7ae531cb903f2acd8cb58ee79285edae555",
+      "observed_request_paths": [
+        "/v1/chat/completions"
+      ],
+      "observed_host_headers": [
+        "127.0.0.1:8851"
+      ],
+      "observed_models": [
+        "local-test-model"
+      ],
+      "retry_lines_observed": 0
+    },
+    {
+      "case_id": "base_path_cli_flag",
+      "config_source": "command-line --openai-api-base",
+      "port": 8852,
+      "command": [
+        "/home/user/aider-venv/bin/aider",
+        "--openai-api-base",
+        "http://127.0.0.1:8852/v1",
+        "--model",
+        "openai/local-test-model",
+        "--no-git",
+        "--yes",
+        "--no-check-update",
+        "--no-analytics",
+        "--no-show-model-warnings",
+        "--exit",
+        "--message",
+        "ok",
+        "import_contacts.py"
+      ],
+      "environment": {
+        "PATH": "/home/user/aider-venv/bin:/usr/bin:/bin",
+        "HOME": "/tmp",
+        "OPENAI_API_KEY": "<PLACEHOLDER_KEY>"
+      },
+      "config_file_content": null,
+      "server_expected": true,
+      "server_ready_before_run": {
+        "tcp_connect_127.0.0.1": true,
+        "server_pid_alive": true
+      },
+      "valid": true,
+      "start_utc": "2026-09-25T18:14:52.632+00:00",
+      "duration_monotonic_s": 2.76,
+      "end_utc": "2026-09-25T18:14:55.393+00:00",
+      "exit_code": 0,
+      "stdout_file": "r2/base_path_cli_flag.stdout.txt",
+      "stdout_sha256": "2fa99c1cae67efdb9eb1573b537fd31231b5e909c8ac7e4ade3004ddafab87d6",
+      "stderr_file": "r2/base_path_cli_flag.stderr.txt",
+      "stderr_sha256": "dd7e4edb84ed0988e73d9fef5f031910be61df17b9bc3ca63a7eac522f1e5a4d",
+      "request_file": "r2/base_path_cli_flag.request.json",
+      "request_sha256": "3fedf6e7564c0f115e8d61a9b6701e5b8731adca6ac811d70696d44ab1149dfe",
+      "observed_request_paths": [
+        "/v1/chat/completions"
+      ],
+      "observed_host_headers": [
+        "127.0.0.1:8852"
+      ],
+      "observed_models": [
+        "local-test-model"
+      ],
+      "retry_lines_observed": 0
+    },
+    {
+      "case_id": "base_path_config_file",
+      "config_source": "config file via --config (issue #4027 form)",
+      "port": 8853,
+      "command": [
+        "/home/user/aider-venv/bin/aider",
+        "--config",
+        "/tmp/tmp5mx54tzm/aider.conf.yml",
+        "--model",
+        "openai/local-test-model",
+        "--no-git",
+        "--yes",
+        "--no-check-update",
+        "--no-analytics",
+        "--no-show-model-warnings",
+        "--exit",
+        "--message",
+        "ok",
+        "import_contacts.py"
+      ],
+      "environment": {
+        "PATH": "/home/user/aider-venv/bin:/usr/bin:/bin",
+        "HOME": "/tmp",
+        "OPENAI_API_KEY": "<PLACEHOLDER_KEY>"
+      },
+      "config_file_content": "openai-api-base: http://127.0.0.1:8853/v1\n",
+      "server_expected": true,
+      "server_ready_before_run": {
+        "tcp_connect_127.0.0.1": true,
+        "server_pid_alive": true
+      },
+      "valid": true,
+      "start_utc": "2026-09-25T18:14:56.291+00:00",
+      "duration_monotonic_s": 2.973,
+      "end_utc": "2026-09-25T18:14:59.264+00:00",
+      "exit_code": 0,
+      "stdout_file": "r2/base_path_config_file.stdout.txt",
+      "stdout_sha256": "2fa99c1cae67efdb9eb1573b537fd31231b5e909c8ac7e4ade3004ddafab87d6",
+      "stderr_file": "r2/base_path_config_file.stderr.txt",
+      "stderr_sha256": "dd7e4edb84ed0988e73d9fef5f031910be61df17b9bc3ca63a7eac522f1e5a4d",
+      "request_file": "r2/base_path_config_file.request.json",
+      "request_sha256": "1be99f87bdae154a9976bc17187808db3fd735c3b59356e3379c379a6bca483d",
+      "observed_request_paths": [
+        "/v1/chat/completions"
+      ],
+      "observed_host_headers": [
+        "127.0.0.1:8853"
+      ],
+      "observed_models": [
+        "local-test-model"
+      ],
+      "retry_lines_observed": 0
+    },
+    {
+      "case_id": "retry_no_server",
+      "config_source": "environment variable OPENAI_API_BASE, no server",
+      "port": 8859,
+      "command": [
+        "/home/user/aider-venv/bin/aider",
+        "--model",
+        "openai/local-test-model",
+        "--no-git",
+        "--yes",
+        "--no-check-update",
+        "--no-analytics",
+        "--no-show-model-warnings",
+        "--exit",
+        "--message",
+        "ok",
+        "import_contacts.py"
+      ],
+      "environment": {
+        "PATH": "/home/user/aider-venv/bin:/usr/bin:/bin",
+        "HOME": "/tmp",
+        "OPENAI_API_KEY": "<PLACEHOLDER_KEY>",
+        "OPENAI_API_BASE": "http://127.0.0.1:8859/v1"
+      },
+      "config_file_content": null,
+      "server_expected": false,
+      "server_ready_before_run": {
+        "tcp_connect_127.0.0.1": false,
+        "server_pid_alive": null
+      },
+      "valid": true,
+      "start_utc": "2026-09-25T18:14:59.767+00:00",
+      "duration_monotonic_s": 78.024,
+      "end_utc": "2026-09-25T18:16:17.791+00:00",
+      "exit_code": 0,
+      "stdout_file": "r2/retry_no_server.stdout.txt",
+      "stdout_sha256": "5490d0aad6b811dd94d30ed7da30f563768cc45bbb14cb803c23bb384a71bb51",
+      "stderr_file": "r2/retry_no_server.stderr.txt",
+      "stderr_sha256": "dd7e4edb84ed0988e73d9fef5f031910be61df17b9bc3ca63a7eac522f1e5a4d",
+      "request_file": null,
+      "observed_request_paths": [],
+      "observed_host_headers": [],
+      "retry_lines_observed": 8
+    },
+    {
+      "case_id": "checker_issue_4797_zai",
+      "config_source": "PR14 check_config.py with AIDER_MODEL=zai/glm-4.7",
+      "port": 0,
+      "command": [
+        "/usr/bin/python3.11",
+        "/tmp/tmpxbdabk_b/check_config.py"
+      ],
+      "environment": {
+        "PATH": "/usr/bin:/bin",
+        "OPENAI_API_BASE": "https://endpoint.example.com/v1",
+        "OPENAI_API_KEY": "<PLACEHOLDER_KEY>",
+        "AIDER_MODEL": "zai/glm-4.7"
+      },
+      "config_file_content": null,
+      "server_expected": false,
+      "server_ready_before_run": {
+        "tcp_connect_127.0.0.1": false,
+        "server_pid_alive": null
+      },
+      "valid": true,
+      "start_utc": "2026-09-25T18:16:18.010+00:00",
+      "duration_monotonic_s": 0.012,
+      "end_utc": "2026-09-25T18:16:18.022+00:00",
+      "exit_code": 3,
+      "stdout_file": "r2/checker_issue_4797_zai.stdout.txt",
+      "stdout_sha256": "e8d595fe9c6759ddfe4b4e369c6a25e94f019e3f587102c69628ce330d5533ff",
+      "stderr_file": "r2/checker_issue_4797_zai.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "request_file": null,
+      "observed_request_paths": [],
+      "observed_host_headers": [],
+      "retry_lines_observed": 0
+    },
+    {
+      "case_id": "checker_issue_4638_local",
+      "config_source": "PR14 check_config.py with AIDER_MODEL=local/qwen3-coder:30b",
+      "port": 0,
+      "command": [
+        "/usr/bin/python3.11",
+        "/tmp/tmpxbdabk_b/check_config.py"
+      ],
+      "environment": {
+        "PATH": "/usr/bin:/bin",
+        "OPENAI_API_BASE": "https://endpoint.example.com/v1",
+        "OPENAI_API_KEY": "<PLACEHOLDER_KEY>",
+        "AIDER_MODEL": "local/qwen3-coder:30b"
+      },
+      "config_file_content": null,
+      "server_expected": false,
+      "server_ready_before_run": {
+        "tcp_connect_127.0.0.1": false,
+        "server_pid_alive": null
+      },
+      "valid": true,
+      "start_utc": "2026-09-25T18:16:18.029+00:00",
+      "duration_monotonic_s": 0.011,
+      "end_utc": "2026-09-25T18:16:18.040+00:00",
+      "exit_code": 3,
+      "stdout_file": "r2/checker_issue_4638_local.stdout.txt",
+      "stdout_sha256": "0d87f71343c0882bd3eb12e3648055d6330381b01e7facb8edf7d6cd25911a02",
+      "stderr_file": "r2/checker_issue_4638_local.stderr.txt",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "request_file": null,
+      "observed_request_paths": [],
+      "observed_host_headers": [],
+      "retry_lines_observed": 0
+    }
+  ],
+  "supersedes": {
+    "evidence/base_path_env_var.json": "base_path_env_var",
+    "evidence/base_path_cli_flag.json": "base_path_cli_flag",
+    "evidence/base_path_config_file.json": "base_path_config_file",
+    "evidence/retry_no_server_stdout.txt": "retry_no_server"
+  },
+  "supersede_note": "The revision 1 files are kept unchanged and are NOT deleted. They are REPORTED only, because they carry no command, source, version, time or exit code. Claims now rest on the cases listed here."
+}

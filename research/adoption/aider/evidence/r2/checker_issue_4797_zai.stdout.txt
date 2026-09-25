@@ -1,0 +1,6 @@
+OPENAI_API_BASE: https://endpoint.example.com/v1
+OPENAI_API_KEY: SET
+AIDER_MODEL: zai/glm-4.7
+
+The model name 'zai/glm-4.7' names the 'zai' provider.
+This check is for OpenAI-compatible endpoints, which aider reaches through the openai/ prefix. With zai/ the request goes to that provider's own route instead of to the endpoint in OPENAI_API_BASE, so the base you set here would not be used. If you meant your OpenAI-compatible endpoint, this is 'openai/glm-4.7'; if you really did mean zai, configure it the way that provider documents, not here.
