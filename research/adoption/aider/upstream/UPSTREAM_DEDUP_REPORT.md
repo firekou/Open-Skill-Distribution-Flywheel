@@ -58,12 +58,39 @@ No LiteLLM issue was found that reports "OpenAI branch 403 → APIError". The cl
 ### 4.2 LiteLLM mapping (direct `litellm.completion`, `max_retries=0`, loopback)
 `evidence/direct/*.json`
 
-<!-- DIRECT_TABLE -->
+| HTTP status | litellm 1.75.0 (openai 1.99.1) | litellm 1.81.10 (openai 2.20.0) | litellm 1.102.1 (openai 2.54.0) |
+|---|---|---|---|
+| 400 | BadRequestError | BadRequestError | BadRequestError |
+| 401 | AuthenticationError | AuthenticationError | AuthenticationError |
+| 402 | **APIError** | **APIError** | **APIError** |
+| 403 | **APIError** | **APIError** | **APIError** |
+| 404 | NotFoundError | NotFoundError | NotFoundError |
+| 429 | RateLimitError | RateLimitError | RateLimitError |
+| 500 | InternalServerError | InternalServerError | InternalServerError |
+
+Each case sent exactly 1 HTTP request (`max_retries=0`). Only 402 and 403 fall through to the generic `APIError`.
 
 ### 4.3 Aider end to end (one `--message`, loopback)
 `evidence/repro/manifest.json`
 
-<!-- REPRO_TABLE -->
+| case | aider | HTTP status | error body | model settings | HTTP requests | `Retrying in` lines | exception | credits hint shown | exit |
+|---|---|---|---|---|---|---|---|---|---|
+| `aider0861_402_generic` | 0.86.1 | 402 | generic_spaced | — | **9** | 8 | litellm.APIError | no | 0 |
+| `aider0861_402_credits_compact` | 0.86.1 | 402 | credits_compact | — | **9** | 8 | litellm.APIError | no | 0 |
+| `aider0861_402_credits_spaced` | 0.86.1 | 402 | credits_spaced | — | **9** | 8 | litellm.APIError | no | 0 |
+| `aider0861_403_generic` | 0.86.1 | 403 | generic_spaced | — | **9** | 8 | litellm.APIError | no | 0 |
+| `aider0861_401_generic` | 0.86.1 | 401 | generic_spaced | — | **1** | 0 | litellm.AuthenticationError | no | 0 |
+| `aider0861_429_generic` | 0.86.1 | 429 | generic_spaced | — | **27** | 8 | litellm.RateLimitError | no | 0 |
+| `aider0861_429_generic_max_retries_0` | 0.86.1 | 429 | generic_spaced | max_retries: 0 | **9** | 8 | litellm.RateLimitError | no | 0 |
+| `aider0862_402_generic` | 0.86.2 | 402 | generic_spaced | — | **9** | 8 | litellm.APIError | no | 0 |
+| `aider0862_402_credits_compact` | 0.86.2 | 402 | credits_compact | — | **9** | 8 | litellm.APIError | no | 0 |
+| `aider0862_402_credits_spaced` | 0.86.2 | 402 | credits_spaced | — | **9** | 8 | litellm.APIError | no | 0 |
+| `aider0862_403_generic` | 0.86.2 | 403 | generic_spaced | — | **9** | 8 | litellm.APIError | no | 0 |
+| `aider0862_401_generic` | 0.86.2 | 401 | generic_spaced | — | **1** | 0 | litellm.AuthenticationError | no | 0 |
+| `aider0862_429_generic` | 0.86.2 | 429 | generic_spaced | — | **27** | 8 | litellm.RateLimitError | no | 0 |
+| `aider0862_429_generic_max_retries_0` | 0.86.2 | 429 | generic_spaced | max_retries: 0 | **9** | 8 | litellm.RateLimitError | no | 0 |
+
+Stacks: 0.86.1 → {'aider-chat': '0.86.1', 'httpx': '0.28.1', 'litellm': '1.75.0', 'openai': '1.99.1'}; 0.86.2 → {'aider-chat': '0.86.2', 'httpx': '0.28.1', 'litellm': '1.81.10', 'openai': '2.20.0'}.
 
 ### 4.4 Why Aider's existing 402 guard doesn't fire
 - The guard (`aider/exceptions.py`, 0.86.1 lines 96–105) requires `"insufficient credits"` **and** `'"code":402'` in `str(ex).lower()`.

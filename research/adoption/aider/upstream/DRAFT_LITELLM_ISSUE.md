@@ -51,11 +51,21 @@ try:
                        messages=[{"role": "user", "content": "hi"}], max_retries=0)
 except Exception as e:
     print(type(e).__name__, getattr(e, "status_code", None))
-# observed (1.75.0, 1.81.10): APIError 403
+# observed (1.75.0, 1.81.10, 1.102.1): APIError 403
 # expected:                   PermissionDeniedError 403
 ```
 
-<!-- LITELLM_REPRO_NOTE -->
+Observed with this exact snippet (`evidence/litellm_direct_mapping.py`, loopback, `max_retries=0`, one request per status):
+
+| HTTP status | 1.75.0 | 1.81.10 | 1.102.1 |
+|---|---|---|---|
+| 400 | BadRequestError | BadRequestError | BadRequestError |
+| 401 | AuthenticationError | AuthenticationError | AuthenticationError |
+| **402** | **APIError** | **APIError** | **APIError** |
+| **403** | **APIError** | **APIError** | **APIError** |
+| 404 | NotFoundError | NotFoundError | NotFoundError |
+| 429 | RateLimitError | RateLimitError | RateLimitError |
+| 500 | InternalServerError | InternalServerError | InternalServerError |
 
 ### Expected
 
@@ -66,7 +76,7 @@ except Exception as e:
 In the OpenAI branch's `status_code` dispatch, add a `403` case that raises `PermissionDeniedError(message=..., llm_provider=..., model=..., response=getattr(original_exception, "response", None), litellm_debug_info=...)`. This mirrors the existing 401 case. Also add a regression test beside the existing OpenAI mapping tests.
 
 ### Relevant versions
-- litellm 1.75.0 and 1.81.10 (reproduced locally), 1.102.1 and `main@636eb4c` (source read only)
+- litellm 1.75.0, 1.81.10 and 1.102.1 (reproduced locally); `main@636eb4c` (source read only)
 - openai 1.99.1 / 2.20.0
 - Python 3.11, Linux
 

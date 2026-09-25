@@ -21,7 +21,22 @@ With `--model openai/<name>` and a custom `OPENAI_API_BASE`, an HTTP **402** or 
 - `aider/exceptions.py` marks `APIError` as retryable.
 - The special case added in `e0b42d5` ("Do not retry litellm.APIError for insufficient credits") requires `'"code":402'` to appear in `str(ex)`. On this path LiteLLM puts only the provider's `error.message` into the exception text, not the raw JSON. So the guard does not fire, even when the provider message says "Insufficient credits".
 
-<!-- AIDER_RESULTS_TABLE -->
+Loopback results (one `--message`; stand-in returns the same status every time):
+
+| HTTP status | error body | aider 0.86.1 / litellm 1.75.0 | aider 0.86.2 / litellm 1.81.10 |
+|---|---|---|---|
+| 401 | generic | 1 request, `AuthenticationError`, no retry | same |
+| **402** | generic | **9 requests**, `APIError` | same |
+| **402** | `{"error":{"code":402,"message":"Insufficient credits. Add more credits."}}` (compact) | **9 requests**; the credits hint is **not** printed | same |
+| **402** | same message, spaced JSON | **9 requests**; hint not printed | same |
+| **403** | generic | **9 requests**, `APIError` | same |
+| 429 (reference, transient) | generic | 27 requests (9 aider × 3 SDK) | same |
+
+The exit code was 0 in every case (covered by #5552).
+
+The exception text that aider sees for the compact credits body is:
+`litellm.APIError: APIError: OpenAIException - Insufficient credits. Add more credits.`
+It has no raw JSON, so `'"code":402'` is never present.
 
 ### Minimal reproducer (no provider, no key)
 
