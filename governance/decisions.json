@@ -200,6 +200,22 @@
         "新增費用0；不live、不部署、不merge、不發邀請、不送上游",
         "實作在工作分支送Draft PR，獨立review才判定，方法與規劃不是採用證據"
       ]
+    },
+    {
+      "id": "ATK-FULL-BLUEPRINT-20260926",
+      "status": "approved",
+      "source": "2026-09-26 Asia/Taipei 負責人要求先規劃所有藍圖、終點與細節，讓 Claude 有完整方向；承接既有 push main 文件授權。",
+      "decision": "先完成端到端藍圖、各階段成果/依賴/驗收/退出、完整後續工作包與單一Claude入口；規劃目標不冒充成果。",
+      "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
+      "supersedes": [
+        "逐輪只規劃下一小步而缺乏全程終點的排程方式",
+        "Claude入口內已過期且互相矛盾的執行快照"
+      ],
+      "limits": [
+        "本輪交付規劃與main入口更新，不宣稱Claude已啟動",
+        "90天與數量為Planner探索目標，不是已達成成果或新增邀請授權",
+        "不重置舊修復輪次；既有主目標與支出/發布/merge/秘密界線維持"
+      ]
     }
   ]
 }
