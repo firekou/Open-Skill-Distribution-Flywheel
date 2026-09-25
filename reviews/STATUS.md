@@ -1,3 +1,12 @@
+## 2026-09-26：ATK-UPSTREAM-01 已正式接單
+
+- Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-UPSTREAM-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838315225)。
+- source main `efe20e67...`、PR17 result `6ea3cec9...`、branch、dedup、scope、期限與 0/2 修復輪均符合工作包；狀態升為 `EXECUTING`，沒有重複派工。
+- PR #17 live head 仍為已審的 `6ea3cec9...`；目前沒有 `ATK-UPSTREAM-01` 成果 SHA 或新 Draft PR，因此不做內容覆核、不宣稱工作完成。
+- Claude 另依負責人指示在 main 新增 [結果彙整](CLAUDE_EXECUTOR_RESULTS_2026-09-25.md)，commit `d4bb22be...`；已核對只新增一份索引文件，未修改 policy、state 或任何 PR 內容。索引中的結果、證據等級與既有 review 相符。
+- state revision 42；next checkpoint `ATK_UPSTREAM_01_RESULT_SHA`。既有 session 接單不證明 persistent launcher 已接通。
+- 未進行 live provider 呼叫、付費、送上游、merge、部署、發布、修改 secrets／settings／權限或新增 polling。
+
 ## 2026-09-26：PR17 Aider live 準備包通過，無依賴上游研究已接續
 
 - PR #17 Draft/open/unmerged，精確 head `6ea3cec9937e74de8ce77f47c5e92d3d1617c506`；[R1 獨立覆核](PR17_R1_LIVE_PREP_6ea3cec9.md) 為 **APPROVED_WITH_CONDITIONS**。
