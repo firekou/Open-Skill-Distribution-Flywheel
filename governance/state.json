@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 46,
+  "revision": 47,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1157,7 +1157,7 @@
       "task_id": "ATK-FIRST-USE-PREP-01",
       "work_id": "ATK-FIRST-USE-PREP-01",
       "revision": 2,
-      "status": "FIX_PENDING",
+      "status": "APPROVED_WITH_CONDITIONS",
       "goal": "Prepare the complete S4 first-use and publication-readiness package without publishing, invitations, outreach or live provider calls.",
       "source_main": "98b98b70cef9ed59ad44fd2b8e81991b73944fc4",
       "source_assets": {
@@ -1193,7 +1193,7 @@
         "secrets/permissions",
         "polling/new controller"
       ],
-      "next_checkpoint": "PR19_R2_FEEDBACK_INTEGRITY_FIX",
+      "next_checkpoint": "OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION",
       "claim": {
         "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
         "work_id": "ATK-FIRST-USE-PREP-01",
@@ -1218,11 +1218,11 @@
         "commit_statuses": 0,
         "pr_reviews": 0
       },
-      "observed_head": "12b807bcbbd15f3ab156248e980f3ddde3a6b5f0",
-      "result_head": "12b807bcbbd15f3ab156248e980f3ddde3a6b5f0",
-      "last_reviewed_head": "12b807bcbbd15f3ab156248e980f3ddde3a6b5f0",
-      "last_review_decision": "BLOCKED",
-      "review": "reviews/PR19_R1_FIRST_USE_PREP_12b807bc.md",
+      "observed_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+      "result_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+      "last_reviewed_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "review": "reviews/PR19_R2_FIRST_USE_PREP_a77d1e8e.md",
       "exact_head_checks": {
         "workflow_runs": 0,
         "check_runs": 0,
@@ -1232,27 +1232,23 @@
       "result_receipt": {
         "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
         "work_id": "ATK-FIRST-USE-PREP-01",
-        "revision": 1,
-        "source_main": "98b98b70cef9ed59ad44fd2b8e81991b73944fc4",
-        "result_head": "12b807bcbbd15f3ab156248e980f3ddde3a6b5f0",
+        "revision": 2,
+        "source_head": "12b807bcbbd15f3ab156248e980f3ddde3a6b5f0",
+        "result_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
         "pr": 19,
-        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839667273",
-        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839734184"
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5840366827",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-FIRST-USE-PREP-01:2:12b807bcbbd15f3ab156248e980f3ddde3a6b5f0:conditions"
       },
       "evidence_verification": {
-        "changed_paths_count": 7,
-        "authorized_paths_matched": 7,
-        "pinned_entry_sha256_checked": 6,
-        "pinned_entry_sha256_matched": 6,
-        "candidate_threads_live_reread": 3,
-        "author_validation_report": "42/42 PASS exit 0",
-        "reviewer_runtime_replay": false,
-        "level": "AUTHOR_TESTED_WITH_INDEPENDENT_SOURCE_AND_INTEGRITY_VERIFICATION"
+        "changed_paths_count": 2,
+        "authorized_paths_matched": 2,
+        "schema_sha256": "b3531cc41660aad7139922d4201dd449c51a01a04b1fd06e815b6c01f986904c",
+        "author_validation_report": "schema_controls_r2.py 17/17 PASS exit 0; r1 validate_first_use.py PASS exit 0",
+        "reviewer_runtime_replay": true,
+        "reviewer_controls": "17/17 PASS exit 0 using independent deterministic evaluator for exercised JSON Schema keywords",
+        "level": "AFFECTED_INVARIANTS_INDEPENDENTLY_REPRODUCED"
       },
-      "blocking_findings": [
-        "P1-01 TASK_SUCCESS_INVARIANT_NOT_ENFORCED",
-        "P1-02 ENTRY_SHA_NOT_BOUND_TO_URL"
-      ],
+      "blocking_findings": [],
       "bounded_repair": {
         "work_id": "ATK-FIRST-USE-PREP-01",
         "revision": 2,
@@ -1261,7 +1257,7 @@
         "source_head": "12b807bcbbd15f3ab156248e980f3ddde3a6b5f0",
         "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-FIRST-USE-PREP-01:2:12b807bcbbd15f3ab156248e980f3ddde3a6b5f0:conditions",
         "deadline": "2026-09-26T20:15:00Z",
-        "status": "SIGNAL_SENT",
+        "status": "RESULT_RECEIVED_REVIEWED",
         "active_claim": null,
         "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5839784779",
         "scope_paths": [
@@ -1283,8 +1279,26 @@
           "merge/deployment",
           "settings/secrets/permissions",
           "polling/new controller"
+        ],
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "result_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5840366827",
+        "review": "reviews/PR19_R2_FIRST_USE_PREP_a77d1e8e.md",
+        "decision": "APPROVED_WITH_CONDITIONS",
+        "findings_closed": [
+          "P1-01 TASK_SUCCESS_INVARIANT_NOT_ENFORCED",
+          "P1-02 ENTRY_SHA_NOT_BOUND_TO_URL"
         ]
-      }
+      },
+      "closed_findings": [
+        "P1-01 TASK_SUCCESS_INVARIANT_NOT_ENFORCED",
+        "P1-02 ENTRY_SHA_NOT_BOUND_TO_URL"
+      ],
+      "pending_conditions": [
+        "P2-01 external-record ingestion must reject tests_failed greater than tests_total",
+        "release gate remains NOT RELEASABLE until owner authorizes channel, sender and external action",
+        "no real-model success, external first-use, reuse, adoption or economic-value evidence exists"
+      ]
     }
   ],
   "planning": {
@@ -1292,11 +1306,11 @@
     "decision_id": "GOV-PLAN-02",
     "prompt": "governance/IMPLEMENTATION_PROMPT.md",
     "scope": "G1-G7",
-    "note": "PR19 exact head 12b807bc was independently reviewed and is BLOCKED only on two feedback-record integrity invariants. Revision 2 repair 1/2 was signalled; no new claim or fixed result SHA exists yet.",
+    "note": "PR19 revision 2 exact head a77d1e8e independently closes both R1 machine-integrity blockers. Preparation is approved with conditions; external publication/outreach remains owner-gated and record ingestion must reject tests_failed > tests_total.",
     "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
-    "next_work_id": "ATK-FIRST-USE-PREP-01",
-    "next_checkpoint": "PR19_R2_FEEDBACK_INTEGRITY_FIX",
-    "execution_status": "FIRST_USE_PREP_FIX_PENDING_OWNER_EXTERNAL_ACTIONS_GATED"
+    "next_work_id": "OWNER-FIRST-USE-DECISION",
+    "next_checkpoint": "OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION",
+    "execution_status": "FIRST_USE_PREP_APPROVED_EXTERNAL_ACTIONS_GATED"
   },
   "handoff": {
     "method": "govern-github-agent-handoffs",
@@ -1393,11 +1407,11 @@
   "product_roadmap": {
     "decision_id": "ATK-FULL-BLUEPRINT-20260926",
     "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
-    "status": "FIRST_USE_PREP_FIX_PENDING",
-    "next_work_id": "ATK-FIRST-USE-PREP-01",
-    "next_checkpoint": "PR19_R2_FEEDBACK_INTEGRITY_FIX",
-    "execution_status": "FIRST_USE_PREP_FIX_PENDING_OWNER_EXTERNAL_ACTIONS_GATED",
-    "note": "PR19 r1 is BLOCKED on two machine-integrity gaps in FEEDBACK_SCHEMA.json. A bounded revision 2 repair 1/2 is SIGNAL_SENT; no claim or fixed SHA yet. All external actions remain owner-gated.",
+    "status": "FIRST_USE_PREP_APPROVED_WITH_CONDITIONS",
+    "next_work_id": "OWNER-FIRST-USE-DECISION",
+    "next_checkpoint": "OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION",
+    "execution_status": "FIRST_USE_PREP_APPROVED_EXTERNAL_ACTIONS_GATED",
+    "note": "PR19 r2 exact head a77d1e8e closes P1-01 and P1-02 after independent 17/17 replay. No third repair is requested. Publication, outreach, sender identity, privacy, credentials and spend remain owner-gated; the release gate is still NOT RELEASABLE.",
     "execution_prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
     "prompt_version": "2.0",
     "prompt_delivery": {
@@ -1440,14 +1454,14 @@
       "source_head": "12b807bcbbd15f3ab156248e980f3ddde3a6b5f0",
       "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-FIRST-USE-PREP-01:2:12b807bcbbd15f3ab156248e980f3ddde3a6b5f0:conditions",
       "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5839784779",
-      "status": "SIGNAL_SENT",
-      "new_claim_observed": false,
-      "claim_url": null,
-      "session_id": null,
+      "status": "RESULT_RECEIVED_REVIEWED",
+      "new_claim_observed": true,
+      "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5840366827",
+      "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
       "deadline": "2026-09-26T20:15:00Z",
-      "result_head": null,
-      "review": "reviews/PR19_R1_FIRST_USE_PREP_12b807bc.md",
-      "decision": "BLOCKED",
+      "result_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+      "review": "reviews/PR19_R2_FIRST_USE_PREP_a77d1e8e.md",
+      "decision": "APPROVED_WITH_CONDITIONS",
       "persistent_launcher_verified": false
     }
   }

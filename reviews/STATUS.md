@@ -1,3 +1,14 @@
+## 2026-09-26：PR #19 revision 2 通過，外部首次使用仍受負責人 gate
+
+- PR #19 Draft/open/unmerged，精確 head `a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41`；[R2 獨立覆核](PR19_R2_FIRST_USE_PREP_a77d1e8e.md) 為 **APPROVED_WITH_CONDITIONS**。
+- R1→R2 僅 1 commit、2 個授權路徑；其他六份 first-use 文件與固定來源資產未變。
+- 獨立重算 schema SHA-256 為 `b3531cc41660aad7139922d4201dd449c51a01a04b1fd06e815b6c01f986904c`，並以獨立 deterministic evaluator 重放 17/17 controls，exit 0；R1 的 P1-01、P1-02 均關閉。
+- 非阻擋條件：外部紀錄 ingestion 必須拒絕 `tests_failed > tests_total`；目前 schema 仍可表達這種失敗紀錄，但不能形成假的 `passed=true`。
+- Exact-head workflow runs、check runs、commit statuses、PR reviews 均為 0；不推定 CI 批准。
+- release gate 仍為 **NOT RELEASABLE**；尚無真實模型成功、外部 first-use、reuse、adoption 或經濟價值證據。
+- state revision 47；next checkpoint `OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION`。不派第三版同類修復。
+- 未發布、外聯、邀請、送上游、live、付費、merge、部署或修改 secrets／settings／權限。
+
 ## 2026-09-26：ATK-FIRST-USE-PREP-01 已正式接單
 
 ## PR #19 — ATK-FIRST-USE-PREP-01 r1 — BLOCKED
