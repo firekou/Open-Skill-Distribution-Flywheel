@@ -1,3 +1,12 @@
+## 2026-09-25：PR15 已合併但治理結論仍為 BLOCKED
+
+- [Post-merge addendum](PR15_POST_MERGE_GOVERNANCE_252bf6dc.md)：PR #15 已於 `2026-09-25T05:39:02Z` 合併，merge commit `252bf6dcd8de7bd3072ad044143fa4304bc7622f`；main 現在包含先前判定 BLOCKED 的同一 blob `cc4c98e85080e9f4bf6a3f97582b1a0e00ce9132`。
+- 合併前 R1 結論不變：缺 work contract、跨倉證據不可追溯、Open-Skill 硬閘與既有決策衝突、建立平行 authority。檔案存在 main 不等於獲得 operational authority。
+- PR reviews 0；PR head 與 merge commit 的 workflow runs、commit statuses 均為 0。main branch protection 未啟用，也沒有 required checks。
+- GitHub-signed merge 與 `firekou`／`web-flow` 歸屬只證明合併動作，不證明四項 blocker 已關閉。
+- 帳本 revision 34，狀態 `MERGED_GOVERNANCE_BLOCKED`；下一 checkpoint 為 `OWNER_PR15_REMEDIATION_DECISION`。可選邊界是移除／隔離、改為附固定來源且非權威的衍生索引，或以明確決策取代衝突中的 Open-Skill 規則。
+- 本輪未回滾、改寫 skill、merge、部署、發布、邀請、送上游、修改 secrets／權限或新增支出。
+
 ## 2026-09-25：PR15 ATK 組織狀態 skill R1 覆核
 
 - [R1 獨立覆核](PR15_R1_ORG_STATUS_2affb13f.md)：PR #15 Draft/open/unmerged，精確 head `2affb13f8cac09d882144971646cfe8cdf4dc3f2`，結論 **BLOCKED**；只審一個新增 skill 檔。
