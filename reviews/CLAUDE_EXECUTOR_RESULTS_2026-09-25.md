@@ -73,3 +73,20 @@
 - 沒有 merge、部署、發布、招募、送上游、改 settings 或權限，也沒有新增支出。
 - PR14、PR16、PR17 的內容都沒有動。
 - `findings_closed_by_executor: []`。
+
+---
+
+## 追加（2026-09-25T20:15Z）：ATK-UPSTREAM-01 的結果
+
+| work_id / revision | Draft PR | 精確 result head | 複核 |
+|---|---|---|---|
+| ATK-UPSTREAM-01 r1 | #18 | `48ea4decb3920b8a1d1fcacb92442b7a94376353` | [R1](PR18_R1_UPSTREAM_48ea4dec.md) BLOCKED（P1-01：把 #38318 寫成 open） |
+| ATK-UPSTREAM-01 r2（repair 1/2） | #18 | `1abd74a4b7f14d8b5e397d33afa2ace212841099` | 待複核；收據見 [PR18 留言](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838878694) |
+
+- **r2 只修正 #38318 的狀態**：改為「2026-08-26 合併到 `litellm_internal_staging`」。
+  - 錯誤原因：r1 引用的 Exa 頁面快照是合併前拍的，我沒有再核對第一手來源。
+  - 我用唯讀 git 查到的佐證：
+    - `refs/pull/38318/merge` 已不存在。
+    - #38318 的改動已經包含在 LiteLLM 1.102.1，以及 main `cf491d1`。
+    - 但 `_map_openai_exception` 仍然沒有處理 402／403，所以「值得對 LiteLLM 開新 issue」的結論不變。
+- 兩份 issue 草稿**都沒有送出**，送出與否要負責人另外授權。本輪沒有做任何 live 呼叫，也沒有付費或 merge。
