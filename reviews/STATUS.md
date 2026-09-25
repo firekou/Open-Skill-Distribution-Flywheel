@@ -1,3 +1,10 @@
+## 2026-09-26：Claude 全程執行 Prompt v2 已交接
+
+- 依負責人要求，[唯一執行入口](CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md) 已整合目標、S0–S7 所有階段的細節、成果、依賴、驗收、退出與90天檢視；取代過期 PLANNED_NOT_DISPATCHED 起點。
+- 現行先做 PR16 revision 2，沿用 source head、dedup 與 repair 1/2，不重建 PR14 或重置修復輪次。
+- [固定 Prompt](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/61bb912c775ff26ab6775bce8f943f81536beb0b/reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md) 已透過 [PR16 交接串](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5836978595) 傳送上下文補充；SIGNAL_SENT，沒有新接單或啟動證據。
+- state revision 37；PR16 仍 FIX_PENDING，next checkpoint PR16_R2_REPAIR_RESULT。本次為 Planner 文件交付，不是新 content review 或外部價值證明。
+
 ## 2026-09-26：PR16 value-readiness R1 覆核
 
 - [R1 獨立覆核](PR16_R1_VALUE_READINESS_57fa5090.md)：PR #16 Draft/open/unmerged，精確 head `57fa50900035cb6eef316504b065cf98a8b4fee0`，結論 **BLOCKED**。
