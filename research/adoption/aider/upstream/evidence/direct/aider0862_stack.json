@@ -1,0 +1,48 @@
+{
+ "litellm": "1.81.10",
+ "openai": "2.20.0",
+ "rows": [
+  {
+   "http_status": 400,
+   "litellm_exception": "BadRequestError",
+   "exception_status_code": 400,
+   "http_requests": 1
+  },
+  {
+   "http_status": 401,
+   "litellm_exception": "AuthenticationError",
+   "exception_status_code": 401,
+   "http_requests": 1
+  },
+  {
+   "http_status": 402,
+   "litellm_exception": "APIError",
+   "exception_status_code": 402,
+   "http_requests": 1
+  },
+  {
+   "http_status": 403,
+   "litellm_exception": "APIError",
+   "exception_status_code": 403,
+   "http_requests": 1
+  },
+  {
+   "http_status": 404,
+   "litellm_exception": "NotFoundError",
+   "exception_status_code": 404,
+   "http_requests": 1
+  },
+  {
+   "http_status": 429,
+   "litellm_exception": "RateLimitError",
+   "exception_status_code": 429,
+   "http_requests": 1
+  },
+  {
+   "http_status": 500,
+   "litellm_exception": "InternalServerError",
+   "exception_status_code": 500,
+   "http_requests": 1
+  }
+ ]
+}
