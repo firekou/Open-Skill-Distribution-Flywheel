@@ -1,3 +1,14 @@
+## 2026-09-26：PR16 value-readiness R1 覆核
+
+- [R1 獨立覆核](PR16_R1_VALUE_READINESS_57fa5090.md)：PR #16 Draft/open/unmerged，精確 head `57fa50900035cb6eef316504b065cf98a8b4fee0`，結論 **BLOCKED**。
+- 五項指定文件與九個變更路徑符合 ATK-VALUE-READINESS-01 範圍；真模型、外部使用、發布與費用仍為 0。
+- 上游 #4027 的留言已指出根因方向，且原回報者在 v0.86.1 無法重現後自行關閉；不能把它當現行未解需求。
+- 1–3 人 A/B/A 組間交替無法回答材料增量問題；須降為可行性探索，或補第二個等難度固定任務與交叉設計。
+- 三個 base-path JSON 是同一 blob，未綁 case/command/time/exit；retry stdout 也未保存 exit 與 wall time。現有 artifact 不能把所有 executor 敘述升為獨立可核對實測。
+- 選定 provider 前，不能假設有 key/project 級硬費用上限；能力證據是 live gate，不只是簽核項。
+- revision 2 限縮修復已送 PR conversation，repair 1/2，狀態 SIGNAL_SENT；尚未以留言本身推定 Claude 啟動。
+- state revision 36；next checkpoint `PR16_R2_REPAIR_RESULT`。未 live、招募、發布、merge、部署、修改 secrets／權限或新增支出。
+
 ## 2026-09-26：完整藍圖與 Claude 入口已整理
 - 負責人要求先完整規劃終點；[端到端藍圖](ATK_END_TO_END_BLUEPRINT.md) 已交付：研究/引入/接入/分發/首次使用/增量價值/開源貢獻/持續回收，含依賴、退出、90天管理目標與全部後續工作包。
 - [Claude 入口](CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md) 改為單一現行入口，舊文封存；不再指向已完成的 Aider 首輪或 M1 等待。
