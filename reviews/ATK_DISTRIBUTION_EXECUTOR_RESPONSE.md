@@ -144,3 +144,97 @@ sys.exit(1 if fails else 0)
 
 ## 邊界
 本批沒有做以下任何事：發布、邀請、聯絡、送上游、改 About/topics 或 repository 設定、live 呼叫、使用憑證、付費、merge、部署、改 secrets／權限、polling、新增 controller。PR14、PR16、PR17、PR18 都沒有修改。`findings_closed_by_executor: []`。
+
+---
+
+# ATK-FIRST-USE-PREP-01 · revision 2（repair 1/2）
+
+| | |
+|---|---|
+| 依據 | `reviews/PR19_R1_FIRST_USE_PREP_12b807bc.md`（BLOCKED：P1-01、P1-02） |
+| source_head | `12b807bcbbd15f3ab156248e980f3ddde3a6b5f0` |
+| dedup_key | `firekou/Open-Skill-Distribution-Flywheel:ATK-FIRST-USE-PREP-01:2:12b807bcbbd15f3ab156248e980f3ddde3a6b5f0:conditions` |
+| session | `session_01RFeCsTYkVywjHvXk7od7Ab`（在 2026-09-25T22:09Z 的每小時例行檢查時接到） |
+| deadline | 2026-09-26T20:15:00Z |
+| 變更路徑 | 只改 `research/adoption/aider/first-use/FEEDBACK_SCHEMA.json`，另外追加本段 |
+
+## 先重現（以 r1 schema 驗證）
+- P1-01：反例是 `passed: true`、5 題中 0 題通過、測試檔被改、diff 沒看過。r1 schema **接受了**。**REPRODUCED。**
+- P1-02：反例是 `url` 裡的 SHA 和 `asset_sha` 填的不是同一個。r1 schema **接受了**。**REPRODUCED。**
+
+## 修法（schema_version 1.0.0 → 1.1.0）
+- **P1-01**：拿掉可以推算出來的欄位 `tests_passed`，改成 `tests_failed`，並用條件規則強制成功的定義：
+  - `passed=true` 時，必須同時滿足 `tests_total≥1`、`tests_failed=0`、`test_file_unchanged=true`、`diff_reviewed=true`。
+  - 固定任務另外要求 `tests_total=5`。
+  - 反方向也強制：以上條件全部成立時，`passed` 不可以寫成 false。
+  - 所以 `passed` 不能自己填，只能是這些條件推出來的結果。
+- **P1-02**：拿掉多餘的 `asset_sha`，只以 `url` 裡的 40 碼 SHA 作為唯一來源，兩者就不可能對不上。還在填 `asset_sha` 的舊格式紀錄會因為「不允許額外欄位」直接被拒絕。另外，`url` 裡不能再夾帶 query 或 fragment。
+
+## 正／負控制
+驗證方式：`python3 schema_controls_r2.py`，**exit 0，17/17 PASS**。腳本 sha256 為 `85164406da7286fbfca2482f68d79787eb888380a50f5050327e2a00bb4c8842`，全文附在下方。
+- 正控制 4 項：範例紀錄；固定任務 5/5 通過；固定任務 2 題失敗且誠實標為未通過；自訂任務 12/12 通過。
+- 負控制 13 項：
+  - reviewer 給的兩個反例
+  - 有測試失敗、測試檔被改、沒看 diff、測試結果全是 null、固定任務總題數寫 3、自訂任務 0 題、條件全部成立卻標 `passed=false`
+  - 仍帶舊欄位 `tests_passed`
+  - `asset_sha` 與 URL 不一致；`asset_sha` 與 URL 一致（這個欄位本身已不允許）
+  - URL 指向分支而不是 SHA；URL 帶 query
+
+另外重跑 r1 的 `validate_first_use.py`：**exit 0，RESULT PASS 0 failures**。
+
+新的 `FEEDBACK_SCHEMA.json` sha256：`b3531cc41660aad7139922d4201dd449c51a01a04b1fd06e815b6c01f986904c`。
+
+```python
+import copy, json, sys
+from jsonschema import Draft202012Validator, FormatChecker
+s = json.load(open("research/adoption/aider/first-use/FEEDBACK_SCHEMA.json"))
+Draft202012Validator.check_schema(s)
+v = Draft202012Validator(s, format_checker=FormatChecker())
+base = s["examples"][0]
+def rec(**task):
+    r = copy.deepcopy(base); r["task"] = dict(r["task"], **task); return r
+URL = base["entry"]["url"]
+cases = [
+  # (name, record, expect_valid)
+  ("POS example record", base, True),
+  ("POS legit passed fixed task 5/5 unchanged reviewed",
+   rec(passed=True, tests_total=5, tests_failed=0, test_file_unchanged=True, diff_reviewed=True), True),
+  ("POS legit failed fixed task 2 failures",
+   rec(passed=False, tests_total=5, tests_failed=2, test_file_unchanged=True, diff_reviewed=True), True),
+  ("POS legit passed own_task 12/12",
+   dict(rec(passed=True, tests_total=12, tests_failed=0, test_file_unchanged=True, diff_reviewed=True), task=dict(task_id="own_task", passed=True, tests_total=12, tests_failed=0, test_file_unchanged=True, diff_reviewed=True)), True),
+  ("NEG P1-01 reviewer counterexample: passed but 0 of 5, tampered, unreviewed",
+   rec(passed=True, tests_total=5, tests_failed=5, test_file_unchanged=False, diff_reviewed=False), False),
+  ("NEG passed with failures", rec(passed=True, tests_total=5, tests_failed=1, test_file_unchanged=True, diff_reviewed=True), False),
+  ("NEG passed with test file changed", rec(passed=True, tests_total=5, tests_failed=0, test_file_unchanged=False, diff_reviewed=True), False),
+  ("NEG passed without diff review", rec(passed=True, tests_total=5, tests_failed=0, test_file_unchanged=True, diff_reviewed=False), False),
+  ("NEG passed with unknown results (nulls)", rec(passed=True, tests_total=None, tests_failed=None, test_file_unchanged=None, diff_reviewed=True), False),
+  ("NEG passed fixed task with wrong total 3/3", rec(passed=True, tests_total=3, tests_failed=0, test_file_unchanged=True, diff_reviewed=True), False),
+  ("NEG passed own_task with 0 tests", dict(base, task=dict(task_id="own_task", passed=True, tests_total=0, tests_failed=0, test_file_unchanged=True, diff_reviewed=True)), False),
+  ("NEG all conditions met but passed=false", rec(passed=False, tests_total=5, tests_failed=0, test_file_unchanged=True, diff_reviewed=True), False),
+  ("NEG old field tests_passed present", rec(tests_passed=5), False),
+  ("NEG P1-02 reviewer counterexample: asset_sha differs from URL SHA",
+   dict(base, entry=dict(url=URL, material="quickstart", asset_sha="1dcd625df3bde48b13b91abb3b03eb7e19371558")), False),
+  ("NEG asset_sha equal to URL SHA (field no longer allowed)",
+   dict(base, entry=dict(url=URL, material="quickstart", asset_sha="d1474670db12934c80caa05674c8e4320cbad312")), False),
+  ("NEG URL on branch, not SHA", dict(base, entry=dict(url=URL.replace("d1474670db12934c80caa05674c8e4320cbad312", "main"), material="quickstart")), False),
+  ("NEG URL with query string", dict(base, entry=dict(url=URL + "?x=1", material="quickstart")), False),
+]
+fails = 0
+for name, r, want in cases:
+    got = not list(v.iter_errors(r))
+    ok = got == want
+    fails += not ok
+    print(("PASS" if ok else "FAIL"), name, "| valid=" + str(got))
+print("RESULT", "PASS" if not fails else "FAIL", f"{len(cases)-fails}/{len(cases)}")
+sys.exit(1 if fails else 0)
+```
+
+## finding 對照
+| finding | 重現 | 修正 | 控制 |
+|---|---|---|---|
+| P1-01 TASK_SUCCESS_INVARIANT_NOT_ENFORCED | REPRODUCED | 條件規則雙向強制，`tests_passed` 改為 `tests_failed` | 負控制 9 項、正控制 4 項 |
+| P1-02 ENTRY_SHA_NOT_BOUND_TO_URL | REPRODUCED | 拿掉 `asset_sha`，只以 URL 裡的 SHA 為準 | 負控制 4 項 |
+
+## 未改動
+其他 6 份 first-use 文件、所有固定的來源資產、PR14／16／17／18 都沒有動，已用 `git diff --name-only` 確認，只有 schema 與本檔有變更。沒有聯絡任何人、沒有發布、沒有送上游、沒有 live 呼叫、沒有付費、沒有 merge。`findings_closed_by_executor: []`。

@@ -25,7 +25,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "1.0.0"
+      "const": "1.1.0"
     },
     "record_id": {
       "type": "string",
@@ -59,17 +59,13 @@
       "additionalProperties": false,
       "required": [
         "url",
-        "asset_sha",
         "material"
       ],
+      "description": "The asset SHA is the 40-hex commit inside url; there is deliberately no separate asset_sha field, so the two cannot disagree (PR19 R1 P1-02). A record that still carries asset_sha is rejected (additionalProperties false).",
       "properties": {
         "url": {
           "type": "string",
-          "pattern": "^https://github\\.com/firekou/Open-Skill-Distribution-Flywheel/blob/[0-9a-f]{40}/"
-        },
-        "asset_sha": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{40}$"
+          "pattern": "^https://github\\.com/firekou/Open-Skill-Distribution-Flywheel/blob/[0-9a-f]{40}/[^\\s?#]+$"
         },
         "material": {
           "enum": [
@@ -211,11 +207,12 @@
       "required": [
         "task_id",
         "passed",
-        "tests_passed",
         "tests_total",
+        "tests_failed",
         "test_file_unchanged",
         "diff_reviewed"
       ],
+      "description": "passed is enforced, not trusted (PR19 R1 P1-01): passed=true iff tests_total>=1 AND tests_failed=0 AND test_file_unchanged=true AND diff_reviewed=true; for the fixed task tests_total must be 5. Never derived from aider's exit code. tests_passed was removed because it is derivable (tests_total - tests_failed).",
       "properties": {
         "task_id": {
           "enum": [
@@ -224,15 +221,7 @@
           ]
         },
         "passed": {
-          "type": "boolean",
-          "description": "true only if tests_passed == tests_total AND test_file_unchanged AND diff_reviewed. Never from aider's exit code."
-        },
-        "tests_passed": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0
+          "type": "boolean"
         },
         "tests_total": {
           "type": [
@@ -240,6 +229,14 @@
             "null"
           ],
           "minimum": 0
+        },
+        "tests_failed": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "failures + errors in the final test run"
         },
         "test_file_unchanged": {
           "type": [
@@ -250,7 +247,94 @@
         "diff_reviewed": {
           "type": "boolean"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "passed": {
+                "const": true
+              }
+            },
+            "required": [
+              "passed"
+            ]
+          },
+          "then": {
+            "properties": {
+              "tests_total": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "tests_failed": {
+                "const": 0
+              },
+              "test_file_unchanged": {
+                "const": true
+              },
+              "diff_reviewed": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "passed": {
+                "const": true
+              },
+              "task_id": {
+                "const": "aider-atk-csv-by-name-v1"
+              }
+            },
+            "required": [
+              "passed",
+              "task_id"
+            ]
+          },
+          "then": {
+            "properties": {
+              "tests_total": {
+                "const": 5
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "tests_total": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "tests_failed": {
+                "const": 0
+              },
+              "test_file_unchanged": {
+                "const": true
+              },
+              "diff_reviewed": {
+                "const": true
+              }
+            },
+            "required": [
+              "tests_total",
+              "tests_failed",
+              "test_file_unchanged",
+              "diff_reviewed"
+            ]
+          },
+          "then": {
+            "properties": {
+              "passed": {
+                "const": true
+              }
+            }
+          },
+          "$comment": "reverse direction: if every success condition holds, passed may not be false"
+        }
+      ]
     },
     "errors": {
       "type": "array",
@@ -565,14 +649,13 @@
   ],
   "examples": [
     {
-      "schema_version": "1.0.0",
+      "schema_version": "1.1.0",
       "record_id": "FU-00000000-000",
       "record_class": "internal_agent_rehearsal",
       "participant_id": "R1",
       "source_path": "internal",
       "entry": {
         "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/d1474670db12934c80caa05674c8e4320cbad312/integrations/aider-atk/QUICKSTART.md",
-        "asset_sha": "d1474670db12934c80caa05674c8e4320cbad312",
         "material": "quickstart"
       },
       "consent": {
@@ -601,8 +684,8 @@
       "task": {
         "task_id": "aider-atk-csv-by-name-v1",
         "passed": false,
-        "tests_passed": null,
         "tests_total": null,
+        "tests_failed": null,
         "test_file_unchanged": null,
         "diff_reviewed": false
       },
