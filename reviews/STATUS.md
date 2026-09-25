@@ -1,3 +1,14 @@
+## 2026-09-26：PR18 revision 2 通過，上游送出仍受條件限制
+
+- PR #18 Draft/open/unmerged，精確 head `1abd74a4b7f14d8b5e397d33afa2ace212841099`；[R2 獨立覆核](PR18_R2_UPSTREAM_1abd74a4.md) 為 **APPROVED_WITH_CONDITIONS**。
+- R1→R2 只有 1 commit、3 個 repository paths：dedup report、LiteLLM draft 與 append-only executor response；PR body 對應行亦修正。raw evidence、manifests、scripts 與 Aider draft 未變。
+- 官方 GitHub API 確認 LiteLLM PR #38318 已於 `2026-08-26T08:46:25Z` 合併到 `litellm_internal_staging`；R1 P1-01 已關閉。PR 原文仍排除 OpenAI branch 自身 403，因此新 issue 方向未被推翻。
+- 發布前條件：LiteLLM 草稿須把 9 requests 明確歸因 Aider retry loop，並說明 OpenAI SDK 在該 403 重現中未重送；任何 upstream submission 仍需負責人授權與當下 live state 重查。
+- Exact-head workflow runs、check runs、commit statuses、PR reviews 均為 0；不推定 CI 批准。兩份 issue 草稿仍未送出。
+- 不等待外部授權的 `ATK-FIRST-USE-PREP-01` revision 1 已送出[完整工作包](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838910923)，只準備首次使用文案、固定入口、候選/渠道矩陣、回饋 schema 與 release gate。
+- state revision 44；next checkpoint `ATK_FIRST_USE_PREP_CLAIM_OR_RESULT`。目前只是 SIGNAL_SENT，尚無新 claim、session/run 或 result SHA。
+- 未發布、邀請、送上游、live、付費、merge、部署或修改 secrets／settings／權限。
+
 ## 2026-09-26：PR18 上游研究 R1 覆核，狀態修正待處理
 
 - PR #18 Draft/open/unmerged，精確 head `48ea4decb3920b8a1d1fcacb92442b7a94376353`；[R1 獨立覆核](PR18_R1_UPSTREAM_48ea4dec.md) 為 **BLOCKED**，只阻擋 maintainer-ready／上游使用。

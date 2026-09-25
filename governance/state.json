@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 43,
+  "revision": 44,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1012,7 +1012,7 @@
       "task_id": "ATK-UPSTREAM-01",
       "work_id": "ATK-UPSTREAM-01",
       "revision": 2,
-      "status": "FIX_PENDING",
+      "status": "APPROVED_WITH_CONDITIONS",
       "goal": "Read-only upstream deduplication and maintainer-ready draft preparation for Aider/LiteLLM 402/403 retry and misleading exit-0 behavior",
       "source_main": "efe20e67d1f96092b00e2154f3ff2712e256fab7",
       "source_result_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
@@ -1042,7 +1042,7 @@
         "settings/permissions",
         "polling"
       ],
-      "next_checkpoint": "PR18_R2_38318_STATUS_CORRECTION",
+      "next_checkpoint": "OWNER_UPSTREAM_SUBMISSION_DECISION",
       "results_digest": {
         "commit": "d4bb22be97c02fb1031bcd419c5e0c1851ea3150",
         "path": "reviews/CLAUDE_EXECUTOR_RESULTS_2026-09-25.md",
@@ -1050,11 +1050,11 @@
         "policy_changed": false,
         "state_changed": false
       },
-      "observed_head": "48ea4decb3920b8a1d1fcacb92442b7a94376353",
-      "result_head": "48ea4decb3920b8a1d1fcacb92442b7a94376353",
-      "last_reviewed_head": "48ea4decb3920b8a1d1fcacb92442b7a94376353",
-      "last_review_decision": "BLOCKED",
-      "review": "reviews/PR18_R1_UPSTREAM_48ea4dec.md",
+      "observed_head": "1abd74a4b7f14d8b5e397d33afa2ace212841099",
+      "result_head": "1abd74a4b7f14d8b5e397d33afa2ace212841099",
+      "last_reviewed_head": "1abd74a4b7f14d8b5e397d33afa2ace212841099",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "review": "reviews/PR18_R2_UPSTREAM_1abd74a4.md",
       "result_receipt": {
         "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
         "work_id": "ATK-UPSTREAM-01",
@@ -1068,9 +1068,9 @@
       },
       "exact_head_checks": {
         "workflow_runs": 0,
+        "check_runs": 0,
         "commit_statuses": 0,
-        "pr_reviews": 0,
-        "check_runs": "NOT_EXPOSED_BY_CONNECTOR"
+        "pr_reviews": 0
       },
       "changed_paths_count": 59,
       "evidence_verification": {
@@ -1088,9 +1088,7 @@
         "reviewer_runtime_replay": false,
         "level": "AUTHOR_TESTED_WITH_INDEPENDENT_INTEGRITY_AND_OFFICIAL_SOURCE_VERIFICATION"
       },
-      "blocking_findings": [
-        "P1-01 PR38318_STATE_MISMATCH"
-      ],
+      "blocking_findings": [],
       "bounded_repair": {
         "work_id": "ATK-UPSTREAM-01",
         "revision": 2,
@@ -1099,7 +1097,7 @@
         "source_head": "48ea4decb3920b8a1d1fcacb92442b7a94376353",
         "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-UPSTREAM-01:2:48ea4decb3920b8a1d1fcacb92442b7a94376353:conditions",
         "deadline": "2026-09-26T19:30:00Z",
-        "status": "SIGNAL_SENT",
+        "status": "RESULT_RECEIVED_REVIEWED",
         "active_claim": null,
         "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838602710",
         "scope_paths": [
@@ -1119,8 +1117,83 @@
           "merge/deployment",
           "settings/permissions",
           "polling"
-        ]
+        ],
+        "result_head": "1abd74a4b7f14d8b5e397d33afa2ace212841099",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838878694",
+        "decision": "APPROVED_WITH_CONDITIONS"
+      },
+      "source_findings_closed": [
+        "P1-01 PR38318_STATE_MISMATCH",
+        "P3-01 NETWORK_ISOLATION_WORDING"
+      ],
+      "pending_conditions": [
+        "Before any upstream submission, rewrite DRAFT_LITELLM_ISSUE.md Why it matters to attribute the nine requests to Aider's retry loop and state that the OpenAI SDK did not resend HTTP 403 in the reproduction.",
+        "Owner authorization is required before sending either issue draft or any upstream comment.",
+        "Re-check upstream current state immediately before any submission."
+      ],
+      "revision_2_result": {
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "work_id": "ATK-UPSTREAM-01",
+        "revision": 2,
+        "repair_round": 1,
+        "source_head": "48ea4decb3920b8a1d1fcacb92442b7a94376353",
+        "result_head": "1abd74a4b7f14d8b5e397d33afa2ace212841099",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-UPSTREAM-01:2:48ea4decb3920b8a1d1fcacb92442b7a94376353:conditions",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838878694",
+        "changed_paths": [
+          "research/adoption/aider/upstream/UPSTREAM_DEDUP_REPORT.md",
+          "research/adoption/aider/upstream/DRAFT_LITELLM_ISSUE.md",
+          "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md",
+          "PR #18 body matching status lines"
+        ],
+        "exact_delta": {
+          "commits": 1,
+          "repository_paths": 3
+        },
+        "scope_compliant": true
       }
+    },
+    {
+      "task_id": "ATK-FIRST-USE-PREP-01",
+      "work_id": "ATK-FIRST-USE-PREP-01",
+      "revision": 1,
+      "status": "SIGNAL_SENT",
+      "goal": "Prepare the complete S4 first-use and publication-readiness package without publishing, invitations, outreach or live provider calls.",
+      "source_main": "98b98b70cef9ed59ad44fd2b8e81991b73944fc4",
+      "source_assets": {
+        "pr14": "d1474670db12934c80caa05674c8e4320cbad312",
+        "pr16": "1dcd625df3bde48b13b91abb3b03eb7e19371558",
+        "pr17": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+        "pr18": "1abd74a4b7f14d8b5e397d33afa2ace212841099"
+      },
+      "branch": "claude/atk-aider-first-use-prep-01",
+      "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-FIRST-USE-PREP-01:1:98b98b70cef9ed59ad44fd2b8e81991b73944fc4:executor",
+      "deadline": "2026-09-26T20:15:00Z",
+      "repair_rounds_used": 0,
+      "repair_rounds_limit": 2,
+      "additional_api_budget_usd": 0,
+      "active_claim": null,
+      "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838910923",
+      "scope_paths": [
+        "research/adoption/aider/first-use/FIRST_USE_READINESS.md",
+        "research/adoption/aider/first-use/PUBLISHABLE_GUIDE.md",
+        "research/adoption/aider/first-use/ATK_OPTIONAL_SETUP.md",
+        "research/adoption/aider/first-use/TARGET_CHANNEL_MATRIX.md",
+        "research/adoption/aider/first-use/FEEDBACK_SCHEMA.json",
+        "research/adoption/aider/first-use/RELEASE_GATE.md",
+        "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
+      ],
+      "explicit_exclusions": [
+        "publishing/invitations/outreach",
+        "upstream submission",
+        "GitHub About/topics or settings changes",
+        "live model/provider calls",
+        "credentials/billing/spend",
+        "merge/deployment",
+        "secrets/permissions",
+        "polling/new controller"
+      ],
+      "next_checkpoint": "ATK_FIRST_USE_PREP_CLAIM_OR_RESULT"
     }
   ],
   "planning": {
@@ -1128,11 +1201,11 @@
     "decision_id": "GOV-PLAN-02",
     "prompt": "governance/IMPLEMENTATION_PROMPT.md",
     "scope": "G1-G7",
-    "note": "ATK-UPSTREAM-01 revision 1 result at PR18 head 48ea4dec is technically evidenced but BLOCKED for maintainer-ready/upstream use because LiteLLM PR #38318 is incorrectly described as open; bounded revision 2 repair 1/2 has been sent. No upstream submission or live operation is authorized.",
+    "note": "PR18 revision 2 closes the #38318 status blocker and is APPROVED_WITH_CONDITIONS. Upstream submission remains owner-gated. The no-send/no-live S4 preparation task ATK-FIRST-USE-PREP-01 revision 1 has been signaled.",
     "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
-    "next_work_id": "ATK-UPSTREAM-01",
-    "next_checkpoint": "PR18_R2_38318_STATUS_CORRECTION",
-    "execution_status": "UPSTREAM_FIX_PENDING_OWNER_LIVE_GATED"
+    "next_work_id": "ATK-FIRST-USE-PREP-01",
+    "next_checkpoint": "ATK_FIRST_USE_PREP_CLAIM_OR_RESULT",
+    "execution_status": "FIRST_USE_PREP_SIGNAL_SENT_OWNER_EXTERNAL_ACTIONS_GATED"
   },
   "handoff": {
     "method": "govern-github-agent-handoffs",
