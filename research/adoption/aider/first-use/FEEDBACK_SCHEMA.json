@@ -1,0 +1,718 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/research/adoption/aider/first-use/FEEDBACK_SCHEMA.json",
+  "title": "ATK Aider first-use feedback record",
+  "description": "One record per attempt by one participant. ATK-FIRST-USE-PREP-01 r1. Internal rehearsals (agent or team member) MUST use record_class internal_* and source_path internal. They never count as external use. Never store code, keys, full logs, raw provider error bodies or real identities.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_id",
+    "record_class",
+    "participant_id",
+    "source_path",
+    "entry",
+    "consent",
+    "environment",
+    "timing",
+    "task",
+    "errors",
+    "support",
+    "cost",
+    "abandonment",
+    "reuse",
+    "redaction_attested"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1.0"
+    },
+    "record_id": {
+      "type": "string",
+      "pattern": "^FU-[0-9]{8}-[0-9]{3}$",
+      "description": "FU-YYYYMMDD-NNN"
+    },
+    "record_class": {
+      "enum": [
+        "external_user",
+        "internal_agent_rehearsal",
+        "internal_human_rehearsal"
+      ],
+      "description": "Only external_user counts toward first-use or adoption numbers."
+    },
+    "participant_id": {
+      "type": "string",
+      "pattern": "^(P|R)[0-9]{1,3}$",
+      "description": "Pseudonym. P = external participant, R = internal rehearsal. No names or handles."
+    },
+    "source_path": {
+      "enum": [
+        "manual_direct",
+        "invited",
+        "public_discovery",
+        "internal"
+      ],
+      "description": "manual_direct = given the link personally; invited = responded to an authorized invitation; public_discovery = found it without contact; internal = rehearsal."
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "url",
+        "material"
+      ],
+      "description": "The asset SHA is the 40-hex commit inside url; there is deliberately no separate asset_sha field, so the two cannot disagree (PR19 R1 P1-02). A record that still carries asset_sha is rejected (additionalProperties false).",
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/firekou/Open-Skill-Distribution-Flywheel/blob/[0-9a-f]{40}/[^\\s?#]+$"
+        },
+        "material": {
+          "enum": [
+            "publishable_guide",
+            "atk_optional_setup",
+            "quickstart",
+            "official_docs_only"
+          ]
+        }
+      }
+    },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "given",
+        "given_at_utc",
+        "scope"
+      ],
+      "properties": {
+        "given": {
+          "const": true,
+          "description": "No record may exist without consent."
+        },
+        "given_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "scope": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "timings",
+              "error_categories",
+              "support_log",
+              "cost_totals",
+              "task_result",
+              "reuse_followup"
+            ]
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "os",
+        "python",
+        "aider_version",
+        "provider_category"
+      ],
+      "properties": {
+        "os": {
+          "enum": [
+            "linux",
+            "macos",
+            "windows",
+            "other"
+          ]
+        },
+        "python": {
+          "type": "string",
+          "pattern": "^3\\.[0-9]+(\\.[0-9]+)?$"
+        },
+        "aider_version": {
+          "type": "string"
+        },
+        "litellm_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider_category": {
+          "enum": [
+            "atk_router",
+            "openrouter",
+            "openai_direct",
+            "other_openai_compatible",
+            "local_server",
+            "unknown"
+          ]
+        },
+        "endpoint_host": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Host name only, never a full URL with credentials or query strings."
+        },
+        "prior_aider_use": {
+          "enum": [
+            "never",
+            "tried",
+            "regular",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "started_at_utc",
+        "first_connect_seconds",
+        "first_result_seconds"
+      ],
+      "properties": {
+        "started_at_utc": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the participant opened the material."
+        },
+        "first_connect_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Until the first successful model response. null if never."
+        },
+        "first_result_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Until task passed (tests 5/5 and test file unchanged). null if never."
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_id",
+        "passed",
+        "tests_total",
+        "tests_failed",
+        "test_file_unchanged",
+        "diff_reviewed"
+      ],
+      "description": "passed is enforced, not trusted (PR19 R1 P1-01): passed=true iff tests_total>=1 AND tests_failed=0 AND test_file_unchanged=true AND diff_reviewed=true; for the fixed task tests_total must be 5. Never derived from aider's exit code. tests_passed was removed because it is derivable (tests_total - tests_failed).",
+      "properties": {
+        "task_id": {
+          "enum": [
+            "aider-atk-csv-by-name-v1",
+            "own_task"
+          ]
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "tests_total": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "tests_failed": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "failures + errors in the final test run"
+        },
+        "test_file_unchanged": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "diff_reviewed": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "passed": {
+                "const": true
+              }
+            },
+            "required": [
+              "passed"
+            ]
+          },
+          "then": {
+            "properties": {
+              "tests_total": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "tests_failed": {
+                "const": 0
+              },
+              "test_file_unchanged": {
+                "const": true
+              },
+              "diff_reviewed": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "passed": {
+                "const": true
+              },
+              "task_id": {
+                "const": "aider-atk-csv-by-name-v1"
+              }
+            },
+            "required": [
+              "passed",
+              "task_id"
+            ]
+          },
+          "then": {
+            "properties": {
+              "tests_total": {
+                "const": 5
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "tests_total": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "tests_failed": {
+                "const": 0
+              },
+              "test_file_unchanged": {
+                "const": true
+              },
+              "diff_reviewed": {
+                "const": true
+              }
+            },
+            "required": [
+              "tests_total",
+              "tests_failed",
+              "test_file_unchanged",
+              "diff_reviewed"
+            ]
+          },
+          "then": {
+            "properties": {
+              "passed": {
+                "const": true
+              }
+            }
+          },
+          "$comment": "reverse direction: if every success condition holds, passed may not be false"
+        }
+      ]
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "at_seconds"
+        ],
+        "properties": {
+          "code": {
+            "enum": [
+              "F-CONFIG",
+              "F-PATH",
+              "F-AUTH",
+              "F-MODEL",
+              "F-TAMPER",
+              "F-GIVEUP",
+              "F-TIMEOUT",
+              "F-OTHER"
+            ]
+          },
+          "at_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "http_status": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "exception_class": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "e.g. litellm.APIError. Class name only, never the message body."
+          },
+          "retry_lines": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200,
+            "description": "Required in practice for F-OTHER. No secrets, no raw logs."
+          }
+        }
+      }
+    },
+    "support": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interventions",
+        "minutes"
+      ],
+      "properties": {
+        "interventions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minutes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "log": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "at_seconds",
+              "asked",
+              "given"
+            ],
+            "properties": {
+              "at_seconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "asked": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "given": {
+                "type": "string",
+                "maxLength": 200
+              }
+            }
+          }
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "source": {
+          "enum": [
+            "provider_dashboard",
+            "participant_reported",
+            "not_collected"
+          ],
+          "description": "Never inferred from aider output."
+        },
+        "http_requests": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "prompt_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "completion_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "charged_amount": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "currency": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Z]{3}$"
+        }
+      }
+    },
+    "abandonment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "abandoned"
+      ],
+      "properties": {
+        "abandoned": {
+          "type": "boolean"
+        },
+        "reason": {
+          "enum": [
+            null,
+            "setup_too_hard",
+            "provider_unavailable",
+            "cost_concern",
+            "no_time",
+            "tool_not_useful",
+            "privacy_concern",
+            "other"
+          ]
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      }
+    },
+    "reuse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stated_intent"
+      ],
+      "properties": {
+        "stated_intent": {
+          "enum": [
+            "yes",
+            "no",
+            "unsure",
+            "not_asked"
+          ],
+          "description": "Intent is NOT reuse."
+        },
+        "actual_reuse_at_utc": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "Only a different-date, unassisted completion counts."
+        },
+        "actual_reuse_unassisted": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "redaction_attested": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "no_code",
+        "no_keys",
+        "no_full_logs",
+        "no_identity"
+      ],
+      "properties": {
+        "no_code": {
+          "const": true
+        },
+        "no_keys": {
+          "const": true
+        },
+        "no_full_logs": {
+          "const": true
+        },
+        "no_identity": {
+          "const": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "record_class": {
+            "enum": [
+              "internal_agent_rehearsal",
+              "internal_human_rehearsal"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source_path": {
+            "const": "internal"
+          },
+          "participant_id": {
+            "pattern": "^R[0-9]{1,3}$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "record_class": {
+            "const": "external_user"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source_path": {
+            "enum": [
+              "manual_direct",
+              "invited",
+              "public_discovery"
+            ]
+          },
+          "participant_id": {
+            "pattern": "^P[0-9]{1,3}$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "abandonment": {
+            "properties": {
+              "abandoned": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "abandonment": {
+            "required": [
+              "abandoned",
+              "reason"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "schema_version": "1.1.0",
+      "record_id": "FU-00000000-000",
+      "record_class": "internal_agent_rehearsal",
+      "participant_id": "R1",
+      "source_path": "internal",
+      "entry": {
+        "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/d1474670db12934c80caa05674c8e4320cbad312/integrations/aider-atk/QUICKSTART.md",
+        "material": "quickstart"
+      },
+      "consent": {
+        "given": true,
+        "given_at_utc": "2000-01-01T00:00:00Z",
+        "scope": [
+          "timings",
+          "error_categories",
+          "task_result"
+        ]
+      },
+      "environment": {
+        "os": "linux",
+        "python": "3.11",
+        "aider_version": "0.86.1",
+        "litellm_version": "1.75.0",
+        "provider_category": "local_server",
+        "endpoint_host": null,
+        "prior_aider_use": "regular"
+      },
+      "timing": {
+        "started_at_utc": "2000-01-01T00:00:00Z",
+        "first_connect_seconds": null,
+        "first_result_seconds": null
+      },
+      "task": {
+        "task_id": "aider-atk-csv-by-name-v1",
+        "passed": false,
+        "tests_total": null,
+        "tests_failed": null,
+        "test_file_unchanged": null,
+        "diff_reviewed": false
+      },
+      "errors": [],
+      "support": {
+        "interventions": 0,
+        "minutes": 0
+      },
+      "cost": {
+        "source": "not_collected"
+      },
+      "abandonment": {
+        "abandoned": false,
+        "reason": null
+      },
+      "reuse": {
+        "stated_intent": "not_asked",
+        "actual_reuse_at_utc": null,
+        "actual_reuse_unassisted": null
+      },
+      "redaction_attested": {
+        "no_code": true,
+        "no_keys": true,
+        "no_full_logs": true,
+        "no_identity": true
+      }
+    }
+  ],
+  "$comment": "The single example below is ILLUSTRATIVE ONLY (placeholder ids, year-2000 timestamps, null results). It is not a real record and must not be counted."
+}
