@@ -1,3 +1,14 @@
+## 2026-09-26：PR17 Aider live 準備包通過，無依賴上游研究已接續
+
+- PR #17 Draft/open/unmerged，精確 head `6ea3cec9937e74de8ce77f47c5e92d3d1617c506`；[R1 獨立覆核](PR17_R1_LIVE_PREP_6ea3cec9.md) 為 **APPROVED_WITH_CONDITIONS**。
+- 42/42 raw artifacts、2/2 evidence harnesses 與 2/2 manifests 的 SHA-256 已獨立重算相符。作者 loopback 行為維持 TESTED，沒有冒充 reviewer 重放。
+- OpenAI hard limit、GPT-5.6 Luna 價格與 Chat Completions、OpenRouter per-key limit／價格，以及 Aider 預設讀取 `.aider.model.settings.yml` 均已由官方來源獨立核對。
+- PR16 的「403 不重試」只對舊文件成立；PR17 在 pinned stack 的測試證據顯示 402／403 都會被 Aider 重試 9 次。保留 PR16 作者證據，以本 review 記錄 supersede。
+- Owner gate 為 `OWNER_ATK_AIDER_LIVE_DECISION`。ATK 須先補價格與拒絕型上限；OpenRouter／OpenAI 仍須負責人明確授權帳號／key／project、憑證注入與支出。沒有進行 live 或任何 secrets／帳務操作。
+- 不等待 owner 的 `ATK-UPSTREAM-01` revision 1 已沿 [PR17 conversation](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838137130) 發出，只允許 Aider／LiteLLM 唯讀查重、本地 loopback 與 issue 草稿，不得送上游。現在只有 SIGNAL_SENT，尚無新 session/run、接單或成果 SHA。
+- state revision 41；next checkpoint `ATK_UPSTREAM_01_CLAIM_OR_RESULT`。Claude 持久 launcher 仍未證實。
+- 未 merge、部署、發布、招募、修改 settings／權限、送上游或新增支出。
+
 ## 2026-09-26：Aider live 決策準備包已正式接單
 
 - Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-AIDER-LIVE-PREP-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837692492)。

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 40,
+  "revision": 41,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -928,7 +928,7 @@
       "task_id": "ATK-AIDER-LIVE-PREP-01",
       "work_id": "ATK-AIDER-LIVE-PREP-01",
       "revision": 1,
-      "status": "EXECUTING",
+      "status": "APPROVED_WITH_CONDITIONS",
       "goal": "Prepare a no-cost, no-secret owner decision packet for one bounded Aider live run",
       "prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md#s3-真實接入atk-aider-live-01",
       "source_main": "b0770499cbef3f5917bd3505433924e0edbb8b27",
@@ -940,27 +940,7 @@
       "repair_rounds_used": 0,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "active_claim": {
-        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
-        "work_id": "ATK-AIDER-LIVE-PREP-01",
-        "revision": 1,
-        "claim_at": "2026-09-25T18:41:57Z",
-        "deadline": "2026-09-26T18:25:31Z",
-        "source_main": "b0770499cbef3f5917bd3505433924e0edbb8b27",
-        "source_readiness_head": "1dcd625df3bde48b13b91abb3b03eb7e19371558",
-        "source_asset_head": "d1474670db12934c80caa05674c8e4320cbad312",
-        "branch": "claude/atk-aider-live-prep-01",
-        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-LIVE-PREP-01:1:b0770499cbef3f5917bd3505433924e0edbb8b27:executor",
-        "scope_paths": [
-          "research/adoption/aider/LIVE_PROVIDER_OPTIONS.md",
-          "research/adoption/aider/LIVE_EXECUTION_PLAN.md",
-          "research/adoption/aider/LIVE_OWNER_APPROVAL_MATRIX.md",
-          "research/adoption/aider/evidence/live-prep/**",
-          "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
-        ],
-        "receipt_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837692492",
-        "note": "Valid claim from the same existing Claude session. This proves the packet was received by that session, not that a persistent launcher or comment-triggered new session exists."
-      },
+      "active_claim": null,
       "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837510459",
       "scope_paths": [
         "research/adoption/aider/LIVE_PROVIDER_OPTIONS.md",
@@ -981,9 +961,88 @@
         "spend",
         "polling"
       ],
-      "next_checkpoint": "ATK_AIDER_LIVE_PREP_RESULT_SHA",
-      "receipt": null,
-      "result_head": null
+      "next_checkpoint": "OWNER_ATK_AIDER_LIVE_DECISION",
+      "receipt": {
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "work_id": "ATK-AIDER-LIVE-PREP-01",
+        "revision": 1,
+        "source_main": "b0770499cbef3f5917bd3505433924e0edbb8b27",
+        "result_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-LIVE-PREP-01:1:b0770499cbef3f5917bd3505433924e0edbb8b27:executor",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5838048735",
+        "pr_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17",
+        "reviewed_at": "2026-09-25T19:10:00Z",
+        "persistent_launcher_proven": false
+      },
+      "result_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+      "observed_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+      "last_reviewed_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "review": "reviews/PR17_R1_LIVE_PREP_6ea3cec9.md",
+      "next_action": "Owner may select ATK Router only after price and reject-limit evidence, or explicitly authorize OpenRouter/OpenAI account setup, credential injection, and spend for ATK-AIDER-LIVE-01. Meanwhile ATK-UPSTREAM-01 may perform read-only deduplication and draft preparation without sending upstream.",
+      "exact_head_checks": {
+        "workflow_runs": 0,
+        "commit_statuses": 0,
+        "pr_reviews": 0,
+        "check_runs": "NOT_EXPOSED_BY_CONNECTOR",
+        "changed_paths": 51
+      },
+      "evidence_verification": {
+        "raw_files_sha256_checked": 42,
+        "raw_files_sha256_matched": 42,
+        "harness_sha256_checked": 2,
+        "harness_sha256_matched": 2,
+        "manifest_sha256_checked": 2,
+        "manifest_sha256_matched": 2,
+        "reviewer_runtime_replay": false,
+        "evidence_level": "AUTHOR_TESTED_WITH_INDEPENDENT_INTEGRITY_AND_OFFICIAL_SOURCE_VERIFICATION"
+      },
+      "open_findings": [],
+      "pending_conditions": [
+        "owner must select exactly one provider or no-live option before ATK-AIDER-LIVE-01",
+        "ATK Router requires current price and reject-type limit evidence",
+        "OpenRouter/OpenAI require explicit owner authorization for account/key/project setup, credential injection, and spend",
+        "official model price and endpoint support must be re-read on approval day",
+        "OpenAI enforcement can slightly exceed the configured amount; OpenRouter enforcement latency and rejected-request billing remain unknown",
+        "no merge, publication, recruitment, upstream send, deployment, settings/permissions change, or secret operation is authorized"
+      ],
+      "scope_note": "Two evidence harness scripts are a non-blocking evidence-only deviation. They are loopback-only, secret-free, confined to research evidence, and improve reproducibility."
+    },
+    {
+      "task_id": "ATK-UPSTREAM-01",
+      "work_id": "ATK-UPSTREAM-01",
+      "revision": 1,
+      "status": "SIGNAL_SENT",
+      "goal": "Read-only upstream deduplication and maintainer-ready draft preparation for Aider/LiteLLM 402/403 retry and misleading exit-0 behavior",
+      "source_main": "efe20e67d1f96092b00e2154f3ff2712e256fab7",
+      "source_result_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+      "branch": "claude/atk-aider-upstream-01",
+      "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-UPSTREAM-01:1:efe20e67d1f96092b00e2154f3ff2712e256fab7:executor",
+      "deadline": "2026-09-26T19:30:00Z",
+      "repair_rounds_used": 0,
+      "repair_rounds_limit": 2,
+      "additional_api_budget_usd": 0,
+      "active_claim": null,
+      "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838137130",
+      "scope_paths": [
+        "research/adoption/aider/upstream/UPSTREAM_DEDUP_REPORT.md",
+        "research/adoption/aider/upstream/DRAFT_AIDER_ISSUE.md",
+        "research/adoption/aider/upstream/DRAFT_LITELLM_ISSUE.md",
+        "research/adoption/aider/upstream/evidence/**",
+        "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
+      ],
+      "explicit_exclusions": [
+        "live provider calls",
+        "secrets/billing/account operations",
+        "key/project creation",
+        "paid APIs",
+        "upstream issue/comment/PR submission",
+        "external outreach",
+        "merge/deployment",
+        "settings/permissions",
+        "polling"
+      ],
+      "next_checkpoint": "ATK_UPSTREAM_01_CLAIM_OR_RESULT"
     }
   ],
   "planning": {
@@ -1090,10 +1149,10 @@
     "decision_id": "ATK-FULL-BLUEPRINT-20260926",
     "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
     "status": "PLANNING_DELIVERED",
-    "next_work_id": "ATK-AIDER-LIVE-PREP-01",
-    "next_checkpoint": "ATK_AIDER_LIVE_PREP_RESULT_SHA",
-    "execution_status": "EXECUTING",
-    "note": "ATK-AIDER-LIVE-PREP-01 revision 1 has a valid claim from the existing Claude session. No result SHA has been observed. Live calls and every external action remain gated.",
+    "next_work_id": "ATK-UPSTREAM-01",
+    "next_checkpoint": "ATK_UPSTREAM_01_CLAIM_OR_RESULT",
+    "execution_status": "UPSTREAM_SIGNAL_SENT_OWNER_LIVE_GATED",
+    "note": "PR17 live-preparation packet is APPROVED_WITH_CONDITIONS. Owner authorization is still required for any live call, account/key/project, credential, or spend. A no-cost upstream dedup and draft-preparation packet has been signaled.",
     "execution_prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
     "prompt_version": "2.0",
     "prompt_delivery": {
@@ -1108,9 +1167,23 @@
       "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837510459",
       "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-LIVE-PREP-01:1:b0770499cbef3f5917bd3505433924e0edbb8b27:executor",
       "source_main": "b0770499cbef3f5917bd3505433924e0edbb8b27",
-      "status": "CLAIM_RECEIVED",
+      "status": "RESULT_RECEIVED_REVIEWED",
       "new_claim_observed": true,
-      "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837692492"
+      "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837692492",
+      "result_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+      "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5838048735",
+      "review": "reviews/PR17_R1_LIVE_PREP_6ea3cec9.md",
+      "decision": "APPROVED_WITH_CONDITIONS"
+    },
+    "upstream_signal": {
+      "work_id": "ATK-UPSTREAM-01",
+      "revision": 1,
+      "source_main": "efe20e67d1f96092b00e2154f3ff2712e256fab7",
+      "source_result_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+      "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-UPSTREAM-01:1:efe20e67d1f96092b00e2154f3ff2712e256fab7:executor",
+      "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838137130",
+      "status": "SIGNAL_SENT",
+      "new_claim_observed": false
     }
   }
 }
