@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 44,
+  "revision": 45,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1157,7 +1157,7 @@
       "task_id": "ATK-FIRST-USE-PREP-01",
       "work_id": "ATK-FIRST-USE-PREP-01",
       "revision": 1,
-      "status": "SIGNAL_SENT",
+      "status": "EXECUTING",
       "goal": "Prepare the complete S4 first-use and publication-readiness package without publishing, invitations, outreach or live provider calls.",
       "source_main": "98b98b70cef9ed59ad44fd2b8e81991b73944fc4",
       "source_assets": {
@@ -1172,7 +1172,24 @@
       "repair_rounds_used": 0,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "active_claim": null,
+      "active_claim": {
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "work_id": "ATK-FIRST-USE-PREP-01",
+        "revision": 1,
+        "source_main": "98b98b70cef9ed59ad44fd2b8e81991b73944fc4",
+        "source_assets": {
+          "pr14": "d1474670db12934c80caa05674c8e4320cbad312",
+          "pr16": "1dcd625df3bde48b13b91abb3b03eb7e19371558",
+          "pr17": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+          "pr18": "1abd74a4b7f14d8b5e397d33afa2ace212841099"
+        },
+        "branch": "claude/atk-aider-first-use-prep-01",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-FIRST-USE-PREP-01:1:98b98b70cef9ed59ad44fd2b8e81991b73944fc4:executor",
+        "deadline": "2026-09-26T20:15:00Z",
+        "claimed_at_reported": "2026-09-25T21:12:00Z",
+        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839667273",
+        "launcher_evidence": "EXISTING_SESSION_HOURLY_CHECK_ONLY_NOT_PERSISTENT"
+      },
       "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838910923",
       "scope_paths": [
         "research/adoption/aider/first-use/FIRST_USE_READINESS.md",
@@ -1193,7 +1210,31 @@
         "secrets/permissions",
         "polling/new controller"
       ],
-      "next_checkpoint": "ATK_FIRST_USE_PREP_CLAIM_OR_RESULT"
+      "next_checkpoint": "ATK_FIRST_USE_PREP_RESULT_SHA",
+      "claim": {
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "work_id": "ATK-FIRST-USE-PREP-01",
+        "revision": 1,
+        "source_main": "98b98b70cef9ed59ad44fd2b8e81991b73944fc4",
+        "source_assets": {
+          "pr14": "d1474670db12934c80caa05674c8e4320cbad312",
+          "pr16": "1dcd625df3bde48b13b91abb3b03eb7e19371558",
+          "pr17": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+          "pr18": "1abd74a4b7f14d8b5e397d33afa2ace212841099"
+        },
+        "branch": "claude/atk-aider-first-use-prep-01",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-FIRST-USE-PREP-01:1:98b98b70cef9ed59ad44fd2b8e81991b73944fc4:executor",
+        "deadline": "2026-09-26T20:15:00Z",
+        "claimed_at_reported": "2026-09-25T21:12:00Z",
+        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839667273",
+        "launcher_evidence": "EXISTING_SESSION_HOURLY_CHECK_ONLY_NOT_PERSISTENT"
+      },
+      "exact_source_head_checks": {
+        "workflow_runs": 0,
+        "check_runs": 0,
+        "commit_statuses": 0,
+        "pr_reviews": 0
+      }
     }
   ],
   "planning": {
@@ -1201,11 +1242,11 @@
     "decision_id": "GOV-PLAN-02",
     "prompt": "governance/IMPLEMENTATION_PROMPT.md",
     "scope": "G1-G7",
-    "note": "PR18 revision 2 closes the #38318 status blocker and is APPROVED_WITH_CONDITIONS. Upstream submission remains owner-gated. The no-send/no-live S4 preparation task ATK-FIRST-USE-PREP-01 revision 1 has been signaled.",
+    "note": "Claude existing session accepted ATK-FIRST-USE-PREP-01 revision 1 with matching source assets, scope, dedup key and deadline. This proves a claimed handoff through the existing hourly check, not a persistent launcher. No result SHA exists yet.",
     "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
     "next_work_id": "ATK-FIRST-USE-PREP-01",
-    "next_checkpoint": "ATK_FIRST_USE_PREP_CLAIM_OR_RESULT",
-    "execution_status": "FIRST_USE_PREP_SIGNAL_SENT_OWNER_EXTERNAL_ACTIONS_GATED"
+    "next_checkpoint": "ATK_FIRST_USE_PREP_RESULT_SHA",
+    "execution_status": "FIRST_USE_PREP_EXECUTING_OWNER_EXTERNAL_ACTIONS_GATED"
   },
   "handoff": {
     "method": "govern-github-agent-handoffs",
@@ -1303,10 +1344,10 @@
     "decision_id": "ATK-FULL-BLUEPRINT-20260926",
     "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
     "status": "PLANNING_DELIVERED",
-    "next_work_id": "ATK-UPSTREAM-01",
-    "next_checkpoint": "ATK_UPSTREAM_01_CLAIM_OR_RESULT",
-    "execution_status": "UPSTREAM_SIGNAL_SENT_OWNER_LIVE_GATED",
-    "note": "PR17 live-preparation packet is APPROVED_WITH_CONDITIONS. Owner authorization is still required for any live call, account/key/project, credential, or spend. A no-cost upstream dedup and draft-preparation packet has been signaled.",
+    "next_work_id": "ATK-FIRST-USE-PREP-01",
+    "next_checkpoint": "ATK_FIRST_USE_PREP_RESULT_SHA",
+    "execution_status": "FIRST_USE_PREP_EXECUTING_OWNER_EXTERNAL_ACTIONS_GATED",
+    "note": "PR18 revision 2 is APPROVED_WITH_CONDITIONS. Claude has claimed the no-send/no-live first-use preparation task in an existing session; no result SHA exists yet. Upstream submission, publication, outreach, live calls, credentials, spend, merge and deployment remain owner-gated.",
     "execution_prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
     "prompt_version": "2.0",
     "prompt_delivery": {
@@ -1336,8 +1377,32 @@
       "source_result_head": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
       "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-UPSTREAM-01:1:efe20e67d1f96092b00e2154f3ff2712e256fab7:executor",
       "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838137130",
-      "status": "SIGNAL_SENT",
-      "new_claim_observed": false
+      "status": "RESULT_RECEIVED_REVIEWED",
+      "new_claim_observed": true,
+      "result_head": "1abd74a4b7f14d8b5e397d33afa2ace212841099",
+      "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838878694",
+      "review": "reviews/PR18_R2_UPSTREAM_1abd74a4.md",
+      "decision": "APPROVED_WITH_CONDITIONS"
+    },
+    "first_use_prep_signal": {
+      "work_id": "ATK-FIRST-USE-PREP-01",
+      "revision": 1,
+      "source_main": "98b98b70cef9ed59ad44fd2b8e81991b73944fc4",
+      "source_assets": {
+        "pr14": "d1474670db12934c80caa05674c8e4320cbad312",
+        "pr16": "1dcd625df3bde48b13b91abb3b03eb7e19371558",
+        "pr17": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+        "pr18": "1abd74a4b7f14d8b5e397d33afa2ace212841099"
+      },
+      "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-FIRST-USE-PREP-01:1:98b98b70cef9ed59ad44fd2b8e81991b73944fc4:executor",
+      "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838910923",
+      "status": "EXECUTING",
+      "new_claim_observed": true,
+      "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839667273",
+      "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+      "deadline": "2026-09-26T20:15:00Z",
+      "result_head": null,
+      "persistent_launcher_verified": false
     }
   }
 }

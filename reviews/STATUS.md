@@ -1,3 +1,13 @@
+## 2026-09-26：ATK-FIRST-USE-PREP-01 已正式接單
+
+- Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-FIRST-USE-PREP-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839667273)。
+- source main `98b98b70...`、PR14／PR16／PR17／PR18 四個固定資產 SHA、branch、dedup key、scope、deadline 與 0/2 修復輪均符合工作包；狀態升為 `EXECUTING`，不重複派工。
+- PR #18 live head 仍為已審的 `1abd74a4...`；沒有新 content head、Draft PR 或 result SHA，因此本輪不重做內容覆核，也不宣稱成果完成。
+- Exact-head workflow runs、check runs、commit statuses、PR reviews 均為 0；不推定 CI 批准。
+- claim 明示由既有 session 的 hourly check 接起，只證明本次接單，不證明 persistent launcher 或 label/comment 可啟動新 session。
+- state revision 45；next checkpoint `ATK_FIRST_USE_PREP_RESULT_SHA`。
+- 未發布、邀請、外聯、送上游、live、付費、merge、部署或修改 secrets／settings／權限。
+
 ## 2026-09-26：PR18 revision 2 通過，上游送出仍受條件限制
 
 - PR #18 Draft/open/unmerged，精確 head `1abd74a4b7f14d8b5e397d33afa2ace212841099`；[R2 獨立覆核](PR18_R2_UPSTREAM_1abd74a4.md) 為 **APPROVED_WITH_CONDITIONS**。
