@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 35,
+  "revision": 36,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -817,7 +817,7 @@
       "task_id": "ATK-VALUE-READINESS-01",
       "work_id": "ATK-VALUE-READINESS-01",
       "revision": 1,
-      "status": "PLANNED_NOT_DISPATCHED",
+      "status": "FIX_PENDING",
       "goal": "Turn reviewed Aider offline assets into a concrete external-value trial and release/access packet",
       "prompt": "reviews/ATK_END_TO_END_BLUEPRINT.md#8-下一個包完整契約atk-value-readiness-01-r1",
       "scope_paths": [
@@ -829,11 +829,61 @@
       ],
       "source_asset_head": "d1474670db12934c80caa05674c8e4320cbad312",
       "active_claim": null,
-      "executor_run": null,
-      "repair_rounds_used": 0,
+      "executor_run": "session_01RFeCsTYkVywjHvXk7od7Ab (result receipt only; new revision 2 claim not observed)",
+      "repair_rounds_used": 1,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "next_action": "按藍圖第8節交五項具體試用準備成果；先核對執行狀態與active claim。本輪先交完整規劃，未派送、未接單。"
+      "next_action": "Wait for one revision 2 claim/result on PR16. Close P1-01..P1-04 only; no live, recruitment, publication, merge, secrets or spend.",
+      "observed_head": "57fa50900035cb6eef316504b065cf98a8b4fee0",
+      "last_reviewed_head": "57fa50900035cb6eef316504b065cf98a8b4fee0",
+      "last_review_decision": "BLOCKED",
+      "review": "reviews/PR16_R1_VALUE_READINESS_57fa5090.md",
+      "result_head": "57fa50900035cb6eef316504b065cf98a8b4fee0",
+      "bounded_repair": {
+        "work_id": "ATK-VALUE-READINESS-01",
+        "revision": 2,
+        "source_head": "57fa50900035cb6eef316504b065cf98a8b4fee0",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:16:ATK-VALUE-READINESS-01:2:57fa50900035cb6eef316504b065cf98a8b4fee0:executor",
+        "scope_paths": [
+          "research/adoption/aider/RELEASE_AND_ACCESS_PACKET.md",
+          "research/adoption/aider/SOURCE_AND_GAP.md",
+          "research/adoption/aider/STUDY_PROTOCOL.md",
+          "research/adoption/aider/TRIAL_RUNBOOK.md",
+          "research/adoption/aider/evidence/base_path_cli_flag.json",
+          "research/adoption/aider/evidence/base_path_config_file.json",
+          "research/adoption/aider/evidence/base_path_env_var.json",
+          "research/adoption/aider/evidence/retry_no_server_stdout.txt",
+          "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md"
+        ],
+        "repair_round": 1,
+        "repair_rounds_limit": 2,
+        "delivery_status": "SIGNAL_SENT",
+        "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5836547813",
+        "active_claim": null,
+        "explicit_exclusions": [
+          "live",
+          "recruitment",
+          "publication",
+          "merge",
+          "deployment",
+          "secrets/permissions",
+          "spend",
+          "adapter/platform",
+          "PR14 changes"
+        ]
+      },
+      "exact_head_checks": {
+        "workflow_runs": 0,
+        "commit_statuses": 0,
+        "pr_reviews": 0,
+        "conversation_comments_before_review": 0
+      },
+      "open_findings": [
+        "P1-01_UPSTREAM_ISSUE_CONTEXT",
+        "P1-02_NON_IDENTIFYING_STUDY_DESIGN",
+        "P1-03_UNBOUND_EXECUTION_EVIDENCE",
+        "P1-04_UNVERIFIED_COST_CAPABILITY"
+      ]
     }
   ],
   "planning": {
@@ -941,8 +991,8 @@
     "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
     "status": "PLANNING_DELIVERED",
     "next_work_id": "ATK-VALUE-READINESS-01",
-    "next_checkpoint": "VALUE_READINESS_PACKET_EXECUTION",
-    "execution_status": "PLANNED_NOT_DISPATCHED",
+    "next_checkpoint": "PR16_R2_REPAIR_RESULT",
+    "execution_status": "FIX_PENDING",
     "note": "Full lifecycle planned; local access/publication gates do not stop unrelated preparation. No outcome or launcher promotion."
   }
 }
