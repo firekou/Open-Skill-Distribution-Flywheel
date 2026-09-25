@@ -1,5 +1,20 @@
 ## 2026-09-26：ATK-FIRST-USE-PREP-01 已正式接單
 
+## PR #19 — ATK-FIRST-USE-PREP-01 r1 — BLOCKED
+
+- Exact head: `12b807bcbbd15f3ab156248e980f3ddde3a6b5f0`
+- Review: [reviews/PR19_R1_FIRST_USE_PREP_12b807bc.md](/firekou/Open-Skill-Distribution-Flywheel/blob/main/reviews/PR19_R1_FIRST_USE_PREP_12b807bc.md)
+- Result receipt: https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839734184
+- Independent checks: 7/7 paths in scope; 6/6 pinned entry SHA-256 values matched; Aider #3396/#4797/#4638 live state re-read.
+- Exact-head evidence: 0 workflow runs, 0 check runs, 0 commit statuses, 0 PR reviews.
+- Blockers:
+  - `P1-01`: the schema accepts `passed=true` with failed tests, modified tests and an unreviewed diff.
+  - `P1-02`: the schema accepts an entry URL SHA that differs from `entry.asset_sha`.
+- Revision 2 repair 1/2: [signal](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5839784779); status `SIGNAL_SENT`, with no claim or fixed result SHA yet.
+- Next checkpoint: `PR19_R2_FEEDBACK_INTEGRITY_FIX`.
+- No publication, outreach, upstream send, live call, spend, merge, deployment or permission change occurred.
+
+
 - Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-FIRST-USE-PREP-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839667273)。
 - source main `98b98b70...`、PR14／PR16／PR17／PR18 四個固定資產 SHA、branch、dedup key、scope、deadline 與 0/2 修復輪均符合工作包；狀態升為 `EXECUTING`，不重複派工。
 - PR #18 live head 仍為已審的 `1abd74a4...`；沒有新 content head、Draft PR 或 result SHA，因此本輪不重做內容覆核，也不宣稱成果完成。
