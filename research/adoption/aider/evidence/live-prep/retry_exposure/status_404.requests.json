@@ -1,0 +1,9 @@
+[
+  {
+    "t_monotonic_s": 2.296,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 404
+  }
+]

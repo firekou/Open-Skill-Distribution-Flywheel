@@ -1,0 +1,9 @@
+[
+  {
+    "t_monotonic_s": 2.318,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 200
+  }
+]

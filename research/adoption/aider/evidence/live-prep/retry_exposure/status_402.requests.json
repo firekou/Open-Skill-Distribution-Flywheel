@@ -1,0 +1,65 @@
+[
+  {
+    "t_monotonic_s": 2.208,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 402
+  },
+  {
+    "t_monotonic_s": 2.48,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 402
+  },
+  {
+    "t_monotonic_s": 2.994,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 402
+  },
+  {
+    "t_monotonic_s": 4.008,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 402
+  },
+  {
+    "t_monotonic_s": 6.022,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 402
+  },
+  {
+    "t_monotonic_s": 10.036,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 402
+  },
+  {
+    "t_monotonic_s": 18.05,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 402
+  },
+  {
+    "t_monotonic_s": 34.064,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 402
+  },
+  {
+    "t_monotonic_s": 66.078,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 402
+  }
+]

@@ -1,0 +1,16 @@
+────────────────────────────────────────────────────────────────────────────────
+Update git name with: git config user.name "Your Name"
+Update git email with: git config user.email "you@example.com"
+You can skip this check with --no-gitignore
+Added .aider* to .gitignore
+HTTPSConnectionPool(host='raw.githubusercontent.com', port=443): Max retries exceeded with url: /BerriAI/litellm/main/model_prices_and_context_window.json (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1016)')))
+Aider v0.86.1
+Model: openai/local-test-model with whole edit format
+Git repo: .git with 3 files
+Repo-map: disabled
+Added import_contacts.py to the chat.
+Added test_import_contacts.py to the chat (read-only).
+
+Empty response received from LLM. Check your provider account?
+
+Tokens: 1.4k sent, 0 received.

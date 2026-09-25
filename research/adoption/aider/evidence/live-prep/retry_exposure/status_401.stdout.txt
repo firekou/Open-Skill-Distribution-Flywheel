@@ -1,0 +1,12 @@
+────────────────────────────────────────────────────────────────────────────────
+HTTPSConnectionPool(host='raw.githubusercontent.com', port=443): Max retries exceeded with url: /BerriAI/litellm/main/model_prices_and_context_window.json (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1016)')))
+Aider v0.86.1
+Model: openai/local-test-model with whole edit format
+Git repo: none
+Repo-map: disabled
+Added import_contacts.py to the chat.
+
+litellm.AuthenticationError: AuthenticationError: OpenAIException - stand-in 
+fixed status 401
+The API provider is not able to authenticate you. Check your API key.
+
