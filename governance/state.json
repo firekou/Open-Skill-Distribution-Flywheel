@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 34,
+  "revision": 35,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -812,6 +812,28 @@
       },
       "next_checkpoint": "OWNER_PR15_REMEDIATION_DECISION",
       "post_merge_verified_at": "2026-09-25T13:39:29+08:00"
+    },
+    {
+      "task_id": "ATK-VALUE-READINESS-01",
+      "work_id": "ATK-VALUE-READINESS-01",
+      "revision": 1,
+      "status": "PLANNED_NOT_DISPATCHED",
+      "goal": "Turn reviewed Aider offline assets into a concrete external-value trial and release/access packet",
+      "prompt": "reviews/ATK_END_TO_END_BLUEPRINT.md#8-下一個包完整契約atk-value-readiness-01-r1",
+      "scope_paths": [
+        "research/adoption/aider/**",
+        "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
+      ],
+      "decision_ids": [
+        "ATK-FULL-BLUEPRINT-20260926"
+      ],
+      "source_asset_head": "d1474670db12934c80caa05674c8e4320cbad312",
+      "active_claim": null,
+      "executor_run": null,
+      "repair_rounds_used": 0,
+      "repair_rounds_limit": 2,
+      "additional_api_budget_usd": 0,
+      "next_action": "按藍圖第8節交五項具體試用準備成果；先核對執行狀態與active claim。本輪先交完整規劃，未派送、未接單。"
     }
   ],
   "planning": {
@@ -913,5 +935,14 @@
     "benchmark_reopened": false,
     "aider_blocked": false,
     "observed_at": "2026-09-24"
+  },
+  "product_roadmap": {
+    "decision_id": "ATK-FULL-BLUEPRINT-20260926",
+    "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
+    "status": "PLANNING_DELIVERED",
+    "next_work_id": "ATK-VALUE-READINESS-01",
+    "next_checkpoint": "VALUE_READINESS_PACKET_EXECUTION",
+    "execution_status": "PLANNED_NOT_DISPATCHED",
+    "note": "Full lifecycle planned; local access/publication gates do not stop unrelated preparation. No outcome or launcher promotion."
   }
 }
