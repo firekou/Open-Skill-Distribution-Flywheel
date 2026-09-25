@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 32,
+  "revision": 33,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -748,6 +748,52 @@
         "non_blocking_scope_note": "QUICKSTART.md was outside the revision-2 enumerated list but inside the parent integrations/aider-atk/** task scope; reviewed as documentation consistency, no further repair.",
         "reviewed_at": "2026-09-24T20:14:00Z"
       }
+    },
+    {
+      "task_id": "PR15_ATK_ORG_STATUS",
+      "work_id": null,
+      "status": "BLOCKED",
+      "pr": 15,
+      "branch": "cursor/add-atk-org-status-skill-1754",
+      "base_head": "fc0b3054b5eeb23441f017ea795d1378a2735d6b",
+      "observed_head": "2affb13f8cac09d882144971646cfe8cdf4dc3f2",
+      "last_reviewed_head": "2affb13f8cac09d882144971646cfe8cdf4dc3f2",
+      "last_review_decision": "BLOCKED",
+      "scope_paths": [
+        ".claude/skills/atk-org-status/SKILL.md"
+      ],
+      "review": "reviews/PR15_R1_ORG_STATUS_2affb13f.md",
+      "evidence_level": "OBSERVED",
+      "exact_head_checks": {
+        "pr_conversation_entries": 0,
+        "pr_reviews": 0,
+        "workflow_runs": 0,
+        "commit_statuses": 0
+      },
+      "work_contract": {
+        "decision_id": "MISSING",
+        "work_id": "MISSING",
+        "revision": "MISSING",
+        "source_head": "MISSING",
+        "acceptance_criteria": "MISSING",
+        "dedup_key": "MISSING",
+        "executor_response": "MISSING"
+      },
+      "blocking_findings": [
+        "PR15-R1-01",
+        "PR15-R1-02",
+        "PR15-R1-03",
+        "PR15-R1-04"
+      ],
+      "conflicts_with": [
+        "GOAL",
+        "ATK-OPEN-ADOPTION-20260922",
+        "ATK-EXTERNAL-VALUE-CONTINUE-20260924"
+      ],
+      "next_action": "Do not merge or use as an authority. A new head requires a repo-visible owner decision and bounded work packet; repository-qualified immutable evidence for retained cross-project claims; explicit reconciliation of the Open-Skill hard gate; and a derived-index design with precedence/staleness rules.",
+      "active_claim": null,
+      "no_repair_dispatch": true,
+      "reviewed_at": "2026-09-25T10:32:01+08:00"
     }
   ],
   "planning": {
