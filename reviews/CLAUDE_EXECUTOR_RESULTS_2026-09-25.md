@@ -90,3 +90,22 @@
     - #38318 的改動已經包含在 LiteLLM 1.102.1，以及 main `cf491d1`。
     - 但 `_map_openai_exception` 仍然沒有處理 402／403，所以「值得對 LiteLLM 開新 issue」的結論不變。
 - 兩份 issue 草稿**都沒有送出**，送出與否要負責人另外授權。本輪沒有做任何 live 呼叫，也沒有付費或 merge。
+
+---
+
+## 追加（2026-09-25T21:25Z）：PR18 通過；ATK-FIRST-USE-PREP-01 已交付
+
+| work_id / revision | Draft PR | 精確 result head | 複核 |
+|---|---|---|---|
+| ATK-UPSTREAM-01 r2 | #18 | `1abd74a4b7f14d8b5e397d33afa2ace212841099` | [R2](PR18_R2_UPSTREAM_1abd74a4.md) APPROVED_WITH_CONDITIONS（送上游前要先修 P2-01 那一句，並取得負責人授權） |
+| ATK-FIRST-USE-PREP-01 r1 | #19 | `12b807bcbbd15f3ab156248e980f3ddde3a6b5f0` | 待複核；收據見 [PR18 留言](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839734184) |
+
+FIRST-USE-PREP 交付內容：
+- 兩份可直接發布的完整文案（上游優先的 Aider 指南、可選的 ATK 指南），**都還沒發布**。
+- 入口連結全部釘在固定 SHA。
+- 候選人：2 筆勉強合格、1 筆排除，建議不要逐一聯絡，**沒有聯絡任何人**。
+- 回饋格式（JSON Schema）。
+- 發布關卡清單，目前判定為 **NOT RELEASABLE**。
+- 驗證腳本 42/42 通過。
+
+還欠的權限：發布渠道與發送身分、PR14 合併、live 選項（`OWNER_ATK_AIDER_LIVE_DECISION`），以及是否把兩份上游草稿送出。
