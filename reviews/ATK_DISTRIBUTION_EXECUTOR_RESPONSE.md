@@ -89,3 +89,39 @@ Aider 和 LiteLLM 的維護者與使用者都會用到這些結果：我們在�
 - 修改 PR14、PR16、PR17
 
 `findings_closed_by_executor: []`。停在 Draft PR，等獨立覆核。
+
+---
+
+# ATK-UPSTREAM-01 · revision 2（repair 1/2）
+
+| | |
+|---|---|
+| 依據 | `reviews/PR18_R1_UPSTREAM_48ea4dec.md`（BLOCKED，P1-01）；[修復包](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838602710) |
+| source_head | `48ea4decb3920b8a1d1fcacb92442b7a94376353` |
+| dedup_key | `firekou/Open-Skill-Distribution-Flywheel:ATK-UPSTREAM-01:2:48ea4decb3920b8a1d1fcacb92442b7a94376353:conditions` |
+| session | `session_01RFeCsTYkVywjHvXk7od7Ab`（沿用既有 session） |
+| claim | 2026-09-25T20:10Z，由每小時例行檢查發現 main 上的新 review 後接手 |
+| deadline | 2026-09-26T19:30:00Z |
+| 變更路徑 | `research/adoption/aider/upstream/UPSTREAM_DEDUP_REPORT.md`、`research/adoption/aider/upstream/DRAFT_LITELLM_ISSUE.md`、本段（只追加）；PR #18 說明中對應的狀態行 |
+
+## P1-01 PR38318_STATE_MISMATCH：確認為真，已修正
+- **錯在哪**：revision 1 用的是 Exa 抓到的頁面快照，上面寫 `State: open`，更新時間 `2026-08-26T08:12:00Z`，也就是 PR 建立後 21 分鐘、合併之前拍的。我沒有拿第一手來源核對就照抄。今天再抓一次，拿到的仍是同一份過期快照。
+- **我自己用唯讀 git 查到的佐證**：
+  - LiteLLM 的 `ls-remote` 裡已經沒有 `refs/pull/38318/merge`，符合「PR 已不是 open」。
+  - `litellm_internal_staging` 分支已不存在。
+  - #38318 的內容已經進入 1.102.1 正式版，也在 main `cf491d1df91afa50527d0253ac960a8bf81ff678` 上：多了 `_map_exception_by_status`；openai_like 的 403 改成 `PermissionDeniedError`；router 對 `PermissionDeniedError` 會直接停止、不重試。
+  - GitHub 網頁與 API 從本環境打不開（proxy 回 403）。所以「2026-08-26 合併到 `litellm_internal_staging`」這個日期與目標分支，是引用 reviewer 讀到的 GitHub 紀錄；我這邊的證據與它一致，但沒有直接看到這兩項。
+- **修正內容**：
+  - dedup report：§3 表格把狀態改成 merged，並新增 §3.1 說明錯誤原因與佐證。
+  - LiteLLM 草稿：頂部的查重說明與「What happened」段落改成已合併，另在版本表加一列 main `cf491d1`。
+  - PR body：更新對應的狀態行。
+- **不變的部分**：#38318 明確把 OpenAI 分支本身的 403 排除在外。`_map_openai_exception` 在 1.102.1（已實測）與 main `cf491d1`（讀原始碼）都還是沒有 402／403 的處理，所以「LiteLLM 值得開新 issue」的結論不變。
+
+## P3-01 NETWORK_ISOLATION_WORDING（不阻擋）
+現有文件沒有用「network-isolated」這類字眼（已 grep 確認）。之後一律寫「provider-loopback」：模型與 provider 的請求只打到本機 127.0.0.1，但 Aider 啟動時仍會嘗試連 `raw.githubusercontent.com` 抓價格表（連線失敗）。
+
+## 範圍外，只報告不修改
+LiteLLM 草稿「Why it matters」段有一句「With the default OpenAI SDK `max_retries=2` underneath ... 9 HTTP requests」，寫得不準：9 次是 Aider 自己重試造成的，OpenAI SDK 不會重送 403。這不屬於 #38318 的修正範圍，本輪沒有改，請 reviewer 決定要不要另外處理。
+
+## 未改動
+raw evidence、manifest、script、Aider 草稿，以及與 #38318 無關的結論都沒有動。沒有送上游、沒有 live 呼叫、沒有付費、沒有 merge、沒有改 settings 或權限。`findings_closed_by_executor: []`。

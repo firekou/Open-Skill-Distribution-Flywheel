@@ -2,7 +2,7 @@
 
 > Status: **draft only, not submitted.** ATK-UPSTREAM-01 r1 does not authorize an upstream issue, comment or PR. Submitting it requires a separate owner decision.
 > Target: `BerriAI/litellm` · issue type: Bug
-> Dedup: see `UPSTREAM_DEDUP_REPORT.md` §3. The closest item is PR #38318 (open), which says explicitly: *"The OpenAI branch's own 403 still raises `APIError`; left alone, out of scope."* No issue was found that reports the OpenAI branch itself.
+> Dedup: see `UPSTREAM_DEDUP_REPORT.md` §3 and §3.1. The closest item is PR #38318 (**merged 2026-08-26 into `litellm_internal_staging`**; its changes are in 1.102.1 and on `main`). It says explicitly: *"The OpenAI branch's own 403 still raises `APIError`; left alone, out of scope."* No issue was found that reports the OpenAI branch itself.
 
 ---
 
@@ -12,7 +12,7 @@
 
 When an OpenAI-compatible endpoint (`openai/<model>` with a custom `api_base`) returns **HTTP 403**, `litellm.completion()` raises `litellm.APIError` (with `status_code=403`), not `litellm.PermissionDeniedError`.
 
-The exception-mapping docs (https://docs.litellm.ai/docs/exception_mapping) list `403 → PermissionDeniedError`. The typed Anthropic, Bedrock and Vertex branches already do this. The OpenAI branch is the gap.
+The exception-mapping docs (https://docs.litellm.ai/docs/exception_mapping) list `403 → PermissionDeniedError`. The typed Anthropic, Bedrock and Vertex branches already do this, and since #38318 (merged) so do OpenAI-like providers and the status-based fallback. The OpenAI branch is the remaining gap. #38318 left it out of scope on purpose.
 
 Why it matters: callers decide whether to retry by exception class. `APIError` is widely treated as transient, and `PermissionDeniedError` as permanent. A permanent 403 is therefore retried. For example, the Aider coding assistant retries `APIError` and does not retry `PermissionDeniedError`. With the default OpenAI SDK `max_retries=2` underneath, one logical call against a 403 endpoint produced 9 HTTP requests in the reproduction below, where the caller intended 1.
 
@@ -27,6 +27,7 @@ HTTP 402 falls through the same `else` branch. I am **not** proposing a class fo
 | 1.75.0 | inline OpenAI block; the `else` → `APIError` is at line 528 |
 | 1.102.1 (latest on PyPI, 2026-09-25) | `_map_openai_exception` (lines 257–500); the `else` → `APIError` is at line 481 |
 | `main` @ `636eb4c396c194235d375db6b021e90f7a53099c` (2026-09-25) | same structure, no 402/403 branch (lines 414–507) |
+| `main` @ `cf491d1df91afa50527d0253ac960a8bf81ff678` (2026-09-25, after #38318 landed) | still no 402/403 branch in `_map_openai_exception` (lines 414–507); the OpenAI-like path and the fallback already map 403 to `PermissionDeniedError` |
 
 ### Minimal reproducer (no provider, no key)
 

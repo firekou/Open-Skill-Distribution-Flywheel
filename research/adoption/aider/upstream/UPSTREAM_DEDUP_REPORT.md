@@ -35,14 +35,23 @@ Searches I ran (Exa, natural language): aider retries 403 / APIError permission 
 
 | Item | State | Date | Does it match? |
 |---|---|---|---|
-| [PR #38318](https://github.com/BerriAI/litellm/pull/38318) map upstream status codes for providers with no exception_type branch | open | 2026-08-26 | **Adjacent, and explicitly excludes our case**: "The OpenAI branch's own 403 still raises `APIError`; left alone, out of scope." |
+| [PR #38318](https://github.com/BerriAI/litellm/pull/38318) map upstream status codes for providers with no exception_type branch | **merged 2026-08-26 into `litellm_internal_staging`** (revision 2 correction; see §3.1) | 2026-08-26 | **Adjacent, and explicitly excludes our case**: "The OpenAI branch's own 403 still raises `APIError`; left alone, out of scope." |
 | [Exception mapping docs](https://docs.litellm.ai/docs/exception_mapping) | — | — | The docs table says `403 → PermissionDeniedError`, but the `openai` row doesn't list it. The docs and the OpenAI branch disagree |
 | [#20959](https://github.com/BerriAI/litellm/issues/20959) / [PR #20960](https://github.com/BerriAI/litellm/pull/20960) PermissionDeniedError not exported | as read | 2026-02-11 | Doesn't match. That is about the export, not the mapping |
 | [PR #32537](https://github.com/BerriAI/litellm/pull/32537) honor status code for invalid_request_error | as read | — | Doesn't match. It covers 400/401/404 in the same mapper, not 402/403 |
 | [#24366](https://github.com/BerriAI/litellm/issues/24366) providers.json 429 wrapped as APIConnectionError | as read | — | Doesn't match. Different provider path |
 | [PR #33151](https://github.com/BerriAI/litellm/pull/33151), [PR #33152](https://github.com/BerriAI/litellm/pull/33152) preserve provider status for non-OpenAI error bodies | as read | — | Doesn't match. A 200 response with an error body |
 
-No LiteLLM issue was found that reports "OpenAI branch 403 → APIError". The closest PR (#38318) knowingly excludes it.
+No LiteLLM issue was found that reports "OpenAI branch 403 → APIError". The closest PR (#38318, already merged) knowingly excludes it.
+
+### 3.1 Revision 2 correction: #38318 status (PR18 R1 finding P1-01)
+- **Revision 1 was wrong to call #38318 "open".** I used an Exa page snapshot that showed `State: open` and `Updated: 2026-08-26T08:12:00Z`, 21 minutes after the PR was created. That snapshot was taken before the merge, and I didn't check it against a primary source. Re-fetching today returns the same stale snapshot.
+- **Current state**: the independent reviewer read it from GitHub as **merged 2026-08-26 into `litellm_internal_staging`**. I couldn't open GitHub's web page or API directly (proxy 403). The date and target branch are therefore cited from the reviewer's GitHub reading. My own evidence below is consistent with it.
+- **My own corroboration (2026-09-25 ~20:15Z, read-only git)**:
+  - `git ls-remote` shows `refs/pull/38318/head` = `6386a68c…` and no `refs/pull/38318/merge`. That fits a PR that is no longer open.
+  - The `litellm_internal_staging` branch no longer appears in `ls-remote`.
+  - #38318's content is already shipped. LiteLLM **1.102.1** (PyPI) and **main @ `cf491d1df91afa50527d0253ac960a8bf81ff678`** (2026-09-25T12:57-07:00) both have the new `_map_exception_by_status` fallback. Both also map 403 to its own `PermissionDeniedError` in `_map_openai_like_exception`, where 1.75.0 still grouped `401 or 403 → AuthenticationError`, and the router's fail-fast check includes `openai.PermissionDeniedError`.
+- **Unchanged**: #38318 explicitly excludes the OpenAI branch's own 403. `_map_openai_exception` still has no 402 or 403 case in 1.102.1 (tested, §4.2) or on main `cf491d1` (source read; the dispatch covers only 400/401/404/408/422/429/500/502/503/504 and everything else becomes `APIError`). The conclusion for LiteLLM, that a new issue is warranted, is unchanged.
 
 ## 4. Current behavior (source read + loopback reproduction)
 
