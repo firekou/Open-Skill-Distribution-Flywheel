@@ -1,3 +1,13 @@
+## 2026-09-25：PR15 ATK 組織狀態 skill R1 覆核
+
+- [R1 獨立覆核](PR15_R1_ORG_STATUS_2affb13f.md)：PR #15 Draft/open/unmerged，精確 head `2affb13f8cac09d882144971646cfe8cdf4dc3f2`，結論 **BLOCKED**；只審一個新增 skill 檔。
+- PR body 只有 Cursor run URL，沒有 main 可追溯的決策、`work_id`、revision、source head、驗收、dedup、期限或綁定本 head 的 executor response；不得視為有效交接。
+- skill 將多倉庫的負責人、部署、PR、共享電腦路徑與商務優先序寫成權威現況，但未附 repository-qualified immutable URL/SHA、observed_at、verifier 或 evidence class，最高只能記 **OBSERVED**。
+- Open-Skill 的「禁止 fork、上傳、對外邀請」與 `GOAL`、`ATK-OPEN-ADOPTION-20260922` 的限定 A4 邀請及 `ATK-EXTERNAL-VALUE-CONTINUE-20260924` 衝突；沒有 superseding owner decision，不採納。
+- 要求狀態變動就更新 skill，會在 `decisions.json`、`state.json`、`reviews/STATUS.md` 之外建立平行 authority；若要保留，只能作為具來源、優先序與時效規則的衍生索引。
+- Exact-head checks：PR conversation 0、PR reviews 0、workflow runs 0、commit statuses 0；`mergeable=true` 不是治理批准。
+- 沒有有效 work item，因此不派修復、不建立 active claim。未 merge、部署、發布、邀請、送上游、修改 secrets／權限或新增支出；automation 維持 `FOUNDATION_ONLY`。
+
 ## 2026-09-24：PR14 revision 2 三項條件關閉
 
 - PR #14 Draft/open/unmerged；精確 head `d1474670db12934c80caa05674c8e4320cbad312`，相對已審 `e8289655...` ahead 1 commit。
