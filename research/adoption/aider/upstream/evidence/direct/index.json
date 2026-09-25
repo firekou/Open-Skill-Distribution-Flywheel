@@ -1,0 +1,21 @@
+{
+  "generated_utc": "2026-09-25T19:44:08+00:00",
+  "commands": [
+    "/home/user/aider-venv/bin/python litellm_direct_mapping.py 8995 direct/aider0861_stack.json   # exit 0",
+    "<scratch>/v0862/bin/python litellm_direct_mapping.py 8996 direct/aider0862_stack.json          # exit 0 (pip install aider-chat==0.86.2)",
+    "<scratch>/vlatest/bin/python litellm_direct_mapping.py 8997 direct/litellm_1_102_1.json        # exit 0 (pip install litellm==1.102.1)"
+  ],
+  "note": "Loopback only, placeholder key, max_retries=0. stdout/stderr hold LiteLLM's own help banners; results are in the .json files.",
+  "sha256": {
+    "direct/aider0861_stack.json": "dbe580374e5e7e8dd4d93dc7e42134a29931b3b140acfe659128cac7b30cb0ba",
+    "direct/aider0861_stack.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "direct/aider0861_stack.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "direct/aider0862_stack.json": "3f61b6a06b47621f47b7b64aef6b00f9e1c786dcc6e291f732ba8e6f24e80f91",
+    "direct/aider0862_stack.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "direct/aider0862_stack.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "direct/litellm_1_102_1.json": "61e87b8f1efeb2d2edc9cddfcd5c861487a4c307b03b9a03bee754118d556548",
+    "direct/litellm_1_102_1.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "direct/litellm_1_102_1.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "litellm_direct_mapping.py": "6e77427b8986c47ea6008da1bd18103f439abced3069962f044b0b3d859899ec"
+  }
+}
