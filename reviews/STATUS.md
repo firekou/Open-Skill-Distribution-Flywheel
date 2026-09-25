@@ -1,3 +1,11 @@
+## 2026-09-26：Aider live 決策準備包已交接
+
+- PR16 revision 2 通過後，依完整執行 Prompt 自動接續 `ATK-AIDER-LIVE-PREP-01` revision 1；[固定工作包](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837510459) 已送既有 PR conversation。
+- source main `b0770499...`、readiness `1dcd625d...`、固定資產 `d1474670...`、dedup、scope 與 UTC deadline 已登記。
+- 只允許無 secrets、無呼叫、無費用的 provider/runtime 選項、官方價格與真正 cap 行為、retry 暴露、最小命令、stop procedure 及 owner approval matrix 準備。
+- 最新 conversation 只有本次 SIGNAL_SENT，尚無新的 Claude session/run 接單、claim 或 result SHA；不宣稱 Claude 已啟動，不重複派工。
+- state revision 39；next checkpoint `ATK_AIDER_LIVE_PREP_CLAIM_OR_RESULT`。live、招募、發布、merge、部署、settings／secrets、送上游與支出仍未授權。
+
 ## 2026-09-26：PR16 revision 2 readiness 修正通過
 
 - [R2 獨立覆核](PR16_R2_VALUE_READINESS_1dcd625d.md)：PR #16 Draft/open/unmerged，精確 head `1dcd625df3bde48b13b91abb3b03eb7e19371558`，結論 **APPROVED_WITH_CONDITIONS**；R1 的 P1-01～P1-04 全部關閉，不需第二輪修復。
