@@ -1,3 +1,15 @@
+## 2026-09-26：PR16 revision 2 readiness 修正通過
+
+- [R2 獨立覆核](PR16_R2_VALUE_READINESS_1dcd625d.md)：PR #16 Draft/open/unmerged，精確 head `1dcd625df3bde48b13b91abb3b03eb7e19371558`，結論 **APPROVED_WITH_CONDITIONS**；R1 的 P1-01～P1-04 全部關閉，不需第二輪修復。
+- VERIFIED：Aider #4027 是已解決歷史案例；#4797／#4638 是仍開放的 prefix/provider 需求線索，但沒有任何人使用本資產，不能算增量價值或採用。
+- 研究改為兩階段：第一階段 1–3 人只做 path B 可行性及卡點，不做 A/B 主張；第二階段須先具備固定等難度任務 2、事前 MLD、AB/BA 配對資料及 live 授權。
+- evidence manifest 綁定命令、環境、版本、fixture、server-ready、UTC、monotonic、exit 與原始檔。Reviewer 對 exact head 的 15/15 raw artifact 重算 SHA-256 全部相符；三次 base-path request 以 ports 8851/8852/8853 可區分。這是 AUTHOR_TESTED＋獨立完整性驗證，不是 reviewer runtime replay。
+- provider 硬上限改為待查能力；G0 未確認拒絕型 cap 或負責人書面接受替代方案前，禁止 live。GitHub credential capability 不等於 merge／發布／settings 授權。
+- `r2_harness.py` 超出「manifest/raw metadata」字面範圍，但僅在 evidence 目錄、loopback-only、未改 PR14 且提高可重放性，記非阻擋 scope deviation。
+- Exact result SHA checks：workflow runs 0、commit statuses 0、PR reviews 0；不是 CI 綠燈。session/result/dedup receipt 齊全，但不證明 persistent launcher。
+- 外部使用者、真實模型成功、增量改善、再次使用、上游接受與經濟價值仍為 0／NOT COLLECTED。
+- state revision 38；next checkpoint `ATK_AIDER_LIVE_PREP_PACKET`。只允許無憑證、無費用的 provider/runtime 決策包準備；live、招募、發布、PR14 merge、settings／secrets、送上游與支出仍需個別授權。
+
 ## 2026-09-26：Claude 全程執行 Prompt v2 已交接
 
 - 依負責人要求，[唯一執行入口](CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md) 已整合目標、S0–S7 所有階段的細節、成果、依賴、驗收、退出與90天檢視；取代過期 PLANNED_NOT_DISPATCHED 起點。
