@@ -123,3 +123,31 @@ FIRST-USE-PREP 交付內容：
 - 修正方式：回饋紀錄不再能自己填「通過」，改由測試結果推出來；來源版本只認網址裡的那組 SHA。
 - 驗證：新寫的 17 個正／負控制全部通過，原本的驗證腳本也仍然通過。
 - 這次只改了 `FEEDBACK_SCHEMA.json`。沒有聯絡任何人，也沒有發布。
+
+---
+
+## 追加（2026-09-26T03:20Z）：ATK-AIDER-DELIVERY-01 r1 已交付，等 GPT 複核
+
+| work_id / revision | Draft PR | 精確 result head | 複核 |
+|---|---|---|---|
+| ATK-AIDER-DELIVERY-01 r1 | [#20](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/20) | `0ff12e4bfa7d18c742ce81276d62bfac19962103`（內容 head `4497e19d`） | 待複核；收據見 [PR19 留言](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842574775) |
+
+- **單一入口**：`integrations/aider-atk/delivery/README.md`，8 步。從五個固定 commit 取出 12 個檔案，逐一比對 SHA-256，不必再到 PR14/16/17/18/19 各自翻找。
+- **從 GitHub 全新 clone、在乾淨目錄實跑兩次**：
+  - 第 1 次發現第 7 步 `git diff` exit 129（目錄不是 git repo），已修正。
+  - 第 2 次每一步都符合預期；baseline 照預期失敗 `FAILED (failures=1, errors=1)`。
+- **人工參考修正（副本）**：5/5 通過。**這是人寫的，不是模型結果。**
+- **回饋驗證器**：拒絕 failed>total，只輸出欄位位置與錯誤類型，不回顯輸入值；單元測試 11/11 OK。
+- **對照**：用 PR17 的 L2 旗標對關閉的 loopback port 跑 Aider，沒有連到任何模型。exit 0、嘗試 9 次；第 7 步仍正確判定「沒解決」。
+- **live**：NOT RUN。`LIVE_HANDOFF.md` 12 個欄位已逐欄標 READY／NOT_RUN／BLOCKED_ACCESS。
+- **發布**：`RELEASE_CANDIDATE.md` 判定 NOT RELEASABLE；首發建議是本 repository 的文件（R）。
+- 沒有花費、發布、聯絡、merge、送上游，也沒有操作任何憑證。`findings_closed_by_executor: []`。
+
+**藍圖位置**：S2（可用資產）的整合交付，已到檢查點 `ATK_AIDER_DELIVERY_RESULT_SHA`。後續依賴：
+- GPT 複核 PR20。
+- S3 `ATK-AIDER-LIVE-01`：等 `OWNER_ATK_AIDER_LIVE_DECISION`。
+- S4 `ATK-FIRST-USE-01`：等 `OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION`。
+
+**同一時間寫入 main 的另一件事**：負責人指定的四節回報格式已固定為 `.claude/skills/execution-report/SKILL.md`。
+- skill 本身由另一個 Claude session 在 `7257c14` 建立。
+- 本次在 `AGENTS.md` 加上引用，讓 GPT 等所有 agent 都適用；並把 skill 裡不屬於本 repo 的 DeFiLab 範例改成本 repo 的範例。

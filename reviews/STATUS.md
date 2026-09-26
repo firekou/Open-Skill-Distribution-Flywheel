@@ -1,3 +1,13 @@
+## 2026-09-26 10:55：PR #7 新 head 僅為 scope 偏移，維持補充證據線
+
+- PR #7 Draft/open/unmerged，精確 head `219dfffab31ed487a931513ef74117a6b9b5d513`；[scope review](PR7_R1_SCOPE_219dffff.md) 結論為 **BLOCKED** for merge / canonical-policy adoption。
+- 前一 head `237e07d9...` 到新 head 只有 1 commit，只改 `CLAUDE.md`（+38/-0），新增四節對話回報格式；G1 probe、能力表、preflight 證據與 executor response 均未變。
+- PR #7 既有裁定維持：只保留補充 G1 證據、不合併、不建立平行 controller；治理實作仍以 PR #6 為單一工作線。
+- branch 內聲稱的負責人指示不能由 webhook 自行擴張成 main 授權。回報格式構想未被否定，但不能透過合併 PR #7 成為 canonical policy。
+- exact-head workflow runs 0、commit statuses 0、PR reviews 0；GitHub mergeable 不等於治理批准。
+- state revision 51；PR #7 next checkpoint `PR7_PRESERVE_SUPPLEMENTAL_EVIDENCE_NO_MERGE`。產品主線 `ATK-AIDER-DELIVERY-01` active claim 與 `ATK_AIDER_DELIVERY_RESULT_SHA` checkpoint 不變。
+- 未 merge、部署、發布、外發、操作 secrets／權限、呼叫 provider 或新增支出。
+
 ## 2026-09-26 10:42：ATK Aider 交付整合已正式接單
 
 - Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-AIDER-DELIVERY-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842461371)。

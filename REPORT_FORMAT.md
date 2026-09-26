@@ -1,6 +1,6 @@
 # 固定回報格式（強制）
 
-決策：REPORT-FORMAT-20260926｜核定：Frank（2026-09-26 直接指示）｜適用：本 repo 所有專案、所有 agent（Claude、GPT、Cursor 及任何 sub-agent）
+決策：REPORT-FORMAT-20260926｜對應技能：`.claude/skills/execution-report`｜核定：Frank（2026-09-26 直接指示）｜適用：本 repo 所有專案、所有 agent（Claude、GPT、Cursor 及任何 sub-agent）
 
 ## 什麼時候用
 
