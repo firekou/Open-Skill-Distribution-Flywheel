@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/schemas/common-defs.schema.json",
+  "title": "ATK shared definitions for content and learning packages",
+  "description": "Shared building blocks. A claim without a source is not a claim; an evidence state outside the ladder is not an evidence state.",
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "evidence_state": {
+      "description": "ATK_VERIFY_STANDARD.md v1. No other value is admissible. UNKNOWN is not a state; a claim whose state cannot be determined does not ship.",
+      "type": "string",
+      "enum": ["REPORTED", "OBSERVED", "TESTED", "VERIFIED", "REPRODUCED"]
+    },
+    "seat_id": {
+      "description": "A canonical Flywheel seat id, or an ATK Magazine operating seat id AM01-AM50.",
+      "type": "string",
+      "pattern": "^([a-z0-9]+(-[a-z0-9]+)*|AM[0-9]{2})$"
+    },
+    "source": {
+      "description": "A source ATK can point another party at. retrieval_mode records HOW the text was obtained, because a summarised rendering is weaker evidence than the document itself.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "source_uri", "source_type", "retrieved_at", "retrieval_mode"],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "source_uri": {"type": "string", "minLength": 1},
+        "source_type": {
+          "type": "string",
+          "enum": ["official_specification", "vendor_documentation", "repository_file", "repository_commit", "academic", "community", "vendor_claim", "internal_measurement"]
+        },
+        "source_version": {"type": ["string", "null"]},
+        "retrieved_at": {"$ref": "#/$defs/date"},
+        "retrieval_mode": {
+          "description": "verbatim = the document's own words were read. summarised_rendering = a tool returned a paraphrase; quotes from it are REPORTED, never OBSERVED. unavailable = cited but not read.",
+          "type": "string",
+          "enum": ["verbatim", "summarised_rendering", "unavailable"]
+        },
+        "quote": {"type": ["string", "null"]},
+        "rights_note": {"type": ["string", "null"]}
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "statement", "evidence_state", "source_refs", "limitations"],
+      "properties": {
+        "claim_id": {"type": "string", "pattern": "^C-[0-9]{3}$"},
+        "statement": {"type": "string", "minLength": 1},
+        "evidence_state": {"$ref": "#/$defs/evidence_state"},
+        "source_refs": {
+          "description": "At least one. Enforced here, and again as semantic rule R2 so the failure message names the claim.",
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "limitations": {
+          "description": "What this claim does NOT establish. An empty array is a positive assertion that nothing limits it, which is why it must be written out rather than omitted.",
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "counterevidence": {"type": "array", "items": {"type": "string"}},
+        "authored_by": {"$ref": "#/$defs/seat_id"},
+        "checked_by": {"type": ["string", "null"]}
+      }
+    },
+    "rights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["license", "redistribution_allowed", "commercial_use_allowed", "attribution_required"],
+      "properties": {
+        "license": {"type": "string", "minLength": 1},
+        "redistribution_allowed": {"type": "boolean"},
+        "commercial_use_allowed": {"type": "boolean"},
+        "attribution_required": {"type": "boolean"},
+        "model_training_allowed": {"type": ["boolean", "null"]},
+        "notes": {"type": ["string", "null"]}
+      }
+    },
+    "applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["use_when", "not_for"],
+      "properties": {
+        "use_when": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "not_for": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "prerequisites": {"type": "array", "items": {"type": "string"}},
+        "compatible_versions": {"type": "array", "items": {"type": "string"}},
+        "jurisdiction_if_relevant": {"type": ["string", "null"]}
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "seat_id", "decision", "decided_at", "scope_hash"],
+      "properties": {
+        "role": {"type": "string", "enum": ["author", "claim_check", "verify", "red_team", "rights", "publish", "human_approver"]},
+        "seat_id": {"$ref": "#/$defs/seat_id"},
+        "decision": {"type": "string", "enum": ["APPROVED", "APPROVED_WITH_CONDITIONS", "NEEDS_INFORMATION", "BLOCKED", "NOT_REQUESTED"]},
+        "decided_at": {"$ref": "#/$defs/date"},
+        "scope_hash": {"$ref": "#/$defs/sha256"},
+        "conditions": {"type": ["string", "null"]}
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["review_owner", "supersedes", "superseded_by", "revokes", "revoked_by", "change_summary"],
+      "properties": {
+        "review_owner": {"$ref": "#/$defs/seat_id"},
+        "supersedes": {"type": ["string", "null"]},
+        "superseded_by": {"type": ["string", "null"]},
+        "revokes": {"type": ["string", "null"]},
+        "revoked_by": {"type": ["string", "null"]},
+        "change_summary": {"type": "string"}
+      }
+    },
+    "test_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["test_id", "given", "expected_behavior", "scoring_version"],
+      "properties": {
+        "test_id": {"type": "string", "pattern": "^T-[0-9]{3}$"},
+        "given": {"type": "string", "minLength": 1},
+        "expected_behavior": {"type": "string", "minLength": 1},
+        "scoring_version": {"type": "string", "minLength": 1},
+        "baseline_reference": {"type": ["string", "null"]},
+        "executed": {
+          "description": "false means the case is written but never run. A written test is not a passed test.",
+          "type": "boolean"
+        },
+        "result": {"type": ["string", "null"], "enum": ["PASS", "FAIL", "NOT_RUN", null]}
+      }
+    }
+  }
+}

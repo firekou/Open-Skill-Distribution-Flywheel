@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/schemas/learning-package.schema.json",
+  "title": "ATK Learning Package v0.1.0",
+  "description": "What a customer-authorised Agent retrieves. It carries the same claims as its human counterpart plus an executable method, the approvals that method requires, and the tests that decide whether the Agent actually learned anything.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "package_kind", "package_id", "schema_version", "version", "status",
+    "title", "desk", "created_at", "valid_until",
+    "authorship", "claims", "sources", "applicability",
+    "method", "test_cases", "limitations", "unknowns",
+    "rights", "approvals", "lifecycle", "delivery", "content_hash"
+  ],
+  "properties": {
+    "package_kind": {"const": "learning"},
+    "package_id": {"type": "string", "pattern": "^atk\\.[a-z0-9]+(-[a-z0-9]+)*\\.[a-z0-9]+(-[a-z0-9]+)*$"},
+    "schema_version": {"const": "0.1.0"},
+    "version": {"$ref": "common-defs.schema.json#/$defs/semver"},
+    "status": {"type": "string", "enum": ["draft", "review", "publishable", "published", "retracted", "expired"]},
+    "title": {"type": "string", "minLength": 1},
+    "desk": {
+      "type": "string",
+      "enum": ["token", "agent", "mcp", "a2a", "routing", "skill", "framework", "context-memory", "trust-security", "agent-economy"]
+    },
+    "created_at": {"$ref": "common-defs.schema.json#/$defs/date"},
+    "published_at": {"oneOf": [{"$ref": "common-defs.schema.json#/$defs/date"}, {"type": "null"}]},
+    "valid_until": {"oneOf": [{"$ref": "common-defs.schema.json#/$defs/date"}, {"type": "null"}]},
+    "authorship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authored_by", "reviewed_by", "human_responsible"],
+      "properties": {
+        "authored_by": {"type": "array", "minItems": 1, "items": {"$ref": "common-defs.schema.json#/$defs/seat_id"}},
+        "reviewed_by": {"type": "array", "items": {"$ref": "common-defs.schema.json#/$defs/seat_id"}},
+        "human_responsible": {"type": ["string", "null"]},
+        "ai_authored": {"type": "boolean"}
+      }
+    },
+    "claims": {"type": "array", "minItems": 1, "items": {"$ref": "common-defs.schema.json#/$defs/claim"}},
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "common-defs.schema.json#/$defs/source"}},
+    "applicability": {"$ref": "common-defs.schema.json#/$defs/applicability"},
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps", "decision_rules", "required_approvals", "escalation_conditions", "rollback"],
+      "properties": {
+        "steps": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "decision_rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rule_id", "when", "then", "claim_refs"],
+            "properties": {
+              "rule_id": {"type": "string", "pattern": "^R-[0-9]{3}$"},
+              "when": {"type": "string", "minLength": 1},
+              "then": {"type": "string", "minLength": 1},
+              "claim_refs": {
+                "description": "Every rule must trace to at least one claim. A rule with no claim behind it is an opinion the Agent will execute.",
+                "type": "array",
+                "minItems": 1,
+                "items": {"type": "string"}
+              }
+            }
+          }
+        },
+        "required_approvals": {"type": "array", "items": {"type": "string"}},
+        "escalation_conditions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "rollback": {"type": "string", "minLength": 1}
+      }
+    },
+    "test_cases": {"type": "array", "items": {"$ref": "common-defs.schema.json#/$defs/test_case"}},
+    "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "unknowns": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "rights": {"$ref": "common-defs.schema.json#/$defs/rights"},
+    "approvals": {"type": "array", "items": {"$ref": "common-defs.schema.json#/$defs/approval"}},
+    "lifecycle": {"$ref": "common-defs.schema.json#/$defs/lifecycle"},
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fail_mode_when_status_unreachable", "max_characters", "requires_atk_api_key"],
+      "properties": {
+        "fail_mode_when_status_unreachable": {
+          "description": "fail_closed is mandatory for governance packages: if the Agent cannot reach the revocation endpoint it must stop using the package, not carry on with the last copy it holds.",
+          "type": "string",
+          "enum": ["fail_closed", "warn_only"]
+        },
+        "risk_class": {"type": "string", "enum": ["governance", "technical", "explanatory"]},
+        "max_characters": {"type": "integer", "minimum": 1, "maximum": 12000},
+        "requires_atk_api_key": {
+          "description": "Must be false. ATK is an optional inference supplier; knowledge access may not be conditioned on it.",
+          "type": "boolean"
+        }
+      }
+    },
+    "human_counterpart": {"type": ["string", "null"]},
+    "content_hash": {"$ref": "common-defs.schema.json#/$defs/sha256"},
+    "disclosure": {"type": ["string", "null"]}
+  }
+}
