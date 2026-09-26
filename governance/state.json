@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 52,
+  "revision": 53,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1403,6 +1403,38 @@
       "active_claim": null,
       "merge_authorized": false,
       "controller_authorized": false
+    },
+    {
+      "task_id": "PR21-REPORT-POINTER",
+      "pr": 21,
+      "status": "APPROVED_WITH_CONDITIONS",
+      "observed_head": "9bf2065858770b225f6418361e58ddb180f9f236",
+      "last_reviewed_head": "9bf2065858770b225f6418361e58ddb180f9f236",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "review": "reviews/PR21_R1_REPORT_POINTER_9bf20658.md",
+      "scope_paths": [
+        "CLAUDE.md",
+        ".claude/skills/execution-report/SKILL.md"
+      ],
+      "authorization_source": "firekou/virtual-strategy-lab@01dc7c90b61d2bc91c27bc8c36ad000cd2f8fccb:reviews/ATK_NEXT_01_GPT_LIMITED_CHECK_AND_ROUTING_2026-09-26.md",
+      "active_claim": null,
+      "executor_session_reported": "session_01EfCdZ5hH3gC3sG3i1h9dy3",
+      "executor_claim_verified": false,
+      "dispatch_status": "NO_NEW_DISPATCH",
+      "next_checkpoint": "PR21_OWNER_MERGE_AUTHORIZATION_IF_ADOPTING",
+      "next_action": "文件語意及固定來源查核通過；不套用 main 政策、不合併；P3 五/六階段措辭列 backlog，不開修復輪。產品首次使用 checkpoint 不變。",
+      "exact_head_checks": {
+        "workflow_runs": 0,
+        "commit_statuses": 0,
+        "pr_reviews": 0,
+        "comments": 0,
+        "check_runs": "NOT_CHECKED"
+      },
+      "pending_conditions": [
+        "preserve local goals and reviewer supplements",
+        "no claim of full cross-repo drift or runtime verification",
+        "revalidate diff before any authorized adoption"
+      ]
     }
   ],
   "planning": {
