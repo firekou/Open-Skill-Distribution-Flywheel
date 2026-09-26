@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 55,
+  "revision": 56,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -133,31 +133,33 @@
     {
       "task_id": "GOV-BOOTSTRAP",
       "status": "BLOCKED",
-      "next_action": "Controller 原批次停在 FOUNDATION_ONLY，不開第三輪。包 A（R2-02/R2-03/R2-05 與兩項 P2）保存為未派工 backlog；包 B 等待合格的 trusted-wrapper／untrusted-source 隔離後端與獨立證據。主線 ATK 工具/skill 採用工作以既有人工 GitHub 交接繼續，不等待治理 ACTIVE。",
+      "next_action": "Package A 已在負責人明示的第三輪限定授權下交付並完成精確 head 獨立覆核，五項 finding 關閉；PR6 整體仍因 GOV-R1-03 Package B 缺合格隔離後端而 BLOCKED / FOUNDATION_ONLY。未取得 qualifying runtime 與新授權前不派 Package B、不開第四輪、不啟動真實閉環。主線產品採用與 PR22 owner merge gate 繼續，不等待治理 ACTIVE。",
       "prompt": "governance/IMPLEMENTATION_PROMPT.md",
       "pr": 6,
       "branch": "claude/atk-governance-controller",
-      "submitted_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
+      "submitted_head": "cca553f6291d14a7abbb6ef8c42d377a127fd9f6",
       "executor_response": "reviews/GOVERNANCE_EXECUTOR_RESPONSE.md (on the PR branch)",
-      "note": "R4 controller code review 仍為 BLOCKED。7de3043 僅新增 scope reduction 提案，無 controller 或 executor response 變更；Planner 已有條件接受拆包作為輸入，但未授權第三輪修復。",
-      "last_reviewed_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
-      "last_review_decision": "BLOCKED",
-      "review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
-      "observed_head": "7de3043938b4179f5011f82927aaeecc5b82cbd1",
+      "note": "Package A 對 cca553f6 的限定裁定為 APPROVED_WITH_CONDITIONS；這不是整個 PR6 或 live runtime 的批准。GOV-R1-03 仍 OPEN，Claude persistent launcher 與真實閉環仍未驗證。",
+      "last_reviewed_head": "cca553f6291d14a7abbb6ef8c42d377a127fd9f6",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "review": "reviews/PR6_R6_PACKAGE_A_cca553f6.md",
+      "observed_head": "cca553f6291d14a7abbb6ef8c42d377a127fd9f6",
       "policy_sha": "38ee2303fd4c702af6d583a00dd9ed6f871ce54f",
       "blocking_findings": [
-        "GOV-R2-02",
-        "GOV-R2-03",
-        "GOV-R2-05",
         "GOV-R1-03"
       ],
       "independent_runtime_verified": false,
       "source_findings_closed": [
         "GOV-R2-01",
-        "GOV-R2-04"
+        "GOV-R2-02",
+        "GOV-R2-03",
+        "GOV-R2-04",
+        "GOV-R2-05",
+        "P2-ISOLATION-BASELINE",
+        "P2-ATOMIC-SPEND-INTENT-TASK"
       ],
-      "repair_rounds_used": 2,
-      "repair_rounds_limit": 2,
+      "repair_rounds_used": 3,
+      "repair_rounds_limit": 3,
       "planner_review": "reviews/PR6_R5_SCOPE_REDUCTION_7de3043.md",
       "last_planner_reviewed_head": "7de3043938b4179f5011f82927aaeecc5b82cbd1",
       "last_planner_decision": "APPROVED_WITH_CONDITIONS",
@@ -165,7 +167,23 @@
         "proposal_head": "7de3043938b4179f5011f82927aaeecc5b82cbd1",
         "controller_code_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
         "package_a": {
-          "status": "BACKLOG_NOT_DISPATCHED",
+          "status": "RESULT_RECEIVED_REVIEWED",
+          "work_id": "GOV-PR6-R2",
+          "revision": 3,
+          "source_head": "25457fbd2ff02a900d55538eb4e2fa0893663c31",
+          "result_head": "cca553f6291d14a7abbb6ef8c42d377a127fd9f6",
+          "decision": "APPROVED_WITH_CONDITIONS",
+          "review": "reviews/PR6_R6_PACKAGE_A_cca553f6.md",
+          "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:6:GOV-PR6-R2:3:25457fbd2ff02a900d55538eb4e2fa0893663c31:package-a",
+          "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+          "submission_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/6#issuecomment-5844293496",
+          "independent_offline_evidence": {
+            "focused_tests": "19/19 PASS",
+            "package_a_mutants": "8/8 CAUGHT",
+            "replay": "COMPLETE_REPLAY_VERIFIED",
+            "tick": "exit 10; redelivery exit 20",
+            "full_suite": "165 tests; 2 failures and 1 skip on reviewer runtime; same two failures and one skip reproduced on prior reviewed head"
+          },
           "findings": [
             "GOV-R2-02",
             "GOV-R2-03",
@@ -176,10 +194,14 @@
         },
         "package_b": {
           "status": "WAITING_QUALIFYING_ISOLATION_BACKEND",
-          "finding": "GOV-R1-03"
+          "finding": "GOV-R1-03",
+          "dispatch_status": "NOT_DISPATCHED",
+          "reason": "Package B is not authorized in the owner decision and no qualifying isolation runtime is available.",
+          "next_checkpoint": "GOV_PR6_PACKAGE_B_QUALIFYING_RUNTIME_OR_OWNER_AUTHORIZATION"
         },
-        "repair_rounds_used": 2,
-        "repair_rounds_limit": 2,
+        "repair_rounds_used": 3,
+        "repair_rounds_limit": 3,
+        "owner_authorization": "reviews/OWNER_DECISION_2026-09-26_PR6_PACKAGE_A.md",
         "no_parallel_controller": true,
         "product_adoption_blocked": false
       }
