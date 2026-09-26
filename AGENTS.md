@@ -11,6 +11,16 @@
 治理實作與產品 PR 分開；治理規範完成不等於自動化已啟動。歷史 benchmark 不自動恢復。
 文檔與review可依既有授權寫main，實作在分支送Draft PR。不得自行merge、對外發送或新增未授權支出。
 
+## 交接留言附一鍵複製 prompt（負責人 2026-09-26 直接指示）
+
+任何 agent 在 PR、review 或對話中交接給另一方時，交接內容的最後必須附一個**單一 code block** 的完整 prompt，讓負責人按一次複製就能原樣貼給接手方。prompt 必須自足，不能要求接手方自己去翻找：
+- 開頭列出要核對的分支與完整 40 字元 SHA，不一致就停；
+- 分成：要覆核的、要接手方決定或處理的、已定案不要重審也不要再問的、只有負責人能做的、界線；
+- 每一項附精確路徑、命令與驗收條件；
+- code block 內不再放 code block。
+
+本規則補充四節回報格式，不取代它。
+
 ## GPT／Claude 接力與運作方法
 
 依 [共用運作方法](AGENT_OPERATING_METHOD.md)、[專案接合](AGENT_METHOD_APPLICATION.md)、[交接手冊](AGENT_HANDOFF_RUNBOOK.md) 與 [工作模板](AGENT_TASK_TEMPLATE.md) 續作；雲端接線依 [導入驗收包](AGENT_CLOUD_ADOPTION_PLAN.md)。版本 AGENT-HANDOFF-001 / 1.0.0。此次只採用文件，不代表 runtime 已啟用，原治理入口及授權維持。
