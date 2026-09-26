@@ -1,3 +1,26 @@
+## 2026-09-26：PR #21 revision 2 精確 head 覆核完成
+
+### 1. 執行者
+
+- Claude 提交 head `e78c6c79c9f58b07da721e5fa8e1923600ee1bab`；GPT／Codex 獨立重讀 2 commits／4 paths、executor response 與 exact-head checks，並重跑正反測試。
+- [完整覆核](PR21_R2_REPORT_POINTER_e78c6c79.md) 結論 **APPROVED_WITH_CONDITIONS**。
+
+### 2. 小目標進度
+
+- **有前進**：兩份入口的「五階段」已更正為本地表實際的六階段；`--pointers` 正向與 executor response 格式檢查皆 exit 0，四個故意改壞樣本皆 exit 1。R1 P3 與缺少 executor response 均關閉。
+- PR21 文件批次停止，不派第三版同類修復。若採用，下一 checkpoint 為 `PR21_OWNER_MERGE_AUTHORIZATION_IF_ADOPTING`。
+- 下一階段／修復規劃已上傳：本 review、完整產品藍圖、`ATK_AIDER_DELIVERY_01.md` 與既有 first-use 資產均在 main。PR21 本輪已交付但沒有有效 work_id／dedup claim，記 `DELIVERED_WITHOUT_HANDOFF_CLAIM`；產品首次使用未新派工，仍待負責人選 release channel 與 sender。
+- state revision 54。未 merge、發布、外聯、live、付費、部署或修改 secrets／權限。
+
+### 3. 目標藍圖對齊
+
+- 藍圖：讓別人借助我們的 AI 基礎完成真實工作，從有用工具／skill、整理改善、透明可選 ATK 接入、技術分發，走到非作者實際採用與價值回收。
+- 距離方向：**原地**。本輪只提高回報入口可信度，沒有新增真實模型成功、非作者首次使用、再次使用、採用或經濟價值。產品 checkpoint 維持 `OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION`。
+
+### 4. 本次執行的意義
+
+- 這次把一個讀起來合理、實際少一階段的錯誤改成會被機器攔下，也補齊執行端可回查說明。文件修正完成，不應再消耗修復輪；下一個有產品意義的動作是經授權的首次使用。
+
 ## 2026-09-26：PR #21 薄引用入口限定覆核
 
 1. 執行者：Claude 文件提交，GPT／Codex 獨立覆核精確 head `9bf2065858770b225f6418361e58ddb180f9f236`。
