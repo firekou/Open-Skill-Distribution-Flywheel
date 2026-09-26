@@ -1,0 +1,262 @@
+# Run 1: README.md at the pushed branch head, command lines verbatim. The driver records each exit code itself, so the README's echo "exit=$?" lines are not run.
+# --- step 1
+$ git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel.git atk-flywheel
+  [utc=2026-09-26T02:47:24Z cwd=<W>]
+  | Cloning into 'atk-flywheel'...
+  exit=0
+$ cd atk-flywheel
+  [utc=2026-09-26T02:47:25Z cwd=<W>]
+  exit=0
+$ git checkout --detach origin/claude/atk-aider-delivery-01
+  [utc=2026-09-26T02:47:25Z cwd=<W>/atk-flywheel]
+  | HEAD is now at b6ed8ad ATK-AIDER-DELIVERY-01 r1: entry README, source manifest, asset fetcher, feedback validator with fixtures and tests
+  exit=0
+$ git rev-parse HEAD
+  [utc=2026-09-26T02:47:25Z cwd=<W>/atk-flywheel]
+  | b6ed8ad5d9e60fb772159399d8ced07c27220a0f
+  exit=0
+$ REPO="$PWD"
+  [utc=2026-09-26T02:47:25Z cwd=<W>/atk-flywheel]
+  exit=0
+$ RUN="$REPO/../aider-first-run"
+  [utc=2026-09-26T02:47:25Z cwd=<W>/atk-flywheel]
+  exit=0
+# --- step 2
+$ python3 "$REPO/integrations/aider-atk/delivery/get_assets.py" --out "$RUN"
+  [utc=2026-09-26T02:47:25Z cwd=<W>/atk-flywheel]
+  | ok  asset/QUICKSTART.md
+  | ok  asset/TASK.md
+  | ok  asset/check_config.py
+  | ok  asset/sample/import_contacts.py
+  | ok  asset/sample/test_import_contacts.py
+  | ok  feedback/FEEDBACK_SCHEMA.json
+  | ok  docs/PUBLISHABLE_GUIDE.md
+  | ok  docs/ATK_OPTIONAL_SETUP.md
+  | ok  docs/RELEASE_GATE.md
+  | ok  docs/LIVE_EXECUTION_PLAN.md
+  | ok  docs/TRIAL_RUNBOOK.md
+  | ok  docs/UPSTREAM_DEDUP_REPORT.md
+  | 12 files written to <W>/atk-flywheel/../aider-first-run, all SHA-256 verified
+  exit=0
+$ (cd "$RUN" && find . -type f | sort | xargs sha256sum)
+  [utc=2026-09-26T02:47:26Z cwd=<W>/atk-flywheel]
+  | 513d3974d21bf400405fa82945c2a3b5c470b791b9f3f648f6776573bfad25eb  ./asset/QUICKSTART.md
+  | f46c923d53f304d3af8dd4db509cd9a47eef785b63661471ae1d3a40b87b31d9  ./asset/TASK.md
+  | 1de20fdc9b8d64ba83cce6862944990841c065796fe0bfd7d327d37e47e21394  ./asset/check_config.py
+  | 2dc27bf7868338c6ea4ef2cd29628078aa1346b471bdfb176073f0ddc21c0336  ./asset/sample/import_contacts.py
+  | b2c040c2ae4ae6c7417acb8dcf4e3ed5c03ae26af95643f6b498a3ed697baada  ./asset/sample/test_import_contacts.py
+  | a703a02c9da753b64979071e82157fa65670923734a009d4b9461ff43c1d4cf1  ./docs/ATK_OPTIONAL_SETUP.md
+  | 9446a155a9e48d5f29142c4ac61ce06f2c8cbc340268dbc61b4312698c8f7d50  ./docs/LIVE_EXECUTION_PLAN.md
+  | 12bbbb66c4d7afa6690987a9448a722f88e8ea687751d05edac0ff489cc7a745  ./docs/PUBLISHABLE_GUIDE.md
+  | a8c7e21950753e9e1b0338dac663b46b30f680198e25060bf60a62902a21c42e  ./docs/RELEASE_GATE.md
+  | 20634dbb48da68537e883ce66c6d258eac79207c77d27f5a40b545cc898245b0  ./docs/TRIAL_RUNBOOK.md
+  | cc163d966d59c788f13f0742b6c40468848b7b8e0e4bed00293beee7327e5fea  ./docs/UPSTREAM_DEDUP_REPORT.md
+  | b3531cc41660aad7139922d4201dd449c51a01a04b1fd06e815b6c01f986904c  ./feedback/FEEDBACK_SCHEMA.json
+  exit=0
+# --- step 3
+$ cd "$RUN"
+  [utc=2026-09-26T02:47:26Z cwd=<W>/atk-flywheel]
+  exit=0
+$ python3.11 -m venv .venv
+  [utc=2026-09-26T02:47:26Z cwd=<W>/aider-first-run]
+  exit=0
+$ .venv/bin/pip install "aider-chat==0.86.1"
+  [utc=2026-09-26T02:47:29Z cwd=<W>/aider-first-run]
+  | Using cached socksio-1.0.0-py3-none-any.whl (12 kB)
+  | Using cached sounddevice-0.5.2-py3-none-any.whl (32 kB)
+  | Using cached soundfile-0.13.1-py2.py3-none-manylinux_2_28_x86_64.whl (1.3 MB)
+  | Using cached soupsieve-2.7-py3-none-any.whl (36 kB)
+  | Using cached tiktoken-0.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.2 MB)
+  | Using cached tokenizers-0.21.4-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.1 MB)
+  | Using cached tqdm-4.67.1-py3-none-any.whl (78 kB)
+  | Using cached tree_sitter-0.24.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (575 kB)
+  | Using cached tree_sitter_c_sharp-0.23.1-cp310-abi3-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (358 kB)
+  | Using cached tree_sitter_embedded_template-0.23.2-cp39-abi3-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (17 kB)
+  | Using cached tree_sitter_language_pack-0.9.0-cp39-abi3-manylinux2014_x86_64.whl (18.5 MB)
+  | Using cached tree_sitter_yaml-0.7.1-cp310-abi3-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (92 kB)
+  | Using cached typing_extensions-4.14.1-py3-none-any.whl (43 kB)
+  | Using cached typing_inspection-0.4.1-py3-none-any.whl (14 kB)
+  | Using cached uritemplate-4.2.0-py3-none-any.whl (11 kB)
+  | Using cached urllib3-2.5.0-py3-none-any.whl (129 kB)
+  | Using cached watchfiles-1.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (453 kB)
+  | Using cached wcwidth-0.2.13-py2.py3-none-any.whl (34 kB)
+  | Using cached yarl-1.20.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (348 kB)
+  | Using cached zipp-3.23.0-py3-none-any.whl (10 kB)
+  | Installing collected packages: wcwidth, pyperclip, pydub, ptyprocess, zipp, urllib3, uritemplate, typing-extensions, tree-sitter-yaml, tree-sitter-embedded-template, tree-sitter-c-sharp, tree-sitter, tqdm, soupsieve, socksio, sniffio, smmap, six, shtab, rpds-py, regex, pyyaml, python-dotenv, pyparsing, pypandoc, pygments, pyflakes, pycparser, pycodestyle, pyasn1, psutil, protobuf, propcache, prompt-toolkit, pillow, pexpect, pathspec, packaging, numpy, networkx, multidict, mslex, mdurl, mccabe, markupsafe, json5, jiter, importlib-resources, idna, hf-xet, h11, grpcio, fsspec, frozenlist, filelock, distro, diskcache, diff-match-patch, configargparse, click, charset-normalizer, certifi, cachetools, backoff, attrs, annotated-types, aiohappyeyeballs, yarl, typing-inspection, tree-sitter-language-pack, scipy, rsa, requests, referencing, python-dateutil, pydantic-core, pyasn1-modules, proto-plus, oslex, markdown-it-py, jinja2, importlib-metadata, httplib2, httpcore, googleapis-common-protos, gitdb, flake8, cffi, beautifulsoup4, anyio, aiosignal, watchfiles, tiktoken, soundfile, sounddevice, rich, pydantic, posthog, mixpanel, jsonschema-specifications, huggingface-hub, httpx, grpcio-status, grep-ast, google-auth, gitpython, aiohttp, tokenizers, openai, jsonschema, google-auth-httplib2, google-api-core, litellm, google-api-python-client, google-ai-generativelanguage, google-generativeai, aider-chat
+  | Successfully installed aider-chat-0.86.1 aiohappyeyeballs-2.6.1 aiohttp-3.12.15 aiosignal-1.4.0 annotated-types-0.7.0 anyio-4.10.0 attrs-25.3.0 backoff-2.2.1 beautifulsoup4-4.13.4 cachetools-5.5.2 certifi-2025.8.3 cffi-1.17.1 charset-normalizer-3.4.2 click-8.2.1 configargparse-1.7.1 diff-match-patch-20241021 diskcache-5.6.3 distro-1.9.0 filelock-3.18.0 flake8-7.3.0 frozenlist-1.7.0 fsspec-2025.7.0 gitdb-4.0.12 gitpython-3.1.45 google-ai-generativelanguage-0.6.15 google-api-core-2.25.1 google-api-python-client-2.178.0 google-auth-2.40.3 google-auth-httplib2-0.2.0 google-generativeai-0.8.5 googleapis-common-protos-1.70.0 grep-ast-0.9.0 grpcio-1.74.0 grpcio-status-1.71.2 h11-0.16.0 hf-xet-1.1.7 httpcore-1.0.9 httplib2-0.22.0 httpx-0.28.1 huggingface-hub-0.34.3 idna-3.10 importlib-metadata-7.2.1 importlib-resources-6.5.2 jinja2-3.1.6 jiter-0.10.0 json5-0.12.0 jsonschema-4.25.0 jsonschema-specifications-2025.4.1 litellm-1.75.0 markdown-it-py-3.0.0 markupsafe-3.0.2 mccabe-0.7.0 mdurl-0.1.2 mixpanel-4.10.1 mslex-1.3.0 multidict-6.6.3 networkx-3.4.2 numpy-1.26.4 openai-1.99.1 oslex-0.1.3 packaging-25.0 pathspec-0.12.1 pexpect-4.9.0 pillow-11.3.0 posthog-6.4.1 prompt-toolkit-3.0.51 propcache-0.3.2 proto-plus-1.26.1 protobuf-5.29.5 psutil-7.0.0 ptyprocess-0.7.0 pyasn1-0.6.1 pyasn1-modules-0.4.2 pycodestyle-2.14.0 pycparser-2.22 pydantic-2.11.7 pydantic-core-2.33.2 pydub-0.25.1 pyflakes-3.4.0 pygments-2.19.2 pypandoc-1.15 pyparsing-3.2.3 pyperclip-1.9.0 python-dateutil-2.9.0.post0 python-dotenv-1.1.1 pyyaml-6.0.2 referencing-0.36.2 regex-2025.7.34 requests-2.32.4 rich-14.1.0 rpds-py-0.27.0 rsa-4.9.1 scipy-1.15.3 shtab-1.7.2 six-1.17.0 smmap-5.0.2 sniffio-1.3.1 socksio-1.0.0 sounddevice-0.5.2 soundfile-0.13.1 soupsieve-2.7 tiktoken-0.10.0 tokenizers-0.21.4 tqdm-4.67.1 tree-sitter-0.24.0 tree-sitter-c-sharp-0.23.1 tree-sitter-embedded-template-0.23.2 tree-sitter-language-pack-0.9.0 tree-sitter-yaml-0.7.1 typing-extensions-4.14.1 typing-inspection-0.4.1 uritemplate-4.2.0 urllib3-2.5.0 watchfiles-1.1.0 wcwidth-0.2.13 yarl-1.20.1 zipp-3.23.0
+  | 
+  | [notice] A new release of pip is available: 24.0 -> 26.2.1
+  | [notice] To update, run: python3.11 -m pip install --upgrade pip
+  exit=0
+$ .venv/bin/aider --version
+  [utc=2026-09-26T02:48:13Z cwd=<W>/aider-first-run]
+  | aider 0.86.1
+  exit=0
+# --- step 4
+$ cd "$RUN/asset"
+  [utc=2026-09-26T02:48:13Z cwd=<W>/aider-first-run]
+  exit=0
+$ OPENAI_API_BASE="https://api.example.invalid/v1" OPENAI_API_KEY="placeholder-not-a-key" AIDER_MODEL="openai/example-model" python3 check_config.py
+  [utc=2026-09-26T02:48:13Z cwd=<W>/aider-first-run/asset]
+  | OPENAI_API_BASE: https://api.example.invalid/v1
+  | OPENAI_API_KEY: SET
+  | AIDER_MODEL: openai/example-model
+  | 
+  | Shape looks right. This says nothing about whether the endpoint answers, whether the key is valid, or whether the model exists there — none of that can be known without a real call.
+  exit=0
+$ OPENAI_API_BASE="https://api.example.invalid/v1/chat/completions" OPENAI_API_KEY="placeholder-not-a-key" AIDER_MODEL="openai/example-model" python3 check_config.py
+  [utc=2026-09-26T02:48:13Z cwd=<W>/aider-first-run/asset]
+  | OPENAI_API_BASE: https://api.example.invalid/v1/chat/completions
+  | OPENAI_API_KEY: SET
+  | AIDER_MODEL: openai/example-model
+  | 
+  | OPENAI_API_BASE ends in '/chat/completions'.
+  | This wants the API root, not a specific route — the route is appended for you, so this would be requested as https://api.example.invalid/v1/chat/completions/chat/completions. Remove the trailing route. This check does not guess the correct URL for you; take it from your provider's own docs.
+  exit=4
+# --- step 5
+$ cd "$RUN/asset/sample"
+  [utc=2026-09-26T02:48:13Z cwd=<W>/aider-first-run/asset]
+  exit=0
+$ sha256sum test_import_contacts.py
+  [utc=2026-09-26T02:48:13Z cwd=<W>/aider-first-run/asset/sample]
+  | b2c040c2ae4ae6c7417acb8dcf4e3ed5c03ae26af95643f6b498a3ed697baada  test_import_contacts.py
+  exit=0
+$ python3.11 -m unittest test_import_contacts
+  [utc=2026-09-26T02:48:13Z cwd=<W>/aider-first-run/asset/sample]
+  |     import_contacts(path)
+  |   File "<W>/aider-first-run/asset/sample/import_contacts.py", line 28, in import_contacts
+  |     records.append({"name": row[0], "email": row[1]})
+  |                                              ~~~^^^
+  | IndexError: list index out of range
+  | 
+  | ======================================================================
+  | FAIL: test_2_columns_may_be_swapped (test_import_contacts.ImportContactsTest.test_2_columns_may_be_swapped)
+  | ----------------------------------------------------------------------
+  | Traceback (most recent call last):
+  |   File "<W>/aider-first-run/asset/sample/test_import_contacts.py", line 39, in test_2_columns_may_be_swapped
+  |     self.assertEqual(
+  | AssertionError: Lists differ: [{'name': 'ada@example.com', 'email': 'Ada'}] != [{'name': 'Ada', 'email': 'ada@example.com'}]
+  | 
+  | First differing element 0:
+  | {'name': 'ada@example.com', 'email': 'Ada'}
+  | {'name': 'Ada', 'email': 'ada@example.com'}
+  | 
+  | - [{'email': 'Ada', 'name': 'ada@example.com'}]
+  | + [{'email': 'ada@example.com', 'name': 'Ada'}]
+  | 
+  | ----------------------------------------------------------------------
+  | Ran 5 tests in 0.001s
+  | 
+  | FAILED (failures=1, errors=1)
+  exit=1
+# --- step 6 NOT RUN (no model; LIVE_HANDOFF.md)
+# --- step 7, on the untouched baseline (no step 6 happened), exactly as written
+$ cd "$RUN/asset/sample"
+  [utc=2026-09-26T02:48:13Z cwd=<W>/aider-first-run/asset/sample]
+  exit=0
+$ sha256sum test_import_contacts.py
+  [utc=2026-09-26T02:48:13Z cwd=<W>/aider-first-run/asset/sample]
+  | b2c040c2ae4ae6c7417acb8dcf4e3ed5c03ae26af95643f6b498a3ed697baada  test_import_contacts.py
+  exit=0
+$ python3.11 -m unittest test_import_contacts -v
+  [utc=2026-09-26T02:48:13Z cwd=<W>/aider-first-run/asset/sample]
+  |     import_contacts(path)
+  |   File "<W>/aider-first-run/asset/sample/import_contacts.py", line 28, in import_contacts
+  |     records.append({"name": row[0], "email": row[1]})
+  |                                              ~~~^^^
+  | IndexError: list index out of range
+  | 
+  | ======================================================================
+  | FAIL: test_2_columns_may_be_swapped (test_import_contacts.ImportContactsTest.test_2_columns_may_be_swapped)
+  | ----------------------------------------------------------------------
+  | Traceback (most recent call last):
+  |   File "<W>/aider-first-run/asset/sample/test_import_contacts.py", line 39, in test_2_columns_may_be_swapped
+  |     self.assertEqual(
+  | AssertionError: Lists differ: [{'name': 'ada@example.com', 'email': 'Ada'}] != [{'name': 'Ada', 'email': 'ada@example.com'}]
+  | 
+  | First differing element 0:
+  | {'name': 'ada@example.com', 'email': 'Ada'}
+  | {'name': 'Ada', 'email': 'ada@example.com'}
+  | 
+  | - [{'email': 'Ada', 'name': 'ada@example.com'}]
+  | + [{'email': 'ada@example.com', 'name': 'Ada'}]
+  | 
+  | ----------------------------------------------------------------------
+  | Ran 5 tests in 0.002s
+  | 
+  | FAILED (failures=1, errors=1)
+  exit=1
+$ git diff
+  [utc=2026-09-26T02:48:14Z cwd=<W>/aider-first-run/asset/sample]
+  |     --[no-]exit-code      exit with 1 if there were differences, 0 otherwise
+  |     --[no-]quiet          disable all output of the program
+  |     --[no-]ext-diff       allow an external diff helper to be executed
+  |     --[no-]textconv       run external text conversion filters when comparing binary files
+  |     --ignore-submodules[=<when>]
+  |                           ignore changes to submodules in the diff generation
+  |     --submodule[=<format>]
+  |                           specify how differences in submodules are shown
+  |     --ita-invisible-in-index
+  |                           hide 'git add -N' entries from the index
+  |     --ita-visible-in-index
+  |                           treat 'git add -N' entries as real in the index
+  |     -S <string>           look for differences that change the number of occurrences of the specified string
+  |     -G <regex>            look for differences that change the number of occurrences of the specified regex
+  |     --pickaxe-all         show all changes in the changeset with -S or -G
+  |     --pickaxe-regex       treat <string> in -S as extended POSIX regular expression
+  |     -O <file>             control the order in which files appear in the output
+  |     --rotate-to <path>    show the change in the specified path first
+  |     --skip-to <path>      skip the output to the specified path
+  |     --find-object <object-id>
+  |                           look for differences that change the number of occurrences of the specified object
+  |     --diff-filter [(A|C|D|M|R|T|U|X|B)...[*]]
+  |                           select files by diff type
+  |     --output <file>       output to a specific file
+  | 
+  exit=129
+# --- step 8
+$ cd "$REPO/research/adoption/aider/first-use/delivery"
+  [utc=2026-09-26T02:48:14Z cwd=<W>/aider-first-run/asset/sample]
+  exit=0
+$ python3.11 -m venv "$RUN/.venv-feedback"
+  [utc=2026-09-26T02:48:14Z cwd=<W>/atk-flywheel/research/adoption/aider/first-use/delivery]
+  exit=0
+$ "$RUN/.venv-feedback/bin/pip" install -r requirements.txt
+  [utc=2026-09-26T02:48:16Z cwd=<W>/atk-flywheel/research/adoption/aider/first-use/delivery]
+  | Collecting jsonschema==4.26.0 (from -r requirements.txt (line 2))
+  |   Using cached jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+  | Collecting attrs>=22.2.0 (from jsonschema==4.26.0->-r requirements.txt (line 2))
+  |   Using cached attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+  | Collecting jsonschema-specifications>=2023.03.6 (from jsonschema==4.26.0->-r requirements.txt (line 2))
+  |   Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+  | Collecting referencing>=0.28.4 (from jsonschema==4.26.0->-r requirements.txt (line 2))
+  |   Using cached referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+  | Collecting rpds-py>=0.25.0 (from jsonschema==4.26.0->-r requirements.txt (line 2))
+  |   Using cached rpds_py-2026.6.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+  | Collecting typing-extensions>=4.4.0 (from referencing>=0.28.4->jsonschema==4.26.0->-r requirements.txt (line 2))
+  |   Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+  | Using cached jsonschema-4.26.0-py3-none-any.whl (90 kB)
+  | Using cached attrs-26.1.0-py3-none-any.whl (67 kB)
+  | Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+  | Using cached referencing-0.37.0-py3-none-any.whl (26 kB)
+  | Using cached rpds_py-2026.6.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (371 kB)
+  | Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+  | Installing collected packages: typing-extensions, rpds-py, attrs, referencing, jsonschema-specifications, jsonschema
+  | Successfully installed attrs-26.1.0 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 referencing-0.37.0 rpds-py-2026.6.3 typing-extensions-4.16.0
+  | 
+  | [notice] A new release of pip is available: 24.0 -> 26.2.1
+  | [notice] To update, run: python3.11 -m pip install --upgrade pip
+  exit=0
+$ "$RUN/.venv-feedback/bin/python" validate_feedback.py --schema "$RUN/feedback/FEEDBACK_SCHEMA.json" fixtures/valid_fail.json
+  [utc=2026-09-26T02:48:18Z cwd=<W>/atk-flywheel/research/adoption/aider/first-use/delivery]
+  | VALID   fixtures/valid_fail.json
+  exit=0
+$ "$RUN/.venv-feedback/bin/pip" freeze
+  [utc=2026-09-26T02:48:18Z cwd=<W>/atk-flywheel/research/adoption/aider/first-use/delivery]
+  | attrs==26.1.0
+  | jsonschema==4.26.0
+  | jsonschema-specifications==2025.9.1
+  | referencing==0.37.0
+  | rpds-py==2026.6.3
+  | typing_extensions==4.16.0
+  exit=0

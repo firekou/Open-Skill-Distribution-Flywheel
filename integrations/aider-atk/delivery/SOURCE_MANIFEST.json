@@ -1,0 +1,119 @@
+{
+  "schema": "atk-aider-delivery-source-manifest/1",
+  "work_id": "ATK-AIDER-DELIVERY-01",
+  "revision": 1,
+  "repository": "https://github.com/firekou/Open-Skill-Distribution-Flywheel",
+  "reviews": {
+    "PR14": "d1474670db12934c80caa05674c8e4320cbad312",
+    "PR16": "1dcd625df3bde48b13b91abb3b03eb7e19371558",
+    "PR17": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+    "PR18": "1abd74a4b7f14d8b5e397d33afa2ace212841099",
+    "PR19": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41"
+  },
+  "note": "Every file is copied byte-for-byte from its source commit and must match sha256. None of the source PRs is merged; these are reviewed commits, not a release.",
+  "fetch_commits": [
+    "1abd74a4b7f14d8b5e397d33afa2ace212841099",
+    "1dcd625df3bde48b13b91abb3b03eb7e19371558",
+    "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+    "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+    "d1474670db12934c80caa05674c8e4320cbad312"
+  ],
+  "files": [
+    {
+      "source_commit": "d1474670db12934c80caa05674c8e4320cbad312",
+      "source_path": "integrations/aider-atk/QUICKSTART.md",
+      "target": "asset/QUICKSTART.md",
+      "sha256": "513d3974d21bf400405fa82945c2a3b5c470b791b9f3f648f6776573bfad25eb",
+      "bytes": 3065,
+      "purpose": "setup steps for the native OpenAI-compatible route"
+    },
+    {
+      "source_commit": "d1474670db12934c80caa05674c8e4320cbad312",
+      "source_path": "integrations/aider-atk/TASK.md",
+      "target": "asset/TASK.md",
+      "sha256": "f46c923d53f304d3af8dd4db509cd9a47eef785b63661471ae1d3a40b87b31d9",
+      "bytes": 1631,
+      "purpose": "the fixed CSV task, expected baseline and hard rules"
+    },
+    {
+      "source_commit": "d1474670db12934c80caa05674c8e4320cbad312",
+      "source_path": "integrations/aider-atk/check_config.py",
+      "target": "asset/check_config.py",
+      "sha256": "1de20fdc9b8d64ba83cce6862944990841c065796fe0bfd7d327d37e47e21394",
+      "bytes": 4450,
+      "purpose": "offline, credential-free configuration shape check"
+    },
+    {
+      "source_commit": "d1474670db12934c80caa05674c8e4320cbad312",
+      "source_path": "integrations/aider-atk/sample/import_contacts.py",
+      "target": "asset/sample/import_contacts.py",
+      "sha256": "2dc27bf7868338c6ea4ef2cd29628078aa1346b471bdfb176073f0ddc21c0336",
+      "bytes": 945,
+      "purpose": "file to be changed (baseline has the defect)"
+    },
+    {
+      "source_commit": "d1474670db12934c80caa05674c8e4320cbad312",
+      "source_path": "integrations/aider-atk/sample/test_import_contacts.py",
+      "target": "asset/sample/test_import_contacts.py",
+      "sha256": "b2c040c2ae4ae6c7417acb8dcf4e3ed5c03ae26af95643f6b498a3ed697baada",
+      "bytes": 1917,
+      "purpose": "scoring tests; must stay byte-for-byte unchanged"
+    },
+    {
+      "source_commit": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+      "source_path": "research/adoption/aider/first-use/FEEDBACK_SCHEMA.json",
+      "target": "feedback/FEEDBACK_SCHEMA.json",
+      "sha256": "b3531cc41660aad7139922d4201dd449c51a01a04b1fd06e815b6c01f986904c",
+      "bytes": 17453,
+      "purpose": "approved v1.1.0 feedback schema used by validate_feedback.py"
+    },
+    {
+      "source_commit": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+      "source_path": "research/adoption/aider/first-use/PUBLISHABLE_GUIDE.md",
+      "target": "docs/PUBLISHABLE_GUIDE.md",
+      "sha256": "12bbbb66c4d7afa6690987a9448a722f88e8ea687751d05edac0ff489cc7a745",
+      "bytes": 5888,
+      "purpose": "reviewed upstream-first guide (not published)"
+    },
+    {
+      "source_commit": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+      "source_path": "research/adoption/aider/first-use/ATK_OPTIONAL_SETUP.md",
+      "target": "docs/ATK_OPTIONAL_SETUP.md",
+      "sha256": "a703a02c9da753b64979071e82157fa65670923734a009d4b9461ff43c1d4cf1",
+      "bytes": 3961,
+      "purpose": "reviewed optional ATK guide (not published)"
+    },
+    {
+      "source_commit": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+      "source_path": "research/adoption/aider/first-use/RELEASE_GATE.md",
+      "target": "docs/RELEASE_GATE.md",
+      "sha256": "a8c7e21950753e9e1b0338dac663b46b30f680198e25060bf60a62902a21c42e",
+      "bytes": 4700,
+      "purpose": "release gate; currently NOT RELEASABLE"
+    },
+    {
+      "source_commit": "6ea3cec9937e74de8ce77f47c5e92d3d1617c506",
+      "source_path": "research/adoption/aider/LIVE_EXECUTION_PLAN.md",
+      "target": "docs/LIVE_EXECUTION_PLAN.md",
+      "sha256": "9446a155a9e48d5f29142c4ac61ce06f2c8cbc340268dbc61b4312698c8f7d50",
+      "bytes": 11740,
+      "purpose": "reviewed live command set reused by LIVE_HANDOFF.md"
+    },
+    {
+      "source_commit": "1dcd625df3bde48b13b91abb3b03eb7e19371558",
+      "source_path": "research/adoption/aider/TRIAL_RUNBOOK.md",
+      "target": "docs/TRIAL_RUNBOOK.md",
+      "sha256": "20634dbb48da68537e883ce66c6d258eac79207c77d27f5a40b545cc898245b0",
+      "bytes": 9142,
+      "purpose": "reviewed trial runbook (G0 cost gate)"
+    },
+    {
+      "source_commit": "1abd74a4b7f14d8b5e397d33afa2ace212841099",
+      "source_path": "research/adoption/aider/upstream/UPSTREAM_DEDUP_REPORT.md",
+      "target": "docs/UPSTREAM_DEDUP_REPORT.md",
+      "sha256": "cc163d966d59c788f13f0742b6c40468848b7b8e0e4bed00293beee7327e5fea",
+      "bytes": 13028,
+      "purpose": "reviewed retry/exit behaviour report referenced by the guide"
+    }
+  ]
+}
