@@ -1,0 +1,2 @@
+# validate_feedback.py dependencies, pinned (resolved in a fresh Python 3.11 venv on 2026-09-26)
+jsonschema==4.26.0
