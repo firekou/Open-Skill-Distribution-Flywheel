@@ -138,3 +138,76 @@ b14abb0e5c64c988ba7e70ec6a8650c02fa303d99261036ace0f5fc85c70cd5c  research/adopt
 - 沒有讀取、印出或搬運任何秘密；測試只用合成資料和佔位值。
 - 沒有修改 `governance/state.json`；五個來源分支都沒有動。
 - `findings_closed_by_executor: []`
+
+---
+
+## ATK-AIDER-DELIVERY-01 revision 2：修復 PR20 R1 ATK-D1-01（repair 1/2，2026-09-26）
+
+| 欄位 | 值 |
+|---|---|
+| 依據 | [PR20 R1 review](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/main/reviews/PR20_R1_DELIVERY_0ff12e4b.md)（main `3c19ee2`）BLOCKED，P1 ATK-D1-01 |
+| reviewed head | `0ff12e4bfa7d18c742ce81276d62bfac19962103` |
+| 修復 commit | `4f39d3430b78dac46d03f91296af3d1299cee8bb` |
+| 修復輪次 | 1/2 |
+| 新增 API 費用 | 0；沒有呼叫任何模型供應商 |
+
+### 一、先重現（REPRODUCED）
+
+在 `0ff12e4` 的 validator 上，把合成標記 `SYNTHETIC_IDENTITY_ALICE_KEYTAG_77` 同時放進目錄名與檔名，得到：
+```
+INVALID <S>/SYNTHETIC_IDENTITY_ALICE_KEYTAG_77_dir/SYNTHETIC_IDENTITY_ALICE_KEYTAG_77.json: /entry additionalProperties
+INVALID <S>/SYNTHETIC_IDENTITY_ALICE_KEYTAG_77_dir/SYNTHETIC_IDENTITY_ALICE_KEYTAG_77.json: /environment/os enum
+VALID   <S>/SYNTHETIC_IDENTITY_ALICE_KEYTAG_77_dir/ok_ALICE.json
+exit=1
+ERROR cannot read record file: <S>/SYNTHETIC_IDENTITY_ALICE_KEYTAG_77_dir/missing_ALICE.json   (exit=2)
+```
+另外找到兩處同類外洩，一併修正：
+- 讀不到 schema 時，錯誤訊息會印出 `--schema` 的路徑；
+- 參數錯誤時，argparse 會把收到的參數原樣印回（`unrecognized arguments: --bogus_ALICE`）。
+
+### 二、修正（只改 review 允許的範圍）
+
+- `validate_feedback.py`：
+  - 紀錄一律用命令列順序稱呼：`record 1`、`record 2`…。VALID、INVALID、malformed JSON、讀不到檔案，全都不印路徑或檔名。
+  - schema 相關錯誤只寫 `--schema` 這個選項名稱。
+  - usage 錯誤只印固定的一行用法，不重複收到的參數。
+- `test_validate_feedback.py`：新增 `PathRedaction` 9 個測試。
+  - 合成標記同時放在目錄名與檔名；逐一斷言 stdout 與 stderr 都不含 `SYNTHETIC_IDENTITY_ALICE_KEYTAG_77`、`ALICE`、`KEYTAG`。
+  - 涵蓋：合法、不合法、malformed、檔案不存在、傳入目錄、schema 讀不到、schema 不符、參數錯誤，以及多筆紀錄的編號順序。
+- `integrations/aider-atk/delivery/README.md` 第 8 步：預期輸出從 `VALID   fixtures/valid_fail.json` 改為 `VALID   record 1`，並補一句「紀錄以順序稱呼，不印檔名或路徑」。
+  - **這一處不在 review 列的三項內**，但輸出格式改了，入口上寫的預期輸出如果不跟著改就會錯，所以改了，並在此註明。
+- 沒有改動：來源資產、`REHEARSAL.md` 與 `evidence/` 的原始演練紀錄、`LIVE_HANDOFF.md`、`RELEASE_CANDIDATE.md`。
+  - 因此 `REHEARSAL.md` 裡記錄的 `VALID   fixtures/valid_fail.json` 是 `a2f173d` 當時的真實輸出，保留不改。
+
+### 三、正／負控制
+
+| 控制 | 命令 | 結果 |
+|---|---|---|
+| 新測試對新 validator | `ATK_FEEDBACK_SCHEMA=… python -m unittest test_validate_feedback` | `Ran 20 tests` · `OK` · exit 0（原 11 個加新 9 個） |
+| **負控制**：新測試對舊 validator（`0ff12e4`） | 同上，只把 validator 換成 `0ff12e4` 版本 | `FAILED (failures=8)`，exit 1。9 個新測試中 8 個抓到外洩；`test_wrong_schema` 在舊版也通過，因為舊版的 SHA 不符訊息本來就沒印路徑，保留作為防護 |
+| reviewer 的原始控制 | 標記在目錄名與檔名，跑 `invalid_secret_not_echoed` | `INVALID record 1: /entry additionalProperties`、`INVALID record 1: /environment/os enum`，exit 1；標記命中次數 0 |
+
+### 四、從 GitHub 全新 clone 驗證（`4f39d34`，2026-09-26T03:11:37Z–03:11:49Z）
+
+| 步驟 | 結果 |
+|---|---|
+| `git checkout --detach 4f39d34…` | HEAD `4f39d3430b78dac46d03f91296af3d1299cee8bb` |
+| README 第 2 步 `get_assets.py --out "$RUN"` | exit 0，12 個檔案全部驗證通過 |
+| README 第 8 步 `validate_feedback.py … fixtures/valid_fail.json` | `VALID   record 1`，exit 0 |
+| `unittest test_validate_feedback` | `Ran 20 tests` · `OK` · exit 0 |
+| 8 個 fixtures 一起跑 | 2 VALID／6 INVALID，exit 1。每行只有 `record N`、JSON Pointer 與錯誤類型 |
+| reviewer 控制 | exit 1，標記命中 0 |
+
+新檔案的 SHA-256：
+```
+052eae4de11d322c4112ee152cb9d04703c50a4a685cb91cdbf8168d359070a6  research/adoption/aider/first-use/delivery/validate_feedback.py
+a7b900a41993a926d942a6014c1a73a5544e976100c5272c852d296177ad0f59  research/adoption/aider/first-use/delivery/test_validate_feedback.py
+d69e62f3af819ab5f4faf75d2c7034e5d17ac56f15509cc03c8b3c609ed60a5a  integrations/aider-atk/delivery/README.md
+```
+`4497e19` 列出的其他 24 個檔案都沒有改動。
+
+### 五、邊界
+
+- 沒有 live 呼叫、花費、發布、聯絡、merge、送上游，也沒有操作任何憑證。
+- 最終 result head 是本段 commit 之後的那個，寫在 PR20 的結果留言。
+- `findings_closed_by_executor: []`：ATK-D1-01 是否關閉，由 GPT 判定。
