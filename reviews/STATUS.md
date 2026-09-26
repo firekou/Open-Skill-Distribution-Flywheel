@@ -1,3 +1,156 @@
+## 2026-09-26 10:55：PR #7 新 head 僅為 scope 偏移，維持補充證據線
+
+- PR #7 Draft/open/unmerged，精確 head `219dfffab31ed487a931513ef74117a6b9b5d513`；[scope review](PR7_R1_SCOPE_219dffff.md) 結論為 **BLOCKED** for merge / canonical-policy adoption。
+- 前一 head `237e07d9...` 到新 head 只有 1 commit，只改 `CLAUDE.md`（+38/-0），新增四節對話回報格式；G1 probe、能力表、preflight 證據與 executor response 均未變。
+- PR #7 既有裁定維持：只保留補充 G1 證據、不合併、不建立平行 controller；治理實作仍以 PR #6 為單一工作線。
+- branch 內聲稱的負責人指示不能由 webhook 自行擴張成 main 授權。回報格式構想未被否定，但不能透過合併 PR #7 成為 canonical policy。
+- exact-head workflow runs 0、commit statuses 0、PR reviews 0；GitHub mergeable 不等於治理批准。
+- state revision 51；PR #7 next checkpoint `PR7_PRESERVE_SUPPLEMENTAL_EVIDENCE_NO_MERGE`。產品主線 `ATK-AIDER-DELIVERY-01` active claim 與 `ATK_AIDER_DELIVERY_RESULT_SHA` checkpoint 不變。
+- 未 merge、部署、發布、外發、操作 secrets／權限、呼叫 provider 或新增支出。
+
+## 2026-09-26 10:42：ATK Aider 交付整合已正式接單
+
+- Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-AIDER-DELIVERY-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842461371)。
+- source main `bbb85b39001ece19a8f19e3f186c1c3eeb1805cb`、source head `a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41`、packet commit `8e40827a9205d1243049b0a7f2e0299d78256d79`、branch、scope、dedup key、期限及 0/2 修復輪均符合固定工作包；狀態升為 `EXECUTING`，不重複派工。
+- PR #19 live head 仍是已審的 `a77d1e8e...`；目前沒有新的 Draft PR 或 result SHA，因此本輪不做內容覆核、不宣稱交付完成。
+- 這是既有 session 在負責人直接指示後接單，只證明本次 round trip，不能證明 persistent launcher 已接通。
+- state revision 50；next checkpoint `ATK_AIDER_DELIVERY_RESULT_SHA`。
+- 未 merge、部署、送上游或社群、操作 secrets／權限、呼叫 live provider 或新增支出。
+
+## 2026-09-26 10:32：下一階段交付整合立即派工
+
+負責人要求照完整藍圖往下執行。[ATK-AIDER-DELIVERY-01](ATK_AIDER_DELIVERY_01.md) 已提供8項操作、固定來源、範圍、期限、驗收及後續live/首次使用/價值/上游/維護接續表。當前先完成可跟做單一入口、feedback validator及乾淨環境離線演練；PR19 R2結論不變。Claude入口已升2.1，刪除過期PR16立即修復指令。已沿[PR19交接串](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842426448)派工，狀態SIGNAL_SENT；尚無新接單或result SHA，state revision 49。缺live/發布條件只停該動作。
+
+## 2026-09-26：PR #19 revision 2 通過，外部首次使用仍受負責人 gate
+
+- PR #19 Draft/open/unmerged，精確 head `a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41`；[R2 獨立覆核](PR19_R2_FIRST_USE_PREP_a77d1e8e.md) 為 **APPROVED_WITH_CONDITIONS**。
+- R1→R2 僅 1 commit、2 個授權路徑；其他六份 first-use 文件與固定來源資產未變。
+- 獨立重算 schema SHA-256 為 `b3531cc41660aad7139922d4201dd449c51a01a04b1fd06e815b6c01f986904c`，並以獨立 deterministic evaluator 重放 17/17 controls，exit 0；R1 的 P1-01、P1-02 均關閉。
+- 非阻擋條件：外部紀錄 ingestion 必須拒絕 `tests_failed > tests_total`；目前 schema 仍可表達這種失敗紀錄，但不能形成假的 `passed=true`。
+- Exact-head workflow runs、check runs、commit statuses、PR reviews 均為 0；不推定 CI 批准。
+- release gate 仍為 **NOT RELEASABLE**；尚無真實模型成功、外部 first-use、reuse、adoption 或經濟價值證據。
+- state revision 47；next checkpoint `OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION`。不派第三版同類修復。
+- 未發布、外聯、邀請、送上游、live、付費、merge、部署或修改 secrets／settings／權限。
+
+## 2026-09-26：ATK-FIRST-USE-PREP-01 已正式接單
+
+## PR #19 — ATK-FIRST-USE-PREP-01 r1 — BLOCKED
+
+- Exact head: `12b807bcbbd15f3ab156248e980f3ddde3a6b5f0`
+- Review: [reviews/PR19_R1_FIRST_USE_PREP_12b807bc.md](/firekou/Open-Skill-Distribution-Flywheel/blob/main/reviews/PR19_R1_FIRST_USE_PREP_12b807bc.md)
+- Result receipt: https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839734184
+- Independent checks: 7/7 paths in scope; 6/6 pinned entry SHA-256 values matched; Aider #3396/#4797/#4638 live state re-read.
+- Exact-head evidence: 0 workflow runs, 0 check runs, 0 commit statuses, 0 PR reviews.
+- Blockers:
+  - `P1-01`: the schema accepts `passed=true` with failed tests, modified tests and an unreviewed diff.
+  - `P1-02`: the schema accepts an entry URL SHA that differs from `entry.asset_sha`.
+- Revision 2 repair 1/2: [signal](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5839784779); status `SIGNAL_SENT`, with no claim or fixed result SHA yet.
+- Next checkpoint: `PR19_R2_FEEDBACK_INTEGRITY_FIX`.
+- No publication, outreach, upstream send, live call, spend, merge, deployment or permission change occurred.
+
+
+- Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-FIRST-USE-PREP-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5839667273)。
+- source main `98b98b70...`、PR14／PR16／PR17／PR18 四個固定資產 SHA、branch、dedup key、scope、deadline 與 0/2 修復輪均符合工作包；狀態升為 `EXECUTING`，不重複派工。
+- PR #18 live head 仍為已審的 `1abd74a4...`；沒有新 content head、Draft PR 或 result SHA，因此本輪不重做內容覆核，也不宣稱成果完成。
+- Exact-head workflow runs、check runs、commit statuses、PR reviews 均為 0；不推定 CI 批准。
+- claim 明示由既有 session 的 hourly check 接起，只證明本次接單，不證明 persistent launcher 或 label/comment 可啟動新 session。
+- state revision 45；next checkpoint `ATK_FIRST_USE_PREP_RESULT_SHA`。
+- 未發布、邀請、外聯、送上游、live、付費、merge、部署或修改 secrets／settings／權限。
+
+## 2026-09-26：PR18 revision 2 通過，上游送出仍受條件限制
+
+- PR #18 Draft/open/unmerged，精確 head `1abd74a4b7f14d8b5e397d33afa2ace212841099`；[R2 獨立覆核](PR18_R2_UPSTREAM_1abd74a4.md) 為 **APPROVED_WITH_CONDITIONS**。
+- R1→R2 只有 1 commit、3 個 repository paths：dedup report、LiteLLM draft 與 append-only executor response；PR body 對應行亦修正。raw evidence、manifests、scripts 與 Aider draft 未變。
+- 官方 GitHub API 確認 LiteLLM PR #38318 已於 `2026-08-26T08:46:25Z` 合併到 `litellm_internal_staging`；R1 P1-01 已關閉。PR 原文仍排除 OpenAI branch 自身 403，因此新 issue 方向未被推翻。
+- 發布前條件：LiteLLM 草稿須把 9 requests 明確歸因 Aider retry loop，並說明 OpenAI SDK 在該 403 重現中未重送；任何 upstream submission 仍需負責人授權與當下 live state 重查。
+- Exact-head workflow runs、check runs、commit statuses、PR reviews 均為 0；不推定 CI 批准。兩份 issue 草稿仍未送出。
+- 不等待外部授權的 `ATK-FIRST-USE-PREP-01` revision 1 已送出[完整工作包](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838910923)，只準備首次使用文案、固定入口、候選/渠道矩陣、回饋 schema 與 release gate。
+- state revision 44；next checkpoint `ATK_FIRST_USE_PREP_CLAIM_OR_RESULT`。目前只是 SIGNAL_SENT，尚無新 claim、session/run 或 result SHA。
+- 未發布、邀請、送上游、live、付費、merge、部署或修改 secrets／settings／權限。
+
+## 2026-09-26：PR18 上游研究 R1 覆核，狀態修正待處理
+
+- PR #18 Draft/open/unmerged，精確 head `48ea4decb3920b8a1d1fcacb92442b7a94376353`；[R1 獨立覆核](PR18_R1_UPSTREAM_48ea4dec.md) 為 **BLOCKED**，只阻擋 maintainer-ready／上游使用。
+- 技術證據完整性通過：55/55 evidence files 已由精確 head 取得；51/51 raw artifact、2/2 script 與 2/2 manifest/index SHA-256 全部相符；14 個 Aider cases 與 3 個 LiteLLM 版本矩陣對得上作者表格。
+- blocker：LiteLLM PR #38318 實際已於 2026-08-26 合併到 `litellm_internal_staging`，不是 open；dedup report、LiteLLM draft 與 PR body 的即時狀態不正確。#38318 同時明確排除 OpenAI branch 的 403 路徑，因此修正狀態後，新 issue 方向仍可能成立。
+- 已送 `ATK-UPSTREAM-01` revision 2、repair 1/2 的[限定修復包](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/18#issuecomment-5838602710)；只允許改 #38318 狀態與相應措辭，不得動 raw evidence、manifests、scripts 或 Aider draft。
+- state revision 43；next checkpoint `PR18_R2_38318_STATUS_CORRECTION`。目前只有 SIGNAL_SENT，尚無 revision 2 的新 claim、session/run 或 result SHA。
+- 兩份 issue 草稿均未送出；未進行 live provider 呼叫、付費、merge、部署、發布、修改 secrets／settings／權限或新增 polling。
+
+## 2026-09-26：ATK-UPSTREAM-01 已正式接單
+
+- Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-UPSTREAM-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838315225)。
+- source main `efe20e67...`、PR17 result `6ea3cec9...`、branch、dedup、scope、期限與 0/2 修復輪均符合工作包；狀態升為 `EXECUTING`，沒有重複派工。
+- PR #17 live head 仍為已審的 `6ea3cec9...`；目前沒有 `ATK-UPSTREAM-01` 成果 SHA 或新 Draft PR，因此不做內容覆核、不宣稱工作完成。
+- Claude 另依負責人指示在 main 新增 [結果彙整](CLAUDE_EXECUTOR_RESULTS_2026-09-25.md)，commit `d4bb22be...`；已核對只新增一份索引文件，未修改 policy、state 或任何 PR 內容。索引中的結果、證據等級與既有 review 相符。
+- state revision 42；next checkpoint `ATK_UPSTREAM_01_RESULT_SHA`。既有 session 接單不證明 persistent launcher 已接通。
+- 未進行 live provider 呼叫、付費、送上游、merge、部署、發布、修改 secrets／settings／權限或新增 polling。
+
+## 2026-09-26：PR17 Aider live 準備包通過，無依賴上游研究已接續
+
+- PR #17 Draft/open/unmerged，精確 head `6ea3cec9937e74de8ce77f47c5e92d3d1617c506`；[R1 獨立覆核](PR17_R1_LIVE_PREP_6ea3cec9.md) 為 **APPROVED_WITH_CONDITIONS**。
+- 42/42 raw artifacts、2/2 evidence harnesses 與 2/2 manifests 的 SHA-256 已獨立重算相符。作者 loopback 行為維持 TESTED，沒有冒充 reviewer 重放。
+- OpenAI hard limit、GPT-5.6 Luna 價格與 Chat Completions、OpenRouter per-key limit／價格，以及 Aider 預設讀取 `.aider.model.settings.yml` 均已由官方來源獨立核對。
+- PR16 的「403 不重試」只對舊文件成立；PR17 在 pinned stack 的測試證據顯示 402／403 都會被 Aider 重試 9 次。保留 PR16 作者證據，以本 review 記錄 supersede。
+- Owner gate 為 `OWNER_ATK_AIDER_LIVE_DECISION`。ATK 須先補價格與拒絕型上限；OpenRouter／OpenAI 仍須負責人明確授權帳號／key／project、憑證注入與支出。沒有進行 live 或任何 secrets／帳務操作。
+- 不等待 owner 的 `ATK-UPSTREAM-01` revision 1 已沿 [PR17 conversation](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/17#issuecomment-5838137130) 發出，只允許 Aider／LiteLLM 唯讀查重、本地 loopback 與 issue 草稿，不得送上游。現在只有 SIGNAL_SENT，尚無新 session/run、接單或成果 SHA。
+- state revision 41；next checkpoint `ATK_UPSTREAM_01_CLAIM_OR_RESULT`。Claude 持久 launcher 仍未證實。
+- 未 merge、部署、發布、招募、修改 settings／權限、送上游或新增支出。
+
+## 2026-09-26：Aider live 決策準備包已正式接單
+
+- Claude 既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 已對 `ATK-AIDER-LIVE-PREP-01` revision 1 回傳完整 [claim](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837692492)。
+- claim 固定 source main `b0770499...`、readiness `1dcd625d...`、資產 `d1474670...`、branch、dedup、scope 與期限，均符合上一則工作包；狀態升為 `EXECUTING`，沒有重複派工。
+- PR16 live head 仍是已審的 `1dcd625d...`，本事件沒有新 content head 或 result SHA，因此不重做 content review、不宣稱工作完成。
+- Exact-head workflow runs 0、commit statuses 0、PR reviews 0；這不是 CI 證明。既有 session 接單證明訊號被讀取，但不證明 comment 能啟動新 session 或 persistent launcher。
+- state revision 40；next checkpoint `ATK_AIDER_LIVE_PREP_RESULT_SHA`。live、secrets、建立 key/project、招募、發布、merge、部署、settings／權限、送上游、支出與 polling 仍未授權。
+
+## 2026-09-26：Aider live 決策準備包已交接
+
+- PR16 revision 2 通過後，依完整執行 Prompt 自動接續 `ATK-AIDER-LIVE-PREP-01` revision 1；[固定工作包](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5837510459) 已送既有 PR conversation。
+- source main `b0770499...`、readiness `1dcd625d...`、固定資產 `d1474670...`、dedup、scope 與 UTC deadline 已登記。
+- 只允許無 secrets、無呼叫、無費用的 provider/runtime 選項、官方價格與真正 cap 行為、retry 暴露、最小命令、stop procedure 及 owner approval matrix 準備。
+- 最新 conversation 只有本次 SIGNAL_SENT，尚無新的 Claude session/run 接單、claim 或 result SHA；不宣稱 Claude 已啟動，不重複派工。
+- state revision 39；next checkpoint `ATK_AIDER_LIVE_PREP_CLAIM_OR_RESULT`。live、招募、發布、merge、部署、settings／secrets、送上游與支出仍未授權。
+
+## 2026-09-26：PR16 revision 2 readiness 修正通過
+
+- [R2 獨立覆核](PR16_R2_VALUE_READINESS_1dcd625d.md)：PR #16 Draft/open/unmerged，精確 head `1dcd625df3bde48b13b91abb3b03eb7e19371558`，結論 **APPROVED_WITH_CONDITIONS**；R1 的 P1-01～P1-04 全部關閉，不需第二輪修復。
+- VERIFIED：Aider #4027 是已解決歷史案例；#4797／#4638 是仍開放的 prefix/provider 需求線索，但沒有任何人使用本資產，不能算增量價值或採用。
+- 研究改為兩階段：第一階段 1–3 人只做 path B 可行性及卡點，不做 A/B 主張；第二階段須先具備固定等難度任務 2、事前 MLD、AB/BA 配對資料及 live 授權。
+- evidence manifest 綁定命令、環境、版本、fixture、server-ready、UTC、monotonic、exit 與原始檔。Reviewer 對 exact head 的 15/15 raw artifact 重算 SHA-256 全部相符；三次 base-path request 以 ports 8851/8852/8853 可區分。這是 AUTHOR_TESTED＋獨立完整性驗證，不是 reviewer runtime replay。
+- provider 硬上限改為待查能力；G0 未確認拒絕型 cap 或負責人書面接受替代方案前，禁止 live。GitHub credential capability 不等於 merge／發布／settings 授權。
+- `r2_harness.py` 超出「manifest/raw metadata」字面範圍，但僅在 evidence 目錄、loopback-only、未改 PR14 且提高可重放性，記非阻擋 scope deviation。
+- Exact result SHA checks：workflow runs 0、commit statuses 0、PR reviews 0；不是 CI 綠燈。session/result/dedup receipt 齊全，但不證明 persistent launcher。
+- 外部使用者、真實模型成功、增量改善、再次使用、上游接受與經濟價值仍為 0／NOT COLLECTED。
+- state revision 38；next checkpoint `ATK_AIDER_LIVE_PREP_PACKET`。只允許無憑證、無費用的 provider/runtime 決策包準備；live、招募、發布、PR14 merge、settings／secrets、送上游與支出仍需個別授權。
+
+## 2026-09-26：Claude 全程執行 Prompt v2 已交接
+
+- 依負責人要求，[唯一執行入口](CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md) 已整合目標、S0–S7 所有階段的細節、成果、依賴、驗收、退出與90天檢視；取代過期 PLANNED_NOT_DISPATCHED 起點。
+- 現行先做 PR16 revision 2，沿用 source head、dedup 與 repair 1/2，不重建 PR14 或重置修復輪次。
+- [固定 Prompt](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/61bb912c775ff26ab6775bce8f943f81536beb0b/reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md) 已透過 [PR16 交接串](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/16#issuecomment-5836978595) 傳送上下文補充；SIGNAL_SENT，沒有新接單或啟動證據。
+- state revision 37；PR16 仍 FIX_PENDING，next checkpoint PR16_R2_REPAIR_RESULT。本次為 Planner 文件交付，不是新 content review 或外部價值證明。
+
+## 2026-09-26：PR16 value-readiness R1 覆核
+
+- [R1 獨立覆核](PR16_R1_VALUE_READINESS_57fa5090.md)：PR #16 Draft/open/unmerged，精確 head `57fa50900035cb6eef316504b065cf98a8b4fee0`，結論 **BLOCKED**。
+- 五項指定文件與九個變更路徑符合 ATK-VALUE-READINESS-01 範圍；真模型、外部使用、發布與費用仍為 0。
+- 上游 #4027 的留言已指出根因方向，且原回報者在 v0.86.1 無法重現後自行關閉；不能把它當現行未解需求。
+- 1–3 人 A/B/A 組間交替無法回答材料增量問題；須降為可行性探索，或補第二個等難度固定任務與交叉設計。
+- 三個 base-path JSON 是同一 blob，未綁 case/command/time/exit；retry stdout 也未保存 exit 與 wall time。現有 artifact 不能把所有 executor 敘述升為獨立可核對實測。
+- 選定 provider 前，不能假設有 key/project 級硬費用上限；能力證據是 live gate，不只是簽核項。
+- revision 2 限縮修復已送 PR conversation，repair 1/2，狀態 SIGNAL_SENT；尚未以留言本身推定 Claude 啟動。
+- state revision 36；next checkpoint `PR16_R2_REPAIR_RESULT`。未 live、招募、發布、merge、部署、修改 secrets／權限或新增支出。
+
+## 2026-09-26：完整藍圖與 Claude 入口已整理
+- 負責人要求先完整規劃終點；[端到端藍圖](ATK_END_TO_END_BLUEPRINT.md) 已交付：研究/引入/接入/分發/首次使用/增量價值/開源貢獻/持續回收，含依賴、退出、90天管理目標與全部後續工作包。
+- [Claude 入口](CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md) 改為單一現行入口，舊文封存；不再指向已完成的 Aider 首輪或 M1 等待。
+- 下一包 ATK-VALUE-READINESS-01 r1 已定五項成果、允許路徑、驗收、期限規則與停止點；PLANNED_NOT_DISPATCHED，未宣稱 Claude 啟動。
+- live PR14 head d1474670db12934c80caa05674c8e4320cbad312 仍 Draft/open；PR15 仍 merged。既有獨立review結論不變，本輪未重跑技術驗證。
+- 這是 Planner 規劃成果，非獨立review或新外部採用。90天數量是探索目標，非成果/發送額度。
+- state revision 35；未新增支出、發布、邀請、merge、部署或權限操作。
+
 ## 2026-09-25：PR15 已合併但治理結論仍為 BLOCKED
 
 - [Post-merge addendum](PR15_POST_MERGE_GOVERNANCE_252bf6dc.md)：PR #15 已於 `2026-09-25T05:39:02Z` 合併，merge commit `252bf6dcd8de7bd3072ad044143fa4304bc7622f`；main 現在包含先前判定 BLOCKED 的同一 blob `cc4c98e85080e9f4bf6a3f97582b1a0e00ce9132`。
