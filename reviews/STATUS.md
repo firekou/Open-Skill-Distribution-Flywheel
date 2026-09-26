@@ -1,3 +1,27 @@
+## 2026-09-26 12:10：PR #20 revision 2 通過，離線交付完成，首次使用等待負責人 gate
+
+### 1. 執行者
+
+- Claude session `session_01RFeCsTYkVywjHvXk7od7Ab` 完成 `ATK-AIDER-DELIVERY-01` revision 2；GPT／Codex 對精確 head `16b7268ed9eda98d218d7edc146eff7f740dce01` 獨立覆核。
+- [完整覆核](PR20_R2_DELIVERY_16b7268.md) 結論 **APPROVED_WITH_CONDITIONS**。
+
+### 2. 小目標進度
+
+- **有前進**：20/20 validator tests 重跑 exit 0；8 fixtures 維持 2 VALID／6 INVALID；合成身分／key 標記未出現在 stdout／stderr。R1 `ATK-D1-01` 已關閉。
+- README 四行同步超出 revision 2 字面路徑清單，但只校正第 8 步的實際輸出，接受為非阻擋偏移。
+- 下一小目標為 `ATK-AIDER-FIRST-USE-01`。既有 first-use 資產已固定在 PR #19 head `a77d1e8e...`，本輪不重複建包。
+- 執行端狀態：**未派工**。需要負責人決定 first-use 渠道與 sender；如需 live，另須 provider、憑證注入與支出上限。next checkpoint `OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION`。
+
+### 3. 目標藍圖對齊
+
+- 藍圖：讓別人借助我們的 AI 基礎完成真實工作，從有用工具／skill、整理改善、透明可選 ATK 接入、技術分發，走到非作者實際採用與價值回收。
+- 距離方向：**前進**。本批完成第 2 階段安全交付入口，但真實模型成功、非作者首次使用、重複使用、採用與經濟成果仍無證據。
+
+### 4. 本次執行的意義
+
+- 會從檔名或資料夾名稱洩漏身分資訊的問題已由不同環境重現並驗證修復。離線入口現在可交給真實使用者，外部試用須由負責人決定發送渠道、身份及 live 條件。
+- state revision 52。未發布、外聯、呼叫 provider、付費、merge、部署或操作憑證／權限。
+
 ## 2026-09-26 10:55：PR #7 新 head 僅為 scope 偏移，維持補充證據線
 
 - PR #7 Draft/open/unmerged，精確 head `219dfffab31ed487a931513ef74117a6b9b5d513`；[scope review](PR7_R1_SCOPE_219dffff.md) 結論為 **BLOCKED** for merge / canonical-policy adoption。
