@@ -1,0 +1,189 @@
+{
+  "task_id": "C-003",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Read registry_export_2032-02.csv, overrode the two plugins named by errata ERR-004/ERR-005, and swept every vendor_blog and community_forum file (plus the registry export itself) for statements of a different minimum version to build contradicted_by. Script: scripts/derive_C.py",
+  "derivation_script": "scripts/derive_C.py",
+  "errata_applied": {
+    "kp-csv-bridge": {
+      "file": "erratum_ERR-004.md",
+      "correct": "0.9"
+    },
+    "kp-fx-lookup": {
+      "file": "erratum_ERR-005.md",
+      "correct": "2.3"
+    }
+  },
+  "contradicted_by_reading": "literal, and settled by RT-16: any corpus file of any tier that states a different min version for the plugin, including registry_export_2032-02.csv for the two erratum-corrected plugins. The v1.0.0 key's `contradicted_by_alternate_reading_low_authority_only` field is withdrawn.",
+  "derivation_diagnostics": {
+    "coincidentally_correct_non_governing_files": {},
+    "note": "files that state the governing value but do not govern it. Kept off the records: under the v1.1.0 citation rule they are neither citable nor required."
+  },
+  "plugins": [
+    {
+      "plugin_id": "kp-audit-trail",
+      "min_kestrel_version": "2.3",
+      "governing_source_tier": "registry_export",
+      "contradicted_by": [
+        "blog_northwall_05.md",
+        "blog_northwall_07.md"
+      ],
+      "sources": [
+        "registry_export_2032-02.csv"
+      ],
+      "citation_support": {
+        "plugin_id": [
+          "registry_export_2032-02.csv"
+        ],
+        "min_kestrel_version": [
+          "registry_export_2032-02.csv"
+        ]
+      }
+    },
+    {
+      "plugin_id": "kp-blob-mirror",
+      "min_kestrel_version": "2.0",
+      "governing_source_tier": "registry_export",
+      "contradicted_by": [
+        "forum_thread_4106.md"
+      ],
+      "sources": [
+        "registry_export_2032-02.csv"
+      ],
+      "citation_support": {
+        "plugin_id": [
+          "registry_export_2032-02.csv"
+        ],
+        "min_kestrel_version": [
+          "registry_export_2032-02.csv"
+        ]
+      }
+    },
+    {
+      "plugin_id": "kp-csv-bridge",
+      "min_kestrel_version": "0.9",
+      "governing_source_tier": "erratum",
+      "contradicted_by": [
+        "blog_northwall_01.md",
+        "forum_thread_4102.md",
+        "forum_thread_4103.md",
+        "forum_thread_4107.md",
+        "registry_export_2032-02.csv"
+      ],
+      "sources": [
+        "erratum_ERR-004.md"
+      ],
+      "citation_support": {
+        "plugin_id": [
+          "erratum_ERR-004.md"
+        ],
+        "min_kestrel_version": [
+          "erratum_ERR-004.md"
+        ]
+      }
+    },
+    {
+      "plugin_id": "kp-dlq-replay",
+      "min_kestrel_version": "2.1",
+      "governing_source_tier": "registry_export",
+      "contradicted_by": [
+        "blog_northwall_03.md",
+        "forum_thread_4111.md"
+      ],
+      "sources": [
+        "registry_export_2032-02.csv"
+      ],
+      "citation_support": {
+        "plugin_id": [
+          "registry_export_2032-02.csv"
+        ],
+        "min_kestrel_version": [
+          "registry_export_2032-02.csv"
+        ]
+      }
+    },
+    {
+      "plugin_id": "kp-edge-cache",
+      "min_kestrel_version": "2.1",
+      "governing_source_tier": "registry_export",
+      "contradicted_by": [
+        "forum_thread_4101.md",
+        "forum_thread_4105.md",
+        "forum_thread_4110.md",
+        "forum_thread_4112.md"
+      ],
+      "sources": [
+        "registry_export_2032-02.csv"
+      ],
+      "citation_support": {
+        "plugin_id": [
+          "registry_export_2032-02.csv"
+        ],
+        "min_kestrel_version": [
+          "registry_export_2032-02.csv"
+        ]
+      }
+    },
+    {
+      "plugin_id": "kp-fx-lookup",
+      "min_kestrel_version": "2.3",
+      "governing_source_tier": "erratum",
+      "contradicted_by": [
+        "blog_northwall_02.md",
+        "blog_northwall_04.md",
+        "registry_export_2032-02.csv"
+      ],
+      "sources": [
+        "erratum_ERR-005.md"
+      ],
+      "citation_support": {
+        "plugin_id": [
+          "erratum_ERR-005.md"
+        ],
+        "min_kestrel_version": [
+          "erratum_ERR-005.md"
+        ]
+      }
+    },
+    {
+      "plugin_id": "kp-graph-export",
+      "min_kestrel_version": "1.1",
+      "governing_source_tier": "registry_export",
+      "contradicted_by": [
+        "forum_thread_4104.md"
+      ],
+      "sources": [
+        "registry_export_2032-02.csv"
+      ],
+      "citation_support": {
+        "plugin_id": [
+          "registry_export_2032-02.csv"
+        ],
+        "min_kestrel_version": [
+          "registry_export_2032-02.csv"
+        ]
+      }
+    },
+    {
+      "plugin_id": "kp-ldap-sync",
+      "min_kestrel_version": "1.2",
+      "governing_source_tier": "registry_export",
+      "contradicted_by": [
+        "blog_northwall_06.md",
+        "forum_thread_4108.md",
+        "forum_thread_4109.md"
+      ],
+      "sources": [
+        "registry_export_2032-02.csv"
+      ],
+      "citation_support": {
+        "plugin_id": [
+          "registry_export_2032-02.csv"
+        ],
+        "min_kestrel_version": [
+          "registry_export_2032-02.csv"
+        ]
+      }
+    }
+  ],
+  "count": 8
+}

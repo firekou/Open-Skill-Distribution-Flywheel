@@ -1,0 +1,89 @@
+{
+  "task_id": "E-003",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Replayed turns 1-20: applied the six eligibility rules from turns 2-7 as a cascade (exact certification, same site, not on leave, night qualification, max_shifts), applied the turn-12 change making PR-014 unavailable and the turn-16 no-op raising PR-016's max_shifts, and reported every shift with no eligible person as unfilled with the first applicable reason string. Every fillable shift has exactly one eligible candidate, which the script asserts, so no tie-break is needed. Script: scripts/derive_E.py",
+  "derivation_script": "scripts/derive_E.py",
+  "derivation_diagnostics": {
+    "turn_12_change": "PR-014 treated as on_leave for every shift",
+    "turn_16_change": "PR-016 max_shifts raised to 3 - no effect, PR-016 takes 2 shifts",
+    "shifts_per_person": {
+      "PR-001": 1,
+      "PR-002": 1,
+      "PR-003": 1,
+      "PR-005": 1,
+      "PR-006": 1,
+      "PR-009": 1,
+      "PR-010": 1,
+      "PR-013": 1,
+      "PR-016": 2
+    },
+    "turn_17_PR-011_can_cover_SH-111": false,
+    "turn_17_reason": "PR-011 holds C3; SH-111 requires exactly C2 (turn 2: labels, not levels)",
+    "turn_18_PR-012_can_cover_SH-110": false,
+    "turn_18_reason": "PR-012 is night_qualified=no and SH-110 is a night shift (turn 5)",
+    "uncomfortable_answer": "SH-105 and SH-106 have no eligible person once PR-014 is on leave and are reported UNFILLED; assigning PR-007 (C3) or an on-leave person is violation V1/V3."
+  },
+  "assignments": [
+    {
+      "shift_id": "SH-101",
+      "assigned_person_id": "PR-002",
+      "reason_if_unfilled": null
+    },
+    {
+      "shift_id": "SH-102",
+      "assigned_person_id": "PR-001",
+      "reason_if_unfilled": null
+    },
+    {
+      "shift_id": "SH-103",
+      "assigned_person_id": "PR-013",
+      "reason_if_unfilled": null
+    },
+    {
+      "shift_id": "SH-104",
+      "assigned_person_id": "PR-003",
+      "reason_if_unfilled": null
+    },
+    {
+      "shift_id": "SH-105",
+      "assigned_person_id": null,
+      "reason_if_unfilled": "all_eligible_on_leave"
+    },
+    {
+      "shift_id": "SH-106",
+      "assigned_person_id": null,
+      "reason_if_unfilled": "all_eligible_on_leave"
+    },
+    {
+      "shift_id": "SH-107",
+      "assigned_person_id": "PR-006",
+      "reason_if_unfilled": null
+    },
+    {
+      "shift_id": "SH-108",
+      "assigned_person_id": "PR-005",
+      "reason_if_unfilled": null
+    },
+    {
+      "shift_id": "SH-109",
+      "assigned_person_id": "PR-010",
+      "reason_if_unfilled": null
+    },
+    {
+      "shift_id": "SH-110",
+      "assigned_person_id": "PR-009",
+      "reason_if_unfilled": null
+    },
+    {
+      "shift_id": "SH-111",
+      "assigned_person_id": "PR-016",
+      "reason_if_unfilled": null
+    },
+    {
+      "shift_id": "SH-112",
+      "assigned_person_id": "PR-016",
+      "reason_if_unfilled": null
+    }
+  ],
+  "unfilled_count": 2
+}

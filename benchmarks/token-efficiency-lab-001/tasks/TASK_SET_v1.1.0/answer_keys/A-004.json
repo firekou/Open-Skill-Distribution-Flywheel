@@ -1,0 +1,27 @@
+{
+  "task_id": "A-004",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "Tarjan strongly-connected components over the same AST-derived call graph, keeping components of size >= 2, each component sorted lexicographically and the outer list sorted by first element. Script: scripts/derive_A.py",
+  "derivation_script": "scripts/derive_A.py",
+  "components": [
+    [
+      "ledgerline.core.model.hydrate_scope_chain",
+      "ledgerline.core.periods.seal_segment_graph"
+    ],
+    [
+      "ledgerline.ingest.dedupe.enqueue_segment_pair",
+      "ledgerline.ingest.dedupe.group_account_chain",
+      "ledgerline.ingest.dedupe.resolve_voucher_view"
+    ],
+    [
+      "ledgerline.plugins.legacyq.tag_journal_rows",
+      "ledgerline.plugins.netsuite.enqueue_token_graph",
+      "ledgerline.plugins.sapbridge.stage_stub_meta"
+    ],
+    [
+      "ledgerline.transform.normalize.lift_segment_state",
+      "ledgerline.transform.normalize.weave_cursor_delta"
+    ]
+  ],
+  "component_count": 4
+}

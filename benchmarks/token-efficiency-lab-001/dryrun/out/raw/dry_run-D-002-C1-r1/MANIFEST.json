@@ -1,8 +1,8 @@
 {
   "run_id": "dry_run-D-002-C1-r1",
-  "written_at": "2026-09-16T10:57:19.598494+00:00",
+  "written_at": "2026-09-16T18:03:49.945545+00:00",
   "files": {
-    "raw.json": "48735fb64e2ca0af01771e8248c7294e82865be7c783609b1a14e3bac9974a0c"
+    "raw.json": "3b5c489431f1ad4ac05557f9f1463a477e5f38d0fd9a33491d9af28216e26a1f"
   },
   "note": "Every hash below is over content only. Two runs of the same task from the same frozen inputs must produce the same hashes; if they do not, the evidence differs, not the clock."
 }

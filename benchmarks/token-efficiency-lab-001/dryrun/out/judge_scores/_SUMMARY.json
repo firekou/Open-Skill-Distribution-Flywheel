@@ -1,6 +1,13 @@
 {
+  "level": "attempt",
+  "note": "attempt-level only; cell success rates are the Aggregator's",
+  "outcome_counts": {
+    "FAIL_QUALITY": 10,
+    "INVALID": 0,
+    "PASS": 0
+  },
   "packets_scored": 10,
-  "spec_version": "1.0.0",
+  "spec_version": "1.1.0",
   "task_success_count": 0,
   "zero_tolerance_breaches": 0
 }

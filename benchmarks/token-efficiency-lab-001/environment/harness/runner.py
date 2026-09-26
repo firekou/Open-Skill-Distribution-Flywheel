@@ -17,6 +17,8 @@ import sys
 import time
 from datetime import datetime, timezone
 
+from . import evidence as ev
+from . import METHODOLOGY_VERSION, TASK_SET_VERSION
 from .attest import dependency_manifest_hash, image_content_hash
 from .blind import BlindMapping, build_packet
 from .meter import TokenMeter
@@ -86,8 +88,12 @@ def run_one(
     container_digest: str | None,
     task_set_hash: str,
     answer_key_hash: str,
+    scorer_hash: str = "",
     run_id: str | None = None,
+    attempt_id: str | None = None,
     reproduces_run_id: str | None = None,
+    audit_path: pathlib.Path | None = None,
+    out_records: pathlib.Path | None = None,
 ) -> tuple[dict, dict]:
     if run_class not in ("benchmark", "pilot", "calibration", "reproduction", "dry_run"):
         raise RunError(f"unknown run_class {run_class!r}")
@@ -102,15 +108,23 @@ def run_one(
             "model in the loop, so the result would describe the harness, not the intervention."
         )
 
+    # RT-08: hash the corpus before the attempt so a modification is detectable afterwards.
+    corpus_before = ev.corpus_hashes(task_root, task["input"].get("corpus_paths", []))
+
     meter = TokenMeter(snapshot)
     started = time.time()
-    raw_calls, outputs = [], []
+    raw_calls, outputs, turns = [], [], []
     for usage, raw in provider.run_task(task_id):
         meter.record(usage)
         raw_calls.append(raw)
         if raw.get("output_text"):
             outputs.append(raw["output_text"])
+        if raw.get("turn") is not None:
+            turns.append({"turn": int(raw["turn"]), "text": raw.get("output_text", "")})
     elapsed_ms = int((time.time() - started) * 1000)
+
+    corpus_after = ev.corpus_hashes(task_root, task["input"].get("corpus_paths", []))
+    corpus_modified = ev.compare_corpus_hashes(corpus_before, corpus_after)
 
     totals = meter.totals()
     warning = meter.cross_provider_guard()
@@ -124,6 +138,10 @@ def run_one(
             "task_id": task_id,
             "condition": condition,
             "run_class": run_class,
+            # Content hash only. The fixture's PATH used to be recorded here through the
+            # surrounding payload, so two runs of identical inputs into different output
+            # directories produced different raw-evidence hashes - the evidence hash depended on
+            # where it was written rather than on what it contained (D-2).
             "fixture_sha256": hashlib.sha256(pathlib.Path(fixture).read_bytes()).hexdigest(),
             "calls": raw_calls,
             "model_output": model_output,
@@ -140,6 +158,13 @@ def run_one(
 
     record = {
         "run_id": rid,
+        # R3-01: the runner wrote no attempt_id at all, so no record the runner produced could
+        # ever be identity-checked against the frozen plan - the aggregator's registry had
+        # nothing to match. PLANNED identity and EXECUTION identity are deliberately separate
+        # fields: `attempt_id` says which planned attempt this is and is issued by the plan,
+        # `run_id` says which execution produced it and changes on every retry. A retry reuses
+        # the attempt_id and gets a new run_id, so it replaces a sample instead of adding one.
+        "attempt_id": attempt_id,
         "task_id": task_id,
         "condition": condition,
         "workload": task["workload"],
@@ -172,20 +197,69 @@ def run_one(
         "image_content_sha256": image_content_hash(),
         "dependency_manifest_sha256": dependency_manifest_hash(),
         "prompt_hash": sha256_text(json.dumps(task["input"], sort_keys=True)),
+        # D-8: this is the RUN configuration hash and is a different quantity from the
+        # manifest's `config_hash` (which covers the schema and harness modules). Renamed so the
+        # two cannot be compared by accident; the old key is kept for records already written.
+        "run_config_hash": sha256_text(f"{condition}|{snapshot.snapshot_id}|{task_set_hash}"),
         "config_hash": sha256_text(f"{condition}|{snapshot.snapshot_id}|{task_set_hash}"),
-        "task_version": "1.0.0",
+        # D-7: named in the evidence manifest and in the runbook, and present in neither the
+        # schema nor any record. A hash a verifier is told to compare and cannot read is worse
+        # than no hash.
+        "scorer_hash": scorer_hash,
+        "task_version": TASK_SET_VERSION,
         "task_set_hash": task_set_hash,
         "answer_key_hash": answer_key_hash,
         "blind_treatment_id": mapping.label(condition),
         "reproduces_run_id": reproduces_run_id,
         "raw_evidence_path": evidence_path,
-        "methodology_version": "1.0.0",
+        # NEVER a literal - see harness/__init__.py METHODOLOGY_VERSION (NEW-01).
+        "methodology_version": METHODOLOGY_VERSION,
         "notes": warning,
     }
     if condition.startswith("C4"):
         record["model_pair"] = " -> ".join(totals.models)
 
-    packet = build_packet(record, model_output, task, answer_key, mapping, CANDIDATE_NAMES)
+    record["corpus_modified"] = corpus_modified or None
+    if task["workload"] == "E":
+        record["turn_count"] = int(task["input"].get("turn_count") or task.get("turn_count") or 0)
+
+    # The Evidence Producer owns required_evidence (RT-01). Static facts come from the frozen
+    # corpus, dynamic facts from the runner's own audit - never from the model's output.
+    try:
+        produced = ev.produce(
+            task, task_root, run_id=rid,
+            audit_path=audit_path,
+            turns=turns or None,
+            corpus_before=corpus_before,
+            corpus_after=corpus_after,
+        )
+        required_evidence = produced.to_dict()
+        record["required_evidence_fields"] = sorted(required_evidence)
+        record["evidence_provenance"] = produced.provenance
+    except ev.EvidenceError as exc:
+        # v1.1.0 section 6.2: unmeasurable is INVALID, never a pass and never a quality failure.
+        record["outcome"] = "INVALID"
+        record["failure_reason"] = str(exc)
+        record["required_evidence_fields"] = None
+        record["evidence_provenance"] = None
+        write_record(record, out_records) if out_records else None
+        raise RunError(f"{rid}: {exc}")
+
+    if corpus_modified:
+        # RT-08: an outright failure condition in 13 of the 17 tasks, previously evaluated for
+        # workload D only, so a corpus-rewriting optimisation scored clean.
+        record["outcome"] = "FAIL_QUALITY"
+        record["failure_reason"] = (
+            "corpus_modified: " + ", ".join(corpus_modified[:5]) +
+            (f" (+{len(corpus_modified)-5} more)" if len(corpus_modified) > 5 else ""))
+    else:
+        # Placeholder until the Quality Judge scores it; finalize.py writes the real outcome.
+        record["outcome"] = "INVALID"
+        record["failure_reason"] = "awaiting Quality Judge score"
+
+    packet = build_packet(record, model_output, task, answer_key, mapping, CANDIDATE_NAMES,
+                          required_evidence=required_evidence,
+                          methodology_version=record["methodology_version"])
     return record, packet.to_dict()
 
 
@@ -196,16 +270,30 @@ def main(argv=None) -> int:
     ap.add_argument("--snapshot", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--run-class", default="dry_run")
-    ap.add_argument("--plan", required=True, help="JSON list of {task_id, condition, repetition}")
+    ap.add_argument("--plan", required=True,
+                    help="JSON list of {task_id, condition, repetition, attempt_id}. "
+                         "`attempt_id` is issued by the run plan; without it the resulting "
+                         "records cannot be identity-checked by the aggregator (R3-01).")
     ap.add_argument("--environment-id", default="lab001-env-2026-09-16")
     ap.add_argument("--container-digest", default=None)
     ap.add_argument("--blind-salt", required=True)
+    ap.add_argument("--tool-audit", default=None,
+                    help="server-written tool audit JSONL; required for workloads A and D")
     args = ap.parse_args(argv)
 
     task_root = pathlib.Path(args.task_root)
     out = pathlib.Path(args.out)
     snapshot = PricingSnapshot(pathlib.Path(args.snapshot))
     plan = json.loads(pathlib.Path(args.plan).read_text())
+    # R3-01: a plan item with no attempt_id produces a record the aggregator cannot verify, and
+    # the failure would surface much later as an unexplained FAIL. Say so here instead.
+    without = [p for p in plan if not p.get("attempt_id")]
+    if without:
+        raise RunError(
+            f"{len(without)} plan item(s) carry no attempt_id, e.g. "
+            f"{[p.get('task_id') for p in without[:5]]}. An attempt id is issued by the run plan; "
+            "records written without one cannot be checked against it, and the cell they land in "
+            "will be unreportable.")
 
     mapping = BlindMapping(args.blind_salt)
     mapping.assign([p["condition"] for p in plan])
@@ -214,6 +302,9 @@ def main(argv=None) -> int:
 
     task_set_hash = hash_tree(task_root / "tasks")
     answer_key_hash = hash_tree(task_root / "answer_keys")
+    judge_path = pathlib.Path(__file__).resolve().parent / "judge.py"
+    scorer_hash = (hashlib.sha256(judge_path.read_bytes()).hexdigest()
+                   if judge_path.exists() else "")
 
     records, packets, failures = [], [], []
     for item in plan:
@@ -222,6 +313,7 @@ def main(argv=None) -> int:
                 task_id=item["task_id"],
                 condition=item["condition"],
                 repetition=item.get("repetition", 1),
+                attempt_id=item.get("attempt_id"),
                 task_root=task_root,
                 fixture=pathlib.Path(args.fixture),
                 snapshot=snapshot,
@@ -232,6 +324,9 @@ def main(argv=None) -> int:
                 container_digest=args.container_digest,
                 task_set_hash=task_set_hash,
                 answer_key_hash=answer_key_hash,
+                scorer_hash=scorer_hash,
+                audit_path=pathlib.Path(args.tool_audit) if args.tool_audit else None,
+                out_records=out / "records",
             )
             write_record(rec, out / "records")
             records.append(rec)
@@ -240,7 +335,8 @@ def main(argv=None) -> int:
             # A failed run is RECORDED, not dropped. A harness that silently skips what it
             # cannot do reports a success rate it did not earn.
             failures.append(
-                {"task_id": item["task_id"], "condition": item["condition"],
+                {"task_id": item["task_id"], "attempt_id": item.get("attempt_id"),
+                 "condition": item["condition"],
                  "error": f"{type(exc).__name__}: {exc}"}
             )
 
@@ -258,6 +354,7 @@ def main(argv=None) -> int:
         "failures": failures,
         "task_set_hash": task_set_hash,
         "answer_key_hash": answer_key_hash,
+        "scorer_hash": scorer_hash,
         "pricing_snapshot_id": snapshot.snapshot_id,
         "container_digest": args.container_digest,
         "ran_at": datetime.now(timezone.utc).isoformat(),

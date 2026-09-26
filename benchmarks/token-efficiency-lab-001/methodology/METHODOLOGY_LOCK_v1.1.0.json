@@ -1,0 +1,143 @@
+{
+  "methodology_version": "1.1.0",
+  "status": "DRAFT_REVIEW_PENDING",
+  "NOT_FROZEN": true,
+  "why_not_frozen": "No independent reviewer has signed this off. The Editor-in-Chief approved the revision DIRECTION in Prompt 3.5 section 3; that is not approval of this deliverable. Marking a draft FROZEN because its direction was approved is exactly the failure this field exists to prevent.",
+  "drafted_at": "2026-09-16",
+  "drafting_seat": "methodology-reviewer",
+  "source_commit": "a8ca352dc64e792864f351f7775e2b21681b6390",
+  "documents": {
+    "methodology/METHODOLOGY_v1.1.0.md": "7567673240d304a63df1292991b3625aba70cb401e11938ae1a06a6a517bfcc1",
+    "methodology/METER_CALIBRATION_v1.1.0.md": "726d193b8e24cc4825c151e41bef09dd0027988efce33bfa069bcafc71298113",
+    "methodology/METHODOLOGY_CHANGE_REVIEW_001.md": "706eaba3c9d578baf06abdddc028dd2ff2db5a9c94db21b265dce2251f06d4cd",
+    "methodology/METHODOLOGY_CHANGE_REQUEST_001.md": "953541203b175033248823e617f9b13f816f8a6e44f723a1d7b58641ebf3106f",
+    "methodology/METHODOLOGY_CHANGE_REQUEST_002.md": "90e128af35140ac8a975bb905128a427e0f1347c7aa9871304e73824c7cea098"
+  },
+  "predecessor": {
+    "methodology/METHODOLOGY_v1.0.0.md": "c1810b0481d1442937771c124c7c30668490470f00dcf71098bdf139ee7089bc",
+    "methodology/METER_CALIBRATION_v1.0.0.md": "3ed9dac60aa537f3e37503cec2c6eb91c4abebcb746658369f534ac2e21a98aa",
+    "status": "FROZEN and UNMODIFIED",
+    "verified_unchanged_this_round": true,
+    "note": "v1.0.0 is a separate file and stays frozen. v1.1.0 does not supersede, replace or retire it, and no v1.0.0 run is re-attributed."
+  },
+  "changed_clauses": [
+    {
+      "clause": "6",
+      "change": "quality floors: baseline-relative -> answer-key-absolute",
+      "kind": "SEMANTIC - not a wording fix",
+      "cr": "CR-001-A"
+    },
+    {
+      "clause": "6.1-6.2",
+      "change": "attempt/cell/aggregate defined once; INVALID added as a third outcome",
+      "kind": "clarification with enforcement",
+      "cr": "CR-001-B"
+    },
+    {
+      "clause": "11",
+      "change": "pricing snapshots must be complete, enforced by a blocking preflight",
+      "kind": "widened beyond the request",
+      "cr": "CR-001-C"
+    }
+  ],
+  "added_clauses": [
+    "5.1 run-plan mapping",
+    "7 comparison design",
+    "12.1 evidence contract",
+    "13 versioning and refusal"
+  ],
+  "unchanged_and_not_open_for_change": [
+    "research question",
+    "H1-H4",
+    "workloads A-E",
+    "conditions C0-C5",
+    "the 100-run allocation",
+    "C4 tier-adjacent design",
+    "cache control",
+    "independent reproduction requirement",
+    "conflict-of-interest declaration",
+    "every zero-tolerance criterion"
+  ],
+  "open_for_decision": [
+    {
+      "id": "A-a",
+      "question": "non-inferiority margin and statistical method",
+      "blocks": "publication of any quality-parity claim",
+      "blocks_freeze": false
+    },
+    {
+      "id": "B-a",
+      "question": "retry budget: proposed one re-run per planned attempt, INVALID only",
+      "blocks": "nothing yet",
+      "blocks_freeze": false
+    },
+    {
+      "id": "C-a",
+      "question": "which models and API plans the LG4 run plan uses",
+      "blocks": "pricing snapshot completion and therefore the Pilot gate",
+      "blocks_freeze": false
+    },
+    {
+      "id": "CR-002",
+      "question": "ratify the run-plan unit and the research design it implies; the 3.46x figure is an EXPERIMENTAL TASK ATTEMPT multiplier, not a cost multiplier - the dollar consequence is withdrawn as unestablished (adversarial review 2026-09-17)",
+      "blocks": "the run-plan-mapping freeze gate (PENDING)",
+      "blocks_freeze": true
+    }
+  ],
+  "run_plan_arithmetic": {
+    "tasks": {
+      "A": 4,
+      "B": 3,
+      "C": 3,
+      "D": 4,
+      "E": 3
+    },
+    "experimental_runs": 78,
+    "guardrail_runs": 22,
+    "total_runs": 100,
+    "task_attempts_experimental": 270,
+    "mean_attempts_per_run": 3.46,
+    "allocation_changed": false
+  },
+  "amendments_during_drafting": [
+    {
+      "date": "2026-09-16",
+      "clause": "12.0.1",
+      "change": "the token-comparability bar extended to WITHIN a provider, after Anthropic's docs were found to state that Claude 4.7+ uses a tokenizer producing ~30% more tokens",
+      "source": "https://docs.claude.com/en/docs/about-claude/pricing"
+    },
+    {
+      "date": "2026-09-16",
+      "clause": "12.0.2",
+      "change": "token inclusion declared per provider; the meter previously encoded the OpenAI/DeepSeek convention as arithmetic and would have raised or mispriced every cache-heavy Anthropic attempt",
+      "source": "https://docs.claude.com/en/docs/about-claude/pricing"
+    },
+    {
+      "date": "2026-09-16",
+      "clause": "8",
+      "change": "recorded that the C4 tier-adjacent pairs were reasoned about against an OpenAI lineup that has since moved; the pairs are open decision C-a",
+      "source": "PRICING_SNAPSHOT_PS-2026-09-16.json"
+    },
+    {
+      "date": "2026-09-17",
+      "clause": "5.1",
+      "change": "WITHDREW the dollar figure '$51-94 becomes roughly $177-325'. 3.46 is 270 experimental attempts over 78 experimental runs; it was applied to a budget covering all 100 runs, the 22 guardrail runs were never expanded into attempts, and an attempt multiplier is not a dollar multiplier. No revised dollar range is available. Also withdrew 'the definition is forced by the arithmetic': arithmetic rules out one reading, it does not select full factorial coverage over the cheaper designs now listed in CR-002.",
+      "source": "external adversarial review of 62a16a4, section 4"
+    },
+    {
+      "date": "2026-09-17",
+      "clause": "6.1",
+      "change": "CORRECTED the worked example. It said a D cell's planned denominator is 3 and required 3/3; the run plan says 12 (4 tasks x 3 repetitions). Three is the repetition count, left over from before CR-002 made the attempt the unit. The denominator is always the run plan's planned_attempts for that cell.",
+      "source": "external adversarial review of 62a16a4, section 5F"
+    },
+    {
+      "date": "2026-09-17",
+      "clause": "7.7",
+      "change": "The published tie-break (delta, passes, smaller variance, condition) named a variance term that aggregate.select_strongest did not implement, so document and code disagreed on any tie. The sort key now carries variance; absent variance sorts last rather than as zero, which would win every tie.",
+      "source": "external adversarial review of 62a16a4, section 5F"
+    }
+  ],
+  "drafting_note": "A draft is amended in place while it is a draft; that is what a draft is for. Each amendment is recorded above with its source. Once signed off, any further change requires a new version file.",
+  "hash_note": "METHODOLOGY_v1.1.0.md was f4e5b65e204dd0a31cc3d04a639d5542c7aa49523d374da5f51bc0330e490774 at commit 62a16a4, before the three 2026-09-17 amendments above. Any document quoting that digest is quoting the pre-review draft.",
+  "documents_note": "R4-04: METHODOLOGY_CHANGE_REQUEST_002.md was edited in the round-1 response (the cost withdrawal) and this map was not updated, so the lock could not be used as a fingerprint of the current candidate. Refreshed 2026-09-18. While the lock is DRAFT these hashes track the draft; tools/delivery_check.py fails if any drifts again."
+}

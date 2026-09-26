@@ -1,0 +1,53 @@
+{
+  "reviewed_commit": "4e6584b6a90dc21067e298ac482d100221ca13a3",
+  "on_4e6584b": {
+    "R3_01_documented_cli_on_legal_records": {
+      "exit": 1,
+      "cell_verdict": "FAIL",
+      "identity_verified": false
+    },
+    "R3_02a_legal_ids_wrong_task_direct_cell": {
+      "cell_verdict": "PASS",
+      "success_rate": 1.0,
+      "identity_verified": true,
+      "selected": [
+        [
+          "D",
+          "C1"
+        ]
+      ]
+    },
+    "R3_02b_record_edited_after_validation": {
+      "cell_verdict": "PASS",
+      "identity_verified": true,
+      "selected": [
+        [
+          "D",
+          "C1"
+        ]
+      ]
+    },
+    "R3_03_self_found_schema": {
+      "attempt_id": "REJECTED: Additional properties are not allowed ('attempt_id' was unexpected)",
+      "pending_adjudication": "REJECTED: Additional properties are not allowed ('pending_adjudication' was unexpected)"
+    }
+  },
+  "after_fix": {
+    "full_documented_chain_with_REAL_jsonschema": {
+      "runner": "17/17 completed, 0 failed",
+      "judge": "17 packets, 17 passed, 0 zero-tolerance breaches",
+      "finalize": "17 finalized, pending_adjudication []",
+      "aggregate": {
+        "exit": 0,
+        "cells_passed": 5,
+        "cells_failed": 0,
+        "cells_identity_unverified": [],
+        "plan_hash": "a4fc427c3136beda72db2d06a27006eb0cd54b74f9012470c8374cf8788982fd"
+      },
+      "packet_methodology_version": "Counter({'1.1.0': 17})"
+    },
+    "note": "This is the first round in which the whole documented chain was executed with the real record schema validator installed. Previous rounds ran the aggregate step only as a library call, and the finalize tests stubbed the validator - which is exactly why R3-03 survived two rounds unnoticed."
+  },
+  "tests": "326 passed (was 319); 7 new R3 tests, all 7 fail on 4e6584b",
+  "environment_change": "jsonschema 4.26.0 installed into this session so the record schema is actually enforced. It is in the vendored wheelhouse already (jsonschema-4.23.0-py3-none-any.whl); it had not been installed here."
+}

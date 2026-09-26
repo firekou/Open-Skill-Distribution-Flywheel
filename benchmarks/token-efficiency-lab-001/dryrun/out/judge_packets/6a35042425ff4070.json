@@ -1,14 +1,224 @@
 {
+  "methodology_version": "1.1.0",
   "packet_id": "6a35042425ff4070",
   "task_id": "C-001",
   "workload": "C",
   "blind_treatment_id": "Treatment B",
   "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=C-001 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=C-001 turn=1. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=C-001 turn=2. No model produced this text. It exists so the harness has something to carry through to a judge packet.\n[SYNTHETIC DRY-RUN OUTPUT] task=C-001 turn=3. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
-  "required_evidence": [],
+  "required_evidence": {
+    "corpus_hashes_before": {
+      "corpora/research_c/SOURCE_INDEX.md": "4f086d8ab5030168275212c8644659b1f2dc05e40e0ae3203d9a04e22a58c393",
+      "corpora/research_c/blog_northwall_01.md": "f78e18a2996836fbd4fb8738d264bfb2800484d0db0b07a8ed9e3128357b67ee",
+      "corpora/research_c/blog_northwall_02.md": "f6e071f8c7f2374157fcb26f9637ce48b5455f4b1e03bcde884bded11d891564",
+      "corpora/research_c/blog_northwall_03.md": "63642aba8d296532064c1d59e61f6e769e9b13038f0fbf1301c2489a95c2b79e",
+      "corpora/research_c/blog_northwall_04.md": "402e93d700be497a122ed08cd1ff38be9af2f220d8946f0c84bae39704dbe594",
+      "corpora/research_c/blog_northwall_05.md": "a46f05adb8aae9155dfd6bd9a16ff90a598349105aeba34055d7c1a68966ef18",
+      "corpora/research_c/blog_northwall_06.md": "0dcc798e638484c9d3a6da97365a83159939affc60919eef6e5607aea22848b0",
+      "corpora/research_c/blog_northwall_07.md": "f3db1812a42f847a201caedcf425a9955a615d56c903151f34299941b5faaf17",
+      "corpora/research_c/bulletin_bul_2031_01.md": "9405386c2aec5fbe7838804edde27e989bfeadae5b156dc06ccc0165b65d121f",
+      "corpora/research_c/bulletin_bul_2031_02.md": "376b80061d16eb6a6da91ac3f37fc28cbb9af171ddf52a8b50ce1820a2db4908",
+      "corpora/research_c/bulletin_bul_2031_03.md": "cefd9858af734f826ff89aa4e861589c52322f92c5839087f1c0e685990471e2",
+      "corpora/research_c/bulletin_bul_2031_04.md": "a3d270d306e23771fd85abd3c84fd74a7bf2356d6b4039a6866bad60664a400f",
+      "corpora/research_c/bulletin_bul_2031_05.md": "fb7cd38cdff17384c10e9361f736d2aa90e412b081e3a33fbe5f18a733c98e93",
+      "corpora/research_c/bulletin_bul_2031_06.md": "e96c07458b3aafcd906b264aa98c4df0104dffb771443de29328a22e7f5c0cbd",
+      "corpora/research_c/bulletin_bul_2031_07.md": "5806d0b1bf5f8ffc52abf68a54de30b4b2d9a3f6eb330286c472d075a4a64af2",
+      "corpora/research_c/bulletin_bul_2031_08.md": "3811f26479fca21bb7f34d08484991dbe93e982466b63825616d3481f800dabc",
+      "corpora/research_c/correction_CORR-001.md": "40f554775a3eb881be28c0870437212fc5cf9b71e354bf95dcb103103d3758c3",
+      "corpora/research_c/correction_CORR-002.md": "86c452e9ec8a584c7eac766e1ef4cdc790ba4f80553818c42a121e5daeb2355b",
+      "corpora/research_c/correction_CORR-003.md": "547e7247e67bfae1ecb3d57775c0d60e0bb3b3cbb58497a2b104f7f1d14071f3",
+      "corpora/research_c/erratum_ERR-001.md": "d5c10cdcc67c457bc543e844752accc7e73199366f3714c7b9c09653da8efa6e",
+      "corpora/research_c/erratum_ERR-002.md": "6c0cc953a463ed852433c92c3d8d7ada7b0b90722124455bf84c6869679c4157",
+      "corpora/research_c/erratum_ERR-003.md": "79713415c0b12a6edb664b66b8957b236a4049b57ec09f115047b43409c6b257",
+      "corpora/research_c/erratum_ERR-004.md": "20352675a89f5a26457566bb70a86b9c51605fa1575115ae8583fbf940dd8039",
+      "corpora/research_c/erratum_ERR-005.md": "2a58d012871598c2f9dda92f087edcfa93648d7f56ff615f8648a536a87dd00a",
+      "corpora/research_c/forum_thread_4101.md": "eae8dfd06525c40d182203d8ba785fbc024a9dc203fa0aedd273752eff481016",
+      "corpora/research_c/forum_thread_4102.md": "2779a1ea6e4f95eaba4a1b1088b8be468034eae2eecc544b052499ed184bfd47",
+      "corpora/research_c/forum_thread_4103.md": "dc115e07bed73dfbbc589334a45181eb980808578572992c7140bc9d729900e5",
+      "corpora/research_c/forum_thread_4104.md": "ac814577e2ed4afe8685377a6bed14c106670a505810f607c4a3573b4a57cb08",
+      "corpora/research_c/forum_thread_4105.md": "04b731d1aa40e01de38ba463b090f90967c194f8053e7299e823278a7ad91330",
+      "corpora/research_c/forum_thread_4106.md": "5091c2044f2f3ba9585160dde04c1ac66ff22d2899d4364a6773d35c324f5356",
+      "corpora/research_c/forum_thread_4107.md": "1a54d24e76d6b405fd8497d6542b804e0417ae30f3f31e811a8407cb92a9b82c",
+      "corpora/research_c/forum_thread_4108.md": "027f6375df618d863c17c5fcb389aa764ff7037631e23fb3ad93f9c4306817c8",
+      "corpora/research_c/forum_thread_4109.md": "803cfc3a10c8ebc85032d9f57a073f33d88f415c63b75df3287c4c494f2290bb",
+      "corpora/research_c/forum_thread_4110.md": "2b099e0d73e69004ceb716c019985d5d57c8301c988bc9ae9dcf6a18dec8bacd",
+      "corpora/research_c/forum_thread_4111.md": "b12b6cac2f2eeb06dc8bb391f5c7a9110f1ede18ca4389142d8379a4ed6e3e02",
+      "corpora/research_c/forum_thread_4112.md": "96a55dcfbd2f1f8e130011deccaa08f8b0537677b03acf6daa8e93154fd8bfcc",
+      "corpora/research_c/registry_export_2032-02.csv": "94830d56610b6968335a68bdb01eba0fec08bdc197404bcada0a0588a0fd8515",
+      "corpora/research_c/release_notes_kestrel_0_9.md": "c54c82ee50566bf2d2007d2e23e0b30a1d1f971da49edd0e74701daf87532987",
+      "corpora/research_c/release_notes_kestrel_1_0.md": "0f7fc6d7e5efaa10795e09989ea0320c0948d037cf9b55d98ab867a9624df6f2",
+      "corpora/research_c/release_notes_kestrel_1_1.md": "562ccf1b6c1ad00978d3e229920248f2a7fd10204b59b0bd385a08779789d77e",
+      "corpora/research_c/release_notes_kestrel_1_2.md": "35ee8f8d30f639960487803e8ec8cda840c533d8c8ac8031c4368ee95e28bf35",
+      "corpora/research_c/release_notes_kestrel_2_0.md": "05fffaa80106203f8c4445fb2be77a534dc2cef57af8a322edc68ec14a0cb495",
+      "corpora/research_c/release_notes_kestrel_2_1.md": "8720f6e27312d3c40b49da98be69729dfb09accdba7973fcb7858601d2c189fa",
+      "corpora/research_c/release_notes_kestrel_2_2.md": "7abc2951c0ccda820e61439f249ffb18069425aaf36a9381e0d0e78ded0402ad",
+      "corpora/research_c/release_notes_kestrel_2_3.md": "fe215155e211bf317105721cbdddd006022ea68db505e61a7afeab6ed823eadf",
+      "corpora/research_c/release_notes_kestrel_3_0.md": "2975575f1d86f158b60c5fbfed0a9ae497bbd7dc69163c9ffa0638a8481d345a",
+      "corpora/research_c/release_notes_kestrel_3_1.md": "85fa5fd77ca391d0b2e9e94ddb08394da3f821921d8b518e4585a5b53af9b225",
+      "corpora/research_c/release_notes_kestrel_3_2.md": "896146ac29cc0681ecba7baa893367b85ed11845a1d18544a9eef4711d1c1dfe",
+      "corpora/research_c/retraction_RETR-001.md": "b0e7a296caea264481d43850e8f5b880857ba20de23370493ad4de4764b74f63",
+      "corpora/research_c/retraction_RETR-002.md": "042080edbc481fc89fc75ae12635fd24b6cdfa4742a92b096e3c0c26dde62d2f"
+    },
+    "corpus_hashes_after": {
+      "corpora/research_c/SOURCE_INDEX.md": "4f086d8ab5030168275212c8644659b1f2dc05e40e0ae3203d9a04e22a58c393",
+      "corpora/research_c/blog_northwall_01.md": "f78e18a2996836fbd4fb8738d264bfb2800484d0db0b07a8ed9e3128357b67ee",
+      "corpora/research_c/blog_northwall_02.md": "f6e071f8c7f2374157fcb26f9637ce48b5455f4b1e03bcde884bded11d891564",
+      "corpora/research_c/blog_northwall_03.md": "63642aba8d296532064c1d59e61f6e769e9b13038f0fbf1301c2489a95c2b79e",
+      "corpora/research_c/blog_northwall_04.md": "402e93d700be497a122ed08cd1ff38be9af2f220d8946f0c84bae39704dbe594",
+      "corpora/research_c/blog_northwall_05.md": "a46f05adb8aae9155dfd6bd9a16ff90a598349105aeba34055d7c1a68966ef18",
+      "corpora/research_c/blog_northwall_06.md": "0dcc798e638484c9d3a6da97365a83159939affc60919eef6e5607aea22848b0",
+      "corpora/research_c/blog_northwall_07.md": "f3db1812a42f847a201caedcf425a9955a615d56c903151f34299941b5faaf17",
+      "corpora/research_c/bulletin_bul_2031_01.md": "9405386c2aec5fbe7838804edde27e989bfeadae5b156dc06ccc0165b65d121f",
+      "corpora/research_c/bulletin_bul_2031_02.md": "376b80061d16eb6a6da91ac3f37fc28cbb9af171ddf52a8b50ce1820a2db4908",
+      "corpora/research_c/bulletin_bul_2031_03.md": "cefd9858af734f826ff89aa4e861589c52322f92c5839087f1c0e685990471e2",
+      "corpora/research_c/bulletin_bul_2031_04.md": "a3d270d306e23771fd85abd3c84fd74a7bf2356d6b4039a6866bad60664a400f",
+      "corpora/research_c/bulletin_bul_2031_05.md": "fb7cd38cdff17384c10e9361f736d2aa90e412b081e3a33fbe5f18a733c98e93",
+      "corpora/research_c/bulletin_bul_2031_06.md": "e96c07458b3aafcd906b264aa98c4df0104dffb771443de29328a22e7f5c0cbd",
+      "corpora/research_c/bulletin_bul_2031_07.md": "5806d0b1bf5f8ffc52abf68a54de30b4b2d9a3f6eb330286c472d075a4a64af2",
+      "corpora/research_c/bulletin_bul_2031_08.md": "3811f26479fca21bb7f34d08484991dbe93e982466b63825616d3481f800dabc",
+      "corpora/research_c/correction_CORR-001.md": "40f554775a3eb881be28c0870437212fc5cf9b71e354bf95dcb103103d3758c3",
+      "corpora/research_c/correction_CORR-002.md": "86c452e9ec8a584c7eac766e1ef4cdc790ba4f80553818c42a121e5daeb2355b",
+      "corpora/research_c/correction_CORR-003.md": "547e7247e67bfae1ecb3d57775c0d60e0bb3b3cbb58497a2b104f7f1d14071f3",
+      "corpora/research_c/erratum_ERR-001.md": "d5c10cdcc67c457bc543e844752accc7e73199366f3714c7b9c09653da8efa6e",
+      "corpora/research_c/erratum_ERR-002.md": "6c0cc953a463ed852433c92c3d8d7ada7b0b90722124455bf84c6869679c4157",
+      "corpora/research_c/erratum_ERR-003.md": "79713415c0b12a6edb664b66b8957b236a4049b57ec09f115047b43409c6b257",
+      "corpora/research_c/erratum_ERR-004.md": "20352675a89f5a26457566bb70a86b9c51605fa1575115ae8583fbf940dd8039",
+      "corpora/research_c/erratum_ERR-005.md": "2a58d012871598c2f9dda92f087edcfa93648d7f56ff615f8648a536a87dd00a",
+      "corpora/research_c/forum_thread_4101.md": "eae8dfd06525c40d182203d8ba785fbc024a9dc203fa0aedd273752eff481016",
+      "corpora/research_c/forum_thread_4102.md": "2779a1ea6e4f95eaba4a1b1088b8be468034eae2eecc544b052499ed184bfd47",
+      "corpora/research_c/forum_thread_4103.md": "dc115e07bed73dfbbc589334a45181eb980808578572992c7140bc9d729900e5",
+      "corpora/research_c/forum_thread_4104.md": "ac814577e2ed4afe8685377a6bed14c106670a505810f607c4a3573b4a57cb08",
+      "corpora/research_c/forum_thread_4105.md": "04b731d1aa40e01de38ba463b090f90967c194f8053e7299e823278a7ad91330",
+      "corpora/research_c/forum_thread_4106.md": "5091c2044f2f3ba9585160dde04c1ac66ff22d2899d4364a6773d35c324f5356",
+      "corpora/research_c/forum_thread_4107.md": "1a54d24e76d6b405fd8497d6542b804e0417ae30f3f31e811a8407cb92a9b82c",
+      "corpora/research_c/forum_thread_4108.md": "027f6375df618d863c17c5fcb389aa764ff7037631e23fb3ad93f9c4306817c8",
+      "corpora/research_c/forum_thread_4109.md": "803cfc3a10c8ebc85032d9f57a073f33d88f415c63b75df3287c4c494f2290bb",
+      "corpora/research_c/forum_thread_4110.md": "2b099e0d73e69004ceb716c019985d5d57c8301c988bc9ae9dcf6a18dec8bacd",
+      "corpora/research_c/forum_thread_4111.md": "b12b6cac2f2eeb06dc8bb391f5c7a9110f1ede18ca4389142d8379a4ed6e3e02",
+      "corpora/research_c/forum_thread_4112.md": "96a55dcfbd2f1f8e130011deccaa08f8b0537677b03acf6daa8e93154fd8bfcc",
+      "corpora/research_c/registry_export_2032-02.csv": "94830d56610b6968335a68bdb01eba0fec08bdc197404bcada0a0588a0fd8515",
+      "corpora/research_c/release_notes_kestrel_0_9.md": "c54c82ee50566bf2d2007d2e23e0b30a1d1f971da49edd0e74701daf87532987",
+      "corpora/research_c/release_notes_kestrel_1_0.md": "0f7fc6d7e5efaa10795e09989ea0320c0948d037cf9b55d98ab867a9624df6f2",
+      "corpora/research_c/release_notes_kestrel_1_1.md": "562ccf1b6c1ad00978d3e229920248f2a7fd10204b59b0bd385a08779789d77e",
+      "corpora/research_c/release_notes_kestrel_1_2.md": "35ee8f8d30f639960487803e8ec8cda840c533d8c8ac8031c4368ee95e28bf35",
+      "corpora/research_c/release_notes_kestrel_2_0.md": "05fffaa80106203f8c4445fb2be77a534dc2cef57af8a322edc68ec14a0cb495",
+      "corpora/research_c/release_notes_kestrel_2_1.md": "8720f6e27312d3c40b49da98be69729dfb09accdba7973fcb7858601d2c189fa",
+      "corpora/research_c/release_notes_kestrel_2_2.md": "7abc2951c0ccda820e61439f249ffb18069425aaf36a9381e0d0e78ded0402ad",
+      "corpora/research_c/release_notes_kestrel_2_3.md": "fe215155e211bf317105721cbdddd006022ea68db505e61a7afeab6ed823eadf",
+      "corpora/research_c/release_notes_kestrel_3_0.md": "2975575f1d86f158b60c5fbfed0a9ae497bbd7dc69163c9ffa0638a8481d345a",
+      "corpora/research_c/release_notes_kestrel_3_1.md": "85fa5fd77ca391d0b2e9e94ddb08394da3f821921d8b518e4585a5b53af9b225",
+      "corpora/research_c/release_notes_kestrel_3_2.md": "896146ac29cc0681ecba7baa893367b85ed11845a1d18544a9eef4711d1c1dfe",
+      "corpora/research_c/retraction_RETR-001.md": "b0e7a296caea264481d43850e8f5b880857ba20de23370493ad4de4764b74f63",
+      "corpora/research_c/retraction_RETR-002.md": "042080edbc481fc89fc75ae12635fd24b6cdfa4742a92b096e3c0c26dde62d2f"
+    },
+    "corpus_hashes": {
+      "corpora/research_c/SOURCE_INDEX.md": "4f086d8ab5030168275212c8644659b1f2dc05e40e0ae3203d9a04e22a58c393",
+      "corpora/research_c/blog_northwall_01.md": "f78e18a2996836fbd4fb8738d264bfb2800484d0db0b07a8ed9e3128357b67ee",
+      "corpora/research_c/blog_northwall_02.md": "f6e071f8c7f2374157fcb26f9637ce48b5455f4b1e03bcde884bded11d891564",
+      "corpora/research_c/blog_northwall_03.md": "63642aba8d296532064c1d59e61f6e769e9b13038f0fbf1301c2489a95c2b79e",
+      "corpora/research_c/blog_northwall_04.md": "402e93d700be497a122ed08cd1ff38be9af2f220d8946f0c84bae39704dbe594",
+      "corpora/research_c/blog_northwall_05.md": "a46f05adb8aae9155dfd6bd9a16ff90a598349105aeba34055d7c1a68966ef18",
+      "corpora/research_c/blog_northwall_06.md": "0dcc798e638484c9d3a6da97365a83159939affc60919eef6e5607aea22848b0",
+      "corpora/research_c/blog_northwall_07.md": "f3db1812a42f847a201caedcf425a9955a615d56c903151f34299941b5faaf17",
+      "corpora/research_c/bulletin_bul_2031_01.md": "9405386c2aec5fbe7838804edde27e989bfeadae5b156dc06ccc0165b65d121f",
+      "corpora/research_c/bulletin_bul_2031_02.md": "376b80061d16eb6a6da91ac3f37fc28cbb9af171ddf52a8b50ce1820a2db4908",
+      "corpora/research_c/bulletin_bul_2031_03.md": "cefd9858af734f826ff89aa4e861589c52322f92c5839087f1c0e685990471e2",
+      "corpora/research_c/bulletin_bul_2031_04.md": "a3d270d306e23771fd85abd3c84fd74a7bf2356d6b4039a6866bad60664a400f",
+      "corpora/research_c/bulletin_bul_2031_05.md": "fb7cd38cdff17384c10e9361f736d2aa90e412b081e3a33fbe5f18a733c98e93",
+      "corpora/research_c/bulletin_bul_2031_06.md": "e96c07458b3aafcd906b264aa98c4df0104dffb771443de29328a22e7f5c0cbd",
+      "corpora/research_c/bulletin_bul_2031_07.md": "5806d0b1bf5f8ffc52abf68a54de30b4b2d9a3f6eb330286c472d075a4a64af2",
+      "corpora/research_c/bulletin_bul_2031_08.md": "3811f26479fca21bb7f34d08484991dbe93e982466b63825616d3481f800dabc",
+      "corpora/research_c/correction_CORR-001.md": "40f554775a3eb881be28c0870437212fc5cf9b71e354bf95dcb103103d3758c3",
+      "corpora/research_c/correction_CORR-002.md": "86c452e9ec8a584c7eac766e1ef4cdc790ba4f80553818c42a121e5daeb2355b",
+      "corpora/research_c/correction_CORR-003.md": "547e7247e67bfae1ecb3d57775c0d60e0bb3b3cbb58497a2b104f7f1d14071f3",
+      "corpora/research_c/erratum_ERR-001.md": "d5c10cdcc67c457bc543e844752accc7e73199366f3714c7b9c09653da8efa6e",
+      "corpora/research_c/erratum_ERR-002.md": "6c0cc953a463ed852433c92c3d8d7ada7b0b90722124455bf84c6869679c4157",
+      "corpora/research_c/erratum_ERR-003.md": "79713415c0b12a6edb664b66b8957b236a4049b57ec09f115047b43409c6b257",
+      "corpora/research_c/erratum_ERR-004.md": "20352675a89f5a26457566bb70a86b9c51605fa1575115ae8583fbf940dd8039",
+      "corpora/research_c/erratum_ERR-005.md": "2a58d012871598c2f9dda92f087edcfa93648d7f56ff615f8648a536a87dd00a",
+      "corpora/research_c/forum_thread_4101.md": "eae8dfd06525c40d182203d8ba785fbc024a9dc203fa0aedd273752eff481016",
+      "corpora/research_c/forum_thread_4102.md": "2779a1ea6e4f95eaba4a1b1088b8be468034eae2eecc544b052499ed184bfd47",
+      "corpora/research_c/forum_thread_4103.md": "dc115e07bed73dfbbc589334a45181eb980808578572992c7140bc9d729900e5",
+      "corpora/research_c/forum_thread_4104.md": "ac814577e2ed4afe8685377a6bed14c106670a505810f607c4a3573b4a57cb08",
+      "corpora/research_c/forum_thread_4105.md": "04b731d1aa40e01de38ba463b090f90967c194f8053e7299e823278a7ad91330",
+      "corpora/research_c/forum_thread_4106.md": "5091c2044f2f3ba9585160dde04c1ac66ff22d2899d4364a6773d35c324f5356",
+      "corpora/research_c/forum_thread_4107.md": "1a54d24e76d6b405fd8497d6542b804e0417ae30f3f31e811a8407cb92a9b82c",
+      "corpora/research_c/forum_thread_4108.md": "027f6375df618d863c17c5fcb389aa764ff7037631e23fb3ad93f9c4306817c8",
+      "corpora/research_c/forum_thread_4109.md": "803cfc3a10c8ebc85032d9f57a073f33d88f415c63b75df3287c4c494f2290bb",
+      "corpora/research_c/forum_thread_4110.md": "2b099e0d73e69004ceb716c019985d5d57c8301c988bc9ae9dcf6a18dec8bacd",
+      "corpora/research_c/forum_thread_4111.md": "b12b6cac2f2eeb06dc8bb391f5c7a9110f1ede18ca4389142d8379a4ed6e3e02",
+      "corpora/research_c/forum_thread_4112.md": "96a55dcfbd2f1f8e130011deccaa08f8b0537677b03acf6daa8e93154fd8bfcc",
+      "corpora/research_c/registry_export_2032-02.csv": "94830d56610b6968335a68bdb01eba0fec08bdc197404bcada0a0588a0fd8515",
+      "corpora/research_c/release_notes_kestrel_0_9.md": "c54c82ee50566bf2d2007d2e23e0b30a1d1f971da49edd0e74701daf87532987",
+      "corpora/research_c/release_notes_kestrel_1_0.md": "0f7fc6d7e5efaa10795e09989ea0320c0948d037cf9b55d98ab867a9624df6f2",
+      "corpora/research_c/release_notes_kestrel_1_1.md": "562ccf1b6c1ad00978d3e229920248f2a7fd10204b59b0bd385a08779789d77e",
+      "corpora/research_c/release_notes_kestrel_1_2.md": "35ee8f8d30f639960487803e8ec8cda840c533d8c8ac8031c4368ee95e28bf35",
+      "corpora/research_c/release_notes_kestrel_2_0.md": "05fffaa80106203f8c4445fb2be77a534dc2cef57af8a322edc68ec14a0cb495",
+      "corpora/research_c/release_notes_kestrel_2_1.md": "8720f6e27312d3c40b49da98be69729dfb09accdba7973fcb7858601d2c189fa",
+      "corpora/research_c/release_notes_kestrel_2_2.md": "7abc2951c0ccda820e61439f249ffb18069425aaf36a9381e0d0e78ded0402ad",
+      "corpora/research_c/release_notes_kestrel_2_3.md": "fe215155e211bf317105721cbdddd006022ea68db505e61a7afeab6ed823eadf",
+      "corpora/research_c/release_notes_kestrel_3_0.md": "2975575f1d86f158b60c5fbfed0a9ae497bbd7dc69163c9ffa0638a8481d345a",
+      "corpora/research_c/release_notes_kestrel_3_1.md": "85fa5fd77ca391d0b2e9e94ddb08394da3f821921d8b518e4585a5b53af9b225",
+      "corpora/research_c/release_notes_kestrel_3_2.md": "896146ac29cc0681ecba7baa893367b85ed11845a1d18544a9eef4711d1c1dfe",
+      "corpora/research_c/retraction_RETR-001.md": "b0e7a296caea264481d43850e8f5b880857ba20de23370493ad4de4764b74f63",
+      "corpora/research_c/retraction_RETR-002.md": "042080edbc481fc89fc75ae12635fd24b6cdfa4742a92b096e3c0c26dde62d2f"
+    },
+    "corpus_files": [
+      "SOURCE_INDEX.md",
+      "blog_northwall_01.md",
+      "blog_northwall_02.md",
+      "blog_northwall_03.md",
+      "blog_northwall_04.md",
+      "blog_northwall_05.md",
+      "blog_northwall_06.md",
+      "blog_northwall_07.md",
+      "bulletin_bul_2031_01.md",
+      "bulletin_bul_2031_02.md",
+      "bulletin_bul_2031_03.md",
+      "bulletin_bul_2031_04.md",
+      "bulletin_bul_2031_05.md",
+      "bulletin_bul_2031_06.md",
+      "bulletin_bul_2031_07.md",
+      "bulletin_bul_2031_08.md",
+      "correction_CORR-001.md",
+      "correction_CORR-002.md",
+      "correction_CORR-003.md",
+      "erratum_ERR-001.md",
+      "erratum_ERR-002.md",
+      "erratum_ERR-003.md",
+      "erratum_ERR-004.md",
+      "erratum_ERR-005.md",
+      "forum_thread_4101.md",
+      "forum_thread_4102.md",
+      "forum_thread_4103.md",
+      "forum_thread_4104.md",
+      "forum_thread_4105.md",
+      "forum_thread_4106.md",
+      "forum_thread_4107.md",
+      "forum_thread_4108.md",
+      "forum_thread_4109.md",
+      "forum_thread_4110.md",
+      "forum_thread_4111.md",
+      "forum_thread_4112.md",
+      "registry_export_2032-02.csv",
+      "release_notes_kestrel_0_9.md",
+      "release_notes_kestrel_1_0.md",
+      "release_notes_kestrel_1_1.md",
+      "release_notes_kestrel_1_2.md",
+      "release_notes_kestrel_2_0.md",
+      "release_notes_kestrel_2_1.md",
+      "release_notes_kestrel_2_2.md",
+      "release_notes_kestrel_2_3.md",
+      "release_notes_kestrel_3_0.md",
+      "release_notes_kestrel_3_1.md",
+      "release_notes_kestrel_3_2.md",
+      "retraction_RETR-001.md",
+      "retraction_RETR-002.md"
+    ]
+  },
   "answer_key": {
     "task_id": "C-001",
     "derived_by": "answer-key-builder",
-    "derivation_method": "Parsed the '## Feature flags' list of every official release note for 'added'/'removed' entries, then applied the three errata that name a flag and correct the release it was added in. Blog and forum statements are recorded but never allowed to decide a value. Script: scripts/derive_C.py",
+    "derivation_method": "Parsed the '## Feature flags' list of every official release note for 'added'/'removed' entries, then applied the three errata that name a flag and correct the release it was added in. Each record's `sources` is the COMPLETE governing-source set the v1.1.0 traceability metric requires, built from the task's claim-to-source mapping: the release notes recording the flag as added, minus the one an erratum corrects for that flag, plus that erratum, plus the release note recording the removal. Blog and forum statements are recorded in derivation_diagnostics and are never governing sources, whether they agree with the answer or not. Script: scripts/derive_C.py",
     "derivation_script": "scripts/derive_C.py",
     "derivation_diagnostics": {
       "flags_with_two_added_claims": {
@@ -41,7 +251,57 @@
           "wrong_release": "1.0",
           "correct_release": "2.1"
         }
-      }
+      },
+      "coincidentally_correct_non_governing_files": {
+        "adaptive_shard_split": [
+          "forum_thread_4111.md"
+        ],
+        "opportunistic_gc": [
+          "forum_thread_4106.md"
+        ]
+      },
+      "non_governing_files_stating_a_different_version": {
+        "deferred_index_flush": [
+          "forum_thread_4101.md"
+        ],
+        "fanout_rate_limit": [
+          "forum_thread_4107.md",
+          "forum_thread_4112.md"
+        ],
+        "hinted_route_table": [
+          "blog_northwall_06.md",
+          "forum_thread_4102.md"
+        ],
+        "inline_checksum": [
+          "blog_northwall_04.md",
+          "forum_thread_4109.md"
+        ],
+        "lazy_schema_load": [
+          "blog_northwall_03.md"
+        ],
+        "mirror_write_audit": [
+          "blog_northwall_05.md"
+        ],
+        "nested_span_export": [
+          "blog_northwall_02.md"
+        ],
+        "opportunistic_gc": [
+          "forum_thread_4103.md",
+          "forum_thread_4108.md"
+        ],
+        "parallel_compaction": [
+          "forum_thread_4105.md"
+        ],
+        "quiescent_snapshot": [
+          "blog_northwall_01.md",
+          "forum_thread_4110.md"
+        ],
+        "relaxed_ordering": [
+          "blog_northwall_07.md",
+          "forum_thread_4104.md"
+        ]
+      },
+      "governing_source_rule": "for `flag` and `introduced_in`: every official release note whose feature-flag list records the flag as added, MINUS the release note an erratum corrects for that flag, PLUS that erratum; for `removed_in`: the official release note whose feature-flag list records the flag as removed, and nothing when it is null"
     },
     "flags": [
       {
@@ -52,15 +312,14 @@
           "release_notes_kestrel_2_2.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_2_2.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_2_2.md"
           ],
           "removed_in": []
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [
-          "forum_thread_4111.md"
-        ],
-        "non_authoritative_files_stating_a_different_version": []
+        }
       },
       {
         "flag": "batch_ack_window",
@@ -71,15 +330,16 @@
           "release_notes_kestrel_1_1.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_0_9.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_0_9.md"
           ],
           "removed_in": [
             "release_notes_kestrel_1_1.md"
           ]
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": []
+        }
       },
       {
         "flag": "cold_start_probe",
@@ -90,15 +350,16 @@
           "release_notes_kestrel_3_2.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_2_0.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_2_0.md"
           ],
           "removed_in": [
             "release_notes_kestrel_3_2.md"
           ]
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": []
+        }
       },
       {
         "flag": "deferred_index_flush",
@@ -109,17 +370,16 @@
           "release_notes_kestrel_3_0.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_2_0.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_2_0.md"
           ],
           "removed_in": [
             "release_notes_kestrel_3_0.md"
           ]
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": [
-          "forum_thread_4101.md"
-        ]
+        }
       },
       {
         "flag": "eager_tenant_cache",
@@ -129,13 +389,14 @@
           "release_notes_kestrel_1_1.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_1_1.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_1_1.md"
           ],
           "removed_in": []
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": []
+        }
       },
       {
         "flag": "fanout_rate_limit",
@@ -145,16 +406,14 @@
           "release_notes_kestrel_1_1.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_1_1.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_1_1.md"
           ],
           "removed_in": []
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": [
-          "forum_thread_4107.md",
-          "forum_thread_4112.md"
-        ]
+        }
       },
       {
         "flag": "greedy_merge_pass",
@@ -165,15 +424,16 @@
           "release_notes_kestrel_3_1.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_1_2.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_1_2.md"
           ],
           "removed_in": [
             "release_notes_kestrel_3_1.md"
           ]
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": []
+        }
       },
       {
         "flag": "hinted_route_table",
@@ -184,18 +444,16 @@
           "release_notes_kestrel_3_1.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_2_2.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_2_2.md"
           ],
           "removed_in": [
             "release_notes_kestrel_3_1.md"
           ]
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": [
-          "blog_northwall_06.md",
-          "forum_thread_4102.md"
-        ]
+        }
       },
       {
         "flag": "inline_checksum",
@@ -206,18 +464,16 @@
           "release_notes_kestrel_3_1.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_1_0.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_1_0.md"
           ],
           "removed_in": [
             "release_notes_kestrel_3_1.md"
           ]
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": [
-          "blog_northwall_04.md",
-          "forum_thread_4109.md"
-        ]
+        }
       },
       {
         "flag": "lazy_schema_load",
@@ -227,15 +483,14 @@
           "release_notes_kestrel_2_1.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_2_1.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_2_1.md"
           ],
           "removed_in": []
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": [
-          "blog_northwall_03.md"
-        ]
+        }
       },
       {
         "flag": "mirror_write_audit",
@@ -246,17 +501,16 @@
           "release_notes_kestrel_3_1.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_2_1.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_2_1.md"
           ],
           "removed_in": [
             "release_notes_kestrel_3_1.md"
           ]
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": [
-          "blog_northwall_05.md"
-        ]
+        }
       },
       {
         "flag": "nested_span_export",
@@ -268,6 +522,10 @@
           "release_notes_kestrel_2_3.md"
         ],
         "citation_support": {
+          "flag": [
+            "erratum_ERR-002.md",
+            "release_notes_kestrel_1_2.md"
+          ],
           "introduced_in": [
             "erratum_ERR-002.md",
             "release_notes_kestrel_1_2.md"
@@ -275,11 +533,7 @@
           "removed_in": [
             "release_notes_kestrel_2_3.md"
           ]
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": [
-          "blog_northwall_02.md"
-        ]
+        }
       },
       {
         "flag": "opportunistic_gc",
@@ -290,19 +544,16 @@
           "release_notes_kestrel_2_2.md"
         ],
         "citation_support": {
+          "flag": [
+            "erratum_ERR-001.md",
+            "release_notes_kestrel_2_2.md"
+          ],
           "introduced_in": [
             "erratum_ERR-001.md",
             "release_notes_kestrel_2_2.md"
           ],
           "removed_in": []
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [
-          "forum_thread_4106.md"
-        ],
-        "non_authoritative_files_stating_a_different_version": [
-          "forum_thread_4103.md",
-          "forum_thread_4108.md"
-        ]
+        }
       },
       {
         "flag": "parallel_compaction",
@@ -313,16 +564,16 @@
           "release_notes_kestrel_2_1.md"
         ],
         "citation_support": {
+          "flag": [
+            "erratum_ERR-003.md",
+            "release_notes_kestrel_2_1.md"
+          ],
           "introduced_in": [
             "erratum_ERR-003.md",
             "release_notes_kestrel_2_1.md"
           ],
           "removed_in": []
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": [
-          "forum_thread_4105.md"
-        ]
+        }
       },
       {
         "flag": "quiescent_snapshot",
@@ -332,16 +583,14 @@
           "release_notes_kestrel_1_0.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_1_0.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_1_0.md"
           ],
           "removed_in": []
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": [
-          "blog_northwall_01.md",
-          "forum_thread_4110.md"
-        ]
+        }
       },
       {
         "flag": "relaxed_ordering",
@@ -351,20 +600,18 @@
           "release_notes_kestrel_1_2.md"
         ],
         "citation_support": {
+          "flag": [
+            "release_notes_kestrel_1_2.md"
+          ],
           "introduced_in": [
             "release_notes_kestrel_1_2.md"
           ],
           "removed_in": []
-        },
-        "non_authoritative_files_stating_the_same_introduced_in": [],
-        "non_authoritative_files_stating_a_different_version": [
-          "blog_northwall_07.md",
-          "forum_thread_4104.md"
-        ]
+        }
       }
     ],
     "count": 16
   },
-  "quality_metric": "Two numbers are produced and both are reported.\n(a) traceability = supported_citations / total_citations, where a citation is supported when the cited file exists in the corpus and literally states the value it is cited for (the answer key lists, per value, the set of files that state it). A reported value with an empty `sources` list counts as one unsupported citation. traceability is reported to 4 decimals.\n(b) coverage: records are matched on `flag`; comparable cells = 3 * |K| (flag, introduced_in, removed_in). A cell matches when the reported value equals the key's, comparing strings case-sensitively and treating JSON null as a value. Cells of a key record with no reported counterpart count as 3 mismatches; a reported record whose `flag` is not in the key adds 3 to the denominator and contributes 0 matches. coverage = matched_cells / denominator, 4 decimals.\nquality_score = coverage. task_success = true iff traceability == 1.0 AND coverage >= 0.90 * (baseline C0 median coverage for C-001).",
-  "failure_condition": "Outright failure if any of: (1) traceability < 1.0 - any single claim that cannot be traced to a retrieved source that states it fails the task, which is the frozen workload-C zero-tolerance criterion (methodology v1.0.0 section 6); (2) the reply is not parseable as a single JSON object with the two required keys; (3) any cited file name does not exist in `corpora/research_c/`; (4) the run edits the corpus."
+  "quality_metric": "Two numbers are produced and both are reported.\n(a) traceability = supported_citations / (total_citations + missing_citations), computed under the task's CITATION RULE. total_citations is the sum, over reported records, of the number of DISTINCT file names in that record's `sources` list - the same file listed twice in one record is de-duplicated before counting and a repeat cannot inflate the denominator (closes UG-13). supported_citations counts those that are supported. missing_citations counts, over reported records, the governing sources of that record's reported values that are absent from its `sources` list; a reported record with an empty `sources` list contributes one missing citation for each governing source of the values it reports, and never fewer than one. Every citation attached to a reported record whose id is not in the answer key is unsupported. traceability is reported to 4 decimals. The key supplies, per record, the set of governing sources that this definition requires; that set IS the set the metric describes, with no curated subset and no separate list of coincidentally-correct files. (Closes RT-04.)\n(b) coverage: records are matched on `flag`; comparable cells = 3 * |K| (flag, introduced_in, removed_in). A cell matches when the reported value equals the key's, comparing strings case-sensitively and treating JSON null as a value. An ABSENT `removed_in` key is not the same as an explicit `null`: a record that omits `removed_in` mismatches that cell even where the key's value is null (closes UG-14). The same holds for any other omitted key of a record. Cells of a key record with no reported counterpart count as 3 mismatches; a reported record whose `flag` is not in the key adds 3 to the denominator and contributes 0 matches. coverage = matched_cells / denominator, 4 decimals.\nquality_score = coverage. task_success = true iff traceability == 1.0 AND coverage >= 0.90. Both floors are ABSOLUTE. The coverage floor replaces v1.0.0's `0.90 x (baseline C0 median coverage for this task)` for the reasons given in RT-05: a blind judge cannot compute a batch median, the relative form forced a two-pass scoring order that the run matrix does not describe, and it moved down with a weak baseline. traceability was already absolute at 1.00 and is unchanged.\n`count` is a self-consistency check on the emitted array and is NOT one of the comparable cells. A `count` that disagrees with the length of the emitted array is reported as `count_consistent: false` and does not change coverage, does not change traceability and does not fail the task. This states explicitly what v1.0.0's metric left silent.\nIf two reported records carry the same id, the first in emitted order is the one scored and each later duplicate is treated as a record whose id is not in the key. (Closes UG-09.)\nBefore any comparison, every string on both sides - including every file name in `sources` and in `contradicted_by` - has leading and trailing whitespace stripped. (Closes UG-30.)",
+  "failure_condition": "Outright failure if any of: (1) traceability < 1.0 - any single claim that cannot be traced to a retrieved source that states it fails the task, which is the frozen workload-C zero-tolerance criterion (methodology v1.0.0 section 6); (2) the reply is not parseable as a single JSON object with the two required keys; (3) any cited file name does not exist in `corpora/research_c/`; (4) the run edits the corpus, as established below.\n\nCorpus integrity is established from `required_evidence.corpus_hashes_before` and `required_evidence.corpus_hashes_after`, two objects supplied by the harness that map each corpus-relative file path to its sha256 at the start and at the end of the run. \"The run edits the corpus\" holds when any path present in both objects has different hashes, or when a path present in `corpus_hashes_before` is absent from `corpus_hashes_after`. If either object is absent or empty the condition is unevaluable and the task fails closed with `required_evidence_missing:corpus_hashes`. (Closes RT-08.)"
 }

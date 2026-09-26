@@ -1,0 +1,20 @@
+{
+  "task_id": "A-002",
+  "derived_by": "answer-key-builder",
+  "derivation_method": "AST pass over ledgerline/ collecting (a) every bare name used as a Call callee, (b) every name bound by an import/from-import, (c) every string in an __all__ assignment; a module-level function is unreferenced when its name is in none of those three sets. Using the AST makes rule R5 true by construction and tests/ is never parsed (rule R3). Script: scripts/derive_A.py",
+  "derivation_script": "scripts/derive_A.py",
+  "unreferenced_functions": [
+    "ledgerline.api.admin.balance_bucket_group",
+    "ledgerline.api.admin.balance_stamp_graph",
+    "ledgerline.api.healthz.scan_lane_pair",
+    "ledgerline.api.public.lift_bucket_graph",
+    "ledgerline.api.reports.map_ticket_group",
+    "ledgerline.plugins.legacyq.compose_batch_view",
+    "ledgerline.plugins.taxuk.drain_receipt_pool",
+    "ledgerline.transform.allocate.render_tally_batch",
+    "ledgerline.transform.enrich.trace_window_tree",
+    "ledgerline.transform.normalize.render_stub_rows",
+    "ledgerline.transform.rollup.shard_payload_slice"
+  ],
+  "count": 11
+}

@@ -11,6 +11,7 @@
       "role": "primary",
       "task_id": "B-002",
       "tool_calls": 0,
+      "turn": 1,
       "usage": {
         "cached_tokens": 0,
         "input_tokens": 48610,
@@ -20,7 +21,7 @@
   ],
   "condition": "C3",
   "cross_provider_warning": null,
-  "fixture_sha256": "41a6e166287ff4a524911ecf2db9fce8756f675bcf8e54c47be26bd05a1e1ee0",
+  "fixture_sha256": "4c8a92cb995a07860d2fc41e9213b66200ad4d5d02781f4cad9ef2464db9c787",
   "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=B-002 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
   "run_class": "dry_run",
   "run_id": "dry_run-B-002-C3-r1",

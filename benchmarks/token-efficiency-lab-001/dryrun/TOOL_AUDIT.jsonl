@@ -1,0 +1,17 @@
+{"arguments": {}, "family": "meta", "mode": "call", "run_id": "dry_run-A-001-C0-r1", "seq": 1, "synthetic": true, "tool": "catalog.list_tools"}
+{"arguments": {}, "family": "meta", "mode": "call", "run_id": "dry_run-A-001-C0-r1", "seq": 2, "synthetic": true, "tool": "catalog.describe_tool"}
+{"arguments": {"path": "corpora/repo_ledgerline/"}, "family": "corpus", "mode": "read", "run_id": "dry_run-A-001-C0-r1", "seq": 3, "synthetic": true, "tool": "fs.read"}
+{"arguments": {}, "family": "meta", "mode": "call", "run_id": "dry_run-A-002-C1-r1", "seq": 4, "synthetic": true, "tool": "catalog.list_tools"}
+{"arguments": {}, "family": "meta", "mode": "call", "run_id": "dry_run-A-002-C1-r1", "seq": 5, "synthetic": true, "tool": "catalog.describe_tool"}
+{"arguments": {"path": "corpora/repo_ledgerline/"}, "family": "corpus", "mode": "read", "run_id": "dry_run-A-002-C1-r1", "seq": 6, "synthetic": true, "tool": "fs.read"}
+{"arguments": {}, "family": "meta", "mode": "call", "run_id": "dry_run-D-001-C0-r1", "seq": 7, "synthetic": true, "tool": "catalog.list_tools"}
+{"arguments": {}, "family": "meta", "mode": "call", "run_id": "dry_run-D-001-C0-r1", "seq": 8, "synthetic": true, "tool": "catalog.describe_tool"}
+{"arguments": {"path": "corpora/mcp_toolset/tools.json"}, "family": "corpus", "mode": "read", "run_id": "dry_run-D-001-C0-r1", "seq": 9, "synthetic": true, "tool": "fs.read"}
+{"arguments": {"path": "corpora/mcp_toolset/server.py"}, "family": "corpus", "mode": "read", "run_id": "dry_run-D-001-C0-r1", "seq": 10, "synthetic": true, "tool": "fs.read"}
+{"arguments": {}, "family": "meta", "mode": "call", "run_id": "dry_run-D-002-C1-r1", "seq": 11, "synthetic": true, "tool": "catalog.list_tools"}
+{"arguments": {}, "family": "meta", "mode": "call", "run_id": "dry_run-D-002-C1-r1", "seq": 12, "synthetic": true, "tool": "catalog.describe_tool"}
+{"arguments": {"path": "corpora/mcp_toolset/tools.json"}, "family": "corpus", "mode": "read", "run_id": "dry_run-D-002-C1-r1", "seq": 13, "synthetic": true, "tool": "fs.read"}
+{"arguments": {"path": "corpora/mcp_toolset/server.py"}, "family": "corpus", "mode": "read", "run_id": "dry_run-D-002-C1-r1", "seq": 14, "synthetic": true, "tool": "fs.read"}
+{"arguments": {}, "family": "meta", "mode": "call", "run_id": "dry_run-A-003-C2+C4-r1", "seq": 15, "synthetic": true, "tool": "catalog.list_tools"}
+{"arguments": {}, "family": "meta", "mode": "call", "run_id": "dry_run-A-003-C2+C4-r1", "seq": 16, "synthetic": true, "tool": "catalog.describe_tool"}
+{"arguments": {"path": "corpora/repo_ledgerline/"}, "family": "corpus", "mode": "read", "run_id": "dry_run-A-003-C2+C4-r1", "seq": 17, "synthetic": true, "tool": "fs.read"}

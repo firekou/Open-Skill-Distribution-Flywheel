@@ -1,5 +1,6 @@
 {
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.1.0",
+  "tool_audit": "TOOL_AUDIT.jsonl",
   "synthetic": true,
   "salt": "lab001-dryrun-2026-09-16",
   "purpose": "harness dry run - plumbing verification only",
@@ -15,6 +16,7 @@
       "cache_state": "cold",
       "latency_ms": 1722,
       "tool_calls": 0,
+      "turn": 1,
       "usage": {
         "input_tokens": 24121,
         "output_tokens": 960,
@@ -32,6 +34,7 @@
       "cache_state": "cold",
       "latency_ms": 2132,
       "tool_calls": 4,
+      "turn": 2,
       "usage": {
         "input_tokens": 25962,
         "output_tokens": 542,
@@ -49,6 +52,7 @@
       "cache_state": "cold",
       "latency_ms": 1085,
       "tool_calls": 4,
+      "turn": 3,
       "usage": {
         "input_tokens": 24655,
         "output_tokens": 538,
@@ -66,6 +70,7 @@
       "cache_state": "cold",
       "latency_ms": 452,
       "tool_calls": 0,
+      "turn": 1,
       "usage": {
         "input_tokens": 23863,
         "output_tokens": 628,
@@ -83,6 +88,7 @@
       "cache_state": "cold",
       "latency_ms": 912,
       "tool_calls": 1,
+      "turn": 2,
       "usage": {
         "input_tokens": 24205,
         "output_tokens": 1119,
@@ -100,6 +106,7 @@
       "cache_state": "cold",
       "latency_ms": 1207,
       "tool_calls": 2,
+      "turn": 3,
       "usage": {
         "input_tokens": 26609,
         "output_tokens": 1047,
@@ -117,6 +124,7 @@
       "cache_state": "cold",
       "latency_ms": 1587,
       "tool_calls": 0,
+      "turn": 1,
       "usage": {
         "input_tokens": 45664,
         "output_tokens": 377,
@@ -134,6 +142,7 @@
       "cache_state": "cold",
       "latency_ms": 1297,
       "tool_calls": 0,
+      "turn": 1,
       "usage": {
         "input_tokens": 48610,
         "output_tokens": 505,
@@ -151,6 +160,7 @@
       "cache_state": "cold",
       "latency_ms": 1674,
       "tool_calls": 0,
+      "turn": 1,
       "usage": {
         "input_tokens": 17128,
         "output_tokens": 939,
@@ -168,6 +178,7 @@
       "cache_state": "cold",
       "latency_ms": 2388,
       "tool_calls": 1,
+      "turn": 2,
       "usage": {
         "input_tokens": 13469,
         "output_tokens": 305,
@@ -185,6 +196,7 @@
       "cache_state": "cold",
       "latency_ms": 2137,
       "tool_calls": 3,
+      "turn": 3,
       "usage": {
         "input_tokens": 14819,
         "output_tokens": 415,
@@ -202,6 +214,7 @@
       "cache_state": "cold",
       "latency_ms": 602,
       "tool_calls": 1,
+      "turn": 4,
       "usage": {
         "input_tokens": 14713,
         "output_tokens": 558,
@@ -219,6 +232,7 @@
       "cache_state": "cold",
       "latency_ms": 2095,
       "tool_calls": 1,
+      "turn": 1,
       "usage": {
         "input_tokens": 13919,
         "output_tokens": 483,
@@ -236,6 +250,7 @@
       "cache_state": "cold",
       "latency_ms": 1825,
       "tool_calls": 0,
+      "turn": 2,
       "usage": {
         "input_tokens": 14270,
         "output_tokens": 544,
@@ -253,6 +268,7 @@
       "cache_state": "cold",
       "latency_ms": 2461,
       "tool_calls": 1,
+      "turn": 1,
       "usage": {
         "input_tokens": 14694,
         "output_tokens": 934,
@@ -270,6 +286,7 @@
       "cache_state": "cold",
       "latency_ms": 1004,
       "tool_calls": 1,
+      "turn": 2,
       "usage": {
         "input_tokens": 14266,
         "output_tokens": 446,
@@ -287,6 +304,7 @@
       "cache_state": "cold",
       "latency_ms": 848,
       "tool_calls": 0,
+      "turn": 1,
       "usage": {
         "input_tokens": 11447,
         "output_tokens": 631,
@@ -304,6 +322,7 @@
       "cache_state": "cold",
       "latency_ms": 2427,
       "tool_calls": 0,
+      "turn": 2,
       "usage": {
         "input_tokens": 12362,
         "output_tokens": 955,
@@ -321,6 +340,7 @@
       "cache_state": "cold",
       "latency_ms": 744,
       "tool_calls": 0,
+      "turn": 3,
       "usage": {
         "input_tokens": 7270,
         "output_tokens": 589,
@@ -338,6 +358,7 @@
       "cache_state": "cold",
       "latency_ms": 1310,
       "tool_calls": 0,
+      "turn": 4,
       "usage": {
         "input_tokens": 8045,
         "output_tokens": 999,
@@ -355,6 +376,7 @@
       "cache_state": "cold",
       "latency_ms": 2188,
       "tool_calls": 0,
+      "turn": 5,
       "usage": {
         "input_tokens": 9156,
         "output_tokens": 785,
@@ -372,12 +394,229 @@
       "cache_state": "cold",
       "latency_ms": 1380,
       "tool_calls": 0,
+      "turn": 6,
       "usage": {
         "input_tokens": 10195,
         "output_tokens": 308,
         "cached_tokens": 4078
       },
       "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=5. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 1525,
+      "tool_calls": 0,
+      "turn": 7,
+      "usage": {
+        "input_tokens": 10952,
+        "output_tokens": 1078,
+        "cached_tokens": 4380
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=6. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 2293,
+      "tool_calls": 0,
+      "turn": 8,
+      "usage": {
+        "input_tokens": 11935,
+        "output_tokens": 1072,
+        "cached_tokens": 4774
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=7. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 797,
+      "tool_calls": 0,
+      "turn": 9,
+      "usage": {
+        "input_tokens": 12926,
+        "output_tokens": 394,
+        "cached_tokens": 5170
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=8. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 1756,
+      "tool_calls": 0,
+      "turn": 10,
+      "usage": {
+        "input_tokens": 13793,
+        "output_tokens": 850,
+        "cached_tokens": 5517
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=9. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 1832,
+      "tool_calls": 0,
+      "turn": 11,
+      "usage": {
+        "input_tokens": 14540,
+        "output_tokens": 468,
+        "cached_tokens": 5816
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=10. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 555,
+      "tool_calls": 0,
+      "turn": 12,
+      "usage": {
+        "input_tokens": 15671,
+        "output_tokens": 1077,
+        "cached_tokens": 6268
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=11. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 1528,
+      "tool_calls": 0,
+      "turn": 13,
+      "usage": {
+        "input_tokens": 16106,
+        "output_tokens": 657,
+        "cached_tokens": 6442
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=12. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 1108,
+      "tool_calls": 0,
+      "turn": 14,
+      "usage": {
+        "input_tokens": 17327,
+        "output_tokens": 949,
+        "cached_tokens": 6930
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=13. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 1802,
+      "tool_calls": 0,
+      "turn": 15,
+      "usage": {
+        "input_tokens": 18072,
+        "output_tokens": 892,
+        "cached_tokens": 7228
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=14. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 2071,
+      "tool_calls": 0,
+      "turn": 16,
+      "usage": {
+        "input_tokens": 18900,
+        "output_tokens": 868,
+        "cached_tokens": 7560
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=15. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 1854,
+      "tool_calls": 0,
+      "turn": 17,
+      "usage": {
+        "input_tokens": 19701,
+        "output_tokens": 507,
+        "cached_tokens": 7880
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=16. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-001",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 962,
+      "tool_calls": 0,
+      "turn": 18,
+      "usage": {
+        "input_tokens": 20967,
+        "output_tokens": 648,
+        "cached_tokens": 8386
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-001 turn=17. No model produced this text. It exists so the harness has something to carry through to a judge packet."
     },
     {
       "task_id": "E-002",
@@ -389,6 +628,7 @@
       "cache_state": "cold",
       "latency_ms": 1237,
       "tool_calls": 0,
+      "turn": 1,
       "usage": {
         "input_tokens": 11177,
         "output_tokens": 536,
@@ -406,6 +646,7 @@
       "cache_state": "cold",
       "latency_ms": 901,
       "tool_calls": 0,
+      "turn": 2,
       "usage": {
         "input_tokens": 11709,
         "output_tokens": 596,
@@ -423,6 +664,7 @@
       "cache_state": "cold",
       "latency_ms": 1418,
       "tool_calls": 0,
+      "turn": 3,
       "usage": {
         "input_tokens": 12586,
         "output_tokens": 1103,
@@ -440,6 +682,7 @@
       "cache_state": "cold",
       "latency_ms": 2219,
       "tool_calls": 0,
+      "turn": 4,
       "usage": {
         "input_tokens": 13271,
         "output_tokens": 1000,
@@ -457,6 +700,7 @@
       "cache_state": "cold",
       "latency_ms": 1575,
       "tool_calls": 0,
+      "turn": 5,
       "usage": {
         "input_tokens": 14474,
         "output_tokens": 872,
@@ -467,19 +711,200 @@
     {
       "task_id": "E-002",
       "provider": "deepseek",
-      "model": "deepseek-v4-pro",
-      "model_version": "deepseek-v4-pro-2026-09",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
       "accepted": true,
-      "role": "escalation",
+      "role": "primary",
       "cache_state": "cold",
       "latency_ms": 904,
       "tool_calls": 0,
+      "turn": 6,
       "usage": {
         "input_tokens": 14952,
         "output_tokens": 369,
         "cached_tokens": 5980
       },
       "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=5. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-002",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 650,
+      "tool_calls": 0,
+      "turn": 7,
+      "usage": {
+        "input_tokens": 16527,
+        "output_tokens": 950,
+        "cached_tokens": 6610
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=6. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-002",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 449,
+      "tool_calls": 0,
+      "turn": 8,
+      "usage": {
+        "input_tokens": 16978,
+        "output_tokens": 1128,
+        "cached_tokens": 6791
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=7. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-002",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 1371,
+      "tool_calls": 0,
+      "turn": 9,
+      "usage": {
+        "input_tokens": 18283,
+        "output_tokens": 351,
+        "cached_tokens": 7313
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=8. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-002",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 1943,
+      "tool_calls": 0,
+      "turn": 10,
+      "usage": {
+        "input_tokens": 19154,
+        "output_tokens": 1179,
+        "cached_tokens": 7661
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=9. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-002",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 2218,
+      "tool_calls": 0,
+      "turn": 11,
+      "usage": {
+        "input_tokens": 20167,
+        "output_tokens": 664,
+        "cached_tokens": 8066
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=10. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-002",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 2153,
+      "tool_calls": 0,
+      "turn": 12,
+      "usage": {
+        "input_tokens": 20418,
+        "output_tokens": 420,
+        "cached_tokens": 8167
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=11. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-002",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 402,
+      "tool_calls": 0,
+      "turn": 13,
+      "usage": {
+        "input_tokens": 21537,
+        "output_tokens": 791,
+        "cached_tokens": 8614
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=12. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-002",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 1039,
+      "tool_calls": 0,
+      "turn": 14,
+      "usage": {
+        "input_tokens": 22853,
+        "output_tokens": 420,
+        "cached_tokens": 9141
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=13. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-002",
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "model_version": "deepseek-flash-2026-09",
+      "accepted": true,
+      "role": "primary",
+      "cache_state": "cold",
+      "latency_ms": 623,
+      "tool_calls": 0,
+      "turn": 15,
+      "usage": {
+        "input_tokens": 24062,
+        "output_tokens": 1103,
+        "cached_tokens": 9624
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=14. No model produced this text. It exists so the harness has something to carry through to a judge packet."
+    },
+    {
+      "task_id": "E-002",
+      "provider": "deepseek",
+      "model": "deepseek-v4-pro",
+      "model_version": "deepseek-v4-pro-2026-09",
+      "accepted": true,
+      "role": "escalation",
+      "cache_state": "cold",
+      "latency_ms": 2125,
+      "tool_calls": 0,
+      "turn": 16,
+      "usage": {
+        "input_tokens": 24008,
+        "output_tokens": 1113,
+        "cached_tokens": 9603
+      },
+      "output_text": "[SYNTHETIC DRY-RUN OUTPUT] task=E-002 turn=15. No model produced this text. It exists so the harness has something to carry through to a judge packet."
     },
     {
       "task_id": "A-003",
@@ -491,6 +916,7 @@
       "cache_state": "cold",
       "latency_ms": 776,
       "tool_calls": 4,
+      "turn": 1,
       "usage": {
         "input_tokens": 24757,
         "output_tokens": 446,
@@ -508,6 +934,7 @@
       "cache_state": "cold",
       "latency_ms": 1544,
       "tool_calls": 2,
+      "turn": 2,
       "usage": {
         "input_tokens": 17679,
         "output_tokens": 723,
@@ -525,6 +952,7 @@
       "cache_state": "cold",
       "latency_ms": 1525,
       "tool_calls": 4,
+      "turn": 3,
       "usage": {
         "input_tokens": 18734,
         "output_tokens": 1178,

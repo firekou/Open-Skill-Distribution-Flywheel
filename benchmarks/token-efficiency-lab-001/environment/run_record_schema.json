@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Lab 001 run record (schema v1.1.0)",
+  "title": "Lab 001 run record (schema v1.2.0)",
   "type": "object",
   "required": [
     "run_id",
@@ -29,11 +29,19 @@
     "methodology_version",
     "run_class",
     "token_source",
-    "quality_judged_before_cost"
+    "quality_judged_before_cost",
+    "outcome"
   ],
   "properties": {
     "run_id": {
       "type": "string"
+    },
+    "attempt_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "R3-01. WHICH PLANNED ATTEMPT this record is, issued by the run plan. Distinct from run_id, which identifies the EXECUTION and changes on every retry. The aggregator checks this against the frozen plan; a record without one lands in a cell that cannot be reported."
     },
     "task_id": {
       "type": "string"
@@ -155,6 +163,17 @@
         "null"
       ]
     },
+    "pending_adjudication": {
+      "type": "boolean",
+      "description": "ADV-D. The scorer found a possible constraint violation that structural detection cannot decide. The attempt may legitimately be PASS; its CELL is not reportable until the Red Team rules on it."
+    },
+    "scored_packet_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "R4-06. sha256 of the exact judge packet this record's score was produced from, so the score-to-record binding stays auditable."
+    },
     "environment_id": {
       "type": "string"
     },
@@ -192,7 +211,11 @@
       "type": "string"
     },
     "methodology_version": {
-      "const": "1.0.0"
+      "enum": [
+        "1.0.0",
+        "1.1.0"
+      ],
+      "description": "v1.1.0 section 13: the scorer and runner refuse a record whose version they do not implement. Silent cross-version scoring is how a v1.0.0 relative floor would survive into a v1.1.0 result."
     },
     "egress_destinations": {
       "type": "array",
@@ -252,6 +275,78 @@
         "string",
         "null"
       ]
+    },
+    "outcome": {
+      "enum": [
+        "PASS",
+        "FAIL_QUALITY",
+        "INVALID"
+      ],
+      "description": "METHODOLOGY v1.1.0 section 6.2. PASS = scored and met the floor. FAIL_QUALITY = scored and missed it, or breached a zero-tolerance criterion. INVALID = could not be scored at all: missing or empty required evidence, tool-chain failure, unpriceable usage, undeterminable cache state. INVALID is not a success and is not deleted; it stays in the denominator. 'It failed' and 'we could not measure it' are different findings and must not share a value."
+    },
+    "corpus_modified": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "description": "RT-08: corpus paths whose hash changed during the attempt. Non-empty fails the attempt outright."
+    },
+    "required_evidence_fields": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "description": "Which evidence fields the Evidence Producer supplied for this attempt."
+    },
+    "evidence_provenance": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "How each evidence field was derived. Static facts from the frozen corpus, dynamic facts from the runner audit; never from the model's own output."
+    },
+    "unpriceable_quantities": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      },
+      "description": "METHODOLOGY v1.1.0 section 11.4: billable quantities the pricing snapshot cannot price. Non-empty means the attempt's cost is not established and the harness does NOT estimate."
+    },
+    "turn_count": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "early_stop": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "The run ended before the declared turn count. Recorded honestly; missing turns are never fabricated."
+    },
+    "scorer_hash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "sha256 of judge.py, the scorer that produced this record's quality figures. Named in the evidence manifest and previously present in no record (D-7)."
+    },
+    "run_config_hash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The RUN configuration hash - condition, pricing snapshot, task set. A DIFFERENT quantity from the manifest's config_hash, which covers the schema and harness modules (D-8)."
     }
   },
   "additionalProperties": false,

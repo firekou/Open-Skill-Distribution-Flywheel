@@ -1,0 +1,45 @@
+{
+  "reviewed_commit": "62a16a43fc70477f48aab1a2c779cbc4204a6d08",
+  "replayed_at_version": "post-fix working tree",
+  "on_62a16a4": {
+    "duplicate": "PASS",
+    "overcount_rate": 1.3333,
+    "missing_selected": [
+      [
+        "D",
+        "C1"
+      ]
+    ],
+    "missing_cost": 0.0,
+    "unadjudicated": "PASS",
+    "version_outcomes": {
+      "1.1.0": "FAIL_QUALITY",
+      "1.0.0": "PASS"
+    }
+  },
+  "after_fix": {
+    "duplicate": "REFUSED: 2 duplicate attempt record(s): [\"('triple', 'same', 'D-001', 1) appears again (f",
+    "overcount": "REFUSED: 3 duplicate attempt record(s): [\"('triple', 'same', 'D-001', 1) appears again (f",
+    "missing_selected": {
+      "cell_verdict": "FAIL",
+      "chosen": []
+    },
+    "missing_cost": "REFUSED: 1 attempt(s) in D/C1 carry no cost: ['same']. Treating an unpriced attempt as $0",
+    "unadjudicated": {
+      "attempt": "PASS",
+      "pending": true,
+      "cell": "FAIL"
+    },
+    "version_conflict": {
+      "1.1.0": {
+        "outcome": "FAIL_QUALITY",
+        "failure_reason": "zero_tolerance:constraint_violation"
+      },
+      "1.0.0": {
+        "outcome": "INVALID",
+        "failure_reason": "methodology_version_conflict"
+      }
+    }
+  },
+  "tests": "306 passed; 12 new regression tests, 9 fail on 62a16a4"
+}

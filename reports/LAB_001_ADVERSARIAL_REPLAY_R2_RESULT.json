@@ -1,0 +1,54 @@
+{
+  "reviewed_commit": "59293e8278f8cbef5781b6a6bb3b0def2ed3a880",
+  "on_59293e8": {
+    "R2_01a_retry_run_ids": {
+      "cell_verdict": "PASS",
+      "success_rate": 1.0,
+      "recorded": "12/12"
+    },
+    "R2_01b_invented_attempt_ids": {
+      "cell_verdict": "PASS",
+      "success_rate": 1.0
+    },
+    "R2_02_direct_cell_overcount": {
+      "cell_verdict": "PASS",
+      "success_rate": 1.3333
+    },
+    "R2_02_direct_cell_selected": [
+      [
+        "D",
+        "C1"
+      ]
+    ],
+    "R2_03_finalize": {
+      "error": "FinalizeError",
+      "first_record_changed": true
+    }
+  },
+  "after_fix": {
+    "retry_run_ids": {
+      "REFUSED": "12 record(s) do not match the planned attempt they claim: attempt_id None is not in the frozen plan; attempt_id None is not in the"
+    },
+    "invented_attempt_ids": {
+      "REFUSED": "12 record(s) do not match the planned attempt they claim: attempt_id 'new-0' is not in the frozen plan; attempt_id 'new-1' is not "
+    },
+    "control_genuine_twelve": {
+      "cell_verdict": "PASS",
+      "rate": 1.0,
+      "identity_verified": true
+    },
+    "direct_cell_overcount": {
+      "cell_verdict": "FAIL",
+      "success_rate": 1.3333
+    },
+    "direct_cell_selected": [],
+    "finalize": {
+      "error": "FinalizeError",
+      "first_record_changed": false,
+      "stray_tmp_files": []
+    }
+  },
+  "tests": "319 passed (was 307); 12 new R2 regression tests",
+  "evidence_limitation": "The R2 regression tests cannot be run against 59293e8 to show them failing: they import PlannedAttempts, which does not exist there, so the module fails to import rather than the assertions failing. The before-column above is from executing the reviewer's probe inputs against the pre-fix code directly, reproduced independently here before any change. This is weaker evidence than round 1's '9 of 12 fail on 62a16a4' and is not claimed as equivalent.",
+  "finalize_scope": "Schema validation is stubbed in the finalize probe because jsonschema is absent locally - the same isolation the reviewer declared. It establishes the ORDERING of validation and writes, not end-to-end schema acceptance."
+}

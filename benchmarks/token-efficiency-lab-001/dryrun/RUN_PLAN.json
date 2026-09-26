@@ -1,0 +1,190 @@
+{
+  "run_plan_version": "dry-run fixture, not the frozen v1.1.0 plan",
+  "methodology_version": "1.1.0",
+  "task_set_version": "1.1.0",
+  "status": "SYNTHETIC - this dry run only",
+  "cells": [
+    {
+      "workload": "A",
+      "condition": "C0",
+      "planned_attempts": 1
+    },
+    {
+      "workload": "A",
+      "condition": "C1",
+      "planned_attempts": 1
+    },
+    {
+      "workload": "A",
+      "condition": "C2+C4",
+      "planned_attempts": 1
+    },
+    {
+      "workload": "B",
+      "condition": "C0",
+      "planned_attempts": 1
+    },
+    {
+      "workload": "B",
+      "condition": "C3",
+      "planned_attempts": 1
+    },
+    {
+      "workload": "C",
+      "condition": "C2",
+      "planned_attempts": 1
+    },
+    {
+      "workload": "D",
+      "condition": "C0",
+      "planned_attempts": 1
+    },
+    {
+      "workload": "D",
+      "condition": "C1",
+      "planned_attempts": 1
+    },
+    {
+      "workload": "E",
+      "condition": "C3",
+      "planned_attempts": 1
+    },
+    {
+      "workload": "E",
+      "condition": "C4",
+      "planned_attempts": 1
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "A-C0-r1",
+      "workload": "A",
+      "condition": "C0",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "A-001",
+          "attempt_id": "A-001-C0-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C1-r1",
+      "workload": "A",
+      "condition": "C1",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "A-002",
+          "attempt_id": "A-002-C1-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "A-C2+C4-r1",
+      "workload": "A",
+      "condition": "C2+C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "A-003",
+          "attempt_id": "A-003-C2+C4-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C0-r1",
+      "workload": "B",
+      "condition": "C0",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "B-001",
+          "attempt_id": "B-001-C0-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "B-C3-r1",
+      "workload": "B",
+      "condition": "C3",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "B-002",
+          "attempt_id": "B-002-C3-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "C-C2-r1",
+      "workload": "C",
+      "condition": "C2",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "C-001",
+          "attempt_id": "C-001-C2-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C0-r1",
+      "workload": "D",
+      "condition": "C0",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "D-001",
+          "attempt_id": "D-001-C0-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "D-C1-r1",
+      "workload": "D",
+      "condition": "C1",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "D-002",
+          "attempt_id": "D-002-C1-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C3-r1",
+      "workload": "E",
+      "condition": "C3",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "E-001",
+          "attempt_id": "E-001-C3-r1",
+          "session": "independent"
+        }
+      ]
+    },
+    {
+      "run_id": "E-C4-r1",
+      "workload": "E",
+      "condition": "C4",
+      "repetition": 1,
+      "task_attempts": [
+        {
+          "task_id": "E-002",
+          "attempt_id": "E-002-C4-r1",
+          "session": "independent"
+        }
+      ]
+    }
+  ]
+}

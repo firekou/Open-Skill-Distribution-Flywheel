@@ -1,10 +1,21 @@
 {
+  "methodology_version": "1.1.0",
   "packet_id": "886f843c30748989",
   "task_id": "B-001",
   "workload": "B",
   "blind_treatment_id": "Treatment C",
   "model_output": "[SYNTHETIC DRY-RUN OUTPUT] task=B-001 turn=0. No model produced this text. It exists so the harness has something to carry through to a judge packet.",
-  "required_evidence": [],
+  "required_evidence": {
+    "corpus_hashes_before": {
+      "corpora/docs_b/MSA_ORBITAL_HARBOR_consolidated.md": "77bb3262633c64c56c3c82a7f9fde2a6d04c18948479a21af362455eb75e56aa"
+    },
+    "corpus_hashes_after": {
+      "corpora/docs_b/MSA_ORBITAL_HARBOR_consolidated.md": "77bb3262633c64c56c3c82a7f9fde2a6d04c18948479a21af362455eb75e56aa"
+    },
+    "corpus_hashes": {
+      "corpora/docs_b/MSA_ORBITAL_HARBOR_consolidated.md": "77bb3262633c64c56c3c82a7f9fde2a6d04c18948479a21af362455eb75e56aa"
+    }
+  },
   "answer_key": {
     "task_id": "B-001",
     "derived_by": "answer-key-builder",
@@ -53,6 +64,6 @@
       ]
     }
   },
-  "quality_metric": "Field-level exact match over the 36 keys. A field matches when the emitted value equals the answer-key value after the normalisation rules N1-N5: numbers compare numerically (30 == 30.0), strings compare case-sensitively after stripping leading and trailing whitespace, booleans compare identically, and the array field compares as an ordered list. A key that is absent, null, or holds a value of the wrong JSON type counts as a mismatch. quality_score = matched_fields / 36, rounded to 4 decimal places. task_success = true iff quality_score >= 0.97 (that is, at most one mismatched field).",
-  "failure_condition": "Outright failure if any of: (1) the reply is not parseable as a single JSON object; (2) more than one of the 36 keys is missing from the object; (3) quality_score < 0.97, which is the frozen workload-B quality floor (methodology v1.0.0 section 6); (4) the run edits the source document."
+  "quality_metric": "Field-level exact match over the 36 keys. A field matches when the emitted value equals the answer-key value after the normalisation rules N1-N5: numbers compare numerically (30 == 30.0), strings compare case-sensitively after stripping leading and trailing whitespace, booleans compare identically, and the array field compares as an ordered list. A key that is absent, null, or holds a value of the wrong JSON type counts as a mismatch: the JSON type classes number, string, boolean and array must match, so the string \"30\" does not match the number 30 and the number 1 does not match the boolean true (closes UG-08). Keys emitted beyond the 36 are ignored, neither matching nor mismatching, and are listed in `detail.extra_fields` (closes UG-07). quality_score = matched_fields / 36, rounded to 4 decimal places. task_success = true iff quality_score >= 0.97 (that is, at most one mismatched field).\nBefore any comparison, every string on both sides has leading and trailing whitespace stripped. (Closes UG-30.)",
+  "failure_condition": "Outright failure if any of: (1) the reply is not parseable as a single JSON object; (2) more than one of the 36 keys is missing from the object; (3) quality_score < 0.97, which is the frozen workload-B quality floor (methodology v1.0.0 section 6); (4) the run edits the source document, as established below.\n\nCorpus integrity is established from `required_evidence.corpus_hashes_before` and `required_evidence.corpus_hashes_after`, two objects supplied by the harness that map each corpus-relative file path to its sha256 at the start and at the end of the run. \"The run edits the source document\" holds when the document's path is present in both objects with different hashes, or is present in `corpus_hashes_before` and absent from `corpus_hashes_after`. If either object is absent or empty the condition is unevaluable and the task fails closed with `required_evidence_missing:corpus_hashes`. (Closes RT-08.)"
 }
