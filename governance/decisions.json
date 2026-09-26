@@ -231,6 +231,19 @@
         "本包分支實作與Draft PR；新增API費用0",
         "未指定merge、production部署、對外發送、credential操作與支出不視為本輪授權"
       ]
+    },
+    {
+      "id": "REPORT-FORMAT-20260926",
+      "status": "approved",
+      "source": "2026-09-26 負責人直接指示：每一個專案每次執行動作的回報，一律嚴格使用固定四項格式，並做成固定 skill 推上 main。",
+      "decision": "沿用既有 .claude/skills/execution-report 為唯一回報技能，補上填寫範本、各 repo 目標藍圖（REPORT_FORMAT.md）與自查工具 check_report_format.py；不另建第二個同功能技能。",
+      "packet": "REPORT_FORMAT.md",
+      "supersedes": [],
+      "limits": [
+        "只規定回報格式，不新增任何執行授權、費用或對外動作",
+        "既有回報格式保留並存",
+        "目標藍圖只能由負責人核定修改"
+      ]
     }
   ]
 }
