@@ -6,6 +6,8 @@
 >
 > We continuously discover useful tools, verify their practical use, prepare usable assets, and distribute them through accessible entry points. External discovery and adoption remain goals to prove, not outcomes implied by publishing this repository.
 
+**Try it:** [Aider + any OpenAI-compatible endpoint, first run](integrations/aider-atk/delivery/README.md). Rehearsed offline from a clean clone; no real model or outside user has completed it yet.
+
 以下雜誌、Lab 與組織文件保留為歷史與參考；目前任務以頁首最新目標及 reviews/STATUS.md 為準。
 
 ## Start here

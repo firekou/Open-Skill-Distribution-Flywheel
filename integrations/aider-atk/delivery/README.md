@@ -26,11 +26,11 @@ Tested with: Linux, `git`, Python 3.11 (`python3.11`). Windows and macOS are not
 ```bash
 git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel.git atk-flywheel
 cd atk-flywheel
-git checkout --detach origin/claude/atk-aider-delivery-01   # or the exact commit named in the PR / RELEASE_CANDIDATE.md
+git checkout --detach origin/main   # or the exact release commit named in RELEASE_CANDIDATE.md
 REPO="$PWD"
 RUN="$REPO/../aider-first-run"
 ```
-A full clone already contains the five reviewed source commits. If you used `--depth` or `--single-branch`, step 2 prints the exact `git fetch origin <sha> …` line to run.
+PR14's commit is part of `main`. The other four source commits live on reviewed branches that a full clone also fetches. If you used `--depth` or `--single-branch`, or those branches are gone, step 2 prints the exact `git fetch origin <sha> …` line to run; GitHub serves those commits by SHA.
 
 ## 2. Extract and verify the reviewed assets
 
@@ -122,4 +122,4 @@ To record a real attempt, start from `fixtures/valid_fail.json`, fill in only th
 | retry/exit behaviour report | PR18 `1abd74a4b7f14d8b5e397d33afa2ace212841099` |
 | feedback schema, guides, release gate | PR19 `a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41` |
 
-None of these PRs is merged. They are reviewed commits, not a release. Optional ATK Router setup is in `docs/ATK_OPTIONAL_SETUP.md`; you do not need it.
+PR14 and this delivery package (PR20) are merged into `main`. PR16–PR19 are reviewed but not merged; their files are taken by commit SHA. Being merged does not mean a real model or an outside user has completed the task. Optional ATK Router setup is in `docs/ATK_OPTIONAL_SETUP.md`; you do not need it.
