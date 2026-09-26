@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 53,
+  "revision": 54,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1408,13 +1408,15 @@
       "task_id": "PR21-REPORT-POINTER",
       "pr": 21,
       "status": "APPROVED_WITH_CONDITIONS",
-      "observed_head": "9bf2065858770b225f6418361e58ddb180f9f236",
-      "last_reviewed_head": "9bf2065858770b225f6418361e58ddb180f9f236",
+      "observed_head": "e78c6c79c9f58b07da721e5fa8e1923600ee1bab",
+      "last_reviewed_head": "e78c6c79c9f58b07da721e5fa8e1923600ee1bab",
       "last_review_decision": "APPROVED_WITH_CONDITIONS",
-      "review": "reviews/PR21_R1_REPORT_POINTER_9bf20658.md",
+      "review": "reviews/PR21_R2_REPORT_POINTER_e78c6c79.md",
       "scope_paths": [
         "CLAUDE.md",
-        ".claude/skills/execution-report/SKILL.md"
+        ".claude/skills/execution-report/SKILL.md",
+        "check_report_format.py",
+        "reviews/PR21_EXECUTOR_RESPONSE.md"
       ],
       "authorization_source": "firekou/virtual-strategy-lab@01dc7c90b61d2bc91c27bc8c36ad000cd2f8fccb:reviews/ATK_NEXT_01_GPT_LIMITED_CHECK_AND_ROUTING_2026-09-26.md",
       "active_claim": null,
@@ -1422,19 +1424,39 @@
       "executor_claim_verified": false,
       "dispatch_status": "NO_NEW_DISPATCH",
       "next_checkpoint": "PR21_OWNER_MERGE_AUTHORIZATION_IF_ADOPTING",
-      "next_action": "文件語意及固定來源查核通過；不套用 main 政策、不合併；P3 五/六階段措辭列 backlog，不開修復輪。產品首次使用 checkpoint 不變。",
+      "next_action": "R1 P3 與 executor-response 缺件已於 e78c6c79 關閉；PR21 文件批次停止，不派第三版同類修復。若採用仍需負責人 merge 授權與合併前最新 diff 重核。產品 checkpoint 維持 OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION，既有 first-use 規劃已在 main，不重複派工。",
       "exact_head_checks": {
         "workflow_runs": 0,
         "commit_statuses": 0,
         "pr_reviews": 0,
-        "comments": 0,
-        "check_runs": "NOT_CHECKED"
+        "comments": 1,
+        "check_runs": "NOT_EXPOSED_BY_CONNECTOR"
       },
       "pending_conditions": [
-        "preserve local goals and reviewer supplements",
-        "no claim of full cross-repo drift or runtime verification",
-        "revalidate diff before any authorized adoption"
-      ]
+        "no merge or canonical-policy adoption by this review",
+        "preserve OSDF local goals and reviewer handoff supplements",
+        "do not claim runtime, persistent launcher or full cross-repo verification",
+        "revalidate latest diff before authorized adoption"
+      ],
+      "executor_response": "reviews/PR21_EXECUTOR_RESPONSE.md",
+      "delivery_status": "DELIVERED_WITHOUT_HANDOFF_CLAIM",
+      "independent_checks": {
+        "diff_check": "PASS exit 0",
+        "pointer_positive": "PASS exit 0",
+        "executor_response_format": "PASS exit 0",
+        "negative_controls": "4/4 rejected with exit 1",
+        "evidence_level": "INDEPENDENTLY_TESTED"
+      },
+      "closed_findings": [
+        "PR21-R1-P3 stage-count mismatch",
+        "missing executor response artifact"
+      ],
+      "non_blocking_risks": [
+        "numeric first-column table counting is not section-scoped",
+        "quoted stage counts are indistinguishable from claims",
+        "no workflow, status or PR review evidence"
+      ],
+      "reviewed_at": "2026-09-26"
     }
   ],
   "planning": {
