@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 51,
+  "revision": 52,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1303,8 +1303,8 @@
     {
       "task_id": "ATK-AIDER-DELIVERY-01",
       "work_id": "ATK-AIDER-DELIVERY-01",
-      "revision": 1,
-      "status": "EXECUTING",
+      "revision": 2,
+      "status": "APPROVED_WITH_CONDITIONS",
       "goal": "單一入口整合已審Aider/ATK資產並完成乾淨環境離線跟做",
       "source_main": "bbb85b39001ece19a8f19e3f186c1c3eeb1805cb",
       "source_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
@@ -1317,31 +1317,59 @@
         "research/adoption/aider/first-use/delivery/**",
         "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
       ],
-      "repair_rounds_used": 0,
+      "repair_rounds_used": 1,
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
-      "active_claim": {
-        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
-        "work_id": "ATK-AIDER-DELIVERY-01",
-        "revision": 1,
-        "source_main": "bbb85b39001ece19a8f19e3f186c1c3eeb1805cb",
-        "source_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
-        "packet_commit": "8e40827a9205d1243049b0a7f2e0299d78256d79",
-        "branch": "claude/atk-aider-delivery-01",
-        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-DELIVERY-01:1:bbb85b39001ece19a8f19e3f186c1c3eeb1805cb:executor",
-        "deadline": "2026-09-27T02:32:50Z",
-        "claimed_at_reported": "2026-09-26T02:42:00Z",
-        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842461371",
-        "scope_paths": [
-          "integrations/aider-atk/delivery/**",
-          "research/adoption/aider/first-use/delivery/**",
-          "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
-        ],
-        "launcher_evidence": "EXISTING_SESSION_OWNER_DIRECTIVE_NOT_PERSISTENT"
-      },
-      "next_checkpoint": "ATK_AIDER_DELIVERY_RESULT_SHA",
+      "active_claim": null,
+      "next_checkpoint": "OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION",
       "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842426448",
-      "packet_commit": "8e40827a9205d1243049b0a7f2e0299d78256d79"
+      "packet_commit": "8e40827a9205d1243049b0a7f2e0299d78256d79",
+      "observed_head": "16b7268ed9eda98d218d7edc146eff7f740dce01",
+      "content_head": "4f39d3430b78dac46d03f91296af3d1299cee8bb",
+      "result_head": "16b7268ed9eda98d218d7edc146eff7f740dce01",
+      "last_reviewed_head": "16b7268ed9eda98d218d7edc146eff7f740dce01",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "review": "reviews/PR20_R2_DELIVERY_16b7268.md",
+      "result_pr": 20,
+      "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/20#issuecomment-5842668160",
+      "blocking_findings": [],
+      "closed_findings": [
+        "ATK-D1-01 CALLER_PATH_ECHO"
+      ],
+      "exact_head_checks": {
+        "workflow_runs": 0,
+        "commit_statuses": 0,
+        "pr_reviews": 0
+      },
+      "independent_checks": {
+        "test_validate_feedback": "20/20 OK exit 0",
+        "fixture_batch": "2 VALID / 6 INVALID exit 1 as designed",
+        "path_identity_key_markers": "absent from stdout and stderr",
+        "schema_source": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+        "level": "AFFECTED_INVARIANT_INDEPENDENTLY_REPRODUCED"
+      },
+      "bounded_repair": {
+        "work_id": "ATK-AIDER-DELIVERY-01",
+        "revision": 2,
+        "repair_round": 1,
+        "repair_rounds_limit": 2,
+        "source_head": "0ff12e4bfa7d18c742ce81276d62bfac19962103",
+        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-DELIVERY-01:2:0ff12e4bfa7d18c742ce81276d62bfac19962103:path-redaction",
+        "deadline": "2026-09-26T04:00:00Z",
+        "status": "RESULT_RECEIVED_REVIEWED",
+        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+        "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/20#issuecomment-5842632217",
+        "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/20#issuecomment-5842668160",
+        "identity_receipt_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/20#issuecomment-5843041007",
+        "result_head": "16b7268ed9eda98d218d7edc146eff7f740dce01",
+        "review": "reviews/PR20_R2_DELIVERY_16b7268.md",
+        "decision": "APPROVED_WITH_CONDITIONS"
+      },
+      "pending_conditions": [
+        "Owner must select first-use channel and sender before publication or outreach.",
+        "Any live provider run requires provider selection, credential injection authorization and a spending cap.",
+        "No real-model success, non-author first-use, reuse, adoption or economic-value evidence exists."
+      ]
     },
     {
       "task_id": "PR7",
@@ -1384,9 +1412,9 @@
     "scope": "G1-G7",
     "note": "負責人要求立即往下執行；完成可跟做整合包，不以live與發布條件阻擋離線交付。",
     "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
-    "next_work_id": "ATK-AIDER-DELIVERY-01",
-    "next_checkpoint": "ATK_AIDER_DELIVERY_RESULT_SHA",
-    "execution_status": "DELIVERY_EXECUTING"
+    "next_work_id": "ATK-AIDER-FIRST-USE-01",
+    "next_checkpoint": "OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION",
+    "execution_status": "DELIVERY_REVIEWED_WAITING_OWNER_FIRST_USE"
   },
   "handoff": {
     "method": "govern-github-agent-handoffs",
@@ -1483,10 +1511,10 @@
   "product_roadmap": {
     "decision_id": "ATK-FULL-BLUEPRINT-20260926",
     "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
-    "status": "DELIVERY_EXECUTING",
-    "next_work_id": "ATK-AIDER-DELIVERY-01",
-    "next_checkpoint": "ATK_AIDER_DELIVERY_RESULT_SHA",
-    "execution_status": "DELIVERY_EXECUTING",
+    "status": "DELIVERY_APPROVED_WAITING_OWNER_FIRST_USE",
+    "next_work_id": "ATK-AIDER-FIRST-USE-01",
+    "next_checkpoint": "OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION",
+    "execution_status": "WAITING_OWNER_FIRST_USE",
     "note": "PR14/16/17/18/19已審成果沿用。新包整合單一入口、資料驗證與離線跟做；外部動作條件僅約束對應步驟。",
     "execution_prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
     "prompt_version": "2.1",
@@ -1543,30 +1571,16 @@
     "delivery_packet": "reviews/ATK_AIDER_DELIVERY_01.md",
     "delivery_signal": {
       "work_id": "ATK-AIDER-DELIVERY-01",
-      "revision": 1,
-      "status": "EXECUTING",
-      "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842426448",
-      "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-DELIVERY-01:1:bbb85b39001ece19a8f19e3f186c1c3eeb1805cb:executor",
-      "packet_commit": "8e40827a9205d1243049b0a7f2e0299d78256d79",
-      "active_claim": {
-        "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
-        "work_id": "ATK-AIDER-DELIVERY-01",
-        "revision": 1,
-        "source_main": "bbb85b39001ece19a8f19e3f186c1c3eeb1805cb",
-        "source_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
-        "packet_commit": "8e40827a9205d1243049b0a7f2e0299d78256d79",
-        "branch": "claude/atk-aider-delivery-01",
-        "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-DELIVERY-01:1:bbb85b39001ece19a8f19e3f186c1c3eeb1805cb:executor",
-        "deadline": "2026-09-27T02:32:50Z",
-        "claimed_at_reported": "2026-09-26T02:42:00Z",
-        "claim_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842461371",
-        "scope_paths": [
-          "integrations/aider-atk/delivery/**",
-          "research/adoption/aider/first-use/delivery/**",
-          "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
-        ],
-        "launcher_evidence": "EXISTING_SESSION_OWNER_DIRECTIVE_NOT_PERSISTENT"
-      }
+      "revision": 2,
+      "status": "RESULT_RECEIVED_REVIEWED",
+      "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/20#issuecomment-5842632217",
+      "result_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/20#issuecomment-5842668160",
+      "result_head": "16b7268ed9eda98d218d7edc146eff7f740dce01",
+      "session_id": "session_01RFeCsTYkVywjHvXk7od7Ab",
+      "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-DELIVERY-01:2:0ff12e4bfa7d18c742ce81276d62bfac19962103:path-redaction",
+      "review": "reviews/PR20_R2_DELIVERY_16b7268.md",
+      "decision": "APPROVED_WITH_CONDITIONS",
+      "persistent_launcher_verified": false
     }
   }
 }
