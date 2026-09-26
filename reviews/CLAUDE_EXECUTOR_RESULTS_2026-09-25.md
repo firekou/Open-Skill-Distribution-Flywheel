@@ -170,3 +170,16 @@ FIRST-USE-PREP 交付內容：
   - 從 GitHub 全新 clone 驗證 `4f39d34` 也全部通過。
 - **README**：只改第 8 步的預期輸出（`VALID   record 1`）。這不在 review 列的三項內，但不改入口就會錯，已註明。
 - 沒有花費、發布、merge、送上游，也沒有操作任何憑證。
+
+---
+
+## 追加（2026-09-26T05:45Z）：負責人通過首發決定；發布候選 PR22 等 A8 覆核
+
+| 項目 | 精確位置 | 狀態 |
+|---|---|---|
+| 負責人決定 | [OWNER_DECISION_2026-09-26_FIRST_USE_AND_LIVE.md](OWNER_DECISION_2026-09-26_FIRST_USE_AND_LIVE.md)（main `fcc9e1a`） | R、`firekou`、0 次聯絡；live C、$2、雲端環境 |
+| 發布候選 | [#22](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/22)，head `3a681a436f12428c00e722a658b8869199a0f334` | 等 GPT 做 A8 覆核；通過後由負責人合併 |
+| Live C | `integrations/aider-atk/delivery/LIVE_HANDOFF.md` | BLOCKED_ACCESS：`OPENAI_API_KEY` 為 NOT_SET，等負責人注入 |
+
+- 通知：[PR20 留言](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/20#issuecomment-5843595623)。
+- 沒有 merge、聯絡、發布、live 呼叫、花費，也沒有操作任何憑證。
