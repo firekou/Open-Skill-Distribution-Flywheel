@@ -1,0 +1,36 @@
+# Run 1: README.md at the pushed branch head, command lines verbatim. The driver records each exit code itself, so the README's echo "exit=$?" lines are not run.
+# --- step 1
+git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel.git atk-flywheel
+cd atk-flywheel
+git checkout --detach origin/claude/atk-aider-delivery-01
+git rev-parse HEAD
+REPO="$PWD"
+RUN="$REPO/../aider-first-run"
+# --- step 2
+python3 "$REPO/integrations/aider-atk/delivery/get_assets.py" --out "$RUN"
+(cd "$RUN" && find . -type f | sort | xargs sha256sum)
+# --- step 3
+cd "$RUN"
+python3.11 -m venv .venv
+.venv/bin/pip install "aider-chat==0.86.1"
+.venv/bin/aider --version
+# --- step 4
+cd "$RUN/asset"
+OPENAI_API_BASE="https://api.example.invalid/v1" OPENAI_API_KEY="placeholder-not-a-key" AIDER_MODEL="openai/example-model" python3 check_config.py
+OPENAI_API_BASE="https://api.example.invalid/v1/chat/completions" OPENAI_API_KEY="placeholder-not-a-key" AIDER_MODEL="openai/example-model" python3 check_config.py
+# --- step 5
+cd "$RUN/asset/sample"
+sha256sum test_import_contacts.py
+python3.11 -m unittest test_import_contacts
+# --- step 6 NOT RUN (no model; LIVE_HANDOFF.md)
+# --- step 7, on the untouched baseline (no step 6 happened), exactly as written
+cd "$RUN/asset/sample"
+sha256sum test_import_contacts.py
+python3.11 -m unittest test_import_contacts -v
+git diff
+# --- step 8
+cd "$REPO/research/adoption/aider/first-use/delivery"
+python3.11 -m venv "$RUN/.venv-feedback"
+"$RUN/.venv-feedback/bin/pip" install -r requirements.txt
+"$RUN/.venv-feedback/bin/python" validate_feedback.py --schema "$RUN/feedback/FEEDBACK_SCHEMA.json" fixtures/valid_fail.json
+"$RUN/.venv-feedback/bin/pip" freeze

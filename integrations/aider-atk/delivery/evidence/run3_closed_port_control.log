@@ -1,0 +1,70 @@
+# Run 3 (control): PR17 LIVE_EXECUTION_PLAN L2 command shape against a CLOSED loopback port (127.0.0.1:9, connection refused). No provider and no model are contacted; the key is a placeholder. Purpose: see what Aider leaves in the workspace and check that README step 7 still judges correctly. Uses run 2's extracted assets and venv.
+$ RUN="$PWD/w2/aider-first-run"
+  [utc=2026-09-26T02:52:29Z cwd=<W>]
+  exit=0
+$ cp -a "$RUN/asset/sample" "$PWD/w2/closed-port-sample"
+  [utc=2026-09-26T02:52:29Z cwd=<W>]
+  exit=0
+$ cd "$PWD/w2/closed-port-sample"
+  [utc=2026-09-26T02:52:29Z cwd=<W>]
+  exit=0
+$ git status --short
+  [utc=2026-09-26T02:52:29Z cwd=<W>/w2/closed-port-sample]
+  | ?? __pycache__/
+  exit=0
+$ git diff --quiet; echo "tracked_changes=$?"
+  [utc=2026-09-26T02:52:29Z cwd=<W>/w2/closed-port-sample]
+  | tracked_changes=0
+  exit=0
+$ export OPENAI_API_BASE="http://127.0.0.1:9/v1" OPENAI_API_KEY="placeholder-not-a-key" AIDER_MODEL="openai/example-model"
+  [utc=2026-09-26T02:52:29Z cwd=<W>/w2/closed-port-sample]
+  exit=0
+$ python3 "$RUN/asset/check_config.py"
+  [utc=2026-09-26T02:52:29Z cwd=<W>/w2/closed-port-sample]
+  | OPENAI_API_BASE: http://127.0.0.1:9/v1
+  | OPENAI_API_KEY: SET
+  | AIDER_MODEL: openai/example-model
+  | 
+  | Shape looks right. This says nothing about whether the endpoint answers, whether the key is valid, or whether the model exists there — none of that can be known without a real call.
+  exit=0
+$ printf -- '- name: %s\n  extra_params:\n    max_tokens: 4096\n    max_retries: 0\n' "$AIDER_MODEL" > .aider.model.settings.yml
+  [utc=2026-09-26T02:52:29Z cwd=<W>/w2/closed-port-sample]
+  exit=0
+$ cat .aider.model.settings.yml
+  [utc=2026-09-26T02:52:29Z cwd=<W>/w2/closed-port-sample]
+  | - name: openai/example-model
+  |   extra_params:
+  |     max_tokens: 4096
+  |     max_retries: 0
+  exit=0
+$ START=$(date +%s); timeout --signal=INT 900 "$RUN/.venv/bin/aider" --model "$AIDER_MODEL" --no-auto-commits --no-auto-lint --map-tokens 0 --max-chat-history-tokens 65536 --timeout 120 --no-check-update --no-analytics --yes --exit --read test_import_contacts.py --message "Change import_contacts.py so it reads the CSV by column name instead of by position. Keep name,email order working; also read email,name correctly; raise MissingColumnError mentioning 'email' when the email column is missing; keep empty strings as empty strings; keep non-ASCII text unchanged. Do not modify test_import_contacts.py." import_contacts.py > aider_closed_port.log 2>&1 < /dev/null; echo "aider_exit=$? seconds=$(( $(date +%s) - START ))"
+  [utc=2026-09-26T02:52:29Z cwd=<W>/w2/closed-port-sample]
+  | aider_exit=0 seconds=68
+  exit=0
+$ grep -c 'Retrying in' aider_closed_port.log
+  [utc=2026-09-26T02:53:37Z cwd=<W>/w2/closed-port-sample]
+  | 8
+  exit=0
+$ grep -m3 -iE 'error|refused' aider_closed_port.log
+  [utc=2026-09-26T02:53:37Z cwd=<W>/w2/closed-port-sample]
+  | litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+  | error.
+  | litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+  exit=0
+$ sha256sum test_import_contacts.py
+  [utc=2026-09-26T02:53:37Z cwd=<W>/w2/closed-port-sample]
+  | b2c040c2ae4ae6c7417acb8dcf4e3ed5c03ae26af95643f6b498a3ed697baada  test_import_contacts.py
+  exit=0
+$ python3.11 -m unittest test_import_contacts 2>&1 | tail -1
+  [utc=2026-09-26T02:53:37Z cwd=<W>/w2/closed-port-sample]
+  | FAILED (failures=1, errors=1)
+  exit=0
+$ git diff --stat
+  [utc=2026-09-26T02:53:37Z cwd=<W>/w2/closed-port-sample]
+  exit=0
+$ git status --short
+  [utc=2026-09-26T02:53:37Z cwd=<W>/w2/closed-port-sample]
+  | ?? .gitignore
+  | ?? __pycache__/
+  | ?? aider_closed_port.log
+  exit=0

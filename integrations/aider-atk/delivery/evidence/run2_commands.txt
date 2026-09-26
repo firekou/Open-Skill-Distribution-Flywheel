@@ -1,0 +1,71 @@
+# Run 2: README.md at a2f173d (after the run-1 fix), command lines verbatim, fresh directory. The driver records each exit code, so the README's echo "exit=$?" lines are not run.
+# --- environment
+uname -srm; python3 --version; python3.11 --version; git --version
+# --- step 1
+git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel.git atk-flywheel
+cd atk-flywheel
+git checkout --detach origin/claude/atk-aider-delivery-01
+git rev-parse HEAD
+REPO="$PWD"
+RUN="$REPO/../aider-first-run"
+# --- step 2
+python3 "$REPO/integrations/aider-atk/delivery/get_assets.py" --out "$RUN"
+(cd "$RUN" && find . -type f | sort | xargs sha256sum)
+# --- step 3
+cd "$RUN"
+python3.11 -m venv .venv
+.venv/bin/pip install "aider-chat==0.86.1"
+.venv/bin/aider --version
+.venv/bin/pip freeze | grep -iE '^(aider-chat|litellm|openai)=='
+# --- step 4
+cd "$RUN/asset"
+OPENAI_API_BASE="https://api.example.invalid/v1" OPENAI_API_KEY="placeholder-not-a-key" AIDER_MODEL="openai/example-model" python3 check_config.py
+OPENAI_API_BASE="https://api.example.invalid/v1/chat/completions" OPENAI_API_KEY="placeholder-not-a-key" AIDER_MODEL="openai/example-model" python3 check_config.py
+# --- step 5
+cd "$RUN/asset/sample"
+sha256sum test_import_contacts.py
+chmod 444 test_import_contacts.py
+git init -q && git add . && git -c user.name=first-run -c user.email=first-run@example.invalid commit -qm baseline
+python3.11 -m unittest test_import_contacts
+# --- step 6 NOT RUN: no model is called in this rehearsal (LIVE_HANDOFF.md)
+# --- step 7 on the untouched baseline (control: nothing changed, tests still fail)
+cd "$RUN/asset/sample"
+sha256sum test_import_contacts.py
+python3.11 -m unittest test_import_contacts -v
+git diff --stat
+git diff
+# --- step 7 on a COPY with the HUMAN REFERENCE FIX (hand-written for this rehearsal, not a model result)
+cp -a "$RUN/asset/sample" "$RUN/../human-ref-sample"
+cp "$HUMAN_FIX" "$RUN/../human-ref-sample/import_contacts.py"
+cd "$RUN/../human-ref-sample"
+sha256sum test_import_contacts.py
+python3.11 -m unittest test_import_contacts -v
+git diff --stat
+# --- step 7 negative control on a second COPY: the fix plus an edited test file must be caught by the hash check
+cp -a "$RUN/../human-ref-sample" "$RUN/../tampered-sample"
+cd "$RUN/../tampered-sample"
+chmod 644 test_import_contacts.py && printf '\n# edited\n' >> test_import_contacts.py
+sha256sum test_import_contacts.py
+git diff --stat
+# --- step 8
+cd "$REPO/research/adoption/aider/first-use/delivery"
+python3.11 -m venv "$RUN/.venv-feedback"
+"$RUN/.venv-feedback/bin/pip" install -r requirements.txt
+"$RUN/.venv-feedback/bin/python" validate_feedback.py --schema "$RUN/feedback/FEEDBACK_SCHEMA.json" fixtures/valid_fail.json
+"$RUN/.venv-feedback/bin/pip" freeze
+# --- step 8 extra: the whole fixture set and the unit tests, from the clone
+"$RUN/.venv-feedback/bin/python" validate_feedback.py --schema "$RUN/feedback/FEEDBACK_SCHEMA.json" fixtures/*.json
+ATK_FEEDBACK_SCHEMA="$RUN/feedback/FEEDBACK_SCHEMA.json" "$RUN/.venv-feedback/bin/python" -m unittest test_validate_feedback
+"$RUN/.venv-feedback/bin/python" validate_feedback.py --schema "$RUN/feedback/FEEDBACK_SCHEMA.json" fixtures/*.json | grep -c SYNTHETIC_SECRET_VALUE_7f3a9c
+# --- get_assets.py negative controls
+python3 "$REPO/integrations/aider-atk/delivery/get_assets.py" --out "$RUN"
+python3 -c "import json,sys;m=json.load(open(sys.argv[1]));m['files'][4]['sha256']='0'*64;json.dump(m,open(sys.argv[2],'w'))" "$REPO/integrations/aider-atk/delivery/SOURCE_MANIFEST.json" "$RUN/../tampered_manifest.json"
+python3 "$REPO/integrations/aider-atk/delivery/get_assets.py" --out "$RUN/../tampered-out" --manifest "$RUN/../tampered_manifest.json"
+ls "$RUN/../tampered-out" 2>&1
+# --- shallow clone path: missing commits are reported with the exact fetch line, which then works
+cd "$RUN/.."
+git clone -q --depth 1 --single-branch -b claude/atk-aider-delivery-01 https://github.com/firekou/Open-Skill-Distribution-Flywheel.git shallow
+cd shallow
+python3 integrations/aider-atk/delivery/get_assets.py --out ../shallow-out
+git fetch -q origin d1474670db12934c80caa05674c8e4320cbad312 a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41 6ea3cec9937e74de8ce77f47c5e92d3d1617c506 1dcd625df3bde48b13b91abb3b03eb7e19371558 1abd74a4b7f14d8b5e397d33afa2ace212841099
+python3 integrations/aider-atk/delivery/get_assets.py --out ../shallow-out
