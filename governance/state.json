@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 48,
+  "revision": 49,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1304,7 +1304,7 @@
       "task_id": "ATK-AIDER-DELIVERY-01",
       "work_id": "ATK-AIDER-DELIVERY-01",
       "revision": 1,
-      "status": "READY",
+      "status": "SIGNAL_SENT",
       "goal": "單一入口整合已審Aider/ATK資產並完成乾淨環境離線跟做",
       "source_main": "bbb85b39001ece19a8f19e3f186c1c3eeb1805cb",
       "source_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
@@ -1321,7 +1321,9 @@
       "repair_rounds_limit": 2,
       "additional_api_budget_usd": 0,
       "active_claim": null,
-      "next_checkpoint": "ATK_AIDER_DELIVERY_CLAIM_OR_RESULT"
+      "next_checkpoint": "ATK_AIDER_DELIVERY_CLAIM_OR_RESULT",
+      "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842426448",
+      "packet_commit": "8e40827a9205d1243049b0a7f2e0299d78256d79"
     }
   ],
   "planning": {
@@ -1333,7 +1335,7 @@
     "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
     "next_work_id": "ATK-AIDER-DELIVERY-01",
     "next_checkpoint": "ATK_AIDER_DELIVERY_CLAIM_OR_RESULT",
-    "execution_status": "DELIVERY_READY"
+    "execution_status": "DELIVERY_SIGNAL_SENT"
   },
   "handoff": {
     "method": "govern-github-agent-handoffs",
@@ -1430,10 +1432,10 @@
   "product_roadmap": {
     "decision_id": "ATK-FULL-BLUEPRINT-20260926",
     "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
-    "status": "DELIVERY_READY",
+    "status": "DELIVERY_SIGNAL_SENT",
     "next_work_id": "ATK-AIDER-DELIVERY-01",
     "next_checkpoint": "ATK_AIDER_DELIVERY_CLAIM_OR_RESULT",
-    "execution_status": "DELIVERY_READY",
+    "execution_status": "DELIVERY_SIGNAL_SENT",
     "note": "PR14/16/17/18/19已審成果沿用。新包整合單一入口、資料驗證與離線跟做；外部動作條件僅約束對應步驟。",
     "execution_prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
     "prompt_version": "2.1",
@@ -1487,6 +1489,15 @@
       "decision": "APPROVED_WITH_CONDITIONS",
       "persistent_launcher_verified": false
     },
-    "delivery_packet": "reviews/ATK_AIDER_DELIVERY_01.md"
+    "delivery_packet": "reviews/ATK_AIDER_DELIVERY_01.md",
+    "delivery_signal": {
+      "work_id": "ATK-AIDER-DELIVERY-01",
+      "revision": 1,
+      "status": "SIGNAL_SENT",
+      "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842426448",
+      "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-DELIVERY-01:1:bbb85b39001ece19a8f19e3f186c1c3eeb1805cb:executor",
+      "packet_commit": "8e40827a9205d1243049b0a7f2e0299d78256d79",
+      "active_claim": null
+    }
   }
 }
