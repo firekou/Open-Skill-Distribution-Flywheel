@@ -1,0 +1,6 @@
+OPENAI_API_BASE: https://endpoint.example.com/v1
+OPENAI_API_KEY: SET
+AIDER_MODEL: local/qwen3-coder:30b
+
+The model name 'local/qwen3-coder:30b' names the 'local' provider.
+This check is for OpenAI-compatible endpoints, which aider reaches through the openai/ prefix. With local/ the request goes to that provider's own route instead of to the endpoint in OPENAI_API_BASE, so the base you set here would not be used. If you meant your OpenAI-compatible endpoint, this is 'openai/qwen3-coder:30b'; if you really did mean local, configure it the way that provider documents, not here.
