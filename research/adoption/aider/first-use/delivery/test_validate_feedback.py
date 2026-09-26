@@ -89,6 +89,87 @@ class Negative(unittest.TestCase):
             self.assertNotIn(value, out)
 
 
+MARK = "SYNTHETIC_IDENTITY_ALICE_KEYTAG_77"
+
+
+class PathRedaction(unittest.TestCase):
+    """PR20 R1 ATK-D1-01: no caller-supplied path text on stdout or stderr."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = os.path.join(self.tmp.name, f"{MARK}_dir")
+        os.mkdir(self.dir)
+        self.addCleanup(self.tmp.cleanup)
+
+    def copy(self, fixture, name):
+        dst = os.path.join(self.dir, f"{MARK}_{name}")
+        with open(os.path.join(FIX, fixture), "rb") as src, open(dst, "wb") as out:
+            out.write(src.read())
+        return dst
+
+    def call(self, *args):
+        p = subprocess.run([sys.executable, VALIDATOR, *args], capture_output=True, text=True)
+        for stream in (p.stdout, p.stderr):
+            self.assertNotIn(MARK, stream)
+            self.assertNotIn("ALICE", stream)
+            self.assertNotIn("KEYTAG", stream)
+        return p.returncode, p.stdout, p.stderr
+
+    def test_valid_record(self):
+        code, out, _ = self.call("--schema", SCHEMA, self.copy("valid_pass.json", "valid.json"))
+        self.assertEqual(code, 0)
+        self.assertEqual(out.strip(), "VALID   record 1")
+
+    def test_invalid_record(self):
+        code, out, _ = self.call("--schema", SCHEMA, self.copy("invalid_secret_not_echoed.json", "invalid.json"))
+        self.assertEqual(code, 1)
+        self.assertIn("INVALID record 1: /entry additionalProperties", out)
+        self.assertNotIn(SECRET, out)
+
+    def test_malformed_record(self):
+        code, out, _ = self.call("--schema", SCHEMA, self.copy("invalid_malformed.json", "malformed.json"))
+        self.assertEqual(code, 1)
+        self.assertIn("INVALID record 1: malformed JSON (line 1, column", out)
+
+    def test_unreadable_record_missing(self):
+        code, _, err = self.call("--schema", SCHEMA, os.path.join(self.dir, f"{MARK}_missing.json"))
+        self.assertEqual(code, 2)
+        self.assertIn("ERROR record 1: cannot read file", err)
+
+    def test_unreadable_record_is_directory(self):
+        code, _, err = self.call("--schema", SCHEMA, self.dir)
+        self.assertEqual(code, 2)
+        self.assertIn("ERROR record 1: cannot read file", err)
+
+    def test_records_numbered_in_argument_order(self):
+        code, out, _ = self.call("--schema", SCHEMA,
+                                 self.copy("valid_pass.json", "a.json"),
+                                 self.copy("invalid_bad_source_url.json", "b.json"),
+                                 self.copy("valid_fail.json", "c.json"))
+        self.assertEqual(code, 1)
+        self.assertEqual(out.splitlines(),
+                         ["VALID   record 1", "INVALID record 2: /entry/url pattern", "VALID   record 3"])
+
+    def test_unreadable_schema(self):
+        code, _, err = self.call("--schema", os.path.join(self.dir, f"{MARK}_schema.json"),
+                                 self.copy("valid_pass.json", "valid.json"))
+        self.assertEqual(code, 2)
+        self.assertIn("ERROR cannot read the --schema file", err)
+
+    def test_wrong_schema(self):
+        bad = os.path.join(self.dir, f"{MARK}_schema.json")
+        with open(bad, "w") as fh:
+            fh.write('{"type": "object"}')
+        code, _, err = self.call("--schema", bad, self.copy("valid_pass.json", "valid.json"))
+        self.assertEqual(code, 2)
+        self.assertIn("SHA-256 mismatch", err)
+
+    def test_usage_error_does_not_repeat_arguments(self):
+        code, _, err = self.call("--schema", SCHEMA, f"--{MARK}", self.copy("valid_pass.json", "valid.json"))
+        self.assertEqual(code, 2)
+        self.assertIn("ERROR usage:", err)
+
+
 class SchemaPin(unittest.TestCase):
     def test_wrong_schema_refused(self):
         fd, bad = tempfile.mkstemp(suffix=".json")

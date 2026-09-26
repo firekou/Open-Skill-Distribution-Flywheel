@@ -106,9 +106,9 @@ cd "$REPO/research/adoption/aider/first-use/delivery"
 python3.11 -m venv "$RUN/.venv-feedback"
 "$RUN/.venv-feedback/bin/pip" install -r requirements.txt
 "$RUN/.venv-feedback/bin/python" validate_feedback.py --schema "$RUN/feedback/FEEDBACK_SCHEMA.json" fixtures/valid_fail.json
-echo "exit=$?"        # expected: "VALID   fixtures/valid_fail.json", exit=0
+echo "exit=$?"        # expected: "VALID   record 1", exit=0
 ```
-To record a real attempt, start from `fixtures/valid_fail.json`, fill in only the permitted fields (pseudonym, timings, error codes, task result; no names, keys, code or raw logs), and run the same command on your file. Invalid records exit 1 and print only the field location and error type, never the values.
+To record a real attempt, start from `fixtures/valid_fail.json`, fill in only the permitted fields (pseudonym, timings, error codes, task result; no names, keys, code or raw logs), and run the same command on your file. Records are named by their position on the command line (`record 1`, `record 2`, …), never by file name or path. Invalid records exit 1 and print only the field location and error type, never the values.
 
 ---
 

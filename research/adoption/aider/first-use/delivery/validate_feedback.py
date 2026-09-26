@@ -10,9 +10,11 @@ file is refused. On top of the schema, one cross-field rule the schema cannot
 express is enforced: when task.tests_total and task.tests_failed are both
 integers, tests_failed may not exceed tests_total (PR19 R2 condition P2-01).
 
-Output never contains record values: only the file name, the JSON Pointer of
-the offending location and the kind of error. Malformed JSON is reported by
-line and column only.
+Output never contains record values or any path the caller supplied: records
+are identified only by their position on the command line ("record 1",
+"record 2", ...), followed by the JSON Pointer of the offending location and
+the kind of error. Malformed JSON is reported by line and column only. Schema
+and usage errors name the option, never the path or argument given.
 
 Exit codes
   0  every record is valid
@@ -29,6 +31,14 @@ import sys
 
 SCHEMA_SHA256 = "b3531cc41660aad7139922d4201dd449c51a01a04b1fd06e815b6c01f986904c"
 SCHEMA_SOURCE = "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41:research/adoption/aider/first-use/FEEDBACK_SCHEMA.json"
+
+
+class Parser(argparse.ArgumentParser):
+    """argparse that never repeats the command-line arguments back."""
+
+    def error(self, message):
+        print("ERROR usage: validate_feedback.py --schema SCHEMA RECORD [RECORD ...]", file=sys.stderr)
+        sys.exit(2)
 
 
 def pointer(parts):
@@ -65,7 +75,7 @@ def check_record(validator, record):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Validate first-use feedback records.")
+    ap = Parser(description="Validate first-use feedback records.")
     ap.add_argument("--schema", required=True)
     ap.add_argument("records", nargs="+")
     args = ap.parse_args(argv)
@@ -73,10 +83,10 @@ def main(argv=None):
     try:
         raw = open(args.schema, "rb").read()
     except OSError:
-        print(f"ERROR cannot read schema: {args.schema}", file=sys.stderr)
+        print("ERROR cannot read the --schema file", file=sys.stderr)
         return 2
     if hashlib.sha256(raw).hexdigest() != SCHEMA_SHA256:
-        print(f"ERROR schema is not the pinned file {SCHEMA_SOURCE} (SHA-256 mismatch)", file=sys.stderr)
+        print(f"ERROR the --schema file is not the pinned file {SCHEMA_SOURCE} (SHA-256 mismatch)", file=sys.stderr)
         return 2
 
     try:
@@ -89,25 +99,26 @@ def main(argv=None):
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
 
     status = 0
-    for path in args.records:
+    for n, path in enumerate(args.records, 1):
+        label = f"record {n}"
         try:
             text = open(path, encoding="utf-8").read()
         except (OSError, UnicodeDecodeError):
-            print(f"ERROR cannot read record file: {path}", file=sys.stderr)
+            print(f"ERROR {label}: cannot read file", file=sys.stderr)
             return 2
         try:
             record = json.loads(text)
         except json.JSONDecodeError as e:
-            print(f"INVALID {path}: malformed JSON (line {e.lineno}, column {e.colno})")
+            print(f"INVALID {label}: malformed JSON (line {e.lineno}, column {e.colno})")
             status = 1
             continue
         errors = check_record(validator, record)
         if errors:
             status = 1
             for parts, kind in errors:
-                print(f"INVALID {path}: {pointer(parts)} {kind}")
+                print(f"INVALID {label}: {pointer(parts)} {kind}")
         else:
-            print(f"VALID   {path}")
+            print(f"VALID   {label}")
     return status
 
 
