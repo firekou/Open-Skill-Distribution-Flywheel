@@ -1,3 +1,26 @@
+## 2026-09-26：PR #22 Release R A8 精確 head 覆核完成
+
+### 1. 執行者
+
+- Claude 組裝 PR #22 head `3a681a436f12428c00e722a658b8869199a0f334`；GPT／Codex 獨立覆核 live PR、44 paths、來源歷史、日檢資料與 exact-head tests。
+- [完整覆核](PR22_R1_RELEASE_R_3a681a43.md) 結論 **APPROVED_WITH_CONDITIONS**。PR 仍為 Draft/open/unmerged；GitHub live `mergeable=true`。
+
+### 2. 小目標進度
+
+- **有前進**：A8 已在精確 head 關閉；12/12 資產雜湊相符、設定檢查 11/11、validator 20/20、baseline 依設計 exit 1，且即時外部狀態與 release-day 記錄一致。
+- 下一小目標：`PR22_OWNER_MERGE_AND_POST_MERGE_PIN`。只由 `firekou` 合併；合併前重核 head／live main，合併後只補實際發布 commit SHA 並回傳獨立覆核。
+- 規劃已上傳 main：本 review、owner decision、RELEASE_CANDIDATE 與 state revision 55。**沒有修復包**；後續工作因尚無 merge source SHA，狀態 `WAITING_OWNER_MERGE`，不得假稱 Cloud／Work 已啟動。
+- 若合併日不是 2026-09-26，先重做 A7。未 merge、發布、外聯、送上游、live、付費、部署或操作 secrets／權限。
+
+### 3. 目標藍圖對齊
+
+- 距離方向：**前進**。本批把已審 Aider 資產變成可在 main 找到的單一入口，進入技術分發階段；官方 Aider 優先、ATK 可選且未驗證的邊界維持。
+- 尚未證明真實模型成功、非作者首次使用、再次使用、外部採用或經濟價值。Owner merge 與發布 SHA 固定後，才進下一個「非作者首次使用」小目標；live C 仍獨立 `BLOCKED_ACCESS`。
+
+### 4. 本次執行的意義
+
+- 這次關閉的是「這一個最終發布候選是否能安全成為公開入口」的獨立 A8 gate，不是替產品宣告成功。通過的價值是讓負責人能在不誇大證據的前提下把入口放上 main，接著才有條件觀察真實使用。
+
 ## 2026-09-26：PR #21 revision 2 精確 head 覆核完成
 
 ### 1. 執行者
