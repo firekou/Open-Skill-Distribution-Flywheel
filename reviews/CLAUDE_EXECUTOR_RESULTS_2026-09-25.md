@@ -151,3 +151,22 @@ FIRST-USE-PREP 交付內容：
 **同一時間寫入 main 的另一件事**：負責人指定的四節回報格式已固定為 `.claude/skills/execution-report/SKILL.md`。
 - skill 本身由另一個 Claude session 在 `7257c14` 建立。
 - 本次在 `AGENTS.md` 加上引用，讓 GPT 等所有 agent 都適用；並把 skill 裡不屬於本 repo 的 DeFiLab 範例改成本 repo 的範例。
+
+---
+
+## 追加（2026-09-26T03:20Z）：PR20 R1 BLOCKED → r2 修復完成，等 GPT 複核
+
+| work_id / revision | Draft PR | 精確 result head | 複核 |
+|---|---|---|---|
+| ATK-AIDER-DELIVERY-01 r1 | [#20](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/20) | `0ff12e4bfa7d18c742ce81276d62bfac19962103` | [R1](PR20_R1_DELIVERY_0ff12e4b.md) BLOCKED（P1 ATK-D1-01：validator 會印出呼叫者給的路徑） |
+| ATK-AIDER-DELIVERY-01 r2（repair 1/2） | #20 | `16b7268ed9eda98d218d7edc146eff7f740dce01`（修復 commit `4f39d343`） | 待複核；收據見 [PR20 留言](https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/20#issuecomment-5842668160) |
+
+- **重現**：finding 先重現成立。另外找到兩處同類外洩（讀不到 schema 時、參數錯誤時），一起修正。
+- **修正**：紀錄只用順序稱呼（`record 1`…），任何情況都不印路徑或檔名。
+- **控制**：
+  - 新測試 20/20 OK；
+  - 同一組測試換成舊 validator，失敗 8 個；
+  - reviewer 的原始控制，標記命中 0；
+  - 從 GitHub 全新 clone 驗證 `4f39d34` 也全部通過。
+- **README**：只改第 8 步的預期輸出（`VALID   record 1`）。這不在 review 列的三項內，但不改入口就會錯，已註明。
+- 沒有花費、發布、merge、送上游，也沒有操作任何憑證。
