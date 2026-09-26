@@ -1,0 +1,224 @@
+{
+  "_what": "The exact stdout shape `claude -p --output-format json` produces, so the adapter can be tested against the real envelope with no model call.",
+  "_why": "GOV-R2-01: parse_verdict read the model's JSON at the ROOT of stdout. The CLI does not put it there — it prints its own result envelope and puts the model's text in `result`, as a STRING. Every adapter test supplied a bare object, so the suite agreed with the code and both were wrong about the only thing that would have run in production.",
+  "_provenance": {
+    "error_envelope_measured": {
+      "evidence_ladder": "REPRODUCED",
+      "how": "claude -p --output-format json --max-turns 1, run with env -i, an empty HOME, ANTHROPIC_BASE_URL=http://127.0.0.1:9 and a dummy key, so no request left the host and no model was billed.",
+      "cli_version": "2.1.278 (Claude Code)",
+      "observed_cost_usd": 0,
+      "de_identified": "session_id and uuid replaced with a fixed all-zero uuid; nothing else altered."
+    },
+    "success_envelope_derived": {
+      "evidence_ladder": "OBSERVED (shape) + SYNTHETIC (values)",
+      "how": "the measured envelope's key set, with the failure fields flipped to the success values the CLI documents and `result` replaced by the verdict string this adapter requires. Producing a genuinely successful envelope costs a model call; this round is offline, so the fabricated part is named here rather than presented as measured.",
+      "not_measured": [
+        "result",
+        "stop_reason",
+        "duration_ms",
+        "duration_api_ms",
+        "is_error",
+        "terminal_reason"
+      ]
+    }
+  },
+  "_the_trap_this_fixture_records": "In the MEASURED error envelope, subtype is \"success\" while is_error is true. An adapter that gates on subtype alone accepts an API failure as a completed run. Measured, not reasoned about.",
+  "error_envelope_measured": {
+    "duration_api_ms": 0,
+    "stop_reason": "stop_sequence",
+    "session_id": "00000000-0000-4000-8000-000000000000",
+    "total_cost_usd": 0,
+    "usage": {
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 0,
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "modelUsage": {},
+    "permission_denials": [],
+    "terminal_reason": "api_error",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "is_error": true,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "API Error: Connection refused — a firewall or proxy may be blocking it (ConnectionRefused)",
+    "type": "result",
+    "duration_ms": 174267,
+    "uuid": "00000000-0000-4000-8000-000000000000",
+    "queued_turn_count": 0,
+    "result_index": 0
+  },
+  "success_envelope_derived": {
+    "duration_api_ms": 12000,
+    "stop_reason": "end_turn",
+    "session_id": "00000000-0000-4000-8000-000000000000",
+    "total_cost_usd": 0,
+    "usage": {
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 0,
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "modelUsage": {},
+    "permission_denials": [],
+    "terminal_reason": null,
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "{\"new_head\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"summary\": \"synthetic verdict text; no model produced this\"}",
+    "type": "result",
+    "duration_ms": 12345,
+    "uuid": "00000000-0000-4000-8000-000000000000",
+    "queued_turn_count": 0,
+    "result_index": 0
+  },
+  "success_envelope_review_derived": {
+    "duration_api_ms": 12000,
+    "stop_reason": "end_turn",
+    "session_id": "00000000-0000-4000-8000-000000000000",
+    "total_cost_usd": 0,
+    "usage": {
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 0,
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "modelUsage": {},
+    "permission_denials": [],
+    "terminal_reason": null,
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "{\"review\": {\"head\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"reviewer\": \"reviewer-rev-b\", \"decision\": \"APPROVED\", \"evidence\": [\"ran the suite\", \"read the diff\"]}}",
+    "type": "result",
+    "duration_ms": 12345,
+    "uuid": "00000000-0000-4000-8000-000000000000",
+    "queued_turn_count": 0,
+    "result_index": 0
+  }
+}

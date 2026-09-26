@@ -1,0 +1,70 @@
+{
+  "1_full_parent_env": {
+    "_what": "what subprocess(env=None) would have given a runner",
+    "env_var_count": 142,
+    "exit_code": 0,
+    "authenticated": true,
+    "subtype": "success",
+    "total_cost_usd": 0.009145,
+    "cache_read_input_tokens": 40685,
+    "session_id_is_parents": true
+  },
+  "2_build_env_executor": {
+    "_what": "the repository's own allowlist for role 'executor'",
+    "env_keys": [
+      "GITHUB_TOKEN",
+      "HOME",
+      "LC_CTYPE",
+      "PATH",
+      "PYTHONDONTWRITEBYTECODE"
+    ],
+    "has_credential_says": false,
+    "exit_code": 0,
+    "authenticated": true,
+    "subtype": "success",
+    "total_cost_usd": 0.0056252,
+    "cache_read_input_tokens": 27856,
+    "session_id_is_parents": false
+  },
+  "2_build_env_reviewer": {
+    "_what": "the repository's own allowlist for role 'reviewer'",
+    "env_keys": [
+      "HOME",
+      "LC_CTYPE",
+      "PATH",
+      "PYTHONDONTWRITEBYTECODE"
+    ],
+    "has_credential_says": false,
+    "exit_code": 0,
+    "authenticated": true,
+    "subtype": "success",
+    "total_cost_usd": 0.0056252,
+    "cache_read_input_tokens": 27856,
+    "session_id_is_parents": false
+  },
+  "2_build_env_pr_tests": {
+    "_what": "the repository's own allowlist for role 'pr_tests'",
+    "env_keys": [
+      "HOME",
+      "LC_CTYPE",
+      "PATH",
+      "PYTHONDONTWRITEBYTECODE"
+    ],
+    "has_credential_says": false,
+    "exit_code": 0,
+    "authenticated": true,
+    "subtype": "success",
+    "total_cost_usd": 0.0056252,
+    "cache_read_input_tokens": 27856,
+    "session_id_is_parents": false
+  },
+  "3_pr_tests_empty_home": {
+    "_what": "same, with HOME redirected to an empty directory",
+    "exit_code": 0,
+    "authenticated": true,
+    "subtype": "success",
+    "total_cost_usd": 0.0393618,
+    "cache_read_input_tokens": 18639,
+    "session_id_is_parents": false
+  }
+}

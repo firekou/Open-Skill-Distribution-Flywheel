@@ -1,0 +1,5 @@
+$ python3 governance/controller/test_controller.py
+----------------------------------------------------------------------
+Ran 165 tests in 18.266s
+
+OK

@@ -1,0 +1,17 @@
+$ python3 governance/controller/evidence/mutate_package_a.py
+unmutated  ABranchMoveIsNotThisWorkWithoutItsReceipt        exit=0 PASS
+unmutated  IsolationProbesNeedAnUnwrappedBaseline           exit=0 PASS
+unmutated  LeaseLossBeforeLaunchStartsNothing               exit=0 PASS
+unmutated  NoLaunchAfterTheRoundDeadline                    exit=0 PASS
+unmutated  SpendIntentAndDeadlineAreOneFencedWrite          exit=0 PASS
+mutant     GOV-R2-02 token ignored                          exit=1 CAUGHT
+mutant     GOV-R2-02 monitor does not set token             exit=1 CAUGHT
+mutant     GOV-R2-05 no deadline check at launch            exit=1 CAUGHT
+mutant     GOV-R2-03 any branch move confirms (old rule)    exit=1 CAUGHT
+mutant     GOV-R2-03 reported head not receipt-checked      exit=1 CAUGHT
+mutant     P2 probe without baseline (old rule)             exit=1 CAUGHT
+mutant     P2 reservation not fenced                        exit=1 CAUGHT
+mutant     P2 round deadline not fenced                     exit=1 CAUGHT
+
+8 mutants; all caught
+exit=0

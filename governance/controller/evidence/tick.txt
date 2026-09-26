@@ -1,0 +1,12 @@
+$ python3 governance/controller/tick.py --config governance/controller/config.replay.json --task TICKDEMO --event demo-1 --drive
+{"action": "REVIEW_PENDING", "head": "1111111111111111111111111111111111111111"}
+{"action": "FIX_PENDING", "attempt": 1}
+{"action": "REVIEW_PENDING", "head": "2222222222222222222222222222222222222222"}
+{"action": "COMPLETE", "head": "2222222222222222222222222222222222222222"}
+{"task": "TICKDEMO", "status": "COMPLETE", "runs_used": 4.0, "run_budget": 8}
+exit=10
+
+$ ... same --event again (redelivery)
+{"action": "NOOP", "reason": "duplicate"}
+{"task": "TICKDEMO", "status": "COMPLETE", "runs_used": 4.0, "run_budget": 8}
+exit=20

@@ -1,0 +1,140 @@
+{
+  "_README": [
+    "Template for real executor/reviewer runs. Copy it, fill it in OUTSIDE the repository,",
+    "and never commit the copy. Nothing here contains or should contain a secret.",
+    "",
+    "ENTRY POINT: tick.py. It supports mode 'replay' and mode 'live'; controller.py's own",
+    "CLI is a replay-only convenience and is not the activation path. Enabling live",
+    "dispatch is a CONFIG change (the two enabled flags below), not a code change.",
+    "",
+    "Live dispatch stays OFF until every one of these is true:",
+    "  1. runners[*].enabled = true, deliberately, in a copy outside the repository",
+    "  2. the credentials below exist in the environment of whatever runs tick.py",
+    "  3. the stop file path is writable by whoever must be able to stop this",
+    "  4. a persistent caller invokes tick.py (see ACTIVATION.md and CAPABILITIES.md)",
+    "",
+    "run_budget is a count of RUNS. It is not a spending authorisation and proves",
+    "nothing about billing; see the authentication row in CAPABILITIES.md."
+  ],
+  "mode": "live",
+  "controller_identity": "controller-1",
+  "repo_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel",
+  "branch": "claude/atk-headroom-adoption",
+  "prompt_file": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
+  "guard_path": "governance/preflight.py",
+  "state_dir": "/var/lib/atk-controller",
+  "stop_file": "/var/lib/atk-controller/STOP",
+  "authorized_phases": [
+    "execute",
+    "review",
+    "accept_review"
+  ],
+  "max_attempts": 2,
+  "timeout_seconds": 2700,
+  "lease_seconds": 2100,
+  "workspace_root": "/var/tmp/atk-runners",
+  "runners": {
+    "executor": {
+      "enabled": false,
+      "identity_suffix": "exec-a",
+      "command": [
+        "claude",
+        "-p",
+        "--output-format",
+        "json",
+        "--permission-mode",
+        "acceptEdits",
+        "--append-system-prompt",
+        "You are the EXECUTOR. Your full work order is the JSON file at {work_order} — read it first; it is outside the checkout under review and is the authoritative contract. Work at {head}. Every commit you push must end with the trailer line 'ATK-Work-Receipt: <work_receipt from the work order>'; the controller refuses a head whose commits lack it. You have {deadline_seconds} seconds. Emit one JSON object on stdout, per the schema named in the work order."
+      ],
+      "timeout_seconds": 1200,
+      "clone_timeout": 300,
+      "terminate_grace_seconds": 10,
+      "isolation_level": "process_env",
+      "_isolation_note": "process_env is hygiene, not a security boundary — see _credentials_by_role._note. Trusted roles are permitted under it; pr_tests is not."
+    },
+    "reviewer": {
+      "enabled": false,
+      "identity_suffix": "rev-b",
+      "command": [
+        "claude",
+        "-p",
+        "--output-format",
+        "json",
+        "--permission-mode",
+        "plan",
+        "--append-system-prompt",
+        "You are the INDEPENDENT REVIEWER. Your full work order is the JSON file at {work_order} — read it first; it is outside the checkout under review and is the authoritative contract. Work at {head}. You have {deadline_seconds} seconds. Emit one JSON object on stdout, per the schema named in the work order."
+      ],
+      "timeout_seconds": 1200,
+      "clone_timeout": 300,
+      "terminate_grace_seconds": 10,
+      "isolation_level": "process_env"
+    }
+  },
+  "_time_limits_note": [
+    "timeout_seconds at the top level bounds one review ROUND (45 min).",
+    "Each runner's own timeout_seconds bounds one model call (20 min).",
+    "A runner that overruns is killed together with every process it started;",
+    "terminate_grace_seconds is how long SIGTERM is given before SIGKILL.",
+    "Repository test suites, when run, belong under the pr_tests role, which is",
+    "REFUSED until a container backend is measured to deny the network, deny the",
+    "host filesystem and keep the source read-only; budget them at 10 minutes.",
+    "The round limit is enforced by the guard: the controller sends the ROUND's",
+    "elapsed time and an absolute deadline_at, and an overrun round is refused",
+    "at dispatch rather than clamped to one second."
+  ],
+  "_credentials_by_role": {
+    "executor": [
+      "ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN - the model call",
+      "GITHUB_TOKEN - push to the work branch only"
+    ],
+    "reviewer": [
+      "ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN - the model call",
+      "NO write token: the reviewer produces evidence, and evidence does not need push rights"
+    ],
+    "pr_tests": [
+      "MEASURED FALSE, 2026-09-21: this role authenticated a real, billed model call",
+      "under the allowlist below, with no credential in its environment and HOME",
+      "pointed at an empty directory. See evidence/auth_isolation_probe.json.",
+      "Environment filtering is NOT the boundary here. The code now refuses this",
+      "role unless isolation_level='container' is declared by an operator who built one."
+    ],
+    "_note": [
+      "This allowlist controls what is PASSED. It was measured not to control what is",
+      "REACHABLE: on at least one host the model CLI authenticated with four",
+      "variables and no credential among them. Treat the allowlist as hygiene, and",
+      "treat isolation_level as the thing that must be true before untrusted code runs.",
+      "It is not configurable from a pull request on purpose: a boundary a PR could",
+      "edit would not be a boundary."
+    ]
+  },
+  "run_budget": 8,
+  "run_budget_note": "Unit is RUNS, not currency. One runner invocation costs 1. A run cap bounds how many times a model is called. MEASURED 2026-09-21: the CLI reports total_cost_usd per call (0.0056-0.0425 observed), so 'the subscription has no per-call price' is false as stated. A run cap bounds the number of calls, not the size of any one of them; record total_cost_usd per run rather than inferring it.",
+  "_lease_note": [
+    "MUST exceed clone_timeout + timeout_seconds of the slowest runner (300+1200=1500).",
+    "It was 900 while a runner could hold the task for 1500s, so a long job outlived",
+    "its own lease. The controller also renews it every lease/3 while a runner runs,",
+    "and refuses to record a result it no longer holds the lease for."
+  ],
+  "policy_repo": "/path/to/trusted/checkout/of/main",
+  "policy_sha": "REQUIRED-IN-LIVE-MODE: full 40-hex SHA of the trusted policy checkout",
+  "_policy_note": [
+    "tick.py in live mode verifies that policy_repo is at exactly policy_sha, that",
+    "guard_path resolves inside it, and that the guard file is neither modified nor",
+    "untracked -- ALL of it BEFORE the first import, because importing the guard",
+    "executes it. Recording a field is not pinning a version; the previous build left",
+    "Controller.policy_sha at 'unrecorded' and nothing checked it, and the build after",
+    "that imported the guard on tick.build()'s first line and validated afterwards."
+  ],
+  "_command_note": [
+    "Placeholders are substituted by name: prompt_file, head, work_order, deadline_seconds.",
+    "deadline_seconds goes into the PROMPT. What actually stops the process is",
+    "deadline_at, an absolute instant the controller puts on the work order and the",
+    "runner re-reads before the clone, before the checkout and when it waits.",
+    "Every other brace is left alone. The previous build ran str.format over each element,",
+    "so a prompt describing JSON ({\"new_head\": ...}) raised KeyError: '\"new_head\"' and the",
+    "shipped template could never launch. A prompt that describes JSON is data, not a",
+    "format string."
+  ]
+}
