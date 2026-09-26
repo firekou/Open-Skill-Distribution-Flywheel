@@ -710,3 +710,100 @@ $ python3 governance/controller/evidence/probe_isolation_effect.py
 `test_run_really_launches_the_command_inside_the_backend`（把「隔離包裝有沒有到 `Popen`」
 從讀原始碼改成 runtime 實測）。讓證據對應**最終**的程式，比守住時限重要，所以我選擇重跑。
 超時的事實與理由寫在這裡，不修飾。
+
+---
+
+## 13. 包 A：PR6 R4 的三項 P1 與兩項 P2（負責人授權的第三輪限定修復，2026-09-26）
+
+### 13.0 接單欄位
+
+| 欄位 | 值 |
+|---|---|
+| 授權 | [負責人決定紀錄](https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/main/reviews/OWNER_DECISION_2026-09-26_PR6_PACKAGE_A.md)（main `a9d8224f`）：「授權包 A」，範圍限下列五項，沿用本分支，不建新 controller |
+| work_id / round | `GOV-PR6-R2`，包 A，**第 3 輪**。負責人明示授權，不是改名規避上限 |
+| dedup_key | `firekou/Open-Skill-Distribution-Flywheel:6:GOV-PR6-R2:3:25457fbd2ff02a900d55538eb4e2fa0893663c31:package-a` |
+| 送審前的程式 head | `25457fbd2ff02a900d55538eb4e2fa0893663c31`（R4 審的版本）；分支 head `7de3043938b4179f5011f82927aaeecc5b82cbd1`，只多一份文件 |
+| 可信政策 SHA | `38ee2303fd4c702af6d583a00dd9ed6f871ce54f`（未改） |
+| session | `session_01RFeCsTYkVywjHvXk7od7Ab` |
+| 不在範圍 | `GOV-R1-03`（包 B，隔離後端），見 13.4 |
+
+### 13.1 觸發本輪的指示，以及我為什麼沒有照字面執行
+
+負責人 2026-09-26 重新下達原始的治理導入指示，要求「使用獨立治理工作分支，建立 Draft PR」。
+依指示先讀最新入口，發現它和 state.json rev 55 衝突：`GOV-BOOTSTRAP` 為 BLOCKED、兩輪修復已用完、`no_parallel_controller: true`。
+照字面另開分支會建立第二份 controller，而且會重做已經 REPLAY_VERIFIED 的東西。所以我先問負責人，得到「授權包 A」。
+
+驗證治理基礎時發現三處矛盾。**這些都是可信 main 的文件，executor 不改，只列給 Planner：**
+
+1. **main 的 `CLAUDE.md`** 目前寫明第 3 節藍圖的「單一事實來源」是另一個 repo 的 `BUSINESS_BREAKTHROUGH_PRIORITIES` 五條業務主線，包括 DeFi 與成人直播等。這與本 repo 的 `REPORT_FORMAT.md`（GOAL-02 六階段）和 `AGENTS.md` 衝突。
+   - PR21 R2 已核准修正，但尚未合併。
+   - 建議：負責人合併 PR21，或由 Planner 在 main 上改回。
+2. **`governance/IMPLEMENTATION_PROMPT.md`** 的「現行接續工作」停在 2026-09-21 R2（`86421c90`），state.json 已經是 R4＋R5 拆包。
+   - 建議：Planner 在該節頂端加註「現行以 state.json `GOV-BOOTSTRAP.scope_reduction` 與 OWNER_DECISION_2026-09-26_PR6_PACKAGE_A 為準」。
+3. **`check_report_format.py --pointers`** 在 main 上不存在（它是 PR21 加的），main 版執行會拋 FileNotFoundError。PR21 合併後就會消失。
+
+main 的 `governance/test_preflight.py` 共 5 個測試，全部通過（Python 3.11.15）。
+
+### 13.2 五項修正
+
+| Finding | 缺陷（R4 原文要點） | 修正 | 守住它的測試 |
+|---|---|---|---|
+| **GOV-R2-02** P1 | clone／checkout／寫 work order 期間失去租約時，`cancel_current` 回 `nothing_running`，之後 runner 仍會 Popen | `Runner.bind_cancellation(token)`：controller 每次 run 建立一個單調的 `threading.Event`。租約 monitor 失敗時**先** `token.set()`，再試著殺 child。<br>runner 在 dispatch、clone、checkout、work order、launch 前都檢查 token。Popen 後再檢查一次，補上「檢查後、指派 `_current` 前」的空窗，這時會殺掉剛啟動的 child。<br>`cancel_current()` 沒有 child 時也會設 token | `LeaseLossBeforeLaunchStartsNothing`（4 個） |
+| **GOV-R2-03** P1 | 任何分支移動都被當成 `effect_confirmed` | executor 每個 commit 必須帶 `ATK-Work-Receipt: <task>/<intent_id>` trailer。intent 在 dispatch **之前**持久記錄，receipt 經 work order 傳給 runner。<br>`_observe_effect`：分支沒動 → refuted；`base..live` 每個 commit 都帶本 intent 的 receipt → confirmed；其他情況（沒帶、混入他人 commit、查不到）→ **effect_unknown**，暫停而不前進。<br>runner 回報的新 head 也要通過同一檢查。live 驗證用真 git：`commits_carry_receipt` | `ABranchMoveIsNotThisWorkWithoutItsReceipt`（5 個，其中 1 個用本機真 git 歷史） |
+| **GOV-R2-05** P1 | 準備階段耗盡期限後，仍會啟動 child 再 timeout | Popen **正前方**做 fail-closed 檢查：剩餘時間 ≤ 0，或小於 1 秒（`MIN_LAUNCH_SECONDS`），就拒絕啟動。`limit` 改用浮點剩餘秒數 | `NoLaunchAfterTheRoundDeadline`（3 個，含「時間夠就會啟動」的正控制） |
+| **P2** 隔離探測缺少對照組 | `_denies` 只跑包裝後的命令 | 先跑未包裝的 baseline：baseline 失敗 → `None`（此主機無法證明）；baseline 成功、包裝後失敗 → `True`；兩者都成功 → `False`。<br>角色需求只認 `True`；`None` 視為缺 | `IsolationProbesNeedAnUnwrappedBaseline`（4 個） |
+| **P2** 非原子寫入 | `add_spend` 與 `record_intent` 分成兩個 commit 且沒有 fence；`round_deadline` 的 `set_task` 沒有 fence | `Store.reserve_run_and_record_intent`：**一個** compare-and-swap，裡面同時驗租約、扣 run、記 intent。<br>`round_deadline` 只在持有租約的 step 內以 owner＋generation fence 寫入；step 外只計算、不持久化 | `SpendIntentAndDeadlineAreOneFencedWrite`（3 個） |
+
+`config.live.example.json` 的 executor 提示已加上 receipt trailer 要求（runner 仍預設停用）。
+
+### 13.3 命令與結果（本 container，Python 3.11.15，無網路呼叫模型）
+
+```
+$ python3 governance/controller/test_controller.py
+Ran 165 tests ... OK                                   # 原 146 + 新 19
+
+$ python3 governance/controller/evidence/mutate_package_a.py
+unmutated  5 個新測試類                                 exit=0 PASS
+mutant     GOV-R2-02 token ignored                     CAUGHT
+mutant     GOV-R2-02 monitor does not set token        CAUGHT
+mutant     GOV-R2-05 no deadline check at launch       CAUGHT
+mutant     GOV-R2-03 any branch move confirms (old)    CAUGHT
+mutant     GOV-R2-03 reported head not receipt-checked CAUGHT
+mutant     P2 probe without baseline (old rule)        CAUGHT
+mutant     P2 reservation not fenced                   CAUGHT
+mutant     P2 round deadline not fenced                CAUGHT
+8 mutants; all caught
+
+$ python3 governance/controller/evidence/mutate_g123.py   # 原有的 51 個變異
+50/51 mutants caught, 1 HUNG（與 R4 相同：「失敗的 commit 不放鎖」造成死鎖，屬設計內，不計入 caught）
+
+$ python3 governance/controller/replay.py      -> COMPLETE / REPLAY_VERIFIED
+$ python3 governance/controller/tick.py … --drive       -> exit 10；同一 --event 重送 -> exit 20
+```
+
+舊 harness 的兩處調整（屬 harness 本身，沒有放寬任何檢查）：
+- `mutate_g123.py` 原本把原始碼路徑寫死為 `/home/user/Open-Skill-Distribution-Flywheel/governance/controller`。這台機器上該路徑是別的分支，baseline 因此 import 失敗。已改為從檔案自身位置解析。
+- 兩個變異的錨點指向本輪改寫過的程式碼，第一次執行時顯示「NOT APPLIED — anchor missing」（48/51）：
+  - 「a failed run costs nothing again」：改錨到 `reserve_run_and_record_intent` 的扣量參數，1 → 0；
+  - 「runner waits for its own timeout」：改錨到新的 `limit` 那一行。
+  兩者改錨後都被抓到。
+
+證據檔：
+- `evidence/tests.txt`
+- `evidence/mutation_package_a.txt`
+- `evidence/mutation_g123.txt`：本輪重跑，50/51、1 HUNG
+- `evidence/replay.txt`：本輪重新產生，其中 guard 路徑的本機前綴已正規化為 `<repo>`
+- `evidence/tick.txt`：重跑結果與前版逐字相同
+
+**原有要求的七種情境**（重複事件、過期 SHA、自審、程序重啟、超時、預算、停止開關）仍由原測試類覆蓋，本輪全數通過：`DuplicateAndConcurrency`、`HeadAndIdentity`、`CrashAndRestart`、`RealCrossProcessConcurrency`、`LimitsAndStop`、`RunsAndTheRoundDeadlineAreNotResetByFailure`、`CancelIsFourDifferentThings`、`RecoveryReadsTheIntentLedger`。
+
+### 13.4 仍未做到（不是待辦清單，是量出來的狀態）
+
+- **GOV-R1-03（包 B）仍 OPEN。** 本機只有 `unshare`（只擋網路）；docker CLI 在，但 daemon 沒有啟動。executor／reviewer 讀未信任內容卻帶認證，這個邊界仍未建立。在那之前，三個角色都不得進入真實閉環。
+- **receipt 依賴 executor 配合寫 trailer。** 真實 CLI 是否會照提示寫，**UNKNOWN**（沒有呼叫模型）。不照做的後果是 fail-closed：head 會被拒，不會被誤收。
+- `commits_carry_receipt` 只 fetch 最近 50 個 commit。base 若更舊，會判為 `False`／`None`，變成暫停而不是誤判。
+- **沒有持久 launcher、沒有真實 executor／reviewer run、沒有 session 外往返。** `automation.status` 維持 `FOUNDATION_ONLY`；本輪最高只到 **REPLAY_VERIFIED**。
+- 真實啟動的設定範本與停用方式沿用 `ACTIVATION.md` 與 `config.live.example.json`（兩個 runner 都是 `enabled: false`），本輪只加了 receipt 提示。
+
+`findings_closed_by_executor: []`：是否關閉由獨立 reviewer 在新的精確 SHA 上判定。
+沒有 merge、部署、觸發器、webhook、模型呼叫或費用，也沒有修改 secrets 或可信政策。

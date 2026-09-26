@@ -7,8 +7,11 @@ suite must catch every one.
 """
 import contextlib, os, pathlib, shutil, signal, subprocess, sys, tempfile
 
-SRC = pathlib.Path("/home/user/Open-Skill-Distribution-Flywheel/governance/controller")
-GOV = pathlib.Path("/home/user/Open-Skill-Distribution-Flywheel/governance")
+# Resolved from this file, not hard-coded: the previous absolute path made the
+# harness mutate whatever checkout happened to live there (found 2026-09-26,
+# when that path held a different branch and the baseline failed to import).
+SRC = pathlib.Path(__file__).resolve().parent.parent
+GOV = SRC.parent
 
 MUTANTS = [
     ("runner inherits the whole parent env", "runners.py",
@@ -114,8 +117,11 @@ MUTANTS = [
      "                _resolve_intent(s, task_id, close_intent_id, close_outcome)",
      "                pass"),
     ("a failed run costs nothing again (R2-05)", "controller.py",
-     "        self.store.add_spend(1)\n        # R2-03: a durable record",
-     "        # moved back after success\n        # R2-03: a durable record"),
+     # Re-anchored 2026-09-26: the reservation is now one fenced call
+     # (package A, P2). Reserving 0 is the same defect: a run that starts and
+     # fails costs the budget nothing.
+     '                task_id, "execute", 1, require_owner=self.owner,',
+     '                task_id, "execute", 0, require_owner=self.owner,'),
     ("the round clock restarts every step (R2-05)", "controller.py",
      "        deadline = task.get(\"round_deadline\")",
      "        deadline = None"),
@@ -134,8 +140,9 @@ MUTANTS = [
      '            "deadline_at": self._round_deadline_at(task_id),',
      '            "deadline_at_unused": self._round_deadline_at(task_id),'),
     ("R3-2 the runner waits for its own timeout, not the round's", "runners.py",
-     '        limit = min(self._config.get("timeout_seconds", 1200),\n                    int(self._remaining(order)))',
-     '        limit = self._config.get("timeout_seconds", 1200)'),
+     # Re-anchored 2026-09-26 (package A, GOV-R2-05): same defect, new line.
+     '        limit = min(float(self._config.get("timeout_seconds", 1200)), left)',
+     '        limit = float(self._config.get("timeout_seconds", 1200))'),
     ("R3-3 recovery goes straight back to dispatch", "controller.py",
      "            recovered = self._reconcile(task_id, generation, event_id)",
      "            recovered = None"),

@@ -41,7 +41,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from controller import (Controller, load_guard,   # noqa: E402
-                        scripted_commit_verifier)
+                        scripted_commit_verifier, scripted_receipt_verifier)
 from store import Store                         # noqa: E402
 
 EXIT = {
@@ -115,6 +115,8 @@ def build(config: dict, store: Store):
         return Controller(config, store, guard, executor, reviewer,
                           head_resolver=replay_head,
                           commit_verifier=scripted_commit_verifier(
+                              config["replay"]["executor_heads"]),
+                          receipt_verifier=scripted_receipt_verifier(
                               config["replay"]["executor_heads"]))
     elif mode == "live":
         from runners import SubprocessRunner

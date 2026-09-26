@@ -23,6 +23,23 @@ Evidence ladder, as used throughout this repository:
 > was measured instead. The pattern in all three: a statement about the *environment* was
 > recorded as a statement about *capability*. Script: `evidence/probe_auth_isolation.py`.
 
+> **2026-09-26 — re-measured for package A (third bounded round).** Nothing below was
+> promoted. What was looked at, read-only, and what it showed:
+>
+> - **#3 persistent launcher:** the account's Routine list (read-only) still shows only cron and
+>   one-shot Routines. There is still no PR-event trigger. The hourly Routine that wakes *this*
+>   session (`persist_session: true`) is a watcher: it re-reads `main`; it does not dispatch.
+>   A `persist_session: false` Routine in the same account last succeeded on 2026-09-21, so the
+>   fresh-session capability recorded above still holds. Nothing new was built for this repository.
+> - **#5 model authentication:** `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN` and
+>   `OPENAI_API_KEY` are NOT_SET in this container (presence checked, values never read).
+>   The `claude` CLI binary is present. No model was called to find out whether it would authenticate.
+> - **Isolation (GOV-R1-03, package B):** `unshare --user --net` still works. The `docker` CLI is
+>   now present, but its daemon is not running (`Cannot connect to the Docker daemon`). So docker
+>   is **not** a usable backend here, and package B's precondition is still unmet.
+> - **#7 GitHub:** `GH_TOKEN`/`GITHUB_TOKEN` are SET for this session's git proxy. That is this
+>   session's own write path; it is not a runner credential and was not handed to any runner.
+
 ---
 
 ## The nine capabilities

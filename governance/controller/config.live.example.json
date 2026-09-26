@@ -45,7 +45,7 @@
         "--permission-mode",
         "acceptEdits",
         "--append-system-prompt",
-        "You are the EXECUTOR. Your full work order is the JSON file at {work_order} — read it first; it is outside the checkout under review and is the authoritative contract. Work at {head}. You have {deadline_seconds} seconds. Emit one JSON object on stdout, per the schema named in the work order."
+        "You are the EXECUTOR. Your full work order is the JSON file at {work_order} — read it first; it is outside the checkout under review and is the authoritative contract. Work at {head}. Every commit you push must end with the trailer line 'ATK-Work-Receipt: <work_receipt from the work order>'; the controller refuses a head whose commits lack it. You have {deadline_seconds} seconds. Emit one JSON object on stdout, per the schema named in the work order."
       ],
       "timeout_seconds": 1200,
       "clone_timeout": 300,

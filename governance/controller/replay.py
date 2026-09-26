@@ -25,7 +25,7 @@ REPO = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 
 from controller import (Controller, load_guard,   # noqa: E402
-                        scripted_commit_verifier)
+                        scripted_commit_verifier, scripted_receipt_verifier)
 from runners import FakeExecutor, FakeReviewer  # noqa: E402
 from store import Store                         # noqa: E402
 
@@ -51,6 +51,9 @@ def main() -> int:
                      FakeReviewer(config["replay"]["reviewer_decisions"]),
                      head_resolver=head_of,
                      commit_verifier=scripted_commit_verifier(
+                         config["replay"]["executor_heads"]),
+                     # GOV-R2-03: the fixture's executor pushes WITH the receipt
+                     receipt_verifier=scripted_receipt_verifier(
                          config["replay"]["executor_heads"]))
     store.set_task("GOVDEMO", status="READY", last_head=start)
 

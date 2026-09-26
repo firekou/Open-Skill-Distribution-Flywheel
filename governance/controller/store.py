@@ -249,6 +249,34 @@ class Store:
         self.log(kind="intent", task=task_id, action=action, intent_id=intent_id, **detail)
         return intent_id
 
+    def reserve_run_and_record_intent(self, task_id: str, action: str, amount: float,
+                                      require_owner: str | None = None,
+                                      require_generation: int | None = None,
+                                      **detail) -> str:
+        """Reserve the run AND record the intent in ONE fenced compare-and-swap.
+
+        P2 (R4): these were two commits — `add_spend`, then `record_intent` —
+        neither fenced. A crash between them spent budget with no intent to
+        reconcile, and a redelivery spent it again; a worker that had already
+        lost its lease could still do both. One commit, checked against the
+        lease inside it, removes the window instead of shrinking it.
+        """
+        intent_id = uuid.uuid4().hex[:12]
+        state = self.read()
+
+        def mutate(s):
+            if require_owner is not None:
+                self._require_lease(s, task_id, require_owner, require_generation)
+            s["spend"] = round(s["spend"] + amount, 6)
+            s["tasks"].setdefault(task_id, {}).setdefault("open_intents", []).append(
+                {"intent_id": intent_id, "action": action, "at": self._clock(), **detail}
+            )
+
+        self.commit(state["revision"], mutate)
+        self.log(kind="intent", task=task_id, action=action, intent_id=intent_id,
+                 reserved=amount, **detail)
+        return intent_id
+
     def close_intent(self, task_id: str, intent_id: str, outcome: str, **detail) -> dict:
         state = self.read()
         _check_outcome(outcome)

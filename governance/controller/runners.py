@@ -91,6 +91,11 @@ class IsolationUnavailable(RunnerError):
     """
 
 
+class RunnerCancelled(RunnerError):
+    """The run was cancelled — by lease loss or by the operator — and nothing
+    further was started. Raised at a phase boundary, never after the fact."""
+
+
 class AuthUnavailable(RunnerError):
     """No usable credential. The controller maps this to BLOCKED_ACCESS.
 
@@ -217,15 +222,39 @@ ROLE_ISOLATION_REQUIREMENTS = {
 _PROBE_ENV = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": "/tmp"}
 
 
-def _denies(backend, cmd, cwd=None, timeout=45.0) -> bool:
-    """True when the wrap makes this command fail that would otherwise pass."""
+def _run_probe(argv, cwd, timeout):
     try:
-        r = subprocess.run(isolate_command(backend, cmd), capture_output=True,
-                           timeout=timeout, env=_PROBE_ENV, cwd=cwd,
-                           stdin=subprocess.DEVNULL)
-        return r.returncode != 0
-    except (OSError, subprocess.TimeoutExpired, IsolationUnavailable):
-        return False
+        r = subprocess.run(argv, capture_output=True, timeout=timeout,
+                           env=_PROBE_ENV, cwd=cwd, stdin=subprocess.DEVNULL)
+        return r.returncode
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
+def _denies(backend, cmd, cwd=None, timeout=45.0):
+    """True when the wrap makes this command fail that would otherwise pass.
+
+    P2 (R4): the docstring always said "would otherwise pass", and the code
+    only ran the wrapped command. On a host with no outbound network, or with
+    a probe precondition missing, every wrapped probe fails and was recorded
+    as a property the backend provides. The unwrapped baseline runs first:
+
+      * baseline fails            -> None: this host cannot show the property
+      * baseline ok, wrapped fails -> True: the boundary denied it
+      * both succeed              -> False: the boundary did not deny it
+
+    None is never treated as the property being present.
+    """
+    if _run_probe(list(cmd), cwd, timeout) != 0:
+        return None
+    try:
+        wrapped = isolate_command(backend, cmd)
+    except IsolationUnavailable:
+        return None
+    rc = _run_probe(wrapped, cwd, timeout)
+    if rc is None:
+        return None
+    return rc != 0
 
 
 def measure_backend_properties(backend: str) -> dict:
@@ -242,6 +271,8 @@ def measure_backend_properties(backend: str) -> dict:
                 "import socket,sys;s=socket.socket();s.settimeout(5);"
                 "sys.exit(0 if s.connect_ex(('1.1.1.1',443))==0 else 1)"]),
             "host_fs_denied": _denies(backend, ["cat", str(host)]),
+            # The baseline also appends to this scratch file; only exit codes
+            # are compared, so the extra line does not affect the result.
             "source_readonly": _denies(backend, ["sh", "-c", f"echo x >> {src}"]),
         }
 
@@ -275,6 +306,22 @@ class Runner:
 
     def run(self, order: dict) -> dict:
         raise NotImplementedError
+
+    def bind_cancellation(self, token) -> None:
+        """Hand the runner the controller's cancellation token for ONE run.
+
+        GOV-R2-02, third round: cancelling used to mean "kill the child, if
+        there is one". During clone, checkout and work-order writing there is
+        no child yet, so a lease lost then was a cancel with nothing to act on,
+        and the runner went on to launch a credentialed process anyway. The
+        token is monotonic — once set it stays set for this run — and the
+        runner checks it before every step that can cause a side effect.
+        """
+        self._cancel_token = token
+
+    def cancellation_requested(self) -> bool:
+        token = getattr(self, "_cancel_token", None)
+        return token is not None and token.is_set()
 
 
 # --------------------------------------------------------------------------
@@ -484,6 +531,12 @@ class SubprocessRunner(Runner):
         executing. This does, and it does not undo anything the child already
         pushed — that needs a revert, which is a separate authorised action.
         """
+        # Set the token FIRST: a child that is not running yet must not start
+        # later. Before this, "nothing_running" was the whole of the answer and
+        # the run went on to Popen after the cancel had been "handled".
+        token = getattr(self, "_cancel_token", None)
+        if token is not None:
+            token.set()
         proc = self._current
         if proc is None:
             return "nothing_running"
@@ -550,7 +603,8 @@ class SubprocessRunner(Runner):
                     f"declaration. Checked: {', '.join(n for n, _ in CONTAINER_BACKENDS)}.")
             self._isolation_properties = measure_backend_properties(self._container_backend)
             need = ROLE_ISOLATION_REQUIREMENTS.get(self.role, ())
-            short = [k for k in need if not self._isolation_properties.get(k)]
+            # `is not True`: an unmeasurable property (None) is a missing one.
+            short = [k for k in need if self._isolation_properties.get(k) is not True]
             if short:
                 raise IsolationUnavailable(
                     f"backend {self._container_backend!r} runs, but role "
@@ -570,7 +624,8 @@ class SubprocessRunner(Runner):
     WORK_ORDER_FIELDS = ("task_id", "goal", "scope_paths", "acceptance", "decision_ids",
                          "repo_url", "branch", "head", "policy_sha", "phase", "run_id",
                          "run_identity", "executor_identity", "command_allowlist",
-                         "deadline", "deadline_seconds", "event_id", "attempt", "review")
+                         "deadline", "deadline_seconds", "event_id", "attempt", "review",
+                         "work_receipt")
 
     def _remaining(self, order: dict) -> float:
         """Seconds left on the ROUND, recomputed every time it is asked.
@@ -591,6 +646,15 @@ class SubprocessRunner(Runner):
                 f"{self.kind}: the round deadline passed before {phase}; "
                 "refusing to start work that cannot finish inside it")
         return left
+
+    def _require_not_cancelled(self, phase: str) -> None:
+        if self.cancellation_requested():
+            raise RunnerCancelled(
+                f"{self.kind}: cancelled before {phase}; nothing further was started")
+
+    # Launching a child with less than this left is launching one that the
+    # timeout path will kill immediately — a side effect with no possible use.
+    MIN_LAUNCH_SECONDS = 1.0
 
     def _container_backend_works(self) -> bool:
         self._container_backend = working_container_backend()
@@ -639,10 +703,12 @@ class SubprocessRunner(Runner):
             shutil.rmtree(path)
         path.mkdir(parents=True)
         repo = path / "repo"
+        self._require_not_cancelled("the clone")
         left = self._require_time(order, "the clone")
         subprocess.run(["git", "clone", "--quiet", order["repo_url"], str(repo)],
                        check=True, env=env,
                        timeout=min(self._config.get("clone_timeout", 300), left))
+        self._require_not_cancelled("the checkout")
         left = self._require_time(order, "the checkout")
         subprocess.run(["git", "checkout", "--quiet", order["head"]],
                        cwd=repo, check=True, env=env, timeout=min(60, left))
@@ -650,9 +716,11 @@ class SubprocessRunner(Runner):
 
     def run(self, order: dict) -> dict:
         env = self.environment()
+        self._require_not_cancelled("dispatch")
         self._require_time(order, "dispatch")
         self._require_auth()
         repo = self._workspace(order, env)
+        self._require_not_cancelled("the work order")
         work_order_path = self._write_work_order(order, repo)
         cmd = render_command(self._config["command"], {
             "prompt_file": order["prompt_file"],
@@ -666,8 +734,19 @@ class SubprocessRunner(Runner):
         # then waited for the role's own full timeout, so the round limit
         # bounded nothing — the submission's claim that the runner "takes the
         # smaller value" did not match the code.
-        limit = min(self._config.get("timeout_seconds", 1200),
-                    int(self._remaining(order)))
+        #
+        # GOV-R2-05, third round: `limit` was computed here and the child was
+        # launched unconditionally, so a round whose deadline expired during
+        # the clone or checkout still started a credentialed process and only
+        # then killed it. The check is now fail-closed and sits immediately
+        # before the launch, and so does the cancellation check.
+        self._require_not_cancelled("the launch")
+        left = self._require_time(order, "the launch")
+        if left < self.MIN_LAUNCH_SECONDS:
+            raise RunnerError(
+                f"{self.kind}: {left:.2f}s left on the round at launch; refusing to "
+                "start a process that could not finish inside it")
+        limit = min(float(self._config.get("timeout_seconds", 1200)), left)
         grace = self._config.get("terminate_grace_seconds", 10)
         # start_new_session puts the runner in its own process group, which is
         # the only way to reach the processes IT starts. Without it a timeout
@@ -677,6 +756,16 @@ class SubprocessRunner(Runner):
             launched, cwd=repo, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, env=env, start_new_session=True)
         self._current = proc
+        # A cancel that arrived between the check above and this assignment
+        # found no child to kill; this closes that window from the other side.
+        if self.cancellation_requested():
+            outcome = terminate_process_group(proc, grace)
+            self._current = None
+            for stream in (proc.stdout, proc.stderr, proc.stdin):
+                if stream is not None and not stream.closed:
+                    with contextlib.suppress(OSError):
+                        stream.close()
+            raise RunnerCancelled(f"{self.kind}: cancelled at launch; process group {outcome}")
         try:
             stdout, _stderr = proc.communicate(timeout=limit)
         except subprocess.TimeoutExpired:

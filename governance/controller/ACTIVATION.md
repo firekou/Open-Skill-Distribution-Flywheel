@@ -108,7 +108,12 @@ authenticated runner that nothing ever invokes still does nothing.
    importing it executes it. A pin that does not cover the file it names is
    decoration.
 3. Run **one** task with `max_attempts: 1` and keep the run IDs, SHAs and
-   timings. That earns `MANUAL_RUN_VERIFIED`.
+   timings. That earns `MANUAL_RUN_VERIFIED`. The executor must end every
+   commit it pushes with `ATK-Work-Receipt: <work_receipt>` from its work order
+   (GOV-R2-03): the controller refuses any head whose commits lack this
+   intent's receipt, and records an unreceipted branch move as
+   `effect_unknown`. Whether the real CLI follows that instruction is
+   **UNKNOWN** until this step is run; if it does not, the run fails closed.
 4. Point a launcher that outlives this session at `tick.py`, passing its own
    event id each time, and keep the event IDs, run IDs, SHAs and timings. Only
    when that survives a restart of the launcher's host is the system `ACTIVE`,

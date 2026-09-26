@@ -118,6 +118,71 @@ def commit_is_on_branch(repo_url: str, branch: str, sha: str, workdir: pathlib.P
     return reachable.returncode == 0
 
 
+RECEIPT_TRAILER = "ATK-Work-Receipt"
+
+
+def work_receipt(task_id: str, intent_id: str) -> str:
+    """The marker an executor must put in every commit it pushes for ONE intent.
+
+    GOV-R2-03, third round: "the branch moved" is not "our push landed". A
+    collaborator, a human or another job can move the same branch. The receipt
+    is derived from the intent that was durably recorded BEFORE dispatch, so a
+    commit carrying it can only have been made by a runner that was handed that
+    work order.
+    """
+    return f"{task_id}/{intent_id}"
+
+
+def commits_carry_receipt(repo_url: str, branch: str, base: str, live: str,
+                          receipt: str, workdir: pathlib.Path):
+    """True only if `base..live` is non-empty, `base` is an ancestor of `live`,
+    and EVERY commit in that range carries `ATK-Work-Receipt: <receipt>`.
+
+    False when the range was provably not (only) ours; None when it cannot be
+    determined (fetch failed, commit missing, history too shallow). The caller
+    treats anything but True as not confirmed.
+    """
+    workdir = pathlib.Path(workdir)
+    workdir.mkdir(parents=True, exist_ok=True)
+    if not (workdir / ".git").exists():
+        subprocess.run(["git", "init", "--quiet", "--", "."], cwd=workdir, check=True,
+                       timeout=60)
+    try:
+        subprocess.run(["git", "fetch", "--quiet", "--depth", "50", repo_url,
+                        f"refs/heads/{branch}"],
+                       cwd=workdir, check=True, timeout=180, capture_output=True)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
+        return None
+    for sha in (base, live):
+        if subprocess.run(["git", "cat-file", "-e", f"{sha}^{{commit}}"], cwd=workdir,
+                          capture_output=True, timeout=30).returncode != 0:
+            return None
+    if subprocess.run(["git", "merge-base", "--is-ancestor", base, live], cwd=workdir,
+                      capture_output=True, timeout=60).returncode != 0:
+        return False
+    log = subprocess.run(["git", "log", "--format=%H%x00%B%x1e", f"{base}..{live}"],
+                         cwd=workdir, capture_output=True, text=True, timeout=60)
+    if log.returncode != 0:
+        return None
+    bodies = [c for c in log.stdout.split("\x1e") if c.strip()]
+    if not bodies:
+        return False
+    line = f"{RECEIPT_TRAILER}: {receipt}"
+    return all(line in body.splitlines() for body in
+               (b.split("\x00", 1)[1] if "\x00" in b else b for b in bodies))
+
+
+def scripted_receipt_verifier(receipted_heads):
+    """Replay stand-in for `commits_carry_receipt`: the fixture says which heads
+    were pushed WITH a receipt. Anything else is not confirmed."""
+    allowed = frozenset(receipted_heads)
+
+    def verify(_repo, _branch, _base, live, _receipt):
+        return live in allowed
+
+    return verify
+
+
 def scripted_commit_verifier(allowed_heads):
     """The commit verifier for replay, where there is no remote to ask.
 
@@ -142,7 +207,7 @@ def scripted_commit_verifier(allowed_heads):
 class Controller:
     def __init__(self, config: dict, store: Store, guard, executor, reviewer,
                  clock=time.time, head_resolver=live_head, commit_verifier=None,
-                 policy_sha_value=None):
+                 policy_sha_value=None, receipt_verifier=None):
         self.config = config
         self.store = store
         self.guard = guard
@@ -156,6 +221,12 @@ class Controller:
             lambda repo, branch, sha: commit_is_on_branch(
                 repo, branch, sha, pathlib.Path(config["state_dir"]) / "verify"))
         self.policy_sha = policy_sha_value or config.get("policy_sha") or "unrecorded"
+        # GOV-R2-03: attribution of a branch move to THIS work, not just the move.
+        self._receipt_is_on = receipt_verifier or (
+            lambda repo, branch, base, live, receipt: commits_carry_receipt(
+                repo, branch, base, live, receipt,
+                pathlib.Path(config["state_dir"]) / "verify-receipt"))
+        self._generation = None
         # R2-02: one identity per INVOCATION, not per config. A static
         # controller_identity meant Store.acquire — which only refuses a live
         # lease held by a DIFFERENT owner — let a second tick started from the
@@ -281,7 +352,7 @@ class Controller:
         return verdict
 
     @contextlib.contextmanager
-    def _lease_kept_alive(self, task_id: str, ttl: float, on_lost=None):
+    def _lease_kept_alive(self, task_id: str, ttl: float, on_lost=None, token=None):
         """Renew the lease for as long as the runner is running.
 
         `renew` was written, tested and never called. Meanwhile the shipped
@@ -307,6 +378,11 @@ class Controller:
                     self.store.renew(task_id, self.owner, ttl)
                 except Exception as exc:          # lost it, or the store is gone
                     failures.append(exc)
+                    # GOV-R2-02, third round: set the token BEFORE trying to
+                    # kill anything. If the runner is still cloning there is no
+                    # child yet; the token is what stops it from starting one.
+                    if token is not None:
+                        token.set()
                     if on_lost is not None:
                         cancel = getattr(on_lost, "cancel_current", None)
                         try:
@@ -337,7 +413,12 @@ class Controller:
         ttl = self.config["lease_seconds"]
         failure = None
         result = None
-        with self._lease_kept_alive(task_id, ttl, on_lost=runner) as renew_failures:
+        token = threading.Event()               # one per run, monotonic
+        bind = getattr(runner, "bind_cancellation", None)
+        if callable(bind):
+            bind(token)
+        with self._lease_kept_alive(task_id, ttl, on_lost=runner,
+                                    token=token) as renew_failures:
             try:
                 result = runner.run(order)
             except Exception as exc:              # noqa: BLE001  re-raised below
@@ -349,7 +430,7 @@ class Controller:
         self._fence(task_id)
         return result
 
-    def _observe_effect(self, head_at_dispatch: str):
+    def _observe_effect(self, head_at_dispatch: str, receipt: str | None = None):
         """Go and look: did the branch move while we were not recording?
 
         This is the only external fact this process can check by itself. It
@@ -366,9 +447,25 @@ class Controller:
             return "effect_unknown", None
         if not isinstance(live, str) or not live:
             return "effect_unknown", None
-        if live != head_at_dispatch:
+        if live == head_at_dispatch:
+            return "effect_refuted", live
+        # GOV-R2-03, third round: the branch moved. That proves SOMETHING was
+        # pushed, not that this work pushed it. Confirm only when every new
+        # commit carries this intent's receipt; otherwise it is unknown, which
+        # halts instead of advancing on someone else's commit.
+        if not receipt:
+            return "effect_unknown", live
+        try:
+            ours = self._receipt_is_on(self.config["repo_url"], self.config["branch"],
+                                       head_at_dispatch, live, receipt)
+        except Exception as exc:                   # noqa: BLE001
+            self.store.log(kind="receipt_check_failed", detail=str(exc))
+            ours = None
+        if ours is True:
             return "effect_confirmed", live
-        return "effect_refuted", live
+        self.store.log(kind="unattributed_branch_move", base=head_at_dispatch[:12],
+                       live=live[:12], receipt=receipt, verified=ours)
+        return "effect_unknown", live
 
     def _reconcile(self, task_id: str, generation, event_id: str):
         """Settle every intent left open by a worker that died mid-dispatch.
@@ -386,7 +483,9 @@ class Controller:
         if not intents:
             return None
         for intent in intents:
-            outcome, live = self._observe_effect(intent.get("head", ""))
+            receipt = (work_receipt(task_id, intent["intent_id"])
+                       if intent.get("action") == "execute" else None)
+            outcome, live = self._observe_effect(intent.get("head", ""), receipt)
             recon_event = f"reconcile:{intent['intent_id']}"
             fields = {}
             decision = "resume"
@@ -394,9 +493,12 @@ class Controller:
                 decision = "halt"
                 fields = {"status": "NEEDS_INFORMATION",
                           "failure": "an intent was left open by a worker that did not "
-                                     "return, and the remote could not be asked whether "
-                                     "its effect landed. Re-dispatching could duplicate a "
-                                     "push; advancing could accept work nobody checked."}
+                                     "return, and it cannot be shown whether its effect "
+                                     "landed: the remote could not be asked, or the "
+                                     "branch moved without this intent's work receipt. "
+                                     "Re-dispatching could duplicate a push; advancing "
+                                     "could accept somebody else's commit as this work.",
+                          "observed_head": live}
             elif outcome == "effect_confirmed" and intent.get("action") == "execute":
                 # The push landed. Re-running the executor would duplicate it.
                 fields = {"status": "REVIEW_PENDING", "last_head": live,
@@ -469,7 +571,17 @@ class Controller:
         deadline = task.get("round_deadline")
         if not deadline:
             deadline = self._clock() + self.config.get("timeout_seconds", 2700)
-            self.store.set_task(task_id, round_deadline=deadline)
+            if self._generation is None:
+                # Outside a step (no lease held): nothing is dispatched from
+                # here, so report the value without persisting it. Only a
+                # worker holding the lease may make it durable.
+                return deadline
+            # P2 (R4): this was the one task write not fenced by the lease.
+            # step() sets the deadline right after acquiring, under the
+            # generation it won, so a worker that lost its lease cannot.
+            self.store.set_task(task_id, require_owner=self.owner,
+                                require_generation=self._generation,
+                                round_deadline=deadline)
         return deadline
 
     def _remaining_round_seconds(self, task_id: str) -> float:
@@ -514,6 +626,7 @@ class Controller:
         # a lease that changed hands and came back cannot be mistaken for the
         # one we are still holding.
         generation = self.store.lease_generation(task_id)
+        self._generation = generation
 
         try:
             task = self.store.task(task_id)
@@ -531,6 +644,13 @@ class Controller:
                     return {"action": "NOOP", "reason": "lease_lost_at_commit"}
                 self.store.log(kind="cancel_task", task=task_id, event=event_id)
                 return {"action": "CANCELLED", "reason": "operator_cancel_task"}
+
+            try:
+                self._round_deadline_at(task_id)          # fenced write, if new
+            except ConcurrencyError as exc:
+                self.store.log(kind="commit_refused", task=task_id, event=event_id,
+                               detail=str(exc))
+                return {"action": "NOOP", "reason": "lease_lost_at_commit"}
 
             # GOV-R2-03: before dispatching anything, settle what a previous
             # worker may have started and never recorded.
@@ -556,6 +676,7 @@ class Controller:
             # A failed release must not replace the result of the step. If the
             # lease is gone, or is now somebody else's, that is worth logging
             # and is not this step's answer.
+            self._generation = None
             try:
                 self.store.release(task_id, self.owner)
             except ConcurrencyError as exc:
@@ -576,13 +697,20 @@ class Controller:
         # successful return, so a call that started and then failed, timed out
         # or crashed cost the budget nothing — the cap counted successes, which
         # is not what runs out.
-        self.store.add_spend(1)
         # R2-03: a durable record of the intent to cause an external effect,
-        # written BEFORE causing it. record_intent existed and was never called,
-        # so recovery had nothing to consult and could only guess.
-        intent = self.store.record_intent(
-            task_id, "execute", head=head, event_id=event_id,
-            run_identity=self.executor.identity())
+        # written BEFORE causing it. P2 (R4): reserved and recorded in ONE
+        # fenced commit, so a crash cannot spend without leaving an intent.
+        try:
+            intent = self.store.reserve_run_and_record_intent(
+                task_id, "execute", 1, require_owner=self.owner,
+                require_generation=generation, head=head, event_id=event_id,
+                run_identity=self.executor.identity())
+        except ConcurrencyError as exc:
+            self.store.log(kind="commit_refused", task=task_id, event=event_id,
+                           detail=str(exc))
+            return {"action": "NOOP", "reason": "lease_lost_before_dispatch"}
+        receipt = work_receipt(task_id, intent)
+        order["work_receipt"] = receipt
 
         try:
             result = self._run_with_lease(self.executor, task_id, order)
@@ -607,7 +735,7 @@ class Controller:
             # The runner ran and failed. That is not the same as "it changed
             # nothing": a failing executor may still have pushed before it
             # died. Ask the remote instead of assuming the tidy answer.
-            outcome, live = self._observe_effect(head)
+            outcome, live = self._observe_effect(head, receipt)
             if not self._commit(event_id, task_id, generation, close_intent_id=intent,
                                 close_outcome=outcome,
                                 status="NEEDS_INFORMATION" if outcome != "effect_refuted"
@@ -635,6 +763,27 @@ class Controller:
             self.store.log(kind="phantom_head", task=task_id, claimed=new_head[:12])
             return {"action": "FAILED", "reason": "reported_head_not_on_branch"}
 
+        # GOV-R2-03: a head that exists on the branch is still not necessarily
+        # THIS work. Its commits must carry the receipt this run was handed.
+        try:
+            attributed = self._receipt_is_on(self.config["repo_url"],
+                                             self.config["branch"], head, new_head, receipt)
+        except Exception as exc:                   # noqa: BLE001
+            self.store.log(kind="receipt_check_failed", detail=str(exc))
+            attributed = None
+        if attributed is not True:
+            status = "FAILED" if attributed is False else "NEEDS_INFORMATION"
+            if not self._commit(event_id, task_id, generation, close_intent_id=intent,
+                                close_outcome="effect_unknown", status=status,
+                                failure=f"reported head {new_head[:12]} does not carry work "
+                                        f"receipt {receipt}" if attributed is False else
+                                        f"could not verify work receipt on {new_head[:12]}",
+                                observed_head=new_head, recovery_point=f"head={head}"):
+                return {"action": "NOOP", "reason": "lease_lost_at_commit"}
+            self.store.log(kind="unreceipted_head", task=task_id, claimed=new_head[:12],
+                           verified=attributed)
+            return {"action": status, "reason": "reported_head_without_work_receipt"}
+
         # R2-03: one commit. The two-step version marked the event processed
         # first, so a crash in between left the event deduplicated away and the
         # task un-advanced — the round silently lost. The comment that used to
@@ -660,10 +809,15 @@ class Controller:
         if verdict["action"] != "DISPATCH_ALLOWED":
             return self._halt(task_id, event_id, verdict, generation)
 
-        self.store.add_spend(1)                       # reserved before dispatch
-        intent = self.store.record_intent(
-            task_id, "review", head=head, event_id=event_id,
-            run_identity=self.reviewer.identity())
+        try:                                          # reserved before dispatch
+            intent = self.store.reserve_run_and_record_intent(
+                task_id, "review", 1, require_owner=self.owner,
+                require_generation=generation, head=head, event_id=event_id,
+                run_identity=self.reviewer.identity())
+        except ConcurrencyError as exc:
+            self.store.log(kind="commit_refused", task=task_id, event=event_id,
+                           detail=str(exc))
+            return {"action": "NOOP", "reason": "lease_lost_before_dispatch"}
         try:
             result = self._run_with_lease(self.reviewer, task_id, order)
         except AuthUnavailable as exc:
@@ -795,7 +949,11 @@ def main(argv=None) -> int:
     from runners import FakeExecutor, FakeReviewer
     ctl = Controller(config, store, guard,
                      FakeExecutor(config["replay"]["executor_heads"]),
-                     FakeReviewer(config["replay"]["reviewer_decisions"]))
+                     FakeReviewer(config["replay"]["reviewer_decisions"]),
+                     commit_verifier=scripted_commit_verifier(
+                         config["replay"]["executor_heads"]),
+                     receipt_verifier=scripted_receipt_verifier(
+                         config["replay"]["executor_heads"]))
     for line in ctl.drive(args.task, args.event, args.max_steps):
         print(json.dumps(line, ensure_ascii=False))
     return 0

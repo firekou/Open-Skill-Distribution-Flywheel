@@ -71,7 +71,7 @@ class Harness:
     """A controller wired to fakes, with the live head under test control."""
 
     def __init__(self, tmp, executor_heads=(H1, H2), decisions=("BLOCKED", "APPROVED"),
-                 pinned_head=None, known_commits=None, **cfg_over):
+                 pinned_head=None, known_commits=None, receipted=None, **cfg_over):
         self.tmp = pathlib.Path(tmp)
         self.config = base_config(self.tmp, **cfg_over)
         self.store = Store(pathlib.Path(self.config["state_dir"]))
@@ -81,12 +81,22 @@ class Harness:
         # Stub for the remote check, so the suite never touches the network.
         # None means "every sha the executor reports really is on the branch".
         self.known_commits = known_commits
+        # GOV-R2-03: which heads were pushed WITH this work's receipt. None
+        # means "every head the executor reports carries it" — the fixture's
+        # executor is ours. Reconciliation tests set it explicitly.
+        self.receipted = receipted
+        self.receipt_checks = []
         self.ctl = Controller(self.config, self.store, GUARD,
                               self.executor, self.reviewer,
                               head_resolver=self._head,
                               commit_verifier=self._commit_on_branch,
+                              receipt_verifier=self._receipt_on,
                               policy_sha_value="policy" + "0" * 35)
         self.store.set_task("T", status="READY", last_head=H0)
+
+    def _receipt_on(self, _repo, _branch, base, live, receipt):
+        self.receipt_checks.append((base, live, receipt))
+        return True if self.receipted is None else live in self.receipted
 
     def _commit_on_branch(self, _repo, _branch, sha):
         return True if self.known_commits is None else sha in self.known_commits
@@ -1363,8 +1373,14 @@ class TheLeaseIsKeptAliveAndTheCommitIsFenced(unittest.TestCase):
         tree = _ast.parse((HERE / "controller.py").read_text())
         called = {n.func.attr for n in _ast.walk(tree)
                   if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)}
-        for api in ("renew", "holds_lease", "record_intent"):
+        # P2 (R4): the intent is now recorded by the same fenced commit that
+        # reserves the run, so the API that must be called changed name.
+        for api in ("renew", "holds_lease", "reserve_run_and_record_intent"):
             self.assertIn(api, called, f"{api} is still never called")
+        # ...and the old two-commit pair must not come back beside it.
+        for api in ("add_spend", "record_intent"):
+            self.assertNotIn(api, called,
+                             f"controller calls {api} outside the fenced reservation")
 
     def test_two_controllers_from_one_config_do_not_share_an_owner(self):
         with tempfile.TemporaryDirectory() as td:
@@ -2419,6 +2435,336 @@ class TheShippedTemplateIsDrivenAgainstTheRealCliEnvelope(unittest.TestCase):
                       prov["success_envelope_derived"]["evidence_ladder"])
         self.assertIn("result", prov["success_envelope_derived"]["not_measured"])
         self.assertNotIn("ANTHROPIC_API_KEY=", json.dumps(self.FIXTURE))
+
+
+
+# ==========================================================================
+# Package A (third bounded round, owner-authorised 2026-09-26):
+# GOV-R2-02, GOV-R2-03, GOV-R2-05, P2 isolation baseline, P2 atomic writes.
+# Each class names the finding it guards. Every test below was run against the
+# pre-fix source (7de3043) and FAILED or ERRORED there; see the executor
+# response for the command and the count.
+# ==========================================================================
+
+def _live_runner(tmp, **over):
+    cfg = {"enabled": True, "command": ["true", "{prompt_file}", "{head}"],
+           "timeout_seconds": 30, "terminate_grace_seconds": 1}
+    cfg.update(over)
+    return SubprocessRunner("executor", cfg, pathlib.Path(tmp))
+
+
+def _order(tmp, deadline_in=60.0):
+    return {"task_id": "T", "head": H1, "policy_sha": "p" * 40, "phase": "execute",
+            "run_identity": "r", "prompt_file": "PROMPT.md", "repo_url": "unused",
+            "deadline_at": time.time() + deadline_in}
+
+
+class _PopenSpy:
+    def __init__(self):
+        self.calls = []
+
+    def __call__(self, *a, **k):
+        self.calls.append(a[0] if a else k.get("args"))
+        raise AssertionError("Popen reached: a child was launched")
+
+
+class LeaseLossBeforeLaunchStartsNothing(unittest.TestCase):
+    """GOV-R2-02 (R4 P1). The lease can be lost while the runner is still
+    cloning, when there is no child to kill. The token must stop the launch."""
+
+    def test_a_cancel_during_the_clone_prevents_the_launch(self):
+        with tempfile.TemporaryDirectory() as td:
+            runner = _live_runner(td)
+            token = threading.Event()
+            runner.bind_cancellation(token)
+            repo = pathlib.Path(td) / "ws" / "repo"
+            repo.mkdir(parents=True)
+
+            def clone_then_lose_lease(order, env):
+                token.set()                   # lease monitor fires mid-clone
+                return repo
+
+            spy = _PopenSpy()
+            with patch.object(runner, "_workspace", clone_then_lose_lease), \
+                    patch.object(runners.subprocess, "Popen", spy):
+                with self.assertRaises(runners.RunnerCancelled):
+                    runner.run(_order(td))
+            self.assertEqual(spy.calls, [], "a credentialed child was launched after cancel")
+
+    def test_cancel_with_nothing_running_still_blocks_a_later_launch(self):
+        """The old answer to this call was 'nothing_running', and the run then
+        went on to Popen. The flag must outlive the call."""
+        with tempfile.TemporaryDirectory() as td:
+            runner = _live_runner(td)
+            runner.bind_cancellation(threading.Event())
+            self.assertEqual(runner.cancel_current(), "nothing_running")
+            spy = _PopenSpy()
+            with patch.object(runners.subprocess, "Popen", spy):
+                with self.assertRaises(runners.RunnerCancelled):
+                    runner.run(_order(td))
+            self.assertEqual(spy.calls, [])
+
+    def test_a_cancel_racing_the_launch_kills_the_child(self):
+        """Cancel lands between the last check and `_current = proc`."""
+        with tempfile.TemporaryDirectory() as td:
+            runner = _live_runner(td, command=["sleep", "30"])
+            token = threading.Event()
+            runner.bind_cancellation(token)
+            repo = pathlib.Path(td) / "ws" / "repo"
+            repo.mkdir(parents=True)
+            real_popen = subprocess.Popen
+            launched = []
+
+            def popen_then_cancel(*a, **k):
+                proc = real_popen(*a, **k)
+                launched.append(proc)
+                token.set()
+                return proc
+
+            with patch.object(runner, "_workspace", lambda o, e: repo), \
+                    patch.object(runners.subprocess, "Popen", popen_then_cancel):
+                with self.assertRaises(runners.RunnerCancelled):
+                    runner.run(_order(td))
+            self.assertEqual(len(launched), 1)
+            self.assertIsNotNone(launched[0].poll(), "the raced child is still running")
+
+    def test_the_lease_monitor_sets_the_token_the_runner_sees(self):
+        """End to end through Controller: renewal fails while the runner is in
+        its preparation phase; the runner observes the cancellation."""
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td, lease_seconds=3)
+            seen = {}
+
+            class Preparing(FakeExecutor):
+                def run(self, order):
+                    deadline = time.time() + 6
+                    while time.time() < deadline and not self.cancellation_requested():
+                        time.sleep(0.05)
+                    seen["cancelled"] = self.cancellation_requested()
+                    raise runners.RunnerCancelled("stopped before launch")
+
+            h.ctl.executor = Preparing([H1])
+
+            def renew_fails(*a, **k):
+                raise ConcurrencyError("lease taken over")
+
+            with patch.object(h.store, "renew", renew_fails):
+                out = h.ctl.step("T", "evt-lease-lost")
+            self.assertTrue(seen.get("cancelled"), "the token never reached the runner")
+            self.assertEqual(out, {"action": "NOOP", "reason": "lease_lost_mid_run"})
+            self.assertEqual(len(h.store.open_intents("T")), 1,
+                             "the intent must stay open for reconciliation")
+
+
+class NoLaunchAfterTheRoundDeadline(unittest.TestCase):
+    """GOV-R2-05 (R4 P1). A deadline that expires during clone/checkout must
+    stop the launch, not be enforced by killing a child after it started."""
+
+    def test_deadline_spent_by_preparation_refuses_before_popen(self):
+        with tempfile.TemporaryDirectory() as td:
+            runner = _live_runner(td)
+            repo = pathlib.Path(td) / "ws" / "repo"
+            repo.mkdir(parents=True)
+
+            def slow_clone(order, env):
+                time.sleep(0.4)
+                return repo
+
+            spy = _PopenSpy()
+            with patch.object(runner, "_workspace", slow_clone), \
+                    patch.object(runners.subprocess, "Popen", spy):
+                with self.assertRaises(RunnerError) as cm:
+                    runner.run(_order(td, deadline_in=0.3))
+            self.assertIn("launch", str(cm.exception))
+            self.assertEqual(spy.calls, [], "a child was started after the round deadline")
+
+    def test_less_than_a_second_left_is_not_worth_a_launch(self):
+        with tempfile.TemporaryDirectory() as td:
+            runner = _live_runner(td)
+            repo = pathlib.Path(td) / "ws" / "repo"
+            repo.mkdir(parents=True)
+            spy = _PopenSpy()
+            with patch.object(runner, "_workspace", lambda o, e: repo), \
+                    patch.object(runners.subprocess, "Popen", spy):
+                with self.assertRaises(RunnerError):
+                    runner.run(_order(td, deadline_in=0.6))
+            self.assertEqual(spy.calls, [])
+
+    def test_positive_control_enough_time_does_launch(self):
+        """Without this, a runner that never launches would pass both tests above."""
+        with tempfile.TemporaryDirectory() as td:
+            stub = pathlib.Path(td) / "stub.py"
+            stub.write_text("import json;print(json.dumps({'new_head': '" + "a" * 40 + "'}))\n")
+            runner = _live_runner(td, command=[sys.executable, str(stub)])
+            repo = pathlib.Path(td) / "ws" / "repo"
+            repo.mkdir(parents=True)
+            with patch.object(runner, "_workspace", lambda o, e: repo):
+                out = runner.run(_order(td, deadline_in=30))
+            self.assertEqual(out["new_head"], "a" * 40)
+
+
+class ABranchMoveIsNotThisWorkWithoutItsReceipt(unittest.TestCase):
+    """GOV-R2-03 (R4 P1). An unrelated push to the same branch must not be
+    recorded as this task's result."""
+
+    def _crashed(self, td, live_head, receipted):
+        h = Harness(td, pinned_head=live_head, receipted=receipted)
+        intent = h.store.reserve_run_and_record_intent(
+            "T", "execute", 1, head=H0, event_id="evt-crashed", run_identity="gone")
+        return h, intent
+
+    def test_somebody_elses_push_halts_instead_of_advancing(self):
+        with tempfile.TemporaryDirectory() as td:
+            h, _ = self._crashed(td, live_head=H1, receipted=set())
+            out = h.ctl.step("T", "evt-after-restart")
+            self.assertEqual(out["action"], "NEEDS_INFORMATION")
+            self.assertEqual(h.executor.calls, [])
+            self.assertNotEqual(h.store.task("T").get("status"), "REVIEW_PENDING")
+            self.assertEqual(h.store.task("T").get("last_head"), H0,
+                             "an unattributed head was adopted as this work")
+            self.assertEqual([i["outcome"] for i in h.store.task("T")["resolved_intents"]],
+                             ["effect_unknown"])
+
+    def test_a_receipted_push_is_confirmed_with_the_intents_receipt(self):
+        """Positive control, and the receipt asked about is this intent's."""
+        with tempfile.TemporaryDirectory() as td:
+            h, intent = self._crashed(td, live_head=H1, receipted={H1})
+            h.ctl.step("T", "evt-after-restart")
+            self.assertEqual(h.store.task("T")["resolved_intents"][0]["outcome"],
+                             "effect_confirmed")
+            self.assertIn((H0, H1, f"T/{intent}"), h.receipt_checks)
+
+    def test_a_reported_head_without_the_receipt_is_not_accepted(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td, receipted=set())
+            out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out["action"], "FAILED")
+            self.assertEqual(out["reason"], "reported_head_without_work_receipt")
+            self.assertNotEqual(h.store.task("T").get("status"), "REVIEW_PENDING")
+
+    def test_the_work_order_carries_the_receipt(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            seen = {}
+
+            class Recording(FakeExecutor):
+                def run(self, order):
+                    seen.update(order)
+                    return super().run(order)
+
+            h.ctl.executor = Recording([H1])
+            h.ctl.step("T", "evt-1")
+            intent_id = h.store.task("T")["resolved_intents"][0]["intent_id"]
+            self.assertEqual(seen.get("work_receipt"), f"T/{intent_id}")
+            self.assertIn("work_receipt", SubprocessRunner.WORK_ORDER_FIELDS)
+
+    def test_the_live_receipt_check_against_a_real_git_history(self):
+        """No stub: a local repository with real commits and trailers."""
+        from controller import commits_carry_receipt
+        with tempfile.TemporaryDirectory() as td:
+            src = pathlib.Path(td) / "src"
+            src.mkdir()
+            env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@x.invalid",
+                   "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@x.invalid"}
+
+            def git(*a):
+                return subprocess.run(["git", *a], cwd=src, env=env, check=True,
+                                      capture_output=True, text=True).stdout.strip()
+
+            git("init", "-q", "-b", "work")
+            git("commit", "-q", "--allow-empty", "-m", "base")
+            base = git("rev-parse", "HEAD")
+            git("commit", "-q", "--allow-empty", "-m", "ours\n\nATK-Work-Receipt: T/abc")
+            ours = git("rev-parse", "HEAD")
+            git("commit", "-q", "--allow-empty", "-m", "someone else")
+            mixed = git("rev-parse", "HEAD")
+            url = src.as_uri()
+            check = lambda live, rec, w: commits_carry_receipt(  # noqa: E731
+                url, "work", base, live, rec, pathlib.Path(td) / w)
+            self.assertIs(check(ours, "T/abc", "v1"), True)
+            self.assertIs(check(ours, "T/other", "v2"), False, "wrong receipt accepted")
+            self.assertIs(check(mixed, "T/abc", "v3"), False,
+                          "a foreign commit on top was accepted as this work")
+            self.assertIs(check(base, "T/abc", "v4"), False, "an empty range was accepted")
+            self.assertIsNone(check("f" * 40, "T/abc", "v5"), "an unknown commit was decided")
+
+
+class IsolationProbesNeedAnUnwrappedBaseline(unittest.TestCase):
+    """P2 (R4). A probe that fails even without the wrap proves nothing about
+    the wrap; it used to be recorded as the property being provided."""
+
+    def _always_failing_wrap(self, backend, cmd):
+        return ["sh", "-c", "exit 1"]
+
+    def test_a_probe_that_fails_unwrapped_is_unknown_not_denied(self):
+        with patch.object(runners, "isolate_command", self._always_failing_wrap):
+            self.assertIsNone(runners._denies("x", ["false"]),
+                              "a host-side failure was credited to the boundary")
+
+    def test_baseline_ok_and_wrapped_fails_is_denied(self):
+        with patch.object(runners, "isolate_command", self._always_failing_wrap):
+            self.assertIs(runners._denies("x", ["true"]), True)
+
+    def test_both_succeed_is_not_denied(self):
+        with patch.object(runners, "isolate_command", lambda b, c: list(c)):
+            self.assertIs(runners._denies("x", ["true"]), False)
+
+    def test_an_unmeasurable_property_does_not_satisfy_a_requirement(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(runners, "working_container_backend", lambda *a, **k: "unshare"), \
+                    patch.object(runners, "measure_backend_properties",
+                                 lambda b: {"network_denied": None, "host_fs_denied": True,
+                                            "source_readonly": True}):
+                with self.assertRaises(IsolationUnavailable):
+                    SubprocessRunner("pr_tests", {"enabled": True, "command": ["true"],
+                                                  "isolation_level": "container"},
+                                     pathlib.Path(tmp), role="pr_tests")
+
+
+class SpendIntentAndDeadlineAreOneFencedWrite(unittest.TestCase):
+    """P2 (R4). Reserving a run and recording its intent were two unfenced
+    commits; the round deadline was the one task write without the lease."""
+
+    def test_reservation_and_intent_land_in_one_revision(self):
+        with tempfile.TemporaryDirectory() as td:
+            store = Store(pathlib.Path(td))
+            before = store.read()["revision"]
+            intent = store.reserve_run_and_record_intent("T", "execute", 1, head=H0)
+            state = store.read()
+            self.assertEqual(state["revision"], before + 1, "two commits, not one")
+            self.assertEqual(state["spend"], 1)
+            self.assertEqual([i["intent_id"] for i in store.open_intents("T")], [intent])
+
+    def test_a_worker_that_lost_the_lease_spends_nothing(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            real_ask = h.ctl._ask
+
+            def ask_then_lose_lease(order):
+                verdict = real_ask(order)
+                if order["phase"] == "execute":
+                    # another worker takes the task after the guard said yes
+                    h.store.commit(h.store.read()["revision"], lambda s: s["tasks"]["T"]
+                                   .__setitem__("lease", {"owner": "thief", "generation": 99,
+                                                          "expires_at": time.time() + 600}))
+                return verdict
+
+            h.ctl._ask = ask_then_lose_lease
+            spend_before = h.store.spend()
+            out = h.ctl.step("T", "evt-1")
+            self.assertEqual(out, {"action": "NOOP", "reason": "lease_lost_before_dispatch"})
+            self.assertEqual(h.store.spend(), spend_before, "budget spent without the lease")
+            self.assertEqual(h.store.open_intents("T"), [])
+            self.assertEqual(h.executor.calls, [], "dispatched without the lease")
+
+    def test_the_round_deadline_is_not_written_without_the_lease(self):
+        with tempfile.TemporaryDirectory() as td:
+            h = Harness(td)
+            h.store.acquire("T", "someone-else", 600)
+            h.ctl._generation = 1             # we believe we hold generation 1
+            with self.assertRaises(ConcurrencyError):
+                h.ctl._round_deadline_at("T")
+            self.assertNotIn("round_deadline", h.store.task("T"))
 
 
 if __name__ == "__main__":
