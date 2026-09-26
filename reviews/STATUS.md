@@ -1,3 +1,28 @@
+## 2026-09-26：Planner 收斂 PR21 採用路徑與 PR22 合併後工作包
+
+### 1. 執行者
+
+- 只有 GPT／Codex Planner；沒有新的 executor 成果，因此沒有內容覆核，也沒有經過其他 agent。
+- 開工前已核對 main `2e6a80c0d5f7d2784c5d8e3966ad3a3bac9be168`、PR #22 `3a681a436f12428c00e722a658b8869199a0f334`、PR #6 `cca553f6291d14a7abbb6ef8c42d377a127fd9f6` 完全符合限定 Prompt。
+
+### 2. 小目標進度
+
+- **有前進**：P-1 選定方案 (a)，以已獨立覆核的 PR #21 作為唯一採用路徑；決策已寫入 `governance/decisions.json`。目前是 `WAITING_OWNER_MERGE`，未自行 merge，也沒有另做平行 main 修正。
+- **P-2 已交付**：`governance/IMPLEMENTATION_PROMPT.md` 檔首已標明舊 `86421c90… BLOCKED` 只是歷史快照，現行以 state 的 `GOV-BOOTSTRAP` 與 [PR6 Package A review](PR6_R6_PACKAGE_A_cca553f6.md) 為準。
+- **P-3 有清楚路由**：main 的 `check_report_format.py --pointers` 由 PR #21 一併採用；PR #21 未經 owner merge 前，不宣稱 main 已具備。
+- **P-4 已上傳、未派工**：[PR22 合併後發布 SHA 固定工作包](ATK_AIDER_RELEASE_R_POST_MERGE_PIN.md) 狀態為 `PLANNED_NOT_DISPATCHED`。它已有 work_id、merge source SHA 取得方式、單檔 scope、期限、最多兩輪修復、條件式 A7 與可複製 Prompt；因 owner merge 尚未發生，沒有 source SHA、active claim、session/run 或 result SHA。
+- state revision 57。下一 checkpoint 維持 `PR22_OWNER_MERGE_AND_POST_MERGE_PIN`；另有 `PR21_OWNER_MERGE_AUTHORIZATION_IF_ADOPTING`。未 merge、部署、呼叫 provider、外聯、修改 secrets／權限、付費或升為 ACTIVE。
+
+### 3. 目標藍圖對齊
+
+- 現在的藍圖：找到有用 AI 工具與 skill，整理改善，提供透明可選的 ATK Router／API／MCP 接入，完成技術分享與分發，再取得非作者實際採用、重複使用與價值證據。
+- 本輪遵照藍圖：是。它移除會把本 repo 回報導向其他 repo 業務目標的入口風險，也把 PR #22 合併後的最小 A3 動作準備好。
+- 距離藍圖方向：**小幅前進，但沒有新增產品成果**。目前仍在技術分發 gate；只有 owner merge 與實際發布 SHA 固定後，才能開始觀察非作者首次使用。
+
+### 4. 本次執行的意義
+
+這次把兩個容易讓後續 agent 找錯版本的問題收斂成單一路徑：回報格式只走已審 PR #21，舊治理 Prompt 明確降為歷史；同時把 PR #22 合併後唯一要做的單檔工作預先寫清楚。執行端現在不需要自行猜範圍，但在 owner merge 發生前也不會被假派工。
+
 ## 2026-09-26：PR #6 Package A 精確 head 覆核完成
 
 ### 1. 執行者
