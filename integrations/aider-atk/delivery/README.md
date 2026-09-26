@@ -74,10 +74,15 @@ Codes: 0 shape ok · 2 a value missing · 3 wrong/missing `openai/` prefix · 4 
 ```bash
 cd "$RUN/asset/sample"
 sha256sum test_import_contacts.py   # expected: b2c040c2ae4ae6c7417acb8dcf4e3ed5c03ae26af95643f6b498a3ed697baada
+chmod 444 test_import_contacts.py
+git init -q && git add . \
+  && git -c user.name=first-run -c user.email=first-run@example.invalid commit -qm baseline
 python3.11 -m unittest test_import_contacts
 echo "exit=$?"        # expected: exit=1, "FAILED (failures=1, errors=1)"
 ```
 The task (read `$RUN/asset/TASK.md`) is to make `import_contacts.py` read the CSV by column name. The baseline must fail; if it passes, stop, because the task is not valid.
+
+The small local git repository is only there so step 7 can show exactly what changed; it is not pushed anywhere. The name and email on the baseline commit are placeholders.
 
 ## 6. Run Aider on the task with a real model — NOT RUN
 
@@ -88,10 +93,11 @@ This needs an endpoint, model, safely injected key and a spending limit. None of
 ```bash
 cd "$RUN/asset/sample"
 sha256sum test_import_contacts.py          # must still be b2c040c2…
-python3.11 -m unittest test_import_contacts -v   # must be 5/5 (OK)
-git diff                                   # read it: only import_contacts.py changed, no hard-coded answers
+python3.11 -m unittest test_import_contacts -v   # must be "Ran 5 tests" and "OK"
+git diff --stat                            # must list import_contacts.py and nothing else
+git diff                                   # read it: reads by column name, no hard-coded test answers
 ```
-**Never use Aider's exit code.** It exits 0 even when every model request failed (measured). A result counts only if all three checks hold.
+**Never use Aider's exit code.** It exits 0 even when every model request failed (measured). A result counts only if all three checks hold. Untracked files Aider leaves behind (`.aider*`, `__pycache__/`) do not count as changes.
 
 ## 8. Validate a de-identified feedback record
 

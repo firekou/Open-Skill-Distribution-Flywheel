@@ -1,2 +1,10 @@
-# validate_feedback.py dependencies, pinned (resolved in a fresh Python 3.11 venv on 2026-09-26)
+# validate_feedback.py dependencies: the full set `pip freeze` reported after
+# `pip install jsonschema==4.26.0` in a fresh Python 3.11 venv (Linux x86_64),
+# 2026-09-26, recorded in integrations/aider-atk/delivery/evidence/.
+# Versions are pinned; hashes are not, because rpds-py ships per-platform wheels.
+attrs==26.1.0
 jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+referencing==0.37.0
+rpds-py==2026.6.3
+typing_extensions==4.16.0
