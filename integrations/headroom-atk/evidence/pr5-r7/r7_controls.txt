@@ -1,0 +1,58 @@
+# R7 bounded repair packet — ATK-PR5-R7-LIVE-GUARD revision 1
+# source_head: f4d676b22a853f64b37f2c160cdb3d1f6bc47efc
+# headroom 0.37.0  python 3.11.15  date 2026-09-21
+# No key, no model call, no paid endpoint. ATK_API_KEY / ATK_BASE_URL / ATK_MODEL all NOT_SET.
+
+## P1-01 — the key is never shown on a command line
+$ grep -rn 'ATK_API_KEY=sk-|ATK_API_KEY=\.\.\.|ATK_API_KEY=[^ ]* python' . --include=*.md --include=*.py
+(no matches)  exit=1  PASS
+
+positive control — the no-key path still refuses and shows nothing:
+$ python3 ab_test.py
+ATK_API_KEY is not set; refusing to run. No mock is substituted.
+exit=2
+
+## P1-02 — the first live run spends exactly two calls
+$ python3 -m unittest test_local_check.TheFirstLiveRunSpendsWhatItSaidItWould -v
+test_no_key_refuses_and_spends_nothing (test_local_check.TheFirstLiveRunSpendsWhatItSaidItWould.test_no_key_refuses_and_spends_nothing) ... ok
+test_the_count_is_printed_before_the_first_call_is_made (test_local_check.TheFirstLiveRunSpendsWhatItSaidItWould.test_the_count_is_printed_before_the_first_call_is_made)
+Printing it afterwards would tell you what you already paid for. ... ok
+test_the_default_run_is_exactly_two_calls_one_each_way (test_local_check.TheFirstLiveRunSpendsWhatItSaidItWould.test_the_default_run_is_exactly_two_calls_one_each_way) ... ok
+test_the_docstring_no_longer_demonstrates_what_it_forbids (test_local_check.TheFirstLiveRunSpendsWhatItSaidItWould.test_the_docstring_no_longer_demonstrates_what_it_forbids)
+P5-R7-01: it said 'never put the key on the command line' four lines ... ok
+test_the_four_call_run_has_to_be_asked_for (test_local_check.TheFirstLiveRunSpendsWhatItSaidItWould.test_the_four_call_run_has_to_be_asked_for)
+The negative control: the bigger run still exists, it is just opt-in, ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.009s
+
+OK
+
+mutation: put the default back to every task — the call-count test must go red
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.010s
+
+FAILED (failures=2)
+
+## P2-01 — a repeated observation is not reported as a cause
+$ python3 local_check.py --log app.jsonl --needle 0042_add_tenant_id --needle 42701
+log        : app.jsonl — 1200 lines, 167760 bytes
+direct     : 167855 chars reached the upstream
+via proxy  : 167855 chars reached the upstream  (identical size)
+needle #1 (18 chars): present after the proxy
+needle #2 (5 chars): present after the proxy
+NO BENEFIT: no size benefit was observed, twice. The payload came back unchanged, byte for byte, on both measurements against the same proxy. Nothing was lost and nothing was gained. This says what was measured and not why: two matching observations do not establish that your payload lacks the redundancy headroom factors out, and do not rule out the proxy not compressing on this run. If it matters, try a different payload shape, run it again, and check ~/.headroom/logs/proxy.log.
+exit=3 (stable negative preserved)
+
+mutation: put the causal sentence back — the new test must go red
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.019s
+
+FAILED (failures=2)
+
+## full suite after restoring both
+Ran 40 tests in 0.114s
+
+OK

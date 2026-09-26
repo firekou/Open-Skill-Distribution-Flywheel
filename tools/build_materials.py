@@ -194,6 +194,16 @@ def add_source(sid, title, url, stype, category, published, verified,
 for row in MS.SOURCES:
     add_source(*row)
 
+# Attach adoption records. An ADOPTION id that matches no material means the
+# record is being silently dropped from the registry, which is the failure this
+# assertion exists to make impossible to ship.
+_by_id = {m["id"]: m for m in materials}
+_orphans = sorted(set(MD.ADOPTION) - set(_by_id))
+if _orphans:
+    raise SystemExit(f"ADOPTION ids match no material: {_orphans}")
+for _mid, _rec in MD.ADOPTION.items():
+    _by_id[_mid]["_adoption"] = _rec
+
 materials.sort(key=lambda m: (-m["scores"]["material_score"], -m["scores"]["atk_relevance"]))
 
 cats = {}

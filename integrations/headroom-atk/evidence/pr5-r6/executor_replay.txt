@@ -1,0 +1,57 @@
+# R5 交接封包：executor 側執行紀錄
+#
+# 重要：這是 EXECUTOR 執行的，不是獨立驗收。R5 的條件是
+# 'P5-R4-01_INDEPENDENT_RUNTIME_VERIFICATION_PENDING'，依定義不能由 executor 關閉。
+# 這份只是把 reviewer 環境做不到的 runtime 數據補上，讓獨立 reviewer 有東西可比對。
+#
+# date 2026-09-19T14:27:34Z   python 3.11.15
+
+## 1. Manifest 校驗：五個 blob hash 全部對上 live repo
+   current/local_check.py           @32ca53c  MATCH  3036418da9fccf40
+   current/test_local_check.py      @32ca53c  MATCH  c154649b2a9f9d77
+   current/ab_test.py               @32ca53c  MATCH  6dd9e14728a4e695
+   current/README.md                @32ca53c  MATCH  26f8c8b1fc0030fd
+   previous/local_check.py          @d1930e4  MATCH  ec66c5ea914fe62d
+
+## 2. 本環境實際可用的隔離（reviewer 環境三項全遭拒，這裡不同）
+   bwrap            : 不存在
+   docker           : 指令在，daemon 連不到
+   unshare -n       : **可用**（util-linux 2.39.3）  <- reviewer 環境此項被拒
+   -> 用 'env -i' 清空環境變數 + 'unshare -n' 斷網執行，唯讀輸入樹
+
+## 3. 執行指令（reviewer 的腳本原檔未改）
+   env -i PATH=/usr/bin:/bin HOME=/tmp TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 \
+     unshare -n python3 reviewer_checks.py /input manifest.json
+   exit=0
+
+## 4. 逐項輸出
+   exact_source_blobs                   {"passed": true, "head": "32ca53cd703efeb647ddb2d65168ba69f1e414d6"}
+   unknown_form_1                       {"exit": 2, "private_echo": false}
+   unknown_form_2                       {"exit": 2, "private_echo": false}
+   unknown_form_3                       {"exit": 2, "private_echo": false}
+   unknown_form_4                       {"exit": 2, "private_echo": false}
+   unknown_form_5                       {"exit": 2, "private_echo": false}
+   previous_version_negative_control    {"exit": 2, "private_echo": true}
+   help_positive_control                {"exit": 0}
+   unit_suite                           exit=0  Ran 31 tests in 0.058s  OK
+   legal_equals_parse                   {"passed": true}
+   shrink                               {"exit": 0}
+   unchanged                            {"exit": 3}
+   equal_rewrite                        {"exit": 3}
+   growth                               {"exit": 3}
+   lost                                 {"exit": 1}
+   http_error_full                      {"body_withheld": true}
+   http_error_partial                   {"body_withheld": true}
+   http_error_transformed               {"body_withheld": true}
+   summary                              {"passed": true, "head": "32ca53cd703efeb647ddb2d65168ba69f1e414d6", "limitations": "No clean headroom install, live proxy, real API, cost or adoption verification."}
+
+## 5. 關鍵負控制
+   previous_version_negative_control -> private_echo: TRUE
+   舊版（d1930e4）確實會把 dash 開頭的合成私密值印出來，證明這組測試抓得到真缺陷，
+   不是空轉綠燈。新版五種形式全部 exit 2 且 private_echo: false。
+
+## 6. 這份不能證明什麼
+   - 不是獨立驗收：executor 執行自己的程式碼，run identity 與 executor 相同。
+   - 未做乾淨安裝 headroom、未跑真實 proxy、未呼叫 live ATK、未重跑歷史費用數字。
+   - 未驗搜尋基線 T0、未驗外部採用。
+   - P5-R4-01 條件維持 OPEN，等獨立 reviewer 在其自有環境重放。

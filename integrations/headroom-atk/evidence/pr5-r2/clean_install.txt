@@ -1,0 +1,35 @@
+# P5-03: clean clone + clean venv, following ONLY the README's Reproduce block.
+# date 2026-09-18T19:26:59Z   host python 3.11.15
+# Nothing was preinstalled: the venv was created empty and verified empty before pip ran.
+
+$ git clone https://github.com/firekou/Open-Skill-Distribution-Flywheel
+$ cd Open-Skill-Distribution-Flywheel && git checkout claude/atk-headroom-adoption
+  checked out dd504a3
+$ python3 -m venv .venv && . .venv/bin/activate
+  headroom preinstalled in the venv: False        <- the gap the review flagged, now closed
+  venv python: 3.11.15
+$ pip install "headroom-ai[proxy]==0.37.0"
+  exit 0; installed headroom-ai 0.37.0
+$ cd integrations/headroom-atk
+$ python3 make_log.py > deploy.log
+  md5 0ad9194a489136baa931881b78374cf7   <- matches the md5 printed in the README
+$ python3 local_check.py
+log        : /tmp/claude-0/-home-user-Open-Skill-Distribution-Flywheel/bc800c22-538e-5adf-b632-197a91f5162e/scratchpad/freshclone/Open-Skill-Distribution-Flywheel/integrations/headroom-atk/deploy.log — 1200 lines, 111262 bytes
+direct     : 111357 chars reached the upstream
+via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+needle '0042_add_tenant_id': present after the proxy
+needle '42701': present after the proxy
+PASS: 16779 fewer characters (15.1%) and every needle survived
+
+exit=0
+
+$ python3 test_local_check.py
+Ran 17 tests in 0.045s
+
+OK
+
+$ python3 tools/build_materials.py   # from the repo root
+  materials.json md5 before: 7afe80a897dfa4388b910a6c3f281faf
+  materials.json md5 after : 7afe80a897dfa4388b910a6c3f281faf
+  git status on registry/materials.json: clean -> the build is reproducible and the
+  _adoption record survives a regeneration rather than being a hand edit.

@@ -1,0 +1,34 @@
+# PR5 R3 conditions — controls.  python 3.11.15  2026-09-19
+# Reviewed head 9c439a4 -> this head. Synthetic values only; no key, no paid call, no live model.
+
+## Conditions P5-R3-01 / 02 / 03 (verified by re-reading the files, not by assertion)
+  P5-R3-01 every README sample line present in evidence/local_check.txt : True (7 lines)
+  P5-R3-01 README sample block still prints needle TEXT                 : False
+  P5-R3-02 '17 unit tests' claims remaining in README                   : 0
+  P5-R3-02 'error-body redaction' (describes the withdrawn design)      : False
+  P5-R3-03 'prints only sizes and pass/fail' in DISTRIBUTION.md         : False
+  P5-R3-03 'position and length' present in README / DIST / free sample : (True, True, True)
+  P5-R3-06 README indexes evidence/pr5-r3/controls.txt                  : True
+
+## Backlog taken early: P5-R3-04 (misuse must be exit 2 and stay private)
+  --log <a directory>            exit=2  traceback=False  secret_echoed=False  full_path=False
+  --log <missing file>           exit=2  traceback=False  secret_echoed=False  full_path=False
+  mistyped --needlez <secret>    exit=2  traceback=False  secret_echoed=False  full_path=False
+
+## Test suite
+$ python3 test_local_check.py   (on this head)
+Ran 28 tests in 0.075s
+
+OK
+
+$ (9c439a4 local_check.py + ab_test.py) python3 test_local_check.py   <- negative control
+Ran 28 tests in 0.073s
+
+FAILED (failures=2, errors=2)
+   The 4 failures/errors are exactly P5-R3-04 and P5-R3-05a on the reviewed head.
+
+## P5-R3-05b — NOT REPRODUCED, recorded rather than claimed as fixed
+   The reviewer flagged needles.index() as able to mis-number a repeated needle.
+   It cannot in this code path: the loop returns at the FIRST failing needle, the same
+   element index() finds. Checked ('KEEP','ABSENT','ABSENT') -> #2 both ways;
+   ('A','B','A','ABSENT') -> #4 both ways. enumerate was kept for clarity, not as a fix.

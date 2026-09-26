@@ -1,0 +1,28 @@
+# P5-R4-01 controls.  python 3.11.15  2026-09-19
+# Synthetic value only: SYNTHETIC_PRIVATE_42. No credential, no network, no model call.
+
+## Reproduced on the reviewed head d1930e4 before fixing — the reviewer was right
+  $ local_check.py --log deploy.log --needlez -SYNTHETIC_PRIVATE_42
+    exit 2, stderr: 'unrecognized option(s): --needlez, -SYNTHETIC_PRIVATE_42'   <- LEAKED
+  the plain and equals forms did NOT leak, which is why 29 tests passed over it.
+
+## After the fix — every form the reviewer named, plus two more
+  --needlez -SYNTHETIC_PRIVATE_42    exit=2  secret_echoed=0  flagname_echoed=0
+  --needlez SYNTHETIC_PRIVATE_42     exit=2  secret_echoed=0  flagname_echoed=0
+  --needlez=-SYNTHETIC_PRIVATE_42    exit=2  secret_echoed=0  flagname_echoed=0
+  -SYNTHETIC_PRIVATE_42              exit=2  secret_echoed=0  flagname_echoed=0
+  --needlez                          exit=2  secret_echoed=0  flagname_echoed=0
+
+  Nothing unrecognised is echoed at all — not even the flag name — because there is
+  no reliable way to tell a mistyped flag from a value that happens to start with '-'.
+
+## Legal forms still work
+  --needle=0042_add_tenant_id   exit=0  (0 = ran the full check)
+  --help                        exit=0
+
+## Suite
+  fixed head : Ran 31 tests in 0.058s  OK
+  d1930e4    : Ran 31 tests in 0.059s  FAILED (failures=6)   <- negative control
+
+## The README test count was caught by the guard added last round, not by me
+  29 -> 31: test_readme_states_the_real_number_of_tests failed immediately and named both numbers.

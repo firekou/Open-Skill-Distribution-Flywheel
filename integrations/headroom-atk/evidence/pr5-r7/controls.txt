@@ -1,0 +1,69 @@
+# PR5 R7 controls — the pass-through re-check, and what leaves the machine
+# headroom 0.37.0  python 3.11.15  date 2026-09-21
+# deploy.log md5: 0ad9194a489136baa931881b78374cf7
+# No key, no model call, no network beyond 127.0.0.1.
+
+--- the observation that prompted this round ---
+The FIRST 'headroom proxy' start in this container today reported, on the bundled sample:
+  via proxy  : 111357 chars reached the upstream  (identical size)
+  NO BENEFIT: the proxy returned the payload unchanged, byte for byte.
+The next 22 runs of the identical command, same md5, same version, all reported 15.1%.
+Root cause NOT established. Recorded as observed-once, not-reproduced.
+
+--- stability check: 10 consecutive runs, same input ---
+run 1: exit=0  via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+run 2: exit=0  via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+run 3: exit=0  via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+run 4: exit=0  via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+run 5: exit=0  via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+run 6: exit=0  via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+run 7: exit=0  via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+run 8: exit=0  via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+run 9: exit=0  via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+run 10: exit=0  via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+
+--- positive control: the happy path, unchanged by the re-check ---
+$ python3 local_check.py
+log        : deploy.log — 1200 lines, 111262 bytes
+direct     : 111357 chars reached the upstream
+via proxy  : 94578 chars reached the upstream  (15.1% fewer)
+needle #1 (18 chars): present after the proxy
+needle #2 (5 chars): present after the proxy
+PASS: 16779 fewer characters (15.1%) and every needle survived
+exit=0
+
+--- true negative still reports a clean negative (JSON lines, no cross-line redundancy) ---
+$ python3 local_check.py --log app.jsonl --needle 0042_add_tenant_id --needle 42701
+log        : app.jsonl — 1200 lines, 167760 bytes
+direct     : 167855 chars reached the upstream
+via proxy  : 167855 chars reached the upstream  (identical size)
+needle #1 (18 chars): present after the proxy
+needle #2 (5 chars): present after the proxy
+NO BENEFIT: the proxy returned the payload unchanged, byte for byte, and a second measurement against the same proxy agreed. headroom saves by factoring out text repeated across lines; this payload has no such redundancy to factor out. Nothing was lost and nothing was gained.
+exit=3
+
+--- negative control for the new branch: two measurements that DISAGREE must not be reported as a negative ---
+$ python3 test_local_check.py -k APassThroughIsConfirmedBeforeItIsReported
+test_a_pass_through_that_does_not_reproduce_is_inconclusive (test_local_check.APassThroughIsConfirmedBeforeItIsReported.test_a_pass_through_that_does_not_reproduce_is_inconclusive) ... ok
+test_a_reproducible_pass_through_is_still_a_clean_negative (test_local_check.APassThroughIsConfirmedBeforeItIsReported.test_a_reproducible_pass_through_is_still_a_clean_negative)
+The control that keeps the re-check from destroying a true negative: ... ok
+test_a_run_that_compresses_is_not_measured_twice (test_local_check.APassThroughIsConfirmedBeforeItIsReported.test_a_run_that_compresses_is_not_measured_twice)
+The re-check is only for the negative, so the common path is unchanged. ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.016s
+
+OK
+
+--- mutation: remove the re-check, the negative control must go red ---
+AssertionError: 1 != 2
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.015s
+
+FAILED (failures=2)
+
+--- restored; full suite green again ---
+Ran 34 tests in 0.097s
+
+OK
