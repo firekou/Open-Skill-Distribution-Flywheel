@@ -25,13 +25,13 @@
 **⚠️ 上一版（2026-09-26 稍早）我把 canonical 的規則整段抄過來，連同 VSL 的
 五條業務主線也一起抄進本檔——那是錯的，已依 GPT 2026-09-26 裁定收回。
 共同的是「回報怎麼寫」，不共同的是「這個 repo 要去哪裡」。
-本 repo 的目標藍圖是自己的（GOAL-02 五階段，見下），不是 VSL 的五條業務主線。**
+本 repo 的目標藍圖是自己的（GOAL-02 六階段，見下），不是 VSL 的五條業務主線。**
 
 ### 第 3 節「目標藍圖對齊」在本 repo 要對齊的是這一份
 
 來源：[`governance/OPERATING_RULES.md`](governance/OPERATING_RULES.md)「使命與定位」（GOAL-02）
 ＋ [`governance/OUTCOME_CONFIDENCE.md`](governance/OUTCOME_CONFIDENCE.md)；
-一句話與五階段表照抄 [`REPORT_FORMAT.md`](REPORT_FORMAT.md) §「本 repo 的目標藍圖」，**修改須經 Frank 核定**。
+一句話與六階段表照抄 [`REPORT_FORMAT.md`](REPORT_FORMAT.md) §「本 repo 的目標藍圖」，**修改須經 Frank 核定**。
 
 **不得照抄 VSL 的五條業務主線來對齊本 repo 的工作。**
 
@@ -44,3 +44,13 @@
 VSL 的 `scripts/governance/check_report_sync.py` 會檢查本段的指標三件事
 （canonical 路徑／採用的 SHA／同步日期），並比對記錄的版本是不是目前的 canonical。
 ⚠️ 它**不會**讀本 repo 的 `.claude/skills/`，那一份是否與 canonical 一致，屬 `NOT_CHECKED`。
+
+本 repo 自己這一側：`python3 check_report_format.py --pointers` 會去數
+`REPORT_FORMAT.md` 的階段表有幾列，比對兩份入口宣稱的階段數。
+由來是 GPT 2026-09-26 對 PR #21 的 P3——入口宣稱的數字比表少一，
+而兩種寫法都讀得通，只有去數那張表才分得出來。
+
+⚠️ **它的能力邊界：分不出「宣稱」與「引述」。** 本段原本寫的是把當年那個
+錯的數字引在句子裡，檢核器當場擋下——那是誤殺，與禁用語掃描把「不得說 X」
+連同 X 一起擋掉同型。**刻意不加整檔豁免標記**（上一次那樣做，豁免的範圍
+就從一行擴大到整份檔案），改為敘述時不寫出裸數字。

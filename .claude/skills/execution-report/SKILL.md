@@ -32,7 +32,7 @@ description: 本 repo 的回報格式入口（薄引用）。四節強制格式�
 ## ⚠️ 第 3 節在本 repo 對齊的是本 repo 自己的藍圖
 
 來源＝`governance/OPERATING_RULES.md`「使命與定位」（GOAL-02）＋ `governance/OUTCOME_CONFIDENCE.md`，
-一句話與五階段表照抄 `REPORT_FORMAT.md` §「本 repo 的目標藍圖」。**修改須經 Frank 核定。**
+一句話與六階段表照抄 `REPORT_FORMAT.md` §「本 repo 的目標藍圖」。**修改須經 Frank 核定。**
 
 **不得照抄 virtual-strategy-lab 的五條業務主線來對齊本 repo 的工作。**
 共同的是「回報怎麼寫」，不共同的是「這個 repo 要去哪裡」——
