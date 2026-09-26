@@ -244,6 +244,18 @@
         "既有回報格式保留並存",
         "目標藍圖只能由負責人核定修改"
       ]
+    },
+    {
+      "id": "PR21-REPORT-POINTER-ADOPTION-20260926",
+      "status": "approved",
+      "source": "負責人 2026-09-26 提供的限定 Planner 指示；PR21 R2 exact head e78c6c79c9f58b07da721e5fa8e1923600ee1bab 已獨立覆核",
+      "decision": "採用方案 (a)：以 PR #21 作為 CLAUDE.md 藍圖指標與 check_report_format.py --pointers 的唯一採用路徑；不在 main 另做平行修正。正式採用等待負責人合併授權，合併前重核 exact head 與 live diff。",
+      "limits": [
+        "Planner、executor、reviewer 不自行 merge",
+        "目前 main 的錯誤藍圖指標仍未修正，狀態為 WAITING_OWNER_MERGE，不得宣稱已採用",
+        "PR21 head 變更即失效並需重新 exact-head review",
+        "不影響 PR22 發布主線、PR6 Package B gate 或 live C BLOCKED_ACCESS"
+      ]
     }
   ]
 }
