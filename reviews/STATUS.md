@@ -1,3 +1,28 @@
+## 2026-09-26：PR #6 Package A 精確 head 覆核完成
+
+### 1. 執行者
+
+- Claude 在既有 session `session_01RFeCsTYkVywjHvXk7od7Ab` 提交 Package A head `cca553f6291d14a7abbb6ef8c42d377a127fd9f6`；GPT／Codex 以不同 reviewer run 獨立重讀 live PR、17 paths、executor response、精確 SHA checks，並重跑聚焦測試、mutation、replay 與 tick redelivery。
+- [完整覆核](PR6_R6_PACKAGE_A_cca553f6.md) 結論為 **APPROVED_WITH_CONDITIONS（只限 Package A）**。PR #6 整體仍是 `BLOCKED / FOUNDATION_ONLY`。
+
+### 2. 小目標進度
+
+- **有前進**：19/19 Package A 測試、8/8 Package A mutants、replay COMPLETE、tick exit 10／重送 exit 20 均通過；`GOV-R2-02`、`GOV-R2-03`、`GOV-R2-05` 與兩項 P2 在精確 head 關閉。
+- 完整 suite 在 reviewer runtime 為 165 tests、2 failures、1 skip；舊 head `25457fbd...` 重現相同兩個 failures 與一個 skip，因此不是本批 regression，但作者的 165/165 與 50/51 舊 mutation 不升格為獨立通過。
+- 下一治理小目標是 `GOV-PR6-PACKAGE-B-ISOLATION-EVIDENCE`，但 `GOV-R1-03` 仍缺 qualifying isolation backend。Package B 未獲本次 owner decision 授權且無可用 runtime，所以**未上傳新執行包、未派工**；既有 scope proposal 與本 review 已寫回 main，next checkpoint `GOV_PR6_PACKAGE_B_QUALIFYING_RUNTIME_OR_OWNER_AUTHORIZATION`。
+- state revision 56。未 merge、部署、安裝 launcher、使用 secrets、呼叫模型、付費或升為 ACTIVE。
+
+### 3. 目標藍圖對齊
+
+- 現在的目標藍圖：讓別人借助我們的 AI 基礎（選模型與工具、判斷與修正、可重用的 skill）完成他想做的工作，並在別人的成功中累積我們自己的能力。
+- 目前處在藍圖哪一個階段：產品主線在第 4 階段「技術分享與分發」；本次為跨階段治理基礎，不是第 5 階段採用證據。
+- 這次有沒有遵照藍圖：是 —— 只處理會造成重複執行、錯認成果與逾權啟動的最小交接風險，沒有讓治理工作凍結產品主線。
+- 距離藍圖方向：前進 —— Package A 的五項離線可靠性缺口已可獨立重放；沒有新增非作者使用、採用或經濟成果。
+
+### 4. 本次執行的意義
+
+這次把「程式看起來有防護」變成租約、期限、分支成果歸屬、隔離探測與原子寫入都有負控制的可查證結論。負責人可以結束 Package A，但不能把這解讀成 controller 已可上線；真正缺的是 Package B 的隔離環境與持久 executor 接線，產品 PR #22 則照自己的 owner merge gate 繼續。
+
 ## 2026-09-26：PR #22 Release R A8 精確 head 覆核完成
 
 ### 1. 執行者
