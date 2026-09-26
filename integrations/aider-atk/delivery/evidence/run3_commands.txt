@@ -1,0 +1,17 @@
+# Run 3 (control): PR17 LIVE_EXECUTION_PLAN L2 command shape against a CLOSED loopback port (127.0.0.1:9, connection refused). No provider and no model are contacted; the key is a placeholder. Purpose: see what Aider leaves in the workspace and check that README step 7 still judges correctly. Uses run 2's extracted assets and venv.
+RUN="$PWD/w2/aider-first-run"
+cp -a "$RUN/asset/sample" "$PWD/w2/closed-port-sample"
+cd "$PWD/w2/closed-port-sample"
+git status --short
+git diff --quiet; echo "tracked_changes=$?"
+export OPENAI_API_BASE="http://127.0.0.1:9/v1" OPENAI_API_KEY="placeholder-not-a-key" AIDER_MODEL="openai/example-model"
+python3 "$RUN/asset/check_config.py"
+printf -- '- name: %s\n  extra_params:\n    max_tokens: 4096\n    max_retries: 0\n' "$AIDER_MODEL" > .aider.model.settings.yml
+cat .aider.model.settings.yml
+START=$(date +%s); timeout --signal=INT 900 "$RUN/.venv/bin/aider" --model "$AIDER_MODEL" --no-auto-commits --no-auto-lint --map-tokens 0 --max-chat-history-tokens 65536 --timeout 120 --no-check-update --no-analytics --yes --exit --read test_import_contacts.py --message "Change import_contacts.py so it reads the CSV by column name instead of by position. Keep name,email order working; also read email,name correctly; raise MissingColumnError mentioning 'email' when the email column is missing; keep empty strings as empty strings; keep non-ASCII text unchanged. Do not modify test_import_contacts.py." import_contacts.py > aider_closed_port.log 2>&1 < /dev/null; echo "aider_exit=$? seconds=$(( $(date +%s) - START ))"
+grep -c 'Retrying in' aider_closed_port.log
+grep -m3 -iE 'error|refused' aider_closed_port.log
+sha256sum test_import_contacts.py
+python3.11 -m unittest test_import_contacts 2>&1 | tail -1
+git diff --stat
+git status --short

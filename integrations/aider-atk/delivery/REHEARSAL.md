@@ -73,6 +73,22 @@ How the runs were driven: [`evidence/drive.sh`](evidence/drive.sh) reads one com
 
 The shallow-clone fetch worked through GitHub's normal fetch-by-SHA; it was not tried against any other git host.
 
+## Run 3: Aider invoked against a closed port (control, no model)
+
+To see what an Aider run leaves in the workspace, and whether step 7 still judges correctly afterwards, the PR17 `LIVE_EXECUTION_PLAN.md` L2 command was run **with the same flags and fixed task message** against `http://127.0.0.1:9/v1`, a loopback port where nothing listens (connection refused), with a placeholder key. **No provider or model was contacted and nothing was generated.** The run used a copy of run 2's baseline workspace and venv. Logs: [`evidence/run3_closed_port_control.log`](evidence/run3_closed_port_control.log) and Aider's own output [`evidence/run3_aider_output.log`](evidence/run3_aider_output.log).
+
+| Check | Observed (02:52:29Z–02:53:37Z) |
+|---|---|
+| `check_config.py` with those values | exit 0 (shape only) |
+| Aider exit code | **0**, after 68 s |
+| `Retrying in` lines | 8, so 9 attempts, each `litellm.InternalServerError … Connection error` |
+| step 7: test hash | unchanged `b2c040c2…` |
+| step 7: tests | still `FAILED (failures=1, errors=1)` |
+| step 7: `git diff --stat` | empty |
+| untracked files afterwards | `.gitignore` (Aider wrote `.aider*` into it), plus `.aider.chat.history.md`, `.aider.input.history`, `.aider.model.settings.yml` hidden by it, and `__pycache__/` |
+
+So a run where every request failed still exits 0, and step 7 correctly reports it as not solved. After this run, README step 7 names the untracked files to expect. This is the fourth time exit 0 on total failure has been seen (PR16, PR17, PR18 and here); it is the same finding, not new evidence of anything else.
+
 ## Blockers found and what changed
 
 | # | Found in | Blocker | Change |

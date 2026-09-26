@@ -97,7 +97,7 @@ python3.11 -m unittest test_import_contacts -v   # must be "Ran 5 tests" and "OK
 git diff --stat                            # must list import_contacts.py and nothing else
 git diff                                   # read it: reads by column name, no hard-coded test answers
 ```
-**Never use Aider's exit code.** It exits 0 even when every model request failed (measured). A result counts only if all three checks hold. Untracked files Aider leaves behind (`.aider*`, `__pycache__/`) do not count as changes.
+**Never use Aider's exit code.** It exits 0 even when every model request failed (measured). A result counts only if all three checks hold. Untracked files do not count as changes: Aider creates `.gitignore` (it adds `.aider*` to it) and `.aider*` history files, and running the tests creates `__pycache__/` (observed in [`REHEARSAL.md`](REHEARSAL.md) run 3).
 
 ## 8. Validate a de-identified feedback record
 
