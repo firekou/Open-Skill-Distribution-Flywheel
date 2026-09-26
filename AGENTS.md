@@ -14,3 +14,7 @@
 ## GPT／Claude 接力與運作方法
 
 依 [共用運作方法](AGENT_OPERATING_METHOD.md)、[專案接合](AGENT_METHOD_APPLICATION.md)、[交接手冊](AGENT_HANDOFF_RUNBOOK.md) 與 [工作模板](AGENT_TASK_TEMPLATE.md) 續作；雲端接線依 [導入驗收包](AGENT_CLOUD_ADOPTION_PLAN.md)。版本 AGENT-HANDOFF-001 / 1.0.0。此次只採用文件，不代表 runtime 已啟用，原治理入口及授權維持。
+
+## 覆核標準回覆補充
+
+依負責人 2026-09-26 直接指示，每次覆核必須交代：本次覆核的意義、是否進入下一小目標及其驗收、與專案目標藍圖的關係，以及下一階段或修復包是否已寫回 GitHub 並交給實際執行端。必附可查證連結，區分已上傳、已派工、已接單、已交付；未完成需明說原因。完整欄位見 [REPORT_FORMAT.md 的覆核者必填補充](REPORT_FORMAT.md#覆核者必填補充2026-09-26-負責人直接指示)，沿用四節格式與既有去重、修復及授權界線。
