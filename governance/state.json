@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 50,
+  "revision": 51,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1342,6 +1342,39 @@
       "next_checkpoint": "ATK_AIDER_DELIVERY_RESULT_SHA",
       "signal_url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/pull/19#issuecomment-5842426448",
       "packet_commit": "8e40827a9205d1243049b0a7f2e0299d78256d79"
+    },
+    {
+      "task_id": "PR7",
+      "pr": 7,
+      "status": "BLOCKED_SUPPLEMENTAL_ONLY",
+      "observed_head": "219dfffab31ed487a931513ef74117a6b9b5d513",
+      "last_reviewed_head": "219dfffab31ed487a931513ef74117a6b9b5d513",
+      "last_review_decision": "BLOCKED",
+      "review": "reviews/PR7_R1_SCOPE_219dffff.md",
+      "role": "SUPPLEMENTAL_EVIDENCE_ONLY",
+      "next_action": "Preserve PR7 without merge. Do not use it as a controller or canonical policy path.",
+      "next_checkpoint": "PR7_PRESERVE_SUPPLEMENTAL_EVIDENCE_NO_MERGE",
+      "exact_delta": {
+        "base_head": "237e07d9cad97cc6ee946d5973d9e6d0993be7b9",
+        "commits": 1,
+        "paths": [
+          "CLAUDE.md"
+        ],
+        "additions": 38,
+        "deletions": 0
+      },
+      "exact_head_checks": {
+        "workflow_runs": 0,
+        "commit_statuses": 0,
+        "pr_reviews": 0
+      },
+      "blocking_findings": [
+        "Repository-wide reporting policy was added to a stale supplemental-evidence branch rather than canonical main.",
+        "Merging PR7 would merge the duplicate G1 work line and violate the recorded PR6 single-source routing."
+      ],
+      "active_claim": null,
+      "merge_authorized": false,
+      "controller_authorized": false
     }
   ],
   "planning": {
