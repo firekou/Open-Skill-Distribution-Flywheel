@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 54,
+  "revision": 55,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1457,6 +1457,48 @@
         "no workflow, status or PR review evidence"
       ],
       "reviewed_at": "2026-09-26"
+    },
+    {
+      "task_id": "PR22-RELEASE-R",
+      "work_id": "ATK-AIDER-RELEASE-R-01",
+      "revision": 1,
+      "pr": 22,
+      "status": "APPROVED_WITH_CONDITIONS",
+      "observed_head": "3a681a436f12428c00e722a658b8869199a0f334",
+      "last_reviewed_head": "3a681a436f12428c00e722a658b8869199a0f334",
+      "last_review_decision": "APPROVED_WITH_CONDITIONS",
+      "review": "reviews/PR22_R1_RELEASE_R_3a681a43.md",
+      "authorization_source": "reviews/OWNER_DECISION_2026-09-26_FIRST_USE_AND_LIVE.md",
+      "owner_merge_only": true,
+      "owner_login": "firekou",
+      "active_claim": null,
+      "dispatch_status": "WAITING_OWNER_MERGE",
+      "next_checkpoint": "PR22_OWNER_MERGE_AND_POST_MERGE_PIN",
+      "next_action": "Immediately before owner merge, verify exact head 3a681a43 and live-main compatibility. Only firekou may merge. After merge, dispatch one documentation-only post-merge pin task with the actual release SHA; require a fixed work_id, source SHA, session/run claim and result SHA before marking execution active.",
+      "exact_head_checks": {
+        "workflow_runs": 0,
+        "commit_statuses": 0,
+        "pr_reviews": 0,
+        "mergeable": true
+      },
+      "independent_checks": {
+        "manifest_assets": "12/12 SHA-256 matched",
+        "configuration_tests": "11/11 OK",
+        "feedback_validator_tests": "20/20 OK",
+        "feedback_positive_fixtures": "2/2 VALID",
+        "baseline": "5 tests; expected 1 failure and 1 error; exit 1",
+        "test_file_sha256": "b2c040c2ae4ae6c7417acb8dcf4e3ed5c03ae26af95643f6b498a3ed697baada",
+        "external_day_of_state": "Aider #5552 open; Aider PR #5553 open/unmerged; LiteLLM PR #38318 closed/merged; aider-chat latest 0.86.2",
+        "evidence_level": "EXACT_HEAD_AND_AFFECTED_INVARIANTS_INDEPENDENTLY_REPRODUCED"
+      },
+      "pending_conditions": [
+        "Any head change invalidates this review.",
+        "If merge date is not 2026-09-26, rerun A7 before merge.",
+        "After merge, record and independently verify the actual release commit SHA.",
+        "Channel R permits zero outreach contacts and no upstream/social send or About/topics change.",
+        "No real-model success, non-author first-use, repeat use, external adoption or economic-value evidence exists."
+      ],
+      "reviewed_at": "2026-09-26"
     }
   ],
   "planning": {
@@ -1466,9 +1508,9 @@
     "scope": "G1-G7",
     "note": "負責人要求立即往下執行；完成可跟做整合包，不以live與發布條件阻擋離線交付。",
     "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
-    "next_work_id": "ATK-AIDER-FIRST-USE-01",
-    "next_checkpoint": "OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION",
-    "execution_status": "DELIVERY_REVIEWED_WAITING_OWNER_FIRST_USE"
+    "next_work_id": "ATK-AIDER-RELEASE-R-POST-MERGE-PIN",
+    "next_checkpoint": "PR22_OWNER_MERGE_AND_POST_MERGE_PIN",
+    "execution_status": "RELEASE_R_A8_APPROVED_WAITING_OWNER_MERGE"
   },
   "handoff": {
     "method": "govern-github-agent-handoffs",
@@ -1565,11 +1607,11 @@
   "product_roadmap": {
     "decision_id": "ATK-FULL-BLUEPRINT-20260926",
     "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
-    "status": "DELIVERY_APPROVED_WAITING_OWNER_FIRST_USE",
-    "next_work_id": "ATK-AIDER-FIRST-USE-01",
-    "next_checkpoint": "OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION",
-    "execution_status": "WAITING_OWNER_FIRST_USE",
-    "note": "PR14/16/17/18/19已審成果沿用。新包整合單一入口、資料驗證與離線跟做；外部動作條件僅約束對應步驟。",
+    "status": "RELEASE_R_A8_APPROVED_WAITING_OWNER_MERGE",
+    "next_work_id": "ATK-AIDER-RELEASE-R-POST-MERGE-PIN",
+    "next_checkpoint": "PR22_OWNER_MERGE_AND_POST_MERGE_PIN",
+    "execution_status": "WAITING_OWNER_MERGE",
+    "note": "PR22 exact head 3a681a43 已完成 A8 獨立覆核。下一步只由 firekou 合併，之後補實際發布 SHA；無 merge 前不派工、不假稱執行。真模型與非作者首次使用仍未證實。",
     "execution_prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
     "prompt_version": "2.1",
     "prompt_delivery": {
