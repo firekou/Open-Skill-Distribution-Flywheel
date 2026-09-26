@@ -1,0 +1,158 @@
+{
+  "work_id": "ATK-AIDER-LIVE-PREP-01",
+  "revision": 1,
+  "note": "Official pages read with Exa web_fetch_exa / web_search_exa between 2026-09-25T18:42Z and 2026-09-25T18:47Z. Quotes are short verbatim excerpts from the fetched text. A page's own 'updated' date is not the same as observed_at. No login, billing page, key page or account data was read.",
+  "sources": [
+    {
+      "id": "OR-LIMITS",
+      "provider": "OpenRouter",
+      "url": "https://openrouter.ai/docs/api-reference/limits",
+      "observed_at_utc": "2026-09-25T18:43Z",
+      "excerpts": [
+        "Per-key credit limits — an optional spending cap configured on an individual API key.",
+        "Account balance — your available credits across the account. If your account has a negative credit balance, you may see errors, including for free models.",
+        "Making additional accounts or API keys will not affect your rate limits, as we govern capacity globally."
+      ]
+    },
+    {
+      "id": "OR-ERRORS",
+      "provider": "OpenRouter",
+      "url": "https://openrouter.ai/docs/api-reference/errors",
+      "observed_at_utc": "2026-09-25T18:43Z",
+      "excerpts": [
+        "402 Payment Required: Your account or API key has insufficient credits. Add more credits and retry the request.",
+        "On 429 Too Many Requests and 503 Service Unavailable responses, OpenRouter may include a standard HTTP Retry-After response header",
+        "in some cases, you may still be charged for the prompt processing cost by the upstream provider, even if no content is generated."
+      ]
+    },
+    {
+      "id": "OR-KEYS",
+      "provider": "OpenRouter",
+      "url": "https://openrouter.ai/docs/features/provisioning-api-keys",
+      "observed_at_utc": "2026-09-25T18:43Z",
+      "excerpts": [
+        "Usage Monitoring: Track key usage and automatically disable keys that exceed limits (with optional daily/weekly/monthly limit resets)",
+        "limit: 1000, // Optional credit limit"
+      ]
+    },
+    {
+      "id": "OR-MODEL-LUNA",
+      "provider": "OpenRouter",
+      "url": "https://openrouter.ai/openai/gpt-5.6-luna",
+      "observed_at_utc": "2026-09-25T18:46Z",
+      "excerpts": [
+        "In / Out Price $0.20 / $1.20 per 1M",
+        "OpenAI Flex | $0.10 | $0.60",
+        "OpenAI | $0.20 | $1.20",
+        "Amazon Bedrock (US) | $0.22 | $1.32",
+        "OpenAI Fast | $0.40 | $2.40"
+      ],
+      "caveat": "The page's availability chart shows 'Sep 12, 8 AM - Sep 15, 8 AM', so the fetched copy may be a cached snapshot older than observed_at. Re-read on approval day."
+    },
+    {
+      "id": "OR-FAQ",
+      "provider": "OpenRouter",
+      "url": "https://openrouter.ai/docs/faq",
+      "observed_at_utc": "2026-09-25T18:46Z",
+      "excerpts": [
+        "OpenRouter charges a 5.5% ($0.80 minimum) fee when you purchase credits.",
+        "We pass through the pricing of the underlying model providers without any markup"
+      ]
+    },
+    {
+      "id": "OA-SPEND-LIMITS",
+      "provider": "OpenAI",
+      "url": "https://developers.openai.com/api/docs/guides/spend-limits",
+      "observed_at_utc": "2026-09-25T18:45Z",
+      "excerpts": [
+        "Spend alert | Sends a notification; API traffic continues",
+        "Hard spend limit | Affected API requests return a `429` error",
+        "Reaching a project hard limit returns a `429` error with the `project_spend_limit_exceeded` code.",
+        "Enforcement is not instantaneous. The API Platform can process a small amount of extra usage while the limit state propagates, so recorded spend can slightly exceed the configured amount."
+      ]
+    },
+    {
+      "id": "OA-PROJECTS-HELP",
+      "provider": "OpenAI",
+      "url": "https://help.openai.com/en/articles/9186755-managing-projects-in-the-api-platform",
+      "observed_at_utc": "2026-09-25T18:44Z",
+      "excerpts": [
+        "Setting a monthly spend limit allows you to establish soft spending thresholds for your project. When usage exceeds this limit within a given calendar month (UTC), API requests will continue to be processed without interruption.",
+        "A spend limit can monitor spend without enforcement, or you can enforce it as a hard limit so API requests fail after spend reaches the limit. For the latest configuration steps and behavior, see Spend limits in the developer documentation."
+      ],
+      "caveat": "The same help page carries both the older soft-only wording and the newer enforce-as-hard-limit wording. Treated as: a project limit is alert-only unless 'Enforce a hard limit' is switched on (per OA-SPEND-LIMITS)."
+    },
+    {
+      "id": "OA-TROUBLESHOOT",
+      "provider": "OpenAI",
+      "url": "https://help.openai.com/en/articles/6614457-troubleshooting-api-usage-and-spend-limits",
+      "observed_at_utc": "2026-09-25T18:45Z",
+      "excerpts": [
+        "project_spend_limit_exceeded | Your project reached a configured hard spend limit.",
+        "Spend alerts send notifications without stopping API traffic. Hard spend limits can stop affected requests when tracked spend reaches the configured amount.",
+        "Changes and enforcement aren't instantaneous, so recorded spend can slightly exceed the configured amount."
+      ]
+    },
+    {
+      "id": "OA-PREPAID",
+      "provider": "OpenAI",
+      "url": "https://help.openai.com/en/articles/8264644-how-can-i-set-up-prepaid-billing",
+      "observed_at_utc": "2026-09-25T18:44Z",
+      "excerpts": [
+        "Review Use auto-reload before confirming your purchase. It is turned on by default during setup.",
+        "API access may not stop immediately after your credits run out. Usage processed during this delay can appear as a negative credit balance.",
+        "Do not rely on the prepaid balance as an instantaneous spending cutoff."
+      ]
+    },
+    {
+      "id": "OA-ERRORS",
+      "provider": "OpenAI",
+      "url": "https://platform.openai.com/docs/guides/error-codes",
+      "observed_at_utc": "2026-09-25T18:44Z",
+      "excerpts": [
+        "429 - You exceeded your current quota, please check your plan and billing details | Cause: You have run out of credits or hit your maximum monthly spend."
+      ]
+    },
+    {
+      "id": "OA-PRICING",
+      "provider": "OpenAI",
+      "url": "https://developers.openai.com/api/docs/pricing",
+      "observed_at_utc": "2026-09-25T18:45Z",
+      "excerpts": [
+        "gpt-5.6-luna | $0.20 | $0.02 | $0.25 | $1.20 | $0.40 | $0.04 | $0.50 | $1.80"
+      ],
+      "caveat": "The page renders several pricing tables whose tier labels were lost in text extraction. The first table (0.20 in / 1.20 out short context) is read as Standard; the 0.10/0.60 tables as Batch or Flex and the 0.40/2.40 table as Fast. This mapping is an inference; confirm the tier label on approval day."
+    },
+    {
+      "id": "ATK-PR4-REVIEW",
+      "provider": "ATK (AI Token King)",
+      "url": "reviews/PR4_ATK_INTEGRATION_REVIEW_f2a2188.md (this repository, 2026-09-18)",
+      "observed_at_utc": "2026-09-25T18:44Z (repository file read; the underlying live check was 2026-09-18)",
+      "excerpts": [
+        "OpenAI 相容 API base URL | https://api.aitokenking.com.tw/api/v1",
+        "模型清單 | GET /api/v1/models | TESTED：HTTP 200，52 個模型",
+        "model=claude-sonnet-4.6 ... 成功回傳 OK，usage 為 12 input／4 output tokens；未回報美元成本"
+      ],
+      "caveat": "Seven days old, reviewer-run with an owner-authorised credential. Not re-checked in this batch: an Exa fetch of aitokenking.com and api.aitokenking.com timed out (CRAWL_TIMEOUT), and a direct request from this session was refused by the session's permission policy. Pricing, spend-cap scope, alert-or-reject behaviour, over-limit error and billing of rejected requests: UNKNOWN."
+    },
+    {
+      "id": "ATK-REPO-CONTRACT",
+      "provider": "ATK (AI Token King)",
+      "url": "ATK_ROUTING_INTEGRATION.md and templates/env.example (this repository, 2026-09-14)",
+      "observed_at_utc": "2026-09-25T18:44Z",
+      "excerpts": ["ATK_BASE_URL=https://api.aitokenking.com/v1"],
+      "caveat": "Superseded: PR4 review found this URL lacks '.tw' and '/api'. Do not use."
+    },
+    {
+      "id": "DS-ERRORS-PRICING",
+      "provider": "DeepSeek (considered, not shortlisted)",
+      "url": "https://api-docs.deepseek.com/quick_start/error_codes ; https://api-docs.deepseek.com/quick_start/pricing",
+      "observed_at_utc": "2026-09-25T18:43Z",
+      "excerpts": [
+        "402 - Insufficient Balance | Cause: You have run out of balance.",
+        "The corresponding fees will be directly deducted from your topped-up balance or granted balance"
+      ],
+      "caveat": "Only an account-wide prepaid balance was documented in the pages read; no per-key or per-project cap found. Dropped to keep the list at three."
+    }
+  ]
+}

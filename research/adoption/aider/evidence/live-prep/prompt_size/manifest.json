@@ -1,0 +1,139 @@
+{
+  "generated_utc": "2026-09-25T19:03:47.301+00:00",
+  "probe": "prompt_size_probe.py",
+  "probe_sha256": "a987eadac7bff59d7e7dbedfc4c0ccee9a9a77d3fca5e91684c1b612cb440fbf",
+  "message": "Change import_contacts.py so it reads the CSV by column name instead of by position. Keep name,email order working; also read email,name correctly; raise MissingColumnError mentioning 'email' when the email column is missing; keep empty strings as empty strings; keep non-ASCII text unchanged. Do not modify test_import_contacts.py.",
+  "fixtures": {
+    "integrations/aider-atk/sample/import_contacts.py": {
+      "from_commit": "d1474670db12934c80caa05674c8e4320cbad312",
+      "md5": "da2b54d995a08cdbb84f157587f82f1d",
+      "sha256": "2dc27bf7868338c6ea4ef2cd29628078aa1346b471bdfb176073f0ddc21c0336"
+    },
+    "integrations/aider-atk/sample/test_import_contacts.py": {
+      "from_commit": "d1474670db12934c80caa05674c8e4320cbad312",
+      "md5": "2952746b8e56b5a35fdb02949bcdabe1",
+      "sha256": "b2c040c2ae4ae6c7417acb8dcf4e3ed5c03ae26af95643f6b498a3ed697baada"
+    }
+  },
+  "variants": [
+    {
+      "variant": "no_settings_file",
+      "port": 8871,
+      "model_settings_file_content": null,
+      "command": [
+        "/home/user/aider-venv/bin/aider",
+        "--model",
+        "openai/local-test-model",
+        "--no-auto-commits",
+        "--no-auto-lint",
+        "--map-tokens",
+        "0",
+        "--max-chat-history-tokens",
+        "65536",
+        "--timeout",
+        "120",
+        "--no-check-update",
+        "--no-analytics",
+        "--no-show-model-warnings",
+        "--yes",
+        "--exit",
+        "--read",
+        "test_import_contacts.py",
+        "--message",
+        "Change import_contacts.py so it reads the CSV by column name instead of by position. Keep name,email order working; also read email,name correctly; raise MissingColumnError mentioning 'email' when the email column is missing; keep empty strings as empty strings; keep non-ASCII text unchanged. Do not modify test_import_contacts.py.",
+        "import_contacts.py"
+      ],
+      "environment": {
+        "PATH": "/home/user/aider-venv/bin:/usr/bin:/bin",
+        "HOME": "/tmp",
+        "OPENAI_API_KEY": "<PLACEHOLDER_KEY>",
+        "OPENAI_API_BASE": "http://127.0.0.1:8871/v1"
+      },
+      "start_utc": "2026-09-25T19:03:37.610+00:00",
+      "duration_monotonic_s": 4.482,
+      "exit_code": 0,
+      "http_requests_received": 1,
+      "per_request": [
+        {
+          "model": "local-test-model",
+          "messages": 10,
+          "message_chars": 6056,
+          "tokens_estimate_o200k_base": 1398,
+          "tokens_estimate_cl100k_base": 1392,
+          "max_tokens_field_present": false,
+          "max_tokens": null,
+          "max_retries_field_in_body": false,
+          "stream": true
+        }
+      ],
+      "files": {
+        "prompt_size/no_settings_file.request_bodies.json": "bb09308a5c613977fba1b347c1e38616036fe7129e94f375e9e4b87233532e97",
+        "prompt_size/no_settings_file.stdout.txt": "7e605330c3584f9ee306ee2c1fcff36d9df0d242f3619aadf529baa9e5a7a9ba",
+        "prompt_size/no_settings_file.stderr.txt": "dd7e4edb84ed0988e73d9fef5f031910be61df17b9bc3ca63a7eac522f1e5a4d"
+      }
+    },
+    {
+      "variant": "l2_settings_file",
+      "port": 8872,
+      "model_settings_file_content": "- name: openai/local-test-model\n  extra_params:\n    max_tokens: 4096\n    max_retries: 0\n",
+      "command": [
+        "/home/user/aider-venv/bin/aider",
+        "--model",
+        "openai/local-test-model",
+        "--model-settings-file",
+        ".aider.model.settings.yml",
+        "--no-auto-commits",
+        "--no-auto-lint",
+        "--map-tokens",
+        "0",
+        "--max-chat-history-tokens",
+        "65536",
+        "--timeout",
+        "120",
+        "--no-check-update",
+        "--no-analytics",
+        "--no-show-model-warnings",
+        "--yes",
+        "--exit",
+        "--read",
+        "test_import_contacts.py",
+        "--message",
+        "Change import_contacts.py so it reads the CSV by column name instead of by position. Keep name,email order working; also read email,name correctly; raise MissingColumnError mentioning 'email' when the email column is missing; keep empty strings as empty strings; keep non-ASCII text unchanged. Do not modify test_import_contacts.py.",
+        "import_contacts.py"
+      ],
+      "environment": {
+        "PATH": "/home/user/aider-venv/bin:/usr/bin:/bin",
+        "HOME": "/tmp",
+        "OPENAI_API_KEY": "<PLACEHOLDER_KEY>",
+        "OPENAI_API_BASE": "http://127.0.0.1:8872/v1"
+      },
+      "start_utc": "2026-09-25T19:03:43.195+00:00",
+      "duration_monotonic_s": 3.598,
+      "exit_code": 0,
+      "http_requests_received": 1,
+      "per_request": [
+        {
+          "model": "local-test-model",
+          "messages": 10,
+          "message_chars": 6056,
+          "tokens_estimate_o200k_base": 1398,
+          "tokens_estimate_cl100k_base": 1392,
+          "max_tokens_field_present": true,
+          "max_tokens": 4096,
+          "max_retries_field_in_body": false,
+          "stream": true
+        }
+      ],
+      "files": {
+        "prompt_size/l2_settings_file.request_bodies.json": "2991cca3fb150670f32f93b8bf0a9f8a96aa03fb9ffa9108070728898948f8bf",
+        "prompt_size/l2_settings_file.stdout.txt": "1f09aa2f06b72bad11b6c1ba740551fc3345282e73b0a8f7cfdc97ef2dce5aa9",
+        "prompt_size/l2_settings_file.stderr.txt": "dd7e4edb84ed0988e73d9fef5f031910be61df17b9bc3ca63a7eac522f1e5a4d"
+      }
+    }
+  ],
+  "limits": [
+    "Stand-in replied 'ok' with no edit, so this is the size of the FIRST request only; later turns carry chat history and grow.",
+    "Token counts are tiktoken estimates, not the chosen model's tokenizer.",
+    "With a real reply that edits the file, aider may run further calls (reflection on malformed edits) not exercised here."
+  ]
+}

@@ -1,0 +1,191 @@
+[
+  {
+    "t_monotonic_s": 2.221,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 2.666,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 3.611,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 3.88,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 4.374,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 5.289,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 5.803,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 6.28,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 7.141,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 8.156,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 8.544,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 9.426,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 11.44,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 11.864,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 12.766,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 16.783,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 17.178,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 17.969,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 25.983,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 26.445,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 27.315,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 43.329,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 43.808,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 44.727,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 76.743,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 77.129,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  },
+  {
+    "t_monotonic_s": 77.955,
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "answered_status": 429
+  }
+]
