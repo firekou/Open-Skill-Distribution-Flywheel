@@ -1,3 +1,5 @@
+> 2026-09-26 10:32 現行執行更新：下文第7、8、11節的起點/狀態為歷史快照，現行由 state.json 及 [ATK_AIDER_DELIVERY_01.md](ATK_AIDER_DELIVERY_01.md) 接續。PR16–19已審，不重跑舊工作；目前執行單一入口整合與離線跟做。完整階段終點保留。
+
 # ATK 完整藍圖：從外部成果到可持續採用
 版本 1.0｜2026-09-26（Asia/Taipei）｜Planner 交付，非獨立驗收
 決策：ATK-FULL-BLUEPRINT-20260926

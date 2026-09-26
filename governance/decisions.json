@@ -216,6 +216,21 @@
         "90天與數量為Planner探索目標，不是已達成成果或新增邀請授權",
         "不重置舊修復輪次；既有主目標與支出/發布/merge/秘密界線維持"
       ]
+    },
+    {
+      "id": "ATK-CONTINUE-DELIVERY-20260926",
+      "status": "approved",
+      "source": "2026-09-26 10:32 Asia/Taipei 負責人要求沿目標藍圖細化全部後續動作、立即執行並派工。",
+      "decision": "立即派ATK-AIDER-DELIVERY-01，整合既有已審資產成可跟做交付、離線演練及後續具體步驟；未具條件的外部動作不得凍結無依賴工作。",
+      "packet": "reviews/ATK_AIDER_DELIVERY_01.md",
+      "supersedes": [
+        "state revision47將OWNER-FIRST-USE-DECISION作為整個產品唯一下一工作的安排"
+      ],
+      "limits": [
+        "不重做已審修復、不重置舊輪次",
+        "本包分支實作與Draft PR；新增API費用0",
+        "未指定merge、production部署、對外發送、credential操作與支出不視為本輪授權"
+      ]
     }
   ]
 }

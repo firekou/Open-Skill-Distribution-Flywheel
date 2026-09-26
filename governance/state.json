@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 47,
+  "revision": 48,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1299,6 +1299,29 @@
         "release gate remains NOT RELEASABLE until owner authorizes channel, sender and external action",
         "no real-model success, external first-use, reuse, adoption or economic-value evidence exists"
       ]
+    },
+    {
+      "task_id": "ATK-AIDER-DELIVERY-01",
+      "work_id": "ATK-AIDER-DELIVERY-01",
+      "revision": 1,
+      "status": "READY",
+      "goal": "單一入口整合已審Aider/ATK資產並完成乾淨環境離線跟做",
+      "source_main": "bbb85b39001ece19a8f19e3f186c1c3eeb1805cb",
+      "source_head": "a77d1e8e4d4d545bf8d4c5c7a803aa6b944c1a41",
+      "branch": "claude/atk-aider-delivery-01",
+      "packet": "reviews/ATK_AIDER_DELIVERY_01.md",
+      "dedup_key": "firekou/Open-Skill-Distribution-Flywheel:ATK-AIDER-DELIVERY-01:1:bbb85b39001ece19a8f19e3f186c1c3eeb1805cb:executor",
+      "deadline": "2026-09-27T02:32:50Z",
+      "scope_paths": [
+        "integrations/aider-atk/delivery/**",
+        "research/adoption/aider/first-use/delivery/**",
+        "reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md (append only)"
+      ],
+      "repair_rounds_used": 0,
+      "repair_rounds_limit": 2,
+      "additional_api_budget_usd": 0,
+      "active_claim": null,
+      "next_checkpoint": "ATK_AIDER_DELIVERY_CLAIM_OR_RESULT"
     }
   ],
   "planning": {
@@ -1306,11 +1329,11 @@
     "decision_id": "GOV-PLAN-02",
     "prompt": "governance/IMPLEMENTATION_PROMPT.md",
     "scope": "G1-G7",
-    "note": "PR19 revision 2 exact head a77d1e8e independently closes both R1 machine-integrity blockers. Preparation is approved with conditions; external publication/outreach remains owner-gated and record ingestion must reject tests_failed > tests_total.",
+    "note": "負責人要求立即往下執行；完成可跟做整合包，不以live與發布條件阻擋離線交付。",
     "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
-    "next_work_id": "OWNER-FIRST-USE-DECISION",
-    "next_checkpoint": "OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION",
-    "execution_status": "FIRST_USE_PREP_APPROVED_EXTERNAL_ACTIONS_GATED"
+    "next_work_id": "ATK-AIDER-DELIVERY-01",
+    "next_checkpoint": "ATK_AIDER_DELIVERY_CLAIM_OR_RESULT",
+    "execution_status": "DELIVERY_READY"
   },
   "handoff": {
     "method": "govern-github-agent-handoffs",
@@ -1407,13 +1430,13 @@
   "product_roadmap": {
     "decision_id": "ATK-FULL-BLUEPRINT-20260926",
     "document": "reviews/ATK_END_TO_END_BLUEPRINT.md",
-    "status": "FIRST_USE_PREP_APPROVED_WITH_CONDITIONS",
-    "next_work_id": "OWNER-FIRST-USE-DECISION",
-    "next_checkpoint": "OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION",
-    "execution_status": "FIRST_USE_PREP_APPROVED_EXTERNAL_ACTIONS_GATED",
-    "note": "PR19 r2 exact head a77d1e8e closes P1-01 and P1-02 after independent 17/17 replay. No third repair is requested. Publication, outreach, sender identity, privacy, credentials and spend remain owner-gated; the release gate is still NOT RELEASABLE.",
+    "status": "DELIVERY_READY",
+    "next_work_id": "ATK-AIDER-DELIVERY-01",
+    "next_checkpoint": "ATK_AIDER_DELIVERY_CLAIM_OR_RESULT",
+    "execution_status": "DELIVERY_READY",
+    "note": "PR14/16/17/18/19已審成果沿用。新包整合單一入口、資料驗證與離線跟做；外部動作條件僅約束對應步驟。",
     "execution_prompt": "reviews/CLAUDE_NEXT_PROMPT_ATK_DISTRIBUTION.md",
-    "prompt_version": "2.0",
+    "prompt_version": "2.1",
     "prompt_delivery": {
       "commit": "61bb912c775ff26ab6775bce8f943f81536beb0b",
       "status": "SIGNAL_SENT",
@@ -1463,6 +1486,7 @@
       "review": "reviews/PR19_R2_FIRST_USE_PREP_a77d1e8e.md",
       "decision": "APPROVED_WITH_CONDITIONS",
       "persistent_launcher_verified": false
-    }
+    },
+    "delivery_packet": "reviews/ATK_AIDER_DELIVERY_01.md"
   }
 }

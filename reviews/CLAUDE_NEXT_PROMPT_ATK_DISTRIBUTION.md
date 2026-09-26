@@ -1,5 +1,5 @@
 # Claude 完整執行 Prompt：ATK 從外部成果到實際採用
-版本 2.0｜2026-09-26｜單一執行入口
+版本 2.1｜2026-09-26｜單一執行入口
 Repository：https://github.com/firekou/Open-Skill-Distribution-Flywheel
 負責人本輪指示：把整個執行計畫、目標與所有階段細節整合為完整 Prompt，交給 Claude 執行。
 全程藍圖：[ATK_END_TO_END_BLUEPRINT.md](ATK_END_TO_END_BLUEPRINT.md)。
@@ -17,36 +17,13 @@ Repository：https://github.com/firekou/Open-Skill-Distribution-Flywheel
 
 文件數、stars、mock、CI、merge、模型呼叫數都不能代替上述答案。缺證據記未知；没有增量則推薦原作，不硬造 adapter。
 
-## 2. 啟動程序與當前起點
-先 fetch 最新 main，依序讀 AGENTS.md、governance/OPERATING_RULES.md、governance/decisions.json、governance/state.json、reviews/STATUS.md，套用 atk-goal-alignment 與 executive-review-gate，完整讀全程藍圖與本 Prompt。
-查 live PR base/head、diff、comments、最新 main review、executor response，不能依舊 PR body 判定目前版本。
+## 2. 最新起點與唯一當前工作
+先讀 main 的 AGENTS、OPERATING_RULES、decisions、state、STATUS；查 live PR 及 active claim。
+PR14/16/17/18/19 的現行已審成果與精確 SHA 見 [下一階段工作包](ATK_AIDER_DELIVERY_01.md)。PR16 R2與PR19 R2已審，不得繼續舊修復。
+本輪負責人要求立即往下規劃及派工；缺 live/發布条件只停相關動作。
 
-目前可核對的起點：
-- 三候選 Aider/Continue/Open WebUI 已比較，Aider 已選定，不重做選題。
-- PR14 固定資產 d1474670db12934c80caa05674c8e4320cbad312 已有原生設定、最小任務、Quick Start、離線檢查器、兩篇技術草稿。R2 三項條件已關閉。真模型和外部採用未驗證。
-- PR16 head 57fa50900035cb6eef316504b065cf98a8b4fee0，ATK-VALUE-READINESS-01 r1 為 BLOCKED。先完成下節 revision 2；不要重建 PR14。
-- 本 Prompt 整合全程，不重置任何修復輪次，不替代現行精確 head review。
-- PR15 的治理問題只限制該 skill 的權威使用，不阻擋無依賴產品工作。controller/持久 launcher 不是產品前置。
-
-若 live 已有較新成果，先沿最新 review 續作，不套用過期修正；相同 work_id 有 active claim 就續用該工作，不另開平行分支。
-
-## 3. 現在立即執行：PR16 revision 2
-work_id: ATK-VALUE-READINESS-01
-revision: 2
-branch: claude/atk-value-readiness-01
-source_head: 57fa50900035cb6eef316504b065cf98a8b4fee0
-dedup_key: firekou/Open-Skill-Distribution-Flywheel:16:ATK-VALUE-READINESS-01:2:57fa50900035cb6eef316504b065cf98a8b4fee0:executor
-repair_round: 1/2
-review: reviews/PR16_R1_VALUE_READINESS_57fa5090.md
-
-只修改 PR16 原有九個路徑；可在 research/adoption/aider/evidence/ 補 manifest/raw metadata。保留既有原始證據，追加修正版與 supersedes 對照，不覆寫舊觀測。PR14 檔案不改。
-四個具體工作：
-1. SOURCE_AND_GAP.md 完整納入 Aider #4027 本文、相關留言、版本及原回報者 v0.86.1 無法重現後關閉的事實。把它標成歷史案例。查當前與檢查器功能相符的需求，保存查詢、時間、範圍、結果與排除理由；找不到就記 0，不把歷史缺陷變成現行需求。
-2. STUDY_PROTOCOL.md 不再用不同人的 A/B/A 來回答材料效果。若只做 1–3 人探索，明定只判可行性及卡點；若要比較增量，提供兩個固定、等難度任務，配置 AB/BA 順序、能力背景、學習效應、支援介入、品質底線與逐人配對資料。新任務可放同研究 evidence 目錄，不改 PR14 評分測試。探索樣本不宣稱普遍或統計顯著改善。最低有用差異須事前有理由，不能事後挑指標。
-3. 各 base-path 與 retry case 補去敏 manifest：case_id、完整安全命令/config、版本、fixture hash、server-ready、起迄 UTC、exit、stdout/stderr 與 SHA256、觀察和限制。原紀錄沒有的欄位不得回填猜值；在原授權離線範圍可重跑，不能重跑就將主張降為 REPORTED。相同 JSON 不能獨自證明三次不同執行。
-4. RELEASE_AND_ACCESS_PACKET.md 與 TRIAL_RUNBOOK.md 將 provider key/project 硬費用上限改為待核實能力；未選定 provider 不預設存在。區分警報與真正拒絕後續請求的硬限制，列不能證明上限就不執行 live 的 gate。GitHub/session 權限沒有 API 證據就寫 unknown。
-
-交付五份文件的一致修正、證據索引與 executor response 追加，提交同一 Draft PR。逐項回覆 P1-01 至 P1-04 的證據，不自行關閉 reviewer findings。交 reviewer 後停止本批，不自行進入真呼叫。
+## 3. 立即執行 ATK-AIDER-DELIVERY-01 revision 1
+完整契約、8個操作步驟、允許路徑、來源SHA、期限、驗收、全程後續動作均在 [ATK_AIDER_DELIVERY_01.md](ATK_AIDER_DELIVERY_01.md)。先回claim，完成可跟做整合包與乾淨環境離線演練，交一個Draft PR；不得只交新計畫。
 
 ## 4. 各階段的詳細執行與終點
 
@@ -119,7 +96,7 @@ ATK-UPSTREAM-01：可提早唯讀查重和備稿。檢查上游 release、issues
 
 每次開工先在既有 GitHub conversation 登記：
 work_id、revision、source main SHA、source asset/head、session/run、scope、dedup key、絕對 UTC deadline。
-PR16 沿用既有 dedup；後續格式 repo:work_id:revision:source_sha:executor。單批 45 分鐘工作窗口、claim 起 24 小時期限；不夠就交 partial、精確缺口及可恢復步驟，不偽報完成。
+現行工作包使用其固定 dedup；後續格式 repo:work_id:revision:source_sha:executor。單批 45 分鐘工作窗口、claim 起 24 小時期限；不夠就交 partial、精確缺口及可恢復步驟，不偽報完成。
 每批只一個主要 work_id。成果 commit/ Draft PR、executor response 齊就交 GPT；不得自己批准自己的實作。
 GPT 通過後，重新核對依賴，續作下一個已定義且在授權範圍內的包；不要求負責人重新給方向。某階段缺權限只停該動作，完成無依賴準備。不得趁等 review 更改同一受審 head。
 每包最多兩輪必要修復，舊輪次不重置；耗盡時交縮小或停止建議。
@@ -139,7 +116,7 @@ reviews/ATK_DISTRIBUTION_EXECUTOR_RESPONSE.md 追加，保留原紀錄。每批�
 Non-goals：不重啟通用 benchmark/Freeze/Omnigent/AGT/OMA；不新增平台、controller、無限候選搜尋；不以 mock 代替真成功；不自行部署、發布、邀請、送上游、修改 secrets/權限或新增未授權支出。
 負責人此次授權整合與執行規劃不等於解除上述外部動作界線。真正需決定時，先備妥固定資產、文案、對象/渠道、端點/model/成本/停止方式，再把單一具體決策交回。
 
-現在開始：讀 live state，承接 PR16 revision 2 四項修正並完成交付，不重做已驗收離線資產。
+現在開始：讀 live state，回 claim，執行 ATK-AIDER-DELIVERY-01；完整沿用已驗收資產。
 
 ## 歷史
 本版取代本入口先前 PLANNED_NOT_DISPATCHED 的過期起點；全程藍圖中的 r1 契約保留作歷史，現行執行以 main 帳本、最新 review 與本版為準。
