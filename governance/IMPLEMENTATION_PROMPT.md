@@ -1,6 +1,6 @@
 # Claude AI 治理導入工作包
 
-> **現行狀態校正（2026-09-26，state revision 56）**：本檔下方 2026-09-21 的 `86421c90… BLOCKED` 是歷史快照，不是現行 next action。現在以 [governance/state.json](state.json) 的 `GOV-BOOTSTRAP` 與 [PR6 Package A 精確 head 覆核](../reviews/PR6_R6_PACKAGE_A_cca553f6.md) 為準：Package A head `cca553f6291d14a7abbb6ef8c42d377a127fd9f6` 已 `APPROVED_WITH_CONDITIONS`，Package B 仍因 `GOV-R1-03` 缺 qualifying isolation backend 而等待。未取得負責人授權與合格 runtime 前，不派 Package B、不開第四輪、不把 automation 升為 ACTIVE。
+> **現行狀態校正（2026-09-26；校正時為 state revision 56，後續以 live state 為準）**：本檔下方 2026-09-21 的 `86421c90… BLOCKED` 是歷史快照，不是現行 next action。現在以 [governance/state.json](state.json) 的 `GOV-BOOTSTRAP` 與 [PR6 Package A 精確 head 覆核](../reviews/PR6_R6_PACKAGE_A_cca553f6.md) 為準：Package A head `cca553f6291d14a7abbb6ef8c42d377a127fd9f6` 已 `APPROVED_WITH_CONDITIONS`，Package B 仍因 `GOV-R1-03` 缺 qualifying isolation backend 而等待。未取得負責人授權與合格 runtime 前，不派 Package B、不開第四輪、不把 automation 升為 ACTIVE。
 
 > 2026-09-21 現行 next_action：PR6 的 86421c90 已完成 G4 review，結論 BLOCKED。請先讀本檔末段「現行接續工作」與 PR6_R2_G4_REVIEW_86421c90；下方舊送審定位為歷史紀錄。此次更新是 review／規劃交付，不啟動 runner。
 版本 2，2026-09-19。取代本檔舊版派工順序。
