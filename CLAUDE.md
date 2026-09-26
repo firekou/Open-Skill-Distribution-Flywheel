@@ -37,7 +37,8 @@
 
 **紀律：**
 - 這四節是**對負責人的對話回報**格式。它**不取代**各專案原有的完工／PR／送審格式
-  （例如 DeFiLab `CLAUDE.md` §3 的 Validation 區塊）——兩者並存，各自都要寫。
+  （本 repo 例如 executor response、`reviews/` 送審檔、PR 結果留言）——兩者並存，各自都要寫。
+- 完整規則、紀律與送出前自我檢查見 [.claude/skills/execution-report/SKILL.md](.claude/skills/execution-report/SKILL.md)。
 - 第 2、3 節若沒有進展，必須寫「沒有前進」並說明原因，**不得用做了什麼事來冒充進度**。
 - 第 4 節不得寫成第 2 節的重複；它要回答的是「所以這件事對人有什麼用」。
 - 不得因為本次只是查資料、只是讀檔、只是被擋住，就省略格式。**被擋住也要用這個格式回報。**
