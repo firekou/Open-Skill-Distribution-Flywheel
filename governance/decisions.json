@@ -231,6 +231,19 @@
         "本包分支實作與Draft PR；新增API費用0",
         "未指定merge、production部署、對外發送、credential操作與支出不視為本輪授權"
       ]
+    },
+    {
+      "id": "REPORT-FORMAT-20260926",
+      "status": "approved",
+      "source": "2026-09-26 負責人直接指示：每一個專案每次執行動作的回報，一律嚴格使用固定四項格式。",
+      "decision": "所有 agent 每次執行後回報，依 REPORT_FORMAT.md 四項固定格式：1. 執行者／2. 小目標進度／3. 目標藍圖對齊／4. 本次執行的意義；送出前以 check_report_format.py 自查。",
+      "packet": "REPORT_FORMAT.md",
+      "supersedes": [],
+      "limits": [
+        "只規定回報格式，不新增任何執行授權、費用或對外動作",
+        "既有回報格式（OUTCOME_CONFIDENCE 回報格式、atk-org-status 三欄與六點）保留，放進第 2 項或附件",
+        "目標藍圖只能由負責人核定修改"
+      ]
     }
   ]
 }
