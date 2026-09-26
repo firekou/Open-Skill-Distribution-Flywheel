@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 56,
+  "revision": 57,
   "automation": {
     "status": "FOUNDATION_ONLY",
     "trigger_installed": true,
@@ -1478,7 +1478,21 @@
         "quoted stage counts are indistinguishable from claims",
         "no workflow, status or PR review evidence"
       ],
-      "reviewed_at": "2026-09-26"
+      "reviewed_at": "2026-09-26",
+      "adoption_route": {
+        "decision_id": "PR21-REPORT-POINTER-ADOPTION-20260926",
+        "selected_option": "a",
+        "status": "WAITING_OWNER_MERGE",
+        "exact_head": "e78c6c79c9f58b07da721e5fa8e1923600ee1bab",
+        "rationale": "Use the already independently reviewed PR21 as the single adoption path; do not create a parallel direct-main correction.",
+        "required_actor": "owner firekou",
+        "merge_authorized": false,
+        "invalidates_when": [
+          "PR21 head changes",
+          "live diff changes materially",
+          "owner declines adoption"
+        ]
+      }
     },
     {
       "task_id": "PR22-RELEASE-R",
@@ -1520,7 +1534,26 @@
         "Channel R permits zero outreach contacts and no upstream/social send or About/topics change.",
         "No real-model success, non-author first-use, repeat use, external adoption or economic-value evidence exists."
       ],
-      "reviewed_at": "2026-09-26"
+      "reviewed_at": "2026-09-26",
+      "post_merge_pin": {
+        "packet": "reviews/ATK_AIDER_RELEASE_R_POST_MERGE_PIN.md",
+        "work_id": "ATK-AIDER-RELEASE-R-POST-MERGE-PIN",
+        "revision": 1,
+        "status": "PLANNED_NOT_DISPATCHED",
+        "source_sha": null,
+        "branch": "claude/atk-aider-release-r-post-merge-pin-01",
+        "scope_paths": [
+          "integrations/aider-atk/delivery/RELEASE_CANDIDATE.md"
+        ],
+        "trigger": "owner firekou merges PR22 while exact head remains 3a681a436f12428c00e722a658b8869199a0f334",
+        "claim_deadline": "merge observed + 24 hours",
+        "execution_deadline": "valid claim + 45 minutes",
+        "repair_rounds_used": 0,
+        "repair_rounds_limit": 2,
+        "active_claim": null,
+        "dispatch_status": "NOT_DISPATCHED",
+        "conditional_a7": "If Taipei merge date is not 2026-09-26, re-read Aider #5552, Aider PR #5553, LiteLLM PR #38318, and PyPI aider-chat before making release claims."
+      }
     }
   ],
   "planning": {
@@ -1532,7 +1565,14 @@
     "last_review": "reviews/PR6_R4_G4_REVIEW_25457fbd.md",
     "next_work_id": "ATK-AIDER-RELEASE-R-POST-MERGE-PIN",
     "next_checkpoint": "PR22_OWNER_MERGE_AND_POST_MERGE_PIN",
-    "execution_status": "RELEASE_R_A8_APPROVED_WAITING_OWNER_MERGE"
+    "execution_status": "RELEASE_R_A8_APPROVED_WAITING_OWNER_MERGE",
+    "post_merge_packet": "reviews/ATK_AIDER_RELEASE_R_POST_MERGE_PIN.md",
+    "report_pointer_adoption": {
+      "decision_id": "PR21-REPORT-POINTER-ADOPTION-20260926",
+      "route": "PR21 owner merge",
+      "status": "WAITING_OWNER_MERGE",
+      "direct_main_parallel_fix": false
+    }
   },
   "handoff": {
     "method": "govern-github-agent-handoffs",
@@ -1699,6 +1739,7 @@
       "review": "reviews/PR20_R2_DELIVERY_16b7268.md",
       "decision": "APPROVED_WITH_CONDITIONS",
       "persistent_launcher_verified": false
-    }
+    },
+    "post_merge_packet": "reviews/ATK_AIDER_RELEASE_R_POST_MERGE_PIN.md"
   }
 }
