@@ -1,3 +1,11 @@
+## 2026-09-26：PR #21 薄引用入口限定覆核
+
+1. 執行者：Claude 文件提交，GPT／Codex 獨立覆核精確 head `9bf2065858770b225f6418361e58ddb180f9f236`。
+2. 小目標進度：文件查核有前進。[覆核](PR21_R1_REPORT_POINTER_9bf20658.md) **APPROVED_WITH_CONDITIONS**；兩份入口的 canonical commit/blob 相符、保留本地目標與 reviewer 補充。無新修復派工；未取得完整 work_id/claim chain，不提升 launcher。state revision 53。
+3. 目標藍圖對齊：有用工具與 skill、整理改善、可選 ATK 接入、技術分發、實際採用及價值回收。本輪產品方向原地，只防止報告誤套 VSL 業務目標；既有首次使用 checkpoint 不变。
+4. 本次執行的意義：釐清可以共用回報規則，不能共用不同專案的目標。修改仍在 Draft PR，main 正式入口尚未替換；本次只寫 review/帳本，未 merge。
+下一步：PR21 若採用須有合併授權且重核最新 diff；P3「五階段」實際為六階段列 backlog，不另派工。产品仍待 `OWNER_FIRST_USE_RELEASE_CHANNEL_AND_SENDER_DECISION`，未新建重複首次使用包。
+
 ## 2026-09-26 12:10：PR #20 revision 2 通過，離線交付完成，首次使用等待負責人 gate
 
 ### 1. 執行者
