@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.1.0",
+  "record_id": "FU-00000000-001",
+  "record_class": "internal_agent_rehearsal",
+  "participant_id": "R1",
+  "source_path": "internal",
+  "entry": {
+    "url": "https://github.com/firekou/Open-Skill-Distribution-Flywheel/blob/d1474670db12934c80caa05674c8e4320cbad312/integrations/aider-atk/QUICKSTART.md",
+    "material": "quickstart"
+  },
+  "consent": {
+    "given": true,
+    "given_at_utc": "2000-01-01T00:00:00Z",
+    "scope": [
+      "timings",
+      "error_categories",
+      "task_result"
+    ]
+  },
+  "environment": {
+    "os": "linux",
+    "python": "3.11",
+    "aider_version": "0.86.1",
+    "litellm_version": "1.75.0",
+    "provider_category": "local_server",
+    "endpoint_host": null,
+    "prior_aider_use": "unknown"
+  },
+  "timing": {
+    "started_at_utc": "2000-01-01T00:00:00Z",
+    "first_connect_seconds": null,
+    "first_result_seconds": null
+  },
+  "task": {
+    "task_id": "aider-atk-csv-by-name-v1",
+    "passed": true,
+    "tests_total": 5,
+    "tests_failed": 0,
+    "test_file_unchanged": true,
+    "diff_reviewed": true
+  },
+  "errors": [],
+  "support": {
+    "interventions": 0,
+    "minutes": 0
+  },
+  "cost": {
+    "source": "not_collected"
+  },
+  "abandonment": {
+    "abandoned": false,
+    "reason": null
+  },
+  "reuse": {
+    "stated_intent": "not_asked",
+    "actual_reuse_at_utc": null,
+    "actual_reuse_unassisted": null
+  },
+  "redaction_attested": {
+    "no_code": true,
+    "no_keys": true,
+    "no_full_logs": true,
+    "no_identity": true
+  }
+}

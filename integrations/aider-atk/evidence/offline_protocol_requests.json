@@ -1,0 +1,9 @@
+[
+  {
+    "path": "/v1/chat/completions",
+    "model": "local-test-model",
+    "stream": true,
+    "message_count": 8,
+    "authorization_header_present": true
+  }
+]
